@@ -1,7 +1,7 @@
 import { INTAKE_CAP_ICON, INTAKE_EMPTY_ICON } from '../data/foundryAssets';
 import { ammoDef } from '../data/ammo';
 import { CAPPED_LABEL } from '../data/objectives';
-import { READOUT_TEXT } from '../data/hudLayout';
+import { READOUT_TEXT } from '../data/descriptions';
 import { trimNumber } from '../data/rulesText';
 import type { EntranceRate } from '../sim/intakeRates';
 import { INTAKE } from '../data/foundry';

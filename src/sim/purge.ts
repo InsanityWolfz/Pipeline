@@ -8,13 +8,16 @@ import { FOUNDRY_ROOM } from '../data/rooms';
 import { stashTotal } from './area';
 import { count } from './inventory';
 import { diagramInReach } from './research';
+import { hoveredStore, usableInReach } from './foundryUse';
+import { pieceRect } from './pieces';
 import type { SimState } from './state';
 import { tileCentre } from './tiles';
 
 // 069: purging an intake entrance. E at an open entrance holding rounds offers "Purge" (render's menu); the choice moves
 // its whole reservoir into the stash, or the inventory for what the stash can't take, so a new round kind can flow in.
-// Refused whole if the two can't hold it all. E's target is the entrance under the cursor (as 050's hoppers), else the
-// nearest in reach holding rounds, unless a restore diagram (033: the capped entrances' sit beside it) is nearer.
+// Refused whole if the two can't hold it all. E's target is the entrance under the cursor (as 050's hoppers); a hopper or
+// crate under the cursor keeps E; else the nearest entrance in reach holding rounds, unless a restore diagram (033: the
+// capped entrances' sit beside it) or a hopper or crate in reach is nearer.
 
 /** Where purged rounds may go: each store's most items (STASH_CAP and INVENTORY_CAP, both unbounded today). */
 export interface PurgeCaps {
@@ -59,17 +62,22 @@ function hovered(state: Pick<SimState, 'player'>): number {
 }
 
 /**
- * The entrance E would offer to purge, or null: the purgeable one under the cursor; else the nearest purgeable one, as
- * long as no restore diagram in reach is nearer (the first on a tie stays with the diagram, as before 069).
+ * The entrance E would offer to purge, or null: the purgeable one under the cursor; else, with no hopper or crate under
+ * the cursor (050: it keeps E), the nearest purgeable one, as long as no restore diagram in reach and no hopper or crate
+ * in reach is nearer (the first on a tie stays with the diagram, as before 069).
  */
-export function entranceTakesE(state: Parameters<typeof diagramInReach>[0] & Reach): number | null {
+export function entranceTakesE(state: SimState): number | null {
   const over = hovered(state);
   if (over >= 0 && purgeable(state, over)) return over;
+  if (hoveredStore(state)) return null;
   let best: number | null = null;
   for (let i = 0; i < INTAKE.entrances.length; i++) if (purgeable(state, i) && (best === null || distTo(state, i) < distTo(state, best))) best = i;
   if (best === null) return null;
   const d = diagramInReach(state);
-  return d && Math.hypot(d.rect.x - state.player.x, d.rect.y - state.player.y) <= distTo(state, best) ? null : best;
+  if (d && Math.hypot(d.rect.x - state.player.x, d.rect.y - state.player.y) <= distTo(state, best)) return null;
+  const piece = usableInReach(state);
+  const r = piece ? pieceRect(piece) : null;
+  return r && Math.hypot(r.x - state.player.x, r.y - state.player.y) < distTo(state, best) ? null : best;
 }
 
 /** Moves entrance `i`'s reservoir to the stash, then the inventory for the rest. Returns whether it did. */

@@ -6,7 +6,7 @@ import { diagramInReach, diagrams } from '../../src/sim/research';
 import type { SimState } from '../../src/sim/state';
 import { tileCentre } from '../../src/sim/tiles';
 import { HALL, movePlayer, run } from './fight';
-import { foundry } from './foundryKit';
+import { foundry, put } from './foundryKit';
 
 // 069: E at an intake entrance offers Purge, which moves that entrance's reservoir into the stash (or the inventory for
 // what the stash can't take), so a new round kind can flow in. Its target is the entrance under the cursor, else the
@@ -101,4 +101,36 @@ describe('purging an intake entrance (069)', () => {
     expect(diagramInReach(s)).toBeUndefined();
     expect(entranceTakesE(s)).toBe(MIDDLE);
   });
+
+  it('a hopper or crate under the cursor, or nearer than the entrance, keeps E (review)', () => {
+    const s = atEntrance();
+    clearDiagrams(s);
+    // A hopper feeding the mouth from row 2, the cursor on it: E opens the hopper, not Purge.
+    const h = put(s, 'hopper', mouth.tx, mouth.ty + 2, 'up');
+    const at = tileCentre({ tx: mouth.tx, ty: mouth.ty + 2 });
+    s.player.aimX = at.x;
+    s.player.aimY = at.y;
+    expect(entranceTakesE(s)).toBeNull();
+    expect(interactTarget(s)?.kind).toBe('hopper');
+    // The cursor elsewhere, a crate beside the player and nearer than the mouth keeps E too.
+    s.foundry.pieces = s.foundry.pieces.filter((p) => p.id !== h.id);
+    put(s, 'crate', mouth.tx + 1, mouth.ty + 1, 'up');
+    movePlayer(s, tileCentre(mouth).x + 12, tileCentre({ tx: mouth.tx, ty: mouth.ty + 1 }).y);
+    s.player.aimY += 6 * 32;
+    expect(entranceTakesE(s)).toBeNull();
+    expect(interactTarget(s)?.kind).toBe('crate');
+    // With the cursor back on the mouth, the entrance wins again.
+    s.player.aimX = tileCentre(mouth).x;
+    s.player.aimY = tileCentre(mouth).y;
+    expect(entranceTakesE(s)).toBe(MIDDLE);
+  });
 });
+
+/** Marks every restore diagram in reach restored, so none sits nearer than the entrance. */
+function clearDiagrams(s: SimState): void {
+  for (let i = 0; i < 20 && diagramInReach(s); i++) {
+    const near = diagramInReach(s);
+    if (near) s.research[near.node] = 'restored';
+  }
+  expect(diagramInReach(s)).toBeUndefined();
+}

@@ -4,7 +4,7 @@ import { transformBlueprint } from './blueprintTransform';
 import { wholeRefusal } from './guided';
 import type { PieceState, PlaceFail } from './pieces';
 import { canPlace, place } from './placement';
-import { stageOf } from './stages';
+import { setStageRound } from './stages';
 import type { SimState } from './state';
 import type { Command } from './input';
 import { pairEnds, pairOnPlace, tunnelReach } from './tunnels';
@@ -52,7 +52,7 @@ export function stamp(state: SimState, cmd: NonNullable<Command['stamp']>): bool
     if (p.fail) return undefined;
     const shape = { ...(p.inFrom ? { inFrom: p.inFrom } : {}), ...(p.mirrored ? { mirrored: true } : {}) };
     const piece = place(state, p.pieceId, p.tx, p.ty, p.facing, shape, false) ?? undefined;
-    if (piece?.kind === 'machine' && p.made !== undefined && stageOf(piece.pieceId)) piece.made = p.made;
+    if (piece?.kind === 'machine' && p.made !== undefined) setStageRound(piece, p.made);
     return piece;
   });
   // Linked ends pair with each other first, if the exit is in the entrance's reach (as building by hand needs); an end

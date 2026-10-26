@@ -167,6 +167,7 @@ export function summarize(state: SimState): SimSummary {
   const { player: p, tube } = state;
   const volley = volleyRounds(state);
   const rates = entranceRates(state);
+  const speed = machineSpeed(state);
   return {
     tick: state.tick,
     seed: state.seed,
@@ -210,7 +211,7 @@ export function summarize(state: SimState): SimSummary {
     unlocked: unlockedPieces(state),
     stagesUnlocked: stagesUnlocked(state),
     building: state.building,
-    foundry: { pieces: state.foundry.pieces.map((p) => pieceSummary(p, machineSpeed(state))) },
+    foundry: { pieces: state.foundry.pieces.map((p) => pieceSummary(p, speed)) },
     intake: {
       entrances: INTAKE.entrances.map((t, i) => {
         const e = state.link.entrances[i];

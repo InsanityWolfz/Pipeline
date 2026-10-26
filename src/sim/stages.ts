@@ -42,7 +42,7 @@ export function machineRecipe(m: Pick<MachineState, 'pieceId' | 'made'>): Recipe
 }
 
 /**
- * 069: sets a just-placed stage machine's round (the pipette's copy, as a stamped blueprint's saved round, 063): only a
+ * Sets a just-placed stage machine's round: a stamped blueprint's saved round (063) and the pipette's copy (069). Only a
  * tagged round this stage makes; any other round, or a machine that isn't a stage, is left as it is.
  */
 export function setStageRound(m: MachineState, round: string): void {

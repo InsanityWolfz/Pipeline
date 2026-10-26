@@ -33,7 +33,7 @@ const inReach = (state: SimState, p: PieceState): boolean =>
 const inHoverReach = (state: SimState, p: PieceState): boolean => state.roomId === FOUNDRY_ROOM && gapTo(state, p) <= HOVER_USE_REACH;
 
 /** The hopper or crate under the cursor (the player's aim point) within HOVER_USE_REACH (050), if any. */
-function hoveredStore(state: SimState): Usable | undefined {
+export function hoveredStore(state: SimState): Usable | undefined {
   const { aimX, aimY } = state.player;
   return state.foundry.pieces.find((p): p is Usable => {
     if (!usable(p) || !inHoverReach(state, p)) return false;

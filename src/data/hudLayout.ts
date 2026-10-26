@@ -186,18 +186,6 @@ export const READOUT_LAYOUT = {
   gap: 4,
 } as const;
 
-/**
- * 069: the words of the intake's readout lines after an entrance's fill: its measured rate in and its round's fire rate,
- * each a rate to one decimal ("12/30 · in 2.3/s · fires 4/s").
- */
-export const READOUT_TEXT = {
-  sep: ' · ',
-  inRate: (n: string): string => `in ${n}/s`,
-  fires: (n: string): string => `fires ${n}/s`,
-  /** Decimal places a rate shows (a trailing .0 dropped). */
-  places: 1,
-} as const;
-
 /** Pylon and stash menus (009): rows per column before wrapping, and the gap between columns, px. */
 export const MENU_MAX_ROWS = 10;
 export const MENU_COLUMN_GAP = 8;

@@ -101,3 +101,11 @@ describe('the carried bar keys and right click (047)', () => {
     expect(stored?.bindings.interact).toBe(DEFAULT_BINDINGS.interact);
   });
 });
+
+describe('older settings files and the newer keys (069 review)', () => {
+  it('a file from before 063 and 069 with rotate on Q and flip on X keeps them; the Area tool and the pipette go unbound', () => {
+    const old = Object.fromEntries(BIND_ACTIONS.filter((a) => !['area', 'blueprints', 'pipette'].includes(a)).map((a) => [a, DEFAULT_BINDINGS[a]]));
+    const parsed = parseSettings(JSON.stringify({ bindings: { ...old, rotate: 'Q', flip: 'X' } }));
+    expect(parsed?.bindings).toMatchObject({ rotate: 'Q', flip: 'X', area: '', pipette: '', blueprints: DEFAULT_BINDINGS.blueprints, build: DEFAULT_BINDINGS.build });
+  });
+});

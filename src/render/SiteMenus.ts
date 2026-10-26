@@ -94,9 +94,14 @@ export class SiteMenus {
 
   /**
    * E was pressed with the restore panel open (033): E again restores, as clicking Restore does, and the panel
-   * closes; without the cost it stays open and nothing is sent. Returns whether the panel took the press.
+   * closes; without the cost it stays open and nothing is sent; 069: E closes the purge menu. Returns whether a panel took the press.
    */
   pressAgain(controls: Controls): boolean {
+    // 069 (review): E again closes the purge menu, as Esc does, so it never reopens it or stacks the restore panel.
+    if (this.purge.isOpen) {
+      this.purge.close();
+      return true;
+    }
     // The altar's offering (034) works the same: E again summons.
     if (this.offering.isOpen) {
       const altar = this.offering.confirm;
