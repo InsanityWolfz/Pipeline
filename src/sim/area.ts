@@ -1,4 +1,5 @@
 import { STASH_CAP } from '../data/blueprints';
+import { INVENTORY_CAP } from '../data/items';
 import { FOUNDRY_ROOM } from '../data/rooms';
 import { wholeRefusal } from './guided';
 import { count, type Inventory } from './inventory';
@@ -9,9 +10,9 @@ import { tunnelContents } from './tunnels';
 
 // Area pick-up (063): the area tool's box over the foundry grid counts every piece wholly inside it (a 3x1 needs all
 // three tiles); fixtures (the intake, the ports, the bench, the stash) aren't pieces, so they never count. Pick up
-// lifts every counted piece at once, as picking each up by hand does (pieces are free, so nothing is refunded), but
-// what they held goes to the stash. It is refused whole if the stash can't hold it all, and by the tutorial's build
-// lock (058) as a single pick-up is. It needs no research.
+// lifts every counted piece at once, as picking each up by hand does (pieces are free, so nothing is refunded); 069:
+// what they held goes to the inventory, and the stash takes what it can't hold. It is refused whole if the two together
+// can't hold it all, and by the tutorial's build lock (058) as a single pick-up is. It needs no research.
 
 /** A box of foundry tiles, corners inclusive, `tx0 <= tx1` and `ty0 <= ty1`. */
 export interface AreaBox {
@@ -53,11 +54,20 @@ function contentsOf(pieces: readonly PieceState[], foundry: FoundryState): Inven
   return items;
 }
 
+/** 069: where an area pick-up's contents may go: each store's most items (INVENTORY_CAP and STASH_CAP, unbounded today). */
+export interface StoreCaps {
+  inventory: number;
+  stash: number;
+}
+
+const CAPS: StoreCaps = { inventory: INVENTORY_CAP, stash: STASH_CAP };
+
 /**
- * Picks up every piece wholly inside the box, their contents to the stash. Returns whether it did. Refused (a pick-up
- * fail on the box's first piece, nothing changed) by the build lock, or when the stash, at `cap` items, can't hold it.
+ * Picks up every piece wholly inside the box, their contents to the inventory and the rest to the stash (069). Returns
+ * whether it did. Refused (a pick-up fail on the box's first piece, nothing changed) by the build lock, or when the
+ * inventory and the stash, at their `caps`, can't hold it between them.
  */
-export function areaPickUp(state: SimState, box: AreaBox, cap: number = STASH_CAP): boolean {
+export function areaPickUp(state: SimState, box: AreaBox, caps: StoreCaps = CAPS): boolean {
   if (state.roomId !== FOUNDRY_ROOM) return false;
   const pieces = piecesInBox(state.foundry, box);
   const first = pieces[0];
@@ -68,11 +78,21 @@ export function areaPickUp(state: SimState, box: AreaBox, cap: number = STASH_CA
     return false;
   }
   const items = contentsOf(pieces, state.foundry);
-  if (stashTotal(state.stash) + stashTotal(items) > cap) {
+  let invRoom = Math.max(0, caps.inventory - stashTotal(state.inventory));
+  const stashRoom = Math.max(0, caps.stash - stashTotal(state.stash));
+  if (stashTotal(items) > invRoom + stashRoom) {
     state.events.pickUpFails.push({ tx: first.tx, ty: first.ty, reason: 'stash-full' });
     return false;
   }
-  for (const p of pieces) removePieceAt(state, p.tx, p.ty, 'stash');
+  const lifted: Inventory = {};
+  for (const p of pieces) removePieceAt(state, p.tx, p.ty, lifted);
+  // The inventory first, kind by kind, then the stash for the rest.
+  for (const [itemId, n] of Object.entries(lifted)) {
+    const mine = Math.min(n, invRoom);
+    invRoom -= mine;
+    if (mine > 0) state.inventory[itemId] = count(state.inventory, itemId) + mine;
+    if (n > mine) state.stash[itemId] = count(state.stash, itemId) + n - mine;
+  }
   state.events.areaPickUps.push({ count: pieces.length, items });
   return true;
 }
