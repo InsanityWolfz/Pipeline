@@ -13,6 +13,8 @@ import { GUIDED_NAMES, GUIDED_TEXT } from '../data/guidedBuilds';
 import { pieceDef } from '../data/pieces';
 import { FOUNDRY_ROOM } from '../data/rooms';
 import { FOUNDRY_MAP } from '../data/foundryMap';
+import { MINIMAP } from '../data/minimap';
+import { OVERWORLD } from '../data/overworld';
 import { pieceIcon } from './foundryLayout';
 import { foundryMapBox } from './foundryMap';
 import { drawTablet } from './tablet';
@@ -57,6 +59,16 @@ function lineTop(sim: SimState): number {
   return b.y + b.h + FOUNDRY_MAP.frame.width + TUTORIAL_LAYOUT.objectiveFoundryGap;
 }
 
+/**
+ * fix-playtest-ui (Shaun: "cap it as large as the mini-map, and if you need to word wrap it, just word wrap it"): the
+ * widest the band gets, view px: the corner map's width with its frame (the foundry's in the foundry, else the
+ * overworld's), so the band, right-aligned under it, never reaches past its left edge.
+ */
+export function objectiveCapWidth(sim: SimState): number {
+  if (sim.roomId === FOUNDRY_ROOM && !sim.sandbox) return foundryMapBox().w + 2 * FOUNDRY_MAP.frame.width;
+  return OVERWORLD.width * MINIMAP.scale + 2 * MINIMAP.frame.width;
+}
+
 interface SubRow {
   tick: GameObjects.Image;
   icon: GameObjects.Image;
@@ -80,6 +92,11 @@ export class ObjectiveView {
   private top: number = TUTORIAL_LAYOUT.objectiveTop;
   /** The sub-lines as drawn, for the test hook. */
   subSteps: SubStepShown[] = [];
+  /** fix-playtest-ui: how many lines the goal's text wraps onto, and the band's widest (the corner map's width). */
+  lines = 0;
+  capWidth = 0;
+  /** Build mode is on: the band lets presses through to the grid under it (fix-playtest-ui). */
+  private building = false;
 
   constructor(scene: Scene) {
     this.scene = scene;
@@ -99,18 +116,25 @@ export class ObjectiveView {
   }
 
   update(sim: SimState): void {
+    this.building = sim.building;
     // 044.5: the sandbox has no objective line.
     const line = objectiveLine(sim);
     const text = sim.sandbox ? '' : line.text;
     const subs = sim.sandbox ? [] : subLines(sim, line.index);
     const top = lineTop(sim);
-    const key = `${text}|${top}|${subs.map((s) => `${s.text}:${s.done}`).join(',')}`;
+    const cap = objectiveCapWidth(sim);
+    const key = `${text}|${top}|${cap}|${subs.map((s) => `${s.text}:${s.done}`).join(',')}`;
     if (key === this.shownKey) return;
     this.top = top;
     this.shownKey = key;
+    this.capWidth = cap;
     const finished = this.shown !== undefined && text !== this.shown;
     this.shown = text;
+    // The text wraps to fit the band inside the cap: less its padding and the tick's place left of it.
+    const { objectivePanel: P, tickGap } = TUTORIAL_LAYOUT;
+    this.line.obj.setWordWrapWidth(Math.floor(cap - 2 * P.padX - tickGap - this.tick.displayWidth), true).setAlign('right');
     this.line.set(text);
+    this.lines = text === '' ? 0 : this.line.obj.getWrappedText().length;
     const x = VIEW_WIDTH - TUTORIAL_LAYOUT.objectiveRight - this.line.width;
     this.line.moveTo(x, top);
     this.drawPanel(x - TUTORIAL_LAYOUT.tickGap - this.tick.displayWidth, text, subs);
@@ -135,9 +159,16 @@ export class ObjectiveView {
     return this.band;
   }
 
+  /** Over the band, outside build mode (fix-playtest-ui: in build mode a press there reaches the grid under it). */
   overUi(x: number, y: number): boolean {
     const b = this.band;
-    return b !== null && x >= b.x && x < b.x + b.w && y >= b.y && y < b.y + b.h;
+    return !this.building && b !== null && x >= b.x && x < b.x + b.w && y >= b.y && y < b.y + b.h;
+  }
+
+  /** The goal's text's height, view px: a line, and each wrapped line under it a measured line's height apart. */
+  private textHeight(): number {
+    const n = Math.max(1, this.lines);
+    return this.line.lineHeight + (n - 1) * (this.line.obj.height / n);
   }
 
   /** One row of objects per sub-line, made as needed. */
@@ -175,7 +206,8 @@ export class ObjectiveView {
     this.panel.clear();
     this.band = null;
     if (!text) return;
-    const top = objectiveTop + this.line.lineHeight + S.gap;
+    const textH = this.textHeight();
+    const top = objectiveTop + textH + S.gap;
     subs.forEach((s, i) => {
       const r = this.row(i);
       const rowX = left + S.indent;
@@ -187,7 +219,7 @@ export class ObjectiveView {
       r.text.setAlpha(s.done ? S.doneAlpha : 1);
       this.subSteps.push({ itemId: s.itemId, ...(s.pieceId ? { pieceId: s.pieceId } : {}), text: words[i] ?? '', done: s.done, x: rowX, y, w: widths[i] ?? 0 });
     });
-    const h = this.line.lineHeight + (subs.length > 0 ? S.gap + subs.length * S.step - (S.step - this.line.lineHeight) : 0);
+    const h = textH + (subs.length > 0 ? S.gap + subs.length * S.step - (S.step - this.line.lineHeight) : 0);
     this.band = { x: left - P.padX, y: objectiveTop - P.padY, w: right - left + 2 * P.padX, h: h + 2 * P.padY };
     drawTablet(this.panel, this.band.x, this.band.y, this.band.w, this.band.h, P.alpha);
   }

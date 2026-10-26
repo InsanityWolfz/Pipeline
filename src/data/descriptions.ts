@@ -7,6 +7,8 @@ export const DESCRIPTIONS = {
   pylon: 'Harvests the land round it, sends it home.',
   /** An unclaimed pylon does nothing yet. */
   pylonDormant: 'Claim it to harvest the land round it.',
+  /** fix-playtest-ui (Shaun: "a mouse over when it needs cleared has just a message that says kill all enemies"): its guards live. */
+  pylonGuarded: 'Kill all enemies to claim it.',
   leyLine: "Carries the pylon's haul to the foundry.",
   /** The Ruined Cache's reliquary (032): sealed while its guards live, ready once they're dead, then empty until it re-arms. */
   cacheSealed: 'Sealed by its guards. Clear them to open it.',

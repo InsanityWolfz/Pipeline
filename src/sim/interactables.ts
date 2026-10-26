@@ -4,7 +4,7 @@ import { SANDBOX_ROOM } from '../data/rooms';
 import { altarInReach, altarState } from './altar';
 import { arenaLocked, doorInReach, doorUse } from './arenaLock';
 import { cacheInReach, isOpened } from './cache';
-import { claimedPylons, dormant, fixtureInReach, pylonInReach } from './claims';
+import { claimedPylons, dormant, fixtureInReach, isClaimed, occupied, pylonInReach } from './claims';
 import { fixtureDef } from './fixtures';
 import { usableInReach } from './foundryUse';
 import { nodeInReach } from './harvest';
@@ -16,7 +16,7 @@ import { stoneInReach } from './tutorial';
 
 // What E would act on right now (045): the thing in reach that takes an E press, in the order the sim takes one
 // (src/sim/step.ts), and the world point its prompt floats over. Nothing while a harvest, claim or cache hold runs
-// (018: the prompt never sits on a hold's bar), or where E would do nothing: a dormant pylon, a dim altar, an opened
+// (018: the prompt never sits on a hold's bar), or where E would do nothing: a dormant or guarded pylon, a dim altar, an opened
 // cache, an empty crate, the waystone with no pylon claimed, and in build mode a node (E there is for pieces).
 
 export interface InteractTarget {
@@ -48,7 +48,8 @@ export function interactTarget(state: SimState): InteractTarget | null {
   const altar = altarInReach(state);
   if (altar) return altarState(state, altar.id) === 'dim' ? null : at('altar', tileCentre(altar));
   const pylon = pylonInReach(state);
-  if (pylon) return dormant(state, pylon) ? null : at('pylon', tileCentre(pylon));
+  // fix-playtest-ui (Shaun: "Should only show E if it needs cleared"): a pylon whose guards live has none; its hover says why.
+  if (pylon) return dormant(state, pylon) || (!isClaimed(state, pylon.site) && occupied(state, pylon.site)) ? null : at('pylon', tileCentre(pylon));
   for (const kind of ['waystone', 'stash', 'bench'] as const) {
     const f = fixtureInReach(state, kind);
     if (!f) continue;
