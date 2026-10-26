@@ -41,7 +41,7 @@ describe('the Conductor (data)', () => {
   it('keeps its own numbers in ring 5: the ring’s ×10 never applies', () => {
     const { c } = spire();
     expect(c.ring).toBe(5);
-    expect(RING_SCALE[5]).toMatchObject({ health: 10, damage: 10 });
+    expect(RING_SCALE[5]).toMatchObject({ health: 10, damage: 8 });
     expect(defOf(c)).toBe(CONDUCTOR);
     expect(c.health).toBe(6000);
   });

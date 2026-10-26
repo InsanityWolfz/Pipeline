@@ -111,8 +111,17 @@ describe('ring scaling (041)', () => {
     return [d.maxHealth, hit];
   };
 
-  it('RING_SCALE: ×1, ×1, ×1.6, ×2.5 on health and damage, separate fields (060: and ×4 in the Emberworks; 064: ×10 in the Stormcrown)', () => {
-    expect(RING_SCALE).toEqual({ 0: { health: 1, damage: 1 }, 1: { health: 1, damage: 1 }, 2: { health: 1.6, damage: 1.6 }, 3: { health: 2.5, damage: 2.5 }, 4: { health: 4, damage: 4 }, 5: { health: 10, damage: 10 } });
+  it('each region steps up by more than the region before (Shaun, 2026-10-26: "not just a linear increase every region")', () => {
+    // A region's step is its ring's multiplier over the last region's: the Hollows (ring 3) over Region 1's outer ring (2),
+    // then the Emberworks (4) and the Stormcrown (5). Each step is bigger than the one before, for health and for damage.
+    for (const field of ['health', 'damage'] as const) {
+      const steps = ([3, 4, 5] as const).map((r) => RING_SCALE[r][field] / RING_SCALE[(r - 1) as 2 | 3 | 4][field]);
+      for (let i = 1; i < steps.length; i++) expect(steps[i], `${field} step into ring ${i + 3}`).toBeGreaterThan(steps[i - 1] ?? 0);
+    }
+  });
+
+  it('RING_SCALE: ×1, ×1, ×1.6, ×2.5 on health and damage, separate fields (060: and ×4 in the Emberworks; 064: ×10 in the Stormcrown, its damage ×8 since)', () => {
+    expect(RING_SCALE).toEqual({ 0: { health: 1, damage: 1 }, 1: { health: 1, damage: 1 }, 2: { health: 1.6, damage: 1.6 }, 3: { health: 2.5, damage: 2.5 }, 4: { health: 4, damage: 4 }, 5: { health: 10, damage: 8 } });
   });
 
   it('gives the spec’s table, champion column included', () => {

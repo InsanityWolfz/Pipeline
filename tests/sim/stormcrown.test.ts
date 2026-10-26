@@ -55,8 +55,8 @@ describe('the ring', () => {
     }
   });
 
-  it('multiplies health and damage ×10 and kill XP ×10 (Shaun)', () => {
-    expect(RING_SCALE[5]).toEqual({ health: 10, damage: 10 });
+  it('multiplies health ×10, damage ×8 and kill XP ×10 (Shaun)', () => {
+    expect(RING_SCALE[5]).toEqual({ health: 10, damage: 8 });
     expect(RING_XP[5]).toBe(10);
   });
 
