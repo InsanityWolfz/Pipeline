@@ -14,6 +14,8 @@ import { clickRow, flowIs } from './flowPage';
 const T = 32;
 const STONE = returnStoneDef('sunken-forum-waystone');
 const WAY = FIXTURES.find((f) => f.kind === 'waystone') ?? { tx: 0, ty: 0 };
+/** The waystone's frame (and the dormant stone's), world px: src/data/art/fixtures.ts. */
+const STONE_SIZE = { w: 32, h: 48 };
 
 /** Clicks row `row` of an `rows`-row menu, pressing E first to open it, until `done` says it took (a menu can take a frame to open). */
 async function menuChoice(page: Page, rows: number, row: number, done: () => Promise<boolean>): Promise<void> {
@@ -58,6 +60,12 @@ test("the Forum's return stone wakes at its door; after a KO the waystone travel
   }, [FORUM_ARENA.door.leaveTo.tx, FORUM_ARENA.door.leaveTo.ty] as const);
   expect(woke.find((r) => r.id === STONE.id)).toMatchObject({ woken: true, name: 'Sunken Forum door' });
   await expect.poll(async () => (await page.evaluate(() => window.__GAME__?.ui().returnStones))?.find((r) => r.id === STONE.id)?.look).toBe('woken');
+  // Its swell over, it is drawn at its frame's size on the world, as the foundry's waystone is (32 × 48 px), whatever
+  // the texture's bake scale.
+  await expect.poll(async () => (await page.evaluate(() => window.__GAME__?.ui().returnStones))?.find((r) => r.id === STONE.id)?.scale).toBe(1);
+  const drawn = (await page.evaluate(() => window.__GAME__?.ui().returnStones))?.find((r) => r.id === STONE.id);
+  expect(drawn?.w).toBeCloseTo(STONE_SIZE.w, 0);
+  expect(drawn?.h).toBeCloseTo(STONE_SIZE.h, 0);
 
   // A KO: the player wakes in the foundry, the stone still woken.
   const ko = await page.evaluate(() => {
@@ -98,5 +106,9 @@ test('the sandbox shows all three return stones woken', async ({ page }) => {
   expect(s?.returnStones.map((r) => r.woken)).toEqual([true, true, true]);
   // Each stands in the sandbox's room, outside its arena's door, drawn woken.
   await expect.poll(async () => (await page.evaluate(() => window.__GAME__?.ui().returnStones))?.map((r) => r.look)).toEqual(['woken', 'woken', 'woken']);
+  for (const r of (await page.evaluate(() => window.__GAME__?.ui().returnStones)) ?? []) {
+    expect(r.w, r.id).toBeCloseTo(STONE_SIZE.w, 0);
+    expect(r.h, r.id).toBeCloseTo(STONE_SIZE.h, 0);
+  }
   expect(errors).toEqual([]);
 });

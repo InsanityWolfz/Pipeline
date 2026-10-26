@@ -185,7 +185,7 @@ export class SiteMenus {
       { icons: [SITE_ICONS.stash], text: PYLON_MENU_TEXT.deposit(held), value: 'deposit' },
       { icons: [SITE_ICONS.travel], text: PYLON_MENU_TEXT.travel, value: 'travel' },
       // 072: and every woken return stone, by its arena (looked up only while the menu is open).
-      ...(this.pylon.isOpen ? travelDestinations(sim).filter((d) => sim.returnStones.includes(d.id)) : []).map((d) => ({ icons: [SITE_ICONS.travel], text: travelText(d.name), value: { stone: d.id } })),
+      ...(this.pylon.isOpen ? travelDestinations(sim).filter((d) => d.kind === 'stone') : []).map((d) => ({ icons: [SITE_ICONS.travel], text: travelText(d.name), value: { stone: d.id } })),
     ];
     this.pylon.show(pylonRows);
     if (this.bench.isOpen && !fixtureInReach(sim, 'bench')) this.bench.close();

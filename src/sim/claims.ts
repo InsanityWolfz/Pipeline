@@ -61,6 +61,7 @@ export function claimedPylons(state: Pick<SimState, 'claims'>): { roomId: string
 /** A fast travel destination (032; 072): a claimed pylon by its site, or a woken return stone by its id. */
 export interface Destination {
   id: string;
+  kind: 'pylon' | 'stone';
   /** Its name in the travel menus: the pylon's landmark, or the stone's arena and "door". */
   name: string;
   roomId: string;
@@ -70,10 +71,10 @@ export interface Destination {
 
 /** Fast travel's destinations (072): the claimed pylons in claim order, then the woken return stones in wake order. */
 export function travelDestinations(state: Pick<SimState, 'claims' | 'returnStones'>): Destination[] {
-  const pylons = claimedPylons(state).map(({ roomId, pylon }) => ({ id: pylon.site, name: pylon.name, roomId, tile: { tx: pylon.tx, ty: pylon.ty + 1 } }));
+  const pylons = claimedPylons(state).map(({ roomId, pylon }) => ({ id: pylon.site, kind: 'pylon' as const, name: pylon.name, roomId, tile: { tx: pylon.tx, ty: pylon.ty + 1 } }));
   const stones = state.returnStones.flatMap((id) => {
     const s = RETURN_STONES.find((r) => r.id === id);
-    return s ? [{ id, name: s.name, roomId: OVERWORLD_ROOM, tile: s.arrive }] : [];
+    return s ? [{ id, kind: 'stone' as const, name: s.name, roomId: OVERWORLD_ROOM, tile: s.arrive }] : [];
   });
   return [...pylons, ...stones];
 }

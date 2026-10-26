@@ -242,9 +242,9 @@ export interface UiState {
   /** 064: lightning arcs on screen. */
   lightningArcs: number;
   /** 055: each boss arena's door in the room on screen, sealed or open, and 043's seal over it while its boss fights. */
-  /** 072: the return stones in the room on show: dormant or woken, and the scale of a wake's swell. */
-  returnStones: ReturnStoneShown[];
   arenaDoors: ArenaDoorShown[];
+  /** 072: the return stones in the room on show: dormant or woken, the scale of a wake's swell, and their drawn size. */
+  returnStones: ReturnStoneShown[];
   /** 036: the bench's gear panel while open (its cells, tabs, rows with ids and boxes, page and totals), else null. */
   gearPanel: GearPanelState | null;
   /** 036: the relics' effects as drawn: the Wardstone's shimmer (its alpha, 0 when hidden), ward breaks, ember flashes and bench flares live. */

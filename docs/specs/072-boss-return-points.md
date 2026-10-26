@@ -50,7 +50,7 @@ above is met. `SAVE_VERSION` is 23 (22 is 069's): the woken stones and their wak
   order. The foundry's waystone lists them all (its one-destination shortcut counts them too); every claimed pylon's
   menu gains a row per woken stone; E at a woken stone opens "Travel to foundry". Travel lands on the floor tile west of
   the stone and banks nothing there.
-- **Spawning**: packs never spawn within 5 tiles (`RETURN_STONE.packMargin`) of a stone, every way.
+- **Spawning**: packs never spawn within 7 tiles (`RETURN_STONE.packMargin`) of a stone, every way.
 - **The sandbox** starts with all three woken.
 - **Tests**: tests/sim/returnStones.test.ts and returnTravel.test.ts (waking outside only, the travel list, travel
   there and back, the save, the spawn margin, the sandbox); tests/e2e/returnStones.spec.ts (wake the Forum's stone,
@@ -85,8 +85,9 @@ Travel:
   land's enemies, and stones aren't claims.
 
 Spawning and the sandbox:
-- 072.7 The spawn margin is a square, 5 tiles every way (data). It keeps packs from spawning there; a pack spawned
-  elsewhere can still roam past, as it can past a pylon's edge.
+- 072.7 The spawn margin is a square, 7 tiles every way (data), matching a resource pylon's safe radius (5 let an
+  arrival pull a fresh pack: a slammer's aggro is 5 tiles, a sniper's 10). It keeps packs from spawning there; a pack
+  spawned elsewhere can still roam past, as it can past a pylon's edge. OK?
 - 072.8 The sandbox's stones stand woken, but E there does nothing: the sandbox has no way to the foundry and back.
 
 Not done (the spec doesn't ask):

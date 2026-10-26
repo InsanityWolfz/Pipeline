@@ -6,13 +6,18 @@ import type { SimEvents } from '../sim/events';
 import { isWoken } from '../sim/returnStones';
 import { roomById, type SimState } from '../sim/state';
 import { registerAnim } from './anims';
-import { addVectorSprite } from './vector/textures';
+import { addVectorSprite, textureScale } from './vector/textures';
 
-/** One return stone as drawn (072), for `ui().returnStones`: dormant or woken, and its wake swell's scale (1 at rest). */
+/**
+ * One return stone as drawn (072), for `ui().returnStones`: dormant or woken, its wake swell's scale (1 at rest), and its
+ * sprite's size on the world, px (its frame's 32 × 48 at rest, whatever the texture's bake scale).
+ */
 export interface ReturnStoneShown {
   id: string;
   look: 'dormant' | 'woken';
   scale: number;
+  w: number;
+  h: number;
 }
 
 interface StoneParts {
@@ -35,7 +40,7 @@ export class ReturnStoneView {
     registerAnim(scene, LOOK.woken);
     this.stones = RETURN_STONES.map((def) => {
       const bottom = (def.ty + 1) * TILE_SIZE;
-      const sprite = addVectorSprite(scene, (def.tx + 0.5) * TILE_SIZE, bottom, LOOK.dormant).setOrigin(0.5, 1).setDepth(bottom).setVisible(false);
+      const sprite = addVectorSprite(scene, (def.tx + 0.5) * TILE_SIZE, bottom, LOOK.dormant).setDepth(bottom).setVisible(false);
       return { def, sprite, swellMs: 0 };
     });
   }
@@ -57,8 +62,9 @@ export class ReturnStoneView {
       if (!woken && s.sprite.frame.name !== LOOK.dormant) s.sprite.setFrame(LOOK.dormant);
       // The swell: up and back down over wakeMs, a half sine.
       const scale = 1 + (LOOK.swell - 1) * Math.sin((Math.PI * s.swellMs) / LOOK.wakeMs);
-      s.sprite.setScale(scale);
-      this.shown.push({ id: s.def.id, look: woken ? 'woken' : 'dormant', scale });
+      // On top of the bake scale's 1 / textureScale(), as showFrame sets it.
+      s.sprite.setScale(scale / textureScale());
+      this.shown.push({ id: s.def.id, look: woken ? 'woken' : 'dormant', scale, w: s.sprite.displayWidth, h: s.sprite.displayHeight });
     }
   }
 }

@@ -28,8 +28,11 @@ export interface ReturnStoneDef {
 export const RETURN_STONE = {
   /** How close the player's feet box must come to the stone to wake it, px: 2.5 tiles, so walking out of the door wakes it. */
   wakeReach: TILE_SIZE * 2.5,
-  /** Packs never spawn within this many tiles of a stone (072: arriving isn't an ambush). */
-  packMargin: 5,
+  /**
+   * Packs never spawn within this many tiles of a stone (072: arriving isn't an ambush): 7, as a resource site's pylon's
+   * safe radius, so a slammer's 5-tile aggro can't reach an arrival from a fresh pack.
+   */
+  packMargin: 7,
 } as const;
 
 /** A stone outside an arena's door, `dx` tiles across from the door's `leaveTo` (west), on its row. */

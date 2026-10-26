@@ -35,7 +35,7 @@ follows them.
 - **Waking**: a wake reach in data (80 px from the feet box, 2.5 tiles), larger than E's 20 px so walking out of
   the door past it wakes it (`leaveTo` is 72 px off). Once a tick after the player moves, in a room that holds stones,
   outside every arena, not in the sandbox (already woken). A `returnWakes` event; no XP (spec).
-- **Spawning**: population.ts's `KEEP_OUT` rects gain one per stone, its tile grown by `packMargin` tiles (data, 5).
+- **Spawning**: population.ts's `KEEP_OUT` rects gain one per stone, its tile grown by `packMargin` tiles (data; built 5, raised to 7 at review to match a resource pylon's safe radius).
   This changes the candidate tiles, so seeded pack positions move; tests that assumed one are checked.
 - **The sandbox**: its start lists all three as woken (a new `StartDef.returnStones`). The sandbox is its own world
   with no way to the foundry, so E at a stone there does nothing. To raise.
