@@ -53,6 +53,9 @@ export const HUD_LAYOUT = {
   },
 } as const;
 
+/** 070: an emptied carried-bar slot's round icon and "0", drawn at this alpha (greyed) until another round takes the slot. */
+export const CARRIED_EMPTY = { alpha: 0.35 } as const;
+
 /** The tube slot's width for `units` rounds (025): units side by side, `gap` px apart. */
 export function tubeSlotWidth(units: number): number {
   const n = Math.max(1, units);
