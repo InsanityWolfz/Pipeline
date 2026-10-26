@@ -18,6 +18,7 @@ import type { SoundView } from './SoundView';
 import type { WakeView } from './WakeView';
 import type { GameHost } from './flow/host';
 import type { SandboxPanel } from './SandboxPanel';
+import { entranceTakesE } from '../sim/purge';
 
 /** The menus the router works, built by the scene. */
 export interface Menus {
@@ -140,8 +141,9 @@ export class MenuRouter {
       inventory.setOpen(false);
     } else if (press && !site.pressAgain(controls)) {
       const target = usableInReach(this.sim);
-      // A diagram in reach wins over a crate (033's priority, as E's prompt shows), as before 047.
-      if (target?.kind === 'hopper' || (target?.kind === 'crate' && !diagramInReach(this.sim))) {
+      // A diagram in reach wins over a crate (033's priority, as E's prompt shows), as before 047; 069: an intake
+      // entrance's purge wins over both, as its prompt does.
+      if (entranceTakesE(this.sim) === null && (target?.kind === 'hopper' || (target?.kind === 'crate' && !diagramInReach(this.sim)))) {
         craft.setOpen(false);
         site.close();
         inventory.openContainer(target.kind, target.id);

@@ -81,6 +81,8 @@ export interface Command {
   takeStash: { itemId: string | null; amount?: HopperAmount; stack?: number } | null;
   /** Put some of a held kind into the stash, standing at it, this tick (an edge, 052: the stash screen's click), or null; amounts as `takeStash`'s. */
   stashPut: { itemId: string; amount: HopperAmount; stack?: number } | null;
+  /** 069: purge this intake entrance (an index into INTAKE.entrances), standing at it, this tick (an edge), or null. */
+  purge: number | null;
   /** Identify every carried piece at the bench this tick (an edge). */
   identify: boolean;
   /** At the bench this tick (an edge, 036): wear a piece by id (the worn one comes off), or take a slot off with `{ slot, id: null }`; null for no change. */
@@ -122,6 +124,7 @@ export const NO_COMMAND: Readonly<Command> = {
   travel: null,
   takeStash: null,
   stashPut: null,
+  purge: null,
   identify: false,
   equip: null,
   restore: null,

@@ -19,6 +19,7 @@ import { clearEvents } from './events';
 import { offerFromOutside, stepFoundry } from './flow';
 import { stepFoundryUse } from './foundryUse';
 import { stepStash } from './stash';
+import { purge } from './purge';
 import { stepHarvest } from './harvest';
 import { stepLink } from './link';
 import { stepIntakeRates } from './intakeRates';
@@ -133,6 +134,8 @@ export function stepSim(state: SimState, input: Command = NO_COMMAND): void {
   stepBuild(state, cmd);
   stepFoundryUse(state, cmd);
   stepStash(state, cmd);
+  // 069: the purge menu's choice.
+  if (cmd.purge !== null) purge(state, cmd.purge);
   stepFoundry(state.foundry, state.link.entrances, state.events, state.link.attuned, { cap: entranceCap(state), speed: machineSpeed(state) });
   // 069: the rounds the intake just took, into its rate window.
   stepIntakeRates(state);

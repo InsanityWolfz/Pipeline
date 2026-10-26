@@ -211,6 +211,7 @@
     "state.events.pools: array",
     "state.events.portDeliveries: array",
     "state.events.pounds: array",
+    "state.events.purges: array",
     "state.events.refills: array",
     "state.events.respecs: array",
     "state.events.restores: array",

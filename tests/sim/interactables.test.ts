@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { FIXTURES } from '../../src/data/claims';
 import { TILE_SIZE } from '../../src/data/config';
 import { HOLLOWS } from '../../src/data/hollows';
+import { INTAKE } from '../../src/data/foundry';
 import { INTERACT_KINDS, INTERACT_LABELS, INTERACT_PROMPTS, type InteractKind } from '../../src/data/interact';
 import { landmarkDef } from '../../src/data/landmarks';
 import { OVERWORLD_ROOM } from '../../src/data/overworld';
@@ -92,6 +93,18 @@ const SCENES: Readonly<Record<InteractKind, () => SimState>> = {
     s.enemies = s.enemies.filter((e) => e.group !== def.id);
     s.roomId = OVERWORLD_ROOM;
     below(s, def.cache ?? { tx: 0, ty: 0 });
+    return s;
+  },
+  // 069: an open entrance holding rounds, the cursor on its mouth (the first reservoir's diagram shares its tile).
+  entrance: () => {
+    const s = foundry();
+    const i = INTAKE.entrances.findIndex((e) => e.startsOpen);
+    const m = INTAKE.entrances[i] ?? { tx: 0, ty: 0 };
+    below(s, m);
+    const c = tileCentre(m);
+    s.player.aimX = c.x;
+    s.player.aimY = c.y;
+    Object.assign(s.link.entrances[i] ?? {}, { ammoId: 'arrow', count: 5 });
     return s;
   },
   diagram: () => {
