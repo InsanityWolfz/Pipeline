@@ -17,8 +17,8 @@ export const CHAMPIONS = {
   dropRolls: [2, 3] as const,
   /** Unidentified armor pieces it always drops, instead of the usual chance. */
   armor: 1,
-  /** A spawning pack's chance of holding one, by danger ring (ring 0 has no population). Later regions add theirs: Stonefall Hollows' ring 3, 1 in 4 (035). */
-  chanceByRing: { 1: 1 / 8, 2: 1 / 5, 3: 1 / 4 } as Readonly<Record<number, number>>,
+  /** A spawning pack's chance of holding one, by danger ring (ring 0 has no population). Later regions add theirs: Stonefall Hollows' ring 3, 1 in 4 (035); the Emberworks' ring 4, 1 in 4 (061). */
+  chanceByRing: { 1: 1 / 8, 2: 1 / 5, 3: 1 / 4, 4: 1 / 4 } as Readonly<Record<number, number>>,
   /** The soft glow round its body: palette colour, radius px at 1× (scaled with it), a slow pulse between two alphas. */
   glow: { color: 'gold-trim', radius: 22, pulseMs: 1800, alpha: [0.3, 0.55] as const },
   /** The dev hook's champion pack (`spawnChampionPack`): its first member this many tiles right of the player, the rest `gap` tiles apart. */
@@ -34,5 +34,11 @@ export const CHAMPIONS = {
     burrower: ['Gritmaw', 'Delvetooth', 'Shalebore', 'Siltgnaw', 'Quakejaw'],
     shardback: ['Glintwall', 'Shardhide', 'Runeplate', 'Slabguard', 'Prismback'],
     sniper: ['Longsight', 'Coldlens', 'Farglint', 'Stillaim', 'Pinpoint'],
+    // 061: the Emberworks' (a whelp is never one, but has names so every non-boss does).
+    'cinder-mote': ['Emberwick', 'Sootspark', 'Cinderling', 'Ashflare', 'Slagglow'],
+    'bellows-hound': ['Gustfang', 'Sootmaw', 'Ashrunner', 'Bellowjaw', 'Cinderpaw'],
+    'slag-golem': ['Clinkerback', 'Dross', 'Crustheart', 'Slagmaw', 'Magmafist'],
+    'slag-whelp': ['Dribble', 'Clinker', 'Sputter'],
+    'kiln-tender': ['Hearthkeep', 'Kindlewarden', 'Firemend', 'Brickbelly', 'Stokewell'],
   } as Readonly<Record<string, readonly string[]>>,
 } as const;

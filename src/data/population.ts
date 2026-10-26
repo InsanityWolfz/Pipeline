@@ -13,8 +13,8 @@ export interface PackDef {
   limits?: Readonly<Record<string, number>>;
 }
 
-/** The rings that keep a population: ring 0 stays calm; ring 3 is Stonefall Hollows (034); ring 4, the Emberworks (060), has no packs until 061. */
-export type PopulatedRing = 1 | 2 | 3;
+/** The rings that keep a population: ring 0 stays calm; ring 3 is Stonefall Hollows (034); ring 4, the Emberworks (060, 061). */
+export type PopulatedRing = 1 | 2 | 3 | 4;
 
 /**
  * 053: the round world is about twice the old map's area, and the pack counts grew with it (4, 8, 6 before): rings 1
@@ -28,6 +28,8 @@ export const POPULATION = {
     2: { packs: 12, size: [4, 5], enemies: ['husk', 'husk', 'wisp'] },
     // Stonefall Hollows (035): its four, at most one Sniper and two Burrowers to a pack.
     3: { packs: 12, size: [4, 5], enemies: ['shardback', 'charger', 'charger', 'burrower', 'sniper'], limits: { sniper: 1, burrower: 2 } },
+    // The Emberworks (061): its four (a golem's whelps rise from it, never spawn), at most one tender and two golems to a pack.
+    4: { packs: 12, size: [4, 5], enemies: ['cinder-mote', 'cinder-mote', 'bellows-hound', 'bellows-hound', 'slag-golem', 'kiln-tender'], limits: { 'kiln-tender': 1, 'slag-golem': 2 } },
   } satisfies Record<PopulatedRing, PackDef>,
   /** A pack spawns at least this far from the player (1.5 half-screens; see the spec's open question on "1.5 screens"). */
   spawnDistance: 480,

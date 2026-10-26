@@ -1,3 +1,4 @@
+import type { PoolShape } from './floodPools';
 import { arenaOf } from '../data/arenas';
 import { OVERWORLD_ROOM } from '../data/overworld';
 import { WORLD } from './world';
@@ -46,8 +47,8 @@ export interface HollowsSummary {
     plated: boolean;
     bellows: { health: number; patch: number }[];
   }[];
-  /** 060: the Forge Flood's pools: whose, the rect they cover (px), and ticks left. */
-  floodPools: { owner: number; room: string; x0: number; y0: number; x1: number; y1: number; ticks: number }[];
+  /** 060: the Forge Flood's pools, and 061's round hazards: whose, the shape, its rect or segment (px) and radius, each beat's damage, and ticks left. */
+  floodPools: { owner: number; room: string; shape: PoolShape; x0: number; y0: number; x1: number; y1: number; r: number; damage: number; ticks: number }[];
   /** Enemy bombs on the ground: where, their ring's radius, the fuse burnt and its length, and how far the inner circle has grown (0..1). */
   enemyBombs: { id: number; room: string; x: number; y: number; from: { x: number; y: number }; radius: number; fuse: number; fuseTicks: number; progress: number; rollProof: boolean }[];
   /** Region bosses killed at least once, in order. */
@@ -89,7 +90,7 @@ export function hollowsSummary(state: SimState): HollowsSummary {
         plated: plated(e),
         bellows: e.bellows.map((b) => ({ health: b.health, patch: b.patch })),
       })),
-    floodPools: state.floodPools.map((p) => ({ owner: p.ownerId, room: p.roomId, x0: p.x0, y0: p.y0, x1: p.x1, y1: p.y1, ticks: p.ticks })),
+    floodPools: state.floodPools.map((p) => ({ owner: p.ownerId, room: p.roomId, shape: p.shape, x0: p.x0, y0: p.y0, x1: p.x1, y1: p.y1, r: p.r, damage: p.damage, ticks: p.ticks })),
     enemyBombs: state.enemyBombs.map((b) => ({ id: b.id, room: b.roomId, x: round(b.x), y: round(b.y), from: { x: round(b.fromX), y: round(b.fromY) }, radius: b.radius, fuse: b.fuse, fuseTicks: b.fuseTicks, progress: round(fuseProgress(b)), rollProof: b.rollProof })),
     bossDefeats: [...state.bossDefeats],
     arenas: ARENAS.map((a) => {

@@ -94,7 +94,7 @@ describe('waking and leaving', () => {
     run(s, 1);
     f.health = 1000;
     f.heat = 80;
-    s.floodPools.push({ ownerId: f.id, enemyId: f.enemyId, roomId: f.roomId, x0: 0, y0: 0, x1: 1, y1: 1, age: 0, ticks: 100 });
+    s.floodPools.push({ ownerId: f.id, enemyId: f.enemyId, roomId: f.roomId, shape: 'rect', x0: 0, y0: 0, x1: 1, y1: 1, r: 0, damage: FORGE.flood.damage, everyTicks: FORGE.flood.everyTicks, age: 0, ticks: 100 });
     const door = ANVIL_ARENA.door.tiles[2] ?? ANVIL_ARENA.door.enterTo;
     movePlayer(s, tileCentre(door).x, tileCentre(door).y - 32);
     run(s, 1, { interact: true });
