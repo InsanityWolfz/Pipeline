@@ -1,19 +1,17 @@
 import { expect, test, type Page } from '@playwright/test';
 import { VIEW_HEIGHT, VIEW_WIDTH } from '../../src/data/config';
 import { OBJECTIVES } from '../../src/data/objectives';
-import { TALENT_START, TALENTS } from '../../src/data/talents';
 import { OVERWORLD } from '../../src/data/overworld';
 import { boot, cameraSettled, quietScreen } from './helpers';
 
-// Review screenshots for 051 (REVIEW_SHOTS=1, into docs/review/051): an edge arrow, the arrow over a hopper with its
-// raw's icon, the bomb goal's sub-lines with icons, a glowing node, the fogged minimap, the foundry minimap and the
+// Review screenshots for 051 (REVIEW_SHOTS=1, into docs/review/051): an edge arrow, (until 067) the arrow over a hopper
+// with its raw's icon, the bomb goal's sub-lines with icons, a glowing node, the fogged minimap, the foundry minimap and the
 // right-click mouse icon beside the carried bar.
 
 const SHOTS = 'docs/review/051';
 const T = 32;
 const ui = (page: Page) => page.evaluate(() => window.__GAME__?.ui());
 const goal = (text: string): number => OBJECTIVES.findIndex((o) => o.text === text);
-const FIRST_TALENT = Object.values(TALENTS).find((t) => t.id !== TALENT_START && t.links.includes(TALENT_START))?.id ?? '';
 
 /** A clip of the view round a world point, view px either side. */
 async function clipAround(page: Page, x: number, y: number, w: number, h: number): Promise<{ x: number; y: number; width: number; height: number }> {
@@ -43,38 +41,8 @@ test.describe('review screenshots (051)', () => {
     await page.screenshot({ path: `${SHOTS}/01-edge-arrow.png` });
   });
 
-  test('02 the arrow over each hopper with its raw', async ({ page }) => {
-    test.setTimeout(120_000);
-    await boot(page, '?start=tutorial');
-    await page.evaluate(([n, talent]) => {
-      const g = window.__GAME__;
-      const h = window.__helpers;
-      if (!g || !h) throw new Error('no game');
-      h.walkTo((40.5 + h.ox) * 32, (34.5 + h.oy) * 32);
-      g.step(1, { interact: true });
-      for (const e of g.getState().enemies.filter((x) => x.group === 'field')) g.setEnemyHealth(e.id, 0);
-      g.step(2);
-      g.completeObjectives(n);
-      h.toFoundry();
-      g.step(400);
-      // Out in the field, the tube fires until the example line has sent up its last arrow (046).
-      h.toHall();
-      let x = g.step(1);
-      for (let t = 0; t < 20000 && !x.lineRanDry; t++) {
-        if (t % 60 === 0) g.setPlayerHealth(100);
-        x = g.step(1, { fire: true, aimX: x.player.x + 200, aimY: x.player.y });
-      }
-      h.toFoundry();
-      // 058: just below the hoppers, so their arrows clear the goal band, which sits higher in the foundry now.
-      h.walkTo(12.5 * 32, 6.5 * 32);
-      // 058: the field's XP brings the first talent point; its cut-in is answered so the refill goal shows.
-      g.step(1, { takeTalent: talent });
-    }, [goal('Refill the hoppers in the foundry with wood, stone and fiber (E)'), FIRST_TALENT] as const);
-    await quietScreen(page);
-    await cameraSettled(page);
-    await expect.poll(async () => (await ui(page))?.waypoint?.icons.length ?? 0, { timeout: 20_000 }).toBe(3);
-    await page.screenshot({ path: `${SHOTS}/02-hopper-arrows.png` });
-  });
+  // 02 (the arrow over each refill hopper with its raw) went with 067: the refill goal and the example line's hoppers
+  // are gone, so docs/review/051/02-hopper-arrows.png stays as it was taken and can't be retaken.
 
   test('03 the bomb goal with its sub-lines', async ({ page }) => {
     await boot(page, '?start=tutorial');
@@ -87,7 +55,7 @@ test.describe('review screenshots (051)', () => {
       g.drop('stone', g.getState().player.x + 4, g.getState().player.y);
       h.collect();
       g.step(2);
-    }, goal('Craft bombs and ley bolts (C)'));
+    }, goal('Craft bombs (C)'));
     await quietScreen(page);
     await expect.poll(async () => (await ui(page))?.objective.subSteps.some((s) => s.done)).toBe(true);
     await page.screenshot({ path: `${SHOTS}/03-sub-steps.png` });
@@ -148,6 +116,8 @@ test.describe('review screenshots (051)', () => {
       h.walkTo((40.5 + h.ox) * 32, (34.5 + h.oy) * 32);
       g.step(1, { interact: true });
       for (const e of g.getState().enemies.filter((x) => x.group === 'field')) g.setEnemyHealth(e.id, 0);
+      // 067: the shrine's claim opens the foundry's stairs.
+      g.claim('shrine');
       g.step(2);
       h.toFoundry();
       g.step(400);

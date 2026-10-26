@@ -160,7 +160,7 @@ function removeDeadOnce(state: SimState): void {
       continue;
     }
     const def = enemyDef(e.enemyId);
-    state.events.deaths.push({ id: e.id, enemyId: e.enemyId, x: e.x, y: e.y, facing: e.facing, ...(e.champion ? { champion: true as const } : {}) });
+    state.events.deaths.push({ id: e.id, enemyId: e.enemyId, group: e.group, x: e.x, y: e.y, facing: e.facing, ...(e.champion ? { champion: true as const } : {}) });
     // A whelp (061) drops nothing at all.
     if (!def.noLoot) spawnDrops(state, def, e.x, e.y, e.roomId, e.champion !== null);
     // Any kill gives XP (037): by ammo, burst or punch. Before the boss's own record, which drops a summoned boss.

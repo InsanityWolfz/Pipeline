@@ -3,7 +3,7 @@ import { GROTTO_GROUP } from '../../src/data/grotto';
 import { OBJECTIVES } from '../../src/data/objectives';
 import { boot, cameraSettled, quietScreen } from './helpers';
 import { centre, screenPoint, step, toggleBuild } from './foundryPage';
-import { craftLeyByHand, goalTo, newGameInFoundry } from './guidedPage';
+import { buildArrowLine, craftLeyByHand, goalTo, newGameInFoundry } from './guidedPage';
 
 // Review screenshots for 058 (REVIEW_SHOTS=1, into docs/review/058): the bench screen's arrows, the ley line's ghosts
 // with the build bar's arrow, the frost step's remove arrow, frost rune ghost and underground ghosts, the goal panel
@@ -70,7 +70,8 @@ test.describe('review screenshots (058)', () => {
   test('03 the ley line on its ghosts, with the build bar pointing at the next piece', async ({ page }) => {
     test.setTimeout(120_000);
     await newGameInFoundry(page);
-    await page.evaluate(() => window.__GAME__?.claim('shrine'));
+    // 067: the first arrow line stands before the ley line.
+    await buildArrowLine(page);
     await craftLeyByHand(page);
     await goalTo(page, 'Put ley bolts into the second entrance (B)');
     await buildUntil(page, 23);
@@ -84,11 +85,9 @@ test.describe('review screenshots (058)', () => {
   test('04 the frost step: the remove arrow, the frost rune ghost, and the underground ghosts', async ({ page }) => {
     test.setTimeout(150_000);
     await newGameInFoundry(page);
-    await page.evaluate((grotto) => {
-      const g = window.__GAME__;
-      g?.claim('shrine');
-      g?.claim(grotto);
-    }, GROTTO_GROUP);
+    await page.evaluate((grotto) => window.__GAME__?.claim(grotto), GROTTO_GROUP);
+    // 067: the first arrow line stands before the ley line; the frost step takes its conduit out of the assembler.
+    await buildArrowLine(page);
     await craftLeyByHand(page);
     await goalTo(page, 'Put ley bolts into the second entrance (B)');
     await buildUntil(page, 0);
@@ -109,15 +108,16 @@ test.describe('review screenshots (058)', () => {
     await expect.poll(async () => (await ui(page))?.guided.remove?.text).toBe('Right click to remove');
     await page.screenshot({ path: `${SHOTS}/04-remove-arrow.png` });
 
-    await buildUntil(page, 20);
+    await buildUntil(page, 24);
     await toggleBuild(page);
     await expect.poll(async () => (await ui(page))?.buildBar?.guide.arrow?.pieceId).toBe('frost-rune');
     await page.mouse.move(0, 0);
     await page.screenshot({ path: `${SHOTS}/05-frost-rune-ghost.png` });
 
-    await buildUntil(page, 17);
+    // 067: the rimestone line runs east along row 12 and up column 14, under the ley line at (14,10).
+    await buildUntil(page, 10);
     await toggleBuild(page);
-    await standAt(page, 7, 9);
+    await standAt(page, 17, 9);
     await toggleBuild(page);
     await expect.poll(async () => (await ui(page))?.buildBar?.guide.arrow?.pieceId).toBe('underground-entrance');
     await page.mouse.move(0, 0);
@@ -145,11 +145,13 @@ test.describe('review screenshots (058)', () => {
     await boot(page, '?start=tutorial');
     await page.evaluate(() => window.__GAME__?.step(1));
     await page.waitForTimeout(300);
+    // 067: the bomb and ley bolt rows show once stone, resin and ley crystal are carried.
     await page.evaluate(() => {
       const g = window.__GAME__;
       if (!g) throw new Error('no game');
-      for (const e of g.getState().enemies.filter((x) => x.group === 'field')) g.setEnemyHealth(e.id, 0);
-      g.step(2);
+      const p = g.getState().player;
+      for (const raw of ['stone', 'husk-resin', 'ley-crystal']) g.drop(raw, p.x, p.y);
+      g.step(30);
     });
     await expect.poll(async () => (await ui(page))?.banners.some((b) => b.kind === 'unlock')).toBe(true);
     // Held at full strength.

@@ -2,6 +2,21 @@
 
 Newest entry first. Entries before 050 are in docs/progress-archive.md.
 
+## 2026-10-26: 067 The foundry after the first boss
+**Changed:** on `claude/067-foundry-after-shrine` (InsanityWolfz/Pipeline#81), from Shaun's playtest calls (docs/brainstorm/2026-10-26-playtest-calls.md; plan docs/plans/067-foundry-after-shrine.md, four slices):
+- arrows, bombs and ley bolts are hand-crafted from the start, with no attunement; each row shows once its raws have been carried;
+- the opening runs gather, hand-craft, clear the ruin field, beat the Warden, claim the shrine; the foundry's stairs stay sealed ("Claim the shrine first") until the claim;
+- the tube attunes on the first foundry entry after it, and the first arrow line is built on ghosts fed from the supply ports into the middle entrance; then 058's tutorial runs on, with the frost line moved to the rune's right side (067.3);
+- the pre-built example line and the refill goal are gone; docs/prototype.md's player flow is in the new order.
+
+`SAVE_VERSION` 20. Reviewed: one blocking finding fixed (the "Clear the ruin field" goal could never complete on `?playtest`, `?start=field` or `?start=hollows`), plus the dead `gate` objective kind removed and the bomb rows' raws read from one list. `npm run check` 2491 tests; CI green. Raised for Shaun: 067.1–067.16 (067.16 asks whether anything should bank before the claim).
+
+**Next:** Shaun's playtest (a New game for the opening, `?playtest` for the rest); his OK on 067.1–067.16; "merge 81".
+
+**Notes:**
+- `src/sim/events.ts` sits at 302 lines; split it the next time it grows.
+- 058's and 051's older review shots that show the example line can't be retaken (067.13).
+
 ## 2026-10-26: 063 Blueprints and area pick-up
 **Changed:** on `claude/063-blueprints` (InsanityWolfz/Pipeline#74), from Shaun's blueprints interview (docs/brainstorm/2026-10-26-blueprints-interview.md; plan docs/plans/063-blueprints.md):
 - the Area tool (X, a Tools group on the build bar): drag a box over whole pieces (never fixtures), then Pick up (contents to the stash), Save blueprint, or both;

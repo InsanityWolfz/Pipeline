@@ -10,18 +10,19 @@ It must prove one thing: **"I did it by hand, now it does itself" feels great**,
 
 ## Player flow
 
-Each beat introduces exactly one new idea.
+Each beat introduces exactly one new idea. Beats 4–9 run in a new order: the ammo by hand, the ruin field, the Warden and the shrine's claim all come before the foundry. (Changed 2026-10-26, Shaun, spec 067.)
 
 1. **Wake and find the tube.** The player wakes in a clearing near ruins and finds the tube, dormant. It can only fire ammo they hand-load.
 2. **Gather and hand-craft.** On the path they pick up wood, stone, fiber and a little ley crystal, and hand-craft a few rounds from a simple crafting menu.
 3. **First fight.** Weak enemies teach movement, dodging and firing hand-loaded ammo. They drop raw materials and one piece of unidentified armor.
-4. **Uncover the foundry.** Stepping inside, the tube attunes to the player and links to the foundry.
-5. **Try the beginner ammo.** Recipes for three beginner ammo types appear. The player hand-crafts a small batch of each and tries them on nearby enemies.
-6. **Commit the first supply slot.** They pick a favorite and build its line. Crafting each part by hand unlocked the machines. Now the tube fires straight from the factory.
-7. **Identify armor.** The armor from the first fight is identified at the foundry and equipped.
-8. **Clear and claim.** A nearby site is guarded by a tougher pack and an elite. Clearing it and reactivating the pylon claims it as a supply line, adds a deposit point, and unlocks fast travel.
-9. **Build a spread.** Back home, materials are flowing. The elite's core restores one of the intake's capped side entrances, and feeding a second entrance turns their ammo into a spread. (Changed from the gravity stager on 2026-10-18, spec 024; one entrance per core on 2026-10-19, spec 033.)
-10. **Head back out.** The line keeps running while they explore. A death here sends them home and drops their haul, which tests the death rule. Coming back to a running factory ends the prototype.
+4. **Try the beginner ammo.** Recipes for the three beginner ammo types show as their raws are carried. The player hand-crafts arrows, bombs and ley bolts and tries them on nearby enemies.
+5. **Clear the ruin field.** The ruin field's pack falls to hand-made rounds. From then on the land fills with packs.
+6. **Beat the Warden and claim the shrine.** The Pylon Warden guards the shrine. Beating him and reactivating its pylon claims it as a supply line, adds a deposit point, unlocks fast travel, and opens the foundry's door.
+7. **Uncover the foundry.** Stepping inside, the tube attunes to the player and links to the foundry.
+8. **Commit the first supply slot.** They build their first line, arrows, on glowing ghosts, fed from the supply ports the shrine's pylon now fills. Crafting each part by hand unlocked the machines. Now the tube fires straight from the factory.
+9. **Identify armor.** The armor from the first fight is identified at the foundry and equipped.
+10. **Build a spread.** Back home, materials are flowing. The Warden's core restores one of the intake's capped side entrances, and feeding a second entrance turns their ammo into a spread. (Changed from the gravity stager on 2026-10-18, spec 024; one entrance per core on 2026-10-19, spec 033.)
+11. **Head back out.** The line keeps running while they explore. A death here sends them home and drops their haul, which tests the death rule. Coming back to a running factory ends the prototype.
 
 ## Camera and art
 

@@ -25,7 +25,7 @@ function v2(edit: (state: Record<string, unknown>) => void): string {
 }
 
 describe('version 2 → 3 (046)', () => {
-  it('is no longer the current version (047: 4, then 5 for 047.9, 6 for 049, 7 for 050, 8 for 051, 9 for 052, 10 for 053, 11 for 055, 12 for 058, 13 for 060, 14 for 061, 15 for 063, 16 for 062 (a machine stall counter), 17 for 064, 18 for 065, 19 for 063 merged onto main, 21 for 068 (20 is another branch’s), with no migration)', () => {
+  it('is no longer the current version (047: 4, then 5 for 047.9, 6 for 049, 7 for 050, 8 for 051, 9 for 052, 10 for 053, 11 for 055, 12 for 058, 13 for 060, 14 for 061, 15 for 063, 16 for 062 (a machine stall counter), 17 for 064, 18 for 065, 19 for 063 merged onto main, 20 for 067, 21 for 068, with no migration)', () => {
     expect(SAVE_VERSION).toBe(21);
     expect(SAVE_MIGRATIONS[3]).toBeUndefined();
   });
@@ -64,20 +64,22 @@ describe('version 2 → 3 objectives (046)', () => {
     });
 
   it("maps the done goals by text: 027's steps drop out, the rest keep their state", () => {
-    // Done in version 2: the tube (0), entering the foundry (4), filling the tube (13) and claiming the shrine (15).
-    const read = readSave(v2Done([0, 4, 13, 15]), V3);
+    // Done in version 2: the tube (0), entering the foundry (4), a build step (8), filling the tube (13), identifying
+    // (14) and claiming the shrine (15).
+    const read = readSave(v2Done([0, 4, 8, 13, 14, 15]), V3);
     if (read.status !== 'ok') throw new Error(read.reason);
     const done = OBJECTIVES.filter((_, i) => read.state.objectives[i]).map((o) => o.text);
     expect(read.state.objectives).toHaveLength(OBJECTIVES.length);
-    // 058 dropped "Fill the tube from your line" (now "Wait for the tube to fill with arrows").
-    expect(done).toEqual(['Pick up the tube (E)', 'Enter the foundry', "Claim the shrine's pylon"]);
+    // 058 dropped "Fill the tube from your line" (now "Wait for the tube to fill with arrows"); 067 dropped "Enter the
+    // foundry" and reworded the shrine's goal ("Claim the shrine's pylon (E)").
+    expect(done).toEqual(['Pick up the tube (E)', 'Identify your armor at the bench (E)']);
   });
 
-  it('counts the refill goal done where a hopper was filled (027 step 2); 058 dropped the second-line goal', () => {
+  it('maps a filled hopper (027 step 2) to nothing now 067 dropped the refill goal; 058 dropped the second-line goal', () => {
     const read = readSave(v2Done([7, 17]), V3);
     if (read.status !== 'ok') throw new Error(read.reason);
     const done = OBJECTIVES.filter((_, i) => read.state.objectives[i]).map((o) => o.text);
-    expect(done).toEqual(['Refill the hoppers in the foundry with wood, stone and fiber (E)']);
+    expect(done).toEqual([]);
   });
 
   it('never gives a save from before 046 the example line (046.1), even on its first foundry entry', () => {
@@ -89,13 +91,10 @@ describe('version 2 → 3 objectives (046)', () => {
     const read = readSave(text, V3);
     if (read.status !== 'ok') throw new Error(read.reason);
     const s = read.state;
-    expect(s.start.exampleLine).toBeUndefined();
+    // 067: no start has the example line any more; the old flag, read from an old save, lays nothing.
     s.roomId = FOUNDRY_ROOM;
     stepSim(s);
     expect(s.link.attuned).toBe(true);
     expect(s.foundry.pieces).toEqual([]);
-    // No hoppers to refill: the refill goal counts as done rather than asking for them (046.8).
-    const refill = OBJECTIVES.findIndex((o) => o.check.kind === 'refilled');
-    expect(s.objectives[refill]).toBe(true);
   });
 });

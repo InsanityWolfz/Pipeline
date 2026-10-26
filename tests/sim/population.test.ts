@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { TUTORIAL_START } from '../../src/data/player';
 import { TILE_SIZE } from '../../src/data/config';
 import { OVERWORLD, ringOf } from '../../src/data/overworld';
 import { POPULATION, SAFE_RADIUS } from '../../src/data/population';
@@ -27,14 +28,17 @@ function populated(): SimState {
 }
 
 describe('the living population', () => {
-  it('is out only once the first line fills the tube', () => {
-    const s = createSim(SEED);
+  it('is out only once the ruin field is cleared (067: no longer the first full line)', () => {
+    const s = createSim(SEED, { start: TUTORIAL_START });
     run(s, 120);
     expect(pop(s)).toEqual([]);
     expect(summarize(s).populated).toBe(false);
     Object.assign(s.link.entrances[1] ?? {}, { ammoId: 'arrow', count: ENTRANCE_CAPS[0] });
     run(s, 1);
-    expect(s.populated).toBe(true);
+    expect(s.populated).toBe(false);
+    for (const e of s.enemies) if (e.group === 'field') e.health = 0;
+    run(s, 1);
+    expect(summarize(s)).toMatchObject({ fieldCleared: true, populated: true });
     run(s, 1);
     expect(packs(s).size).toBe(TARGET);
   });
