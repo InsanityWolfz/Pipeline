@@ -44,11 +44,12 @@ export function parseSettings(raw: string | null): Settings | null {
       }
     }
   }
-  // An action newer than the stored file (044: the sandbox panel's; 063: the Area tool's) whose default key the player
+  // An action newer than the stored file (044: the sandbox panel's; 063: the Area tool's; 069: the pipette's) whose default key the player
   // has since bound to something else is left with no key, rather than the clash resetting every binding.
   for (const a of NEWER_ACTIONS) if (!stored.has(a) && BIND_ACTIONS.some((o) => o !== a && stored.has(o) && bindings[o] === bindings[a])) bindings[a] = '';
-  // Two actions on one key (a hand-edited file) fall back to the defaults.
-  const keys = Object.values(bindings);
+  // Two actions on one key (a hand-edited file) fall back to the defaults. 069 (review): actions left with no key ('')
+  // don't clash with each other.
+  const keys = Object.values(bindings).filter((k) => k !== '');
   const clean = new Set(keys).size === keys.length;
   return {
     version: SETTINGS_VERSION,

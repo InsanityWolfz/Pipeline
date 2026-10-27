@@ -163,9 +163,11 @@ describe('content', () => {
 
   it('a stage: its generated line and the rounds it takes; its rule, cost and every round it gives', () => {
     const d = describeStage(player(), 'frost-rune');
-    expect(texts(d.summary)).toEqual(['Cold: added to any round', 'Takes: Arrow, Bomb, Cluster bomb, Ley bolt, Split ley bolt, Landmine']);
+    // 069: its recipe card leads (tests/render/recipeCard.test.ts); its generated line moves to the breakdown (069.3).
+    expect(texts(d.summary)).toEqual(['4 arrows + 1 rimestone → 4 frost arrows · 1.0 s', 'Takes: Arrow, Bomb, Cluster bomb, Ley bolt, Split ley bolt, Landmine']);
     const lines = texts(d.breakdown);
-    expect(lines[0]).toBe('Cold: Each hit adds 1 Chill.');
+    expect(lines[1]).toBe('Cold: added to any round');
+    expect(lines[2]).toBe('Cold: Each hit adds 1 Chill.');
     expect(lines).toContain('Cost: 1 rimestone per 4');
     expect(lines.at(-1)).toContain('Arrow → Frost arrow · Bomb → Frost bomb');
     expect(texts(describeStage(player('a3'), 'frost-rune').summary)).toContain('1 bonus · hold Shift');

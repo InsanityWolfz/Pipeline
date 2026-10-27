@@ -42,10 +42,7 @@ export const HUD_LAYOUT = {
     wellInset: 2,
     labelPad: 2,
     melee: 'Melee',
-    /**
-     * 070: the fist's label with the tube empty and a carried round ready for right click. `{key}` is the use key: RMB
-     * for right click (the default), else the bound key's name. A label wider than a unit widens the card to fit.
-     */
+    /** 070: the fist's label, tube empty with a carried round ready; `{key}` is the use key (RMB or the bound key). Widens the card. */
     tubeEmpty: 'Tube empty · {key} fires carried',
     mouseKey: 'RMB',
     /** 070: the widened card's well: its ring (palette id, alpha, px) and its fill, top to bottom. */

@@ -23,6 +23,9 @@ import { pieceDef } from '../data/pieces';
 import { FOUNDRY_ROOM } from '../data/rooms';
 import { fixtureAt, fixtureDef } from '../sim/fixtures';
 import { pieceAt } from '../sim/pieces';
+import { machineCard } from '../sim/recipeCard';
+import { machineSpeed } from '../sim/research';
+import { machineCardText } from './recipeText';
 import { intakeAnchor } from './foundryLayout';
 import { roomById, type SimState } from '../sim/state';
 
@@ -37,7 +40,7 @@ export interface HoverName {
   rise: number;
   /** A foundry piece's id, so render can sit the name above its sprite and readout. */
   pieceId?: number;
-  /** A line under the name saying where materials come from (018). */
+  /** A line under the name saying where materials come from (018); 069: a machine's recipe card. */
   description?: string;
   /** The foundry intake (019): render shows the reservoir's readout under the name. */
   intake?: boolean;
@@ -92,7 +95,9 @@ export function nameAt(sim: SimState, roomId: string, px: number, py: number): H
   const centre = (t: { tx: number; ty: number }) => ({ x: (t.tx + 0.5) * TILE_SIZE, y: (t.ty + 1) * TILE_SIZE });
   if (roomId === FOUNDRY_ROOM) {
     const piece = pieceAt(sim.foundry, tx, ty);
-    if (piece) return { name: pieceDef(piece.pieceId).name, ...centre(piece), rise: HOVER_NAME.tile.rise, pieceId: piece.id };
+    // 069: a machine's recipe card under its name (its numbers the sim's, at the machine speed now).
+    const card = piece?.kind === 'machine' ? { description: machineCardText(machineCard(piece, machineSpeed(sim))) } : {};
+    if (piece) return { name: pieceDef(piece.pieceId).name, ...centre(piece), rise: HOVER_NAME.tile.rise, pieceId: piece.id, ...card };
     // The intake's mouth (019), or the pipe rising above it up the wall shown over the top row.
     if (INTAKE.entrances.some((m) => m.tx === tx && ty <= m.ty)) {
       const at = intakeAnchor();

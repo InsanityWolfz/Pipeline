@@ -31,10 +31,14 @@ export function dragTo(held: HeldConduit, to: Tile): { lay: ConduitLay[]; held: 
   return { lay, held: current };
 }
 
-/** Release: the held tile runs straight on in the drag's last direction, or a click's ghost facing. */
-export function release(held: HeldConduit, ghostFacing: Facing): ConduitLay {
+/**
+ * Release: the held tile runs straight on in the drag's last direction, or a click's ghost facing; 069: a click with a
+ * pipetted conduit's `turn` in hand lays that turn (a drag's own side wins).
+ */
+export function release(held: HeldConduit, ghostFacing: Facing, turn?: Facing | null): ConduitLay {
   const facing = held.inFrom ? opposite(held.inFrom) : ghostFacing;
-  return { ...held.tile, facing, ...(held.inFrom ? { inFrom: held.inFrom } : {}) };
+  const inFrom = held.inFrom ?? turn ?? undefined;
+  return { ...held.tile, facing, ...(inFrom ? { inFrom } : {}) };
 }
 
 /**

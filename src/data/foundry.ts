@@ -29,6 +29,9 @@ export const HOPPER_TICKS = 15;
 /** 050 (A.12): a crate's slots, each holding one stack (047's stack sizes); its screen shows them in a row. */
 export const CRATE_SLOTS = 8;
 
+/** 069: a plain click on a hopper's screen moves this many in or out (all, if fewer); Shift half, Ctrl the stack. */
+export const HOPPER_CLICK = 10;
+
 /** Most items a hopper takes from a line (028); hand-filling is uncapped. */
 export const HOPPER_FLOW_CAP = 99;
 
@@ -80,3 +83,9 @@ export const SPREAD_STEP = 15;
  * than a tile, so a piece built in front of the mouth doesn't put it out of reach.
  */
 export const INTAKE_REACH = 40;
+
+/**
+ * 069: the intake's supply rate in is measured, not computed, so it shows real bottlenecks: the rounds each entrance
+ * took over the last `windowSeconds` whole seconds (it changes once a second), over that many seconds.
+ */
+export const INTAKE_RATE = { windowSeconds: 5 } as const;

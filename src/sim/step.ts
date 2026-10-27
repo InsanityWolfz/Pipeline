@@ -19,8 +19,10 @@ import { clearEvents } from './events';
 import { offerFromOutside, stepFoundry } from './flow';
 import { stepFoundryUse } from './foundryUse';
 import { stepStash } from './stash';
+import { purge } from './purge';
 import { stepHarvest } from './harvest';
 import { stepLink } from './link';
+import { stepIntakeRates } from './intakeRates';
 import { checkKo } from './health';
 import { stepHealing } from './healing';
 import { stepEnemies } from './enemyAi';
@@ -135,7 +137,11 @@ export function stepSim(state: SimState, input: Command = NO_COMMAND): void {
   stepBuild(state, cmd);
   stepFoundryUse(state, cmd);
   stepStash(state, cmd);
+  // 069: the purge menu's choice.
+  if (cmd.purge !== null) purge(state, cmd.purge);
   stepFoundry(state.foundry, state.link.entrances, state.events, state.link.attuned, { cap: entranceCap(state), speed: machineSpeed(state) });
+  // 069: the rounds the intake just took, into its rate window.
+  stepIntakeRates(state);
   stepPorts(state, (to, from, item) => offerFromOutside(state.foundry, to, from, item));
   stepPickups(state);
   // 050: in the foundry, the tick's gains (and crafts from the menu since the last tick) are safe at once.

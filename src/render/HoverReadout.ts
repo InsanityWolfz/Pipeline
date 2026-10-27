@@ -26,16 +26,20 @@ export class HoverReadout {
   /**
    * Shows `lines` with the panel's bottom-centre at (x, bottom); no lines hides it.
    * It never rises above `minTop` (the top of the camera's view), so it stays on screen.
-   * Returns the panel's top and bottom, so a name can sit clear of it.
+   * Returns the panel's top and bottom, so a name can sit clear of it (069: and its left and width, so it never covers it).
    */
-  show(lines: readonly Line[], x: number, bottom: number, minTop = -Infinity): { top: number; bottom: number } {
+  show(lines: readonly Line[], x: number, bottom: number, minTop = -Infinity): { top: number; bottom: number; left: number; width: number } {
     const L = READOUT_LAYOUT;
     this.back.clear();
+    // 069: the texts first, so the panel is as wide as its widest line (the intake's rates), never narrower than before.
+    lines.forEach((line, i) => this.counts[i]?.set(line[1]));
+    const textW = Math.max(0, ...lines.map((_l, i) => this.counts[i]?.width ?? 0));
+    const width = Math.max(L.width, Math.ceil(L.count.x + textW + 2 * L.pad));
     const h = lines.length * L.lineHeight + 2 * L.pad;
-    const left = Math.round(x - L.width / 2);
+    const left = Math.round(x - width / 2);
     const top = Math.round(Math.max(bottom - L.gap - h, minTop + L.pad));
     if (lines.length > 0) {
-      drawTablet(this.back, left, top, L.width, h);
+      drawTablet(this.back, left, top, width, h);
     }
     for (let i = 0; i < MAX_LINES; i++) {
       const line = lines[i];
@@ -48,8 +52,7 @@ export class HoverReadout {
       const y = top + L.pad + i * L.lineHeight;
       icon.setFrame(line[0]).setPosition(left + L.pad, y);
       text.moveTo(left + L.pad + L.count.x, y + L.count.y);
-      text.set(line[1]);
     }
-    return { top, bottom: top + h };
+    return { top, bottom: top + h, left, width };
   }
 }

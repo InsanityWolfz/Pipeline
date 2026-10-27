@@ -7,12 +7,14 @@ import { movePlayer, run } from './fight';
 import { foundry, put } from './foundryKit';
 
 // 022: a click moves one, Shift+click half (rounded up), Ctrl+click the whole stack,
-// both into a hopper and out of it.
+// both into a hopper and out of it. 069: a plain click on a hopper's screen moves ten (or all, if fewer): the `ten`
+// amount; `one` stays for the hook, crates and the stash.
 
 const COUNTS = [1, 2, 5, 30] as const;
-const AMOUNTS: readonly HopperAmount[] = ['one', 'half', 'all'];
+const AMOUNTS: readonly HopperAmount[] = ['one', 'ten', 'half', 'all'];
 const EXPECTED: Record<HopperAmount, Record<(typeof COUNTS)[number], number>> = {
   one: { 1: 1, 2: 1, 5: 1, 30: 1 },
+  ten: { 1: 1, 2: 2, 5: 5, 30: 10 },
   half: { 1: 1, 2: 1, 5: 3, 30: 15 },
   all: { 1: 1, 2: 2, 5: 5, 30: 30 },
 };
