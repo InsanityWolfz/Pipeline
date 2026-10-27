@@ -30,11 +30,11 @@ export function rollPose(r: number, view: WandererView, base: WandererPose): Ove
   const landing = r > RL.turnEnd ? r - RL.turnEnd : 0;
   const squash = landing > 0 ? RL.land * (1 - (landing - 1) / 1.5) : r <= RL.tuckEnd ? RL.tuck * tuck : view === 'side' ? RL.tuck : RL.tumble;
   // The feet pull up under the hips as it tucks.
-  const pulled = (x: number) => ({ x: x * (1 - tuck) + Math.sign(x || 1) * 2 * tuck, y: -7 * tuck, tilt: 0 });
+  const pulled = (x: number) => ({ x: x * (1 - tuck) + (Math.sign(x || 1) * 2 + 2) * tuck, y: -8 * tuck, tilt: 0 });
   const feet = { far: pulled(base.feet.far.x), near: pulled(base.feet.near.x) };
   const common: Overlay = { tuck, crouch: RL.crouch * tuck, squash, feet, kick: 0, flash: null, shimmer: base.shimmer, jab: 0 };
   if (view === 'side') {
-    return { ...common, lean: 0.5 * tuck, turn: TAU * turning, turnAt: RL.centre, cape: { trail: 0.4 * tuck, sway: 0, tail: 0.5 * Math.sin(Math.PI * turning) }, hoodTail: 0.6 * tuck };
+    return { ...common, lean: RL.curl * tuck, turn: TAU * turning, turnAt: RL.centre, cape: { trail: 0.15 * tuck, sway: 0, tail: 0.5 * Math.sin(Math.PI * turning) }, hoodTail: 0.6 * tuck };
   }
   const wobble = RL.wobble * Math.sin(TAU * turning) * tuck;
   return {

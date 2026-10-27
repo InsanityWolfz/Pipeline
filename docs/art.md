@@ -15,14 +15,28 @@ Since 016 the game is drawn in **clean vector art**, chosen by Shaun from a thre
 - **Theme rule:** lost magical civilization. Rune-carved stone, glowing ley lines, brass and crystal. Nothing modern.
 
 ## The wanderer
-The player is a hooded wanderer of the lost civilization:
-- a rust cloak with a gold-trimmed hem over a pale robe
-- a shoulder mantle with a gold clasp, a belt with a ley buckle
-- no face: a cyan glow in the hood, in the tube's colours, that pulses and flares on each shot
-- leather gloves and boots
-- the tube held like a minigun, its ringed cyan hose running round the hip into a brass tank on the back
+Since 075 the player is the **arcane ranger**: an agile, light-armoured scout of the lost civilization with ley-etched gear. About 42 px tall (side and front: 40–44 world px from the soles to the hood's tip), drawn in the 72×68 box with the feet at (36, 52), at scale 0.66 from style px. Light from the top left; every part has the ink outline; big shapes take a soft gradient from their light colour (top left) to their dark (bottom right) and a rim light.
+- **Hood:** a close, pointed scout's hood whose tip sweeps back into a short tail that flicks with motion. A deep `hood-dark` hollow holds the faceless cyan glow (it pulses, and flares on each shot). A thin cyan ley seam runs up the crown. The opening's edge carries the rarity trim. A short cowl covers the shoulders, its clasp gem at the throat in the trim's colour.
+- **Cape:** to the back of the knees, so the legs read; its hem cut into two pointed tails (the near one longer), carrying the trim.
+- **Jerkin:** fitted leather in quilted panels to mid-thigh, a split skirt (front and back flaps that swing with the thighs), cyan rune lines on the chest panels and the skirt's edge. Bone (`robe`) sleeves show at the shoulders.
+- **Arms:** slim; leather bracers with an etched cyan line and a brass rivet; fingerless gloves.
+- **Ranger cues:** a rune bandolier from the far shoulder to the near hip with four brass-capped ley vials; a hip quiver of three carved rune stakes, tips up and back (side and back views); a belt with the ley buckle, a pouch, and a brass clip for the hose.
+- **Legs:** two segments (thigh and shin, bent by two-bone IK), slim dark breeches with a wrap below the knee, soft ranger boots to mid-calf with a folded cuff and a pointed toe.
+- **Tank, hose and tube:** the brass tank with its cyan window and rising bubble rides high between the shoulder blades over the cape, in a leather harness, and bounces in it. The ringed hose leaves its outlet, passes the belt's clip and enters the tube's rear. The tube keeps 016's silhouette (brass housing, cyan barrel, four rings that light in order as it attunes, the muzzle), gains three etched flutes that roll as it spins and a leather sling to the near shoulder, and is held at the hip like a minigun. Before attuning, the barrel, rings, hose and window are dormant grey-cyan.
+- **Theme:** cloth, leather, brass, carved stakes and ley glass only.
 
-Before the tube attunes, the barrel, rings, hose and tank window are dormant grey-cyan; attuning lights the rings one by one.
+**Colour schemes** (`WANDERER_SCHEMES`, the default in `WANDERER_SCHEME`): a scheme sets the cloth (hood, cowl, cape) and the jerkin, each a dark, mid and light id; everything else is fixed. A, **Ley cobalt** (the default): `cobalt-dark`, `cobalt`, `cobalt-light` with a `leather`, `hide`, `hide-light` jerkin. B, **Ember rust**: `rust-dark`, `rust`, `rust-light`, the same jerkin. C, **Pale bone**: `bone-dark`, `bone`, `bone-light` with a `leather-dark`, `leather`, `strap` jerkin. `?scheme=cobalt|rust|bone` swaps it at boot in render only (a bad value is the default); the title's wanderer uses it too.
+
+**Rarity trim** (`WANDERER_TRIM`): the hem, the hood's edge and the clasp show the rarity of the best gear piece worn over all four slots, which the sim decides (`wornRarity`, by `RARITY_ORDER`) and render only reads. Nothing worn: the cloth's light id, no glow. Common `rock-light`; fine `cyan` with a cyan glow; rare `gold-trim` with a gold glow and a slow pulse (0.8 to 1, 2 s); relic `wisp-light` with a wisp glow, the pulse, and a white shimmer running along the hem once a second (the bench's rarity frame colours, 036). Armour never tints the body; the hit flash is unchanged.
+
+**Animation** (`wandererMotion`, a pure function from clocks to a pose; numbers in `WANDERER_MOTION`): snappy and exaggerated, with squash and stretch about the feet (keeping the area) and anticipation folded into each action's opening frames, never delaying the sim.
+- **Run:** keyed to distance (0.32 rad a world px), feet planted through the stance, the swing kicking back and lifting with the knee bent; the body bobs lowest just after each contact, squashing there and stretching at passing; the side view leans in. The cape trails with speed (to 0.35 rad) and flaps, its tails and the hood's tail a quarter cycle behind; the tank bounces a quarter of the bob behind the body. Firing while moving is a braced strafe at half the stride and bob, stepping twice as often so the feet still don't slide. A stride ends with one settle.
+- **Firing:** a quick dip, then the brace (wider stance, crouch, lean back) with an overshoot; each shot kicks the tube back, shoves the shoulders and squashes the body, recovering over 6 frames through a small stretch; the barrel's flutes spin up over 15 frames and down over 30; a 3-frame muzzle flash (star, smaller star turned 45°, fading ring; odd and even shots alternate its angle); a bright pulse runs down the hose from the tank to the tube in 150 ms, the window flaring as it leaves.
+- **Roll:** tuck, a full forward somersault side on (a tucked tumble facing down or up), land; the smear stays. **Hit:** snaps back and squashes on its first frame, the cape and hood tail flicking forward, the glow dipping, then recovers with an overshoot over the 8 pose ticks. **KO:** always side on: staggers back, buckles to a kneel, topples to lie flat by tick 36 (the tube dropping beside it), and the glow gutters out by 48; it fades over the last third.
+- **Idle:** a breath every 2.4 s, the cape and hood tail swaying.
+- No screen shake comes from the player (`SHAKE_ON` stays false).
+
+**Drawing:** the rig (`src/render/vector/wandererRig.ts`) poses it every frame into its canvas texture. Its parts are baked once into small bitmaps at the drawing's scale the first time each is drawn (per scheme, trim and view) and stamped each frame; the limbs, hose, tube and effects are drawn live. The contact sheet shows every pose and strip, per view, from `sheetSections`.
 
 ## Palette
 Every colour comes from the palette, by id. The source of truth is `src/data/palette.ts`; this table mirrors it, and tests check that they match. (The pixel palette went with the pixel sprites in 020.)
@@ -133,9 +147,10 @@ Every colour comes from the palette, by id. The source of truth is `src/data/pal
 
 ## Vector sprites
 - **Shape data** lives in `src/data/art/`: ellipses, rounded rects, paths (written as short SVG-style strings, `M`, `L`, `Q`, `C`, `Z`) and round-capped lines, with fills (flat, linear or radial gradients), strokes, the outline flag, glows and opacity. Units are world px around an anchor.
+- **Rim light** (075): an optional `rim: { color, width, offset }` on a shape. Render clips to the shape and strokes its own path shifted down and right by `offset`, so a band of `color` shows along its top and left edges only: the static top-left light. The wanderer uses `rim-light` at 0.55 alpha, 1.2 wide, 1.2 offset, on its hood, cowl, cape, jerkin and tank; 076 can use it for enemies.
 - **Static and frame-by-frame sprites** (projectiles, effects, the tube stone) are `VectorSprite`s in `src/data/art/sprites.ts`: a key, a box, an anchor and one shape list per frame. Frame names are `key`, or `key/0`, `key/1` and so on for animation frames.
 - **Rigs** are characters made of named parts with pivots:
-  - The wanderer (`wanderer.ts`) has parts for the side, down and up views and a draw order with dynamic pieces (legs, arms, hose, tube, tank window, face glow). `src/render/vector/wandererRig.ts` poses it from sim state every frame: the stance widens, the hips crouch and lean back, each shot shoves and kicks, the cloak flaps.
+  - The wanderer (`wanderer.ts`, its views in `wandererSide.ts`, `wandererFront.ts` and `wandererBack.ts`) has parts for the side, down and up views, joints its swinging parts hang on, and a draw order with dynamic pieces (legs, arms, hose, tube, tank window, face glow, the trim's shimmer, the muzzle flash). `src/render/vector/wandererRig.ts` draws the pose `wandererMotion` makes from sim state every frame (see "The wanderer").
   - Enemies (`husk.ts`, `wisp.ts`, `warden.ts`) are parts by role (legs, body, head, arms, glow, charge) with a pose table per animation, one pose per frame. They are baked at boot into the frames `src/data/assets.ts` names, such as `husk-walk-side/2`.
 - **World pieces with state:**
   - Gathering nodes (018, `nodes.ts`) have a look per use left, bare remains, and regrow stages, picked from the sim's timer.

@@ -74,9 +74,9 @@ export function drawWanderer(c: CanvasRenderingContext2D, pose: WandererPose, px
   const tankParts = new Set(def.tankParts);
 
   // The tube, rigid in the feet's frame: held at the hip (tucked in to the chest for a roll), or lying where it dropped.
-  const tuckAim = pose.view === 'side' ? -1 : pose.aim;
+  const tuckAim = pose.view === 'side' ? -1.6 : pose.aim;
   const aim = pose.aim + (tuckAim - pose.aim) * pose.tuck;
-  const slide = pose.kick - pose.jab * WANDERER.rig.jab.thrust + 5 * pose.tuck;
+  const slide = pose.kick - pose.jab * WANDERER.rig.jab.thrust + 7 * pose.tuck;
   const heldAt = apply(torso, [def.gunPivot[0] + Math.cos(aim) * -slide, def.gunPivot[1] + Math.sin(aim) * -slide]);
   const heldAngle = angleOf(torso) + aim;
   const K = WANDERER_MOTION.ko;

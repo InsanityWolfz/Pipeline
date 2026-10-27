@@ -62,9 +62,10 @@ export const WANDERER_MOTION = {
     tumble: 0.25,
     wobble: 0.3,
     land: 0.1,
-    crouch: 9,
-    /** The somersault turns about this height above the feet. */
-    centre: 18,
+    crouch: 10,
+    /** Side on, the body curls this far forward over the tucked legs, and the somersault turns about this height above the feet. */
+    curl: 0.9,
+    centre: 17,
   },
   hit: {
     /** The first frame snaps back this far (away from the aim) and squashes, then recovers with an overshoot over `frames`. */
