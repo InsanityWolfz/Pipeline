@@ -1,6 +1,6 @@
 # Backlog
 
-Build order: combat first, then the foundry, then claiming. Statuses: idea, draft, approved, done.
+Build order: combat first, then the foundry, then claiming. Statuses: idea, draft, approved, done, dropped (closed unmerged).
 Only Shaun moves a spec to approved. Unattended runs only pick up approved items.
 
 | # | Item | Status |
@@ -74,6 +74,8 @@ Only Shaun moves a spec to approved. Unattended runs only pick up approved items
 | 067 | The foundry after the first boss: bombs and ley bolts hand-craftable from the start, the foundry sealed until the shrine's claim, then the tube attunes and a ghost-guided arrow line fed from the supply ports; the example line and refill goal removed | done |
 | 068 | Tougher late bosses: the Forgewright at 6,000 HP with heat filling through vents (the Flood on rhythm) and 300-HP bellows; the Conductor at 8,000 HP with a storm shield while 3+ rods stand, a 0.5 s blink-in window and a 5-circle storm call | done |
 | 069 | Factory numbers and tools: recipe cards and rates, intake in/out rates, hopper amounts, purge a lane, pipette (Q), area pick-up to the inventory, build-mode zoom | done |
+| 071 | Off-screen threat markers: a red edge arrow for each off-screen enemy winding up on you, with a setting; closed unmerged (InsanityWolfz/Pipeline#85, Shaun, 2026-10-27), replaced by 073 | dropped |
+| 073 | Enemies only attack on screen: no enemy starts an attack off screen; ranges, the 1 s leash grace and shots in flight kept; bosses exempt in their arenas | draft |
 
 008–014 were approved on Shaun's behalf for the overnight run (Shaun, 2026-10-18: "Yes, approve all"), from his interview answers. He reviews them in the morning report.
 
@@ -115,3 +117,5 @@ Fixes to built behaviour that need no design. Each goes on its own branch and PR
 - Fixed in InsanityWolfz/Pipeline#51: older review-shot specs failed on main after 053's round world. 032's landmark walks (quarry, old-grove, ley-grotto, north-spring) stopped with "could not reach": the tile just below some areas is solid with no open neighbour, or cut off from the player's side, so the path search found nothing. The walk now goes to the nearest tile reachable from the player and fails if that is more than 3 tiles from its aim; Old Grove, Ley Grotto and North Spring aim at their area's middle so the whole landmark is framed; 032/01, 02, 03 and 09 retaken. 030's and 031's shots already pass on main since 055's door helpers restaged them; 030/05 (the shrine's safe zone, moved in 053 and walled in 055) retaken.
 
 064–066 come from Shaun's Region 4 interview on 2026-10-26 (docs/brainstorm/2026-10-26-region-4-interview.md), split like 060–062. They are stacked on 062's branch in order.
+
+071 was closed unmerged on 2026-10-27 on Shaun's call ("anything off the screen should de aggro"). 073 replaces it, from his interview answers that day (docs/brainstorm/2026-10-27-offscreen-attacks.md).
