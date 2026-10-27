@@ -313,3 +313,8 @@ Each plan's build notes hold the detail; these are the lasting technical choices
   - A held key reaches the sim as its own command flag (`Command.interactHeld`) next to the press (`interact`); rules that chain on a hold read the flag, so a press alone still acts once.
   - Render-side checks that read pixels (the silhouette) cache on everything that can change the answer, including each prop's current frame, and look only at a spatial bucket round the player, never every prop each frame.
   - A craft max always carries `batches` on its one craft event (even for one batch); a plain click carries none, so the feed tells them apart.
+
+- **075 the wanderer redesign:**
+  - What the body shows of gear is a sim fact (`wornRarity`, the highest rarity worn), read by render; the rig never decides rarity.
+  - Pose timings read the sim's own durations (`ROLL_TICKS`, `PLAYER_HIT_FX.poseTicks`); every other motion number lives in `WANDERER_MOTION`, so a timing change can't leave the art out of step.
+  - Rig parts are baked to textures at boot and cached per view, so drawing allocates nothing per frame.

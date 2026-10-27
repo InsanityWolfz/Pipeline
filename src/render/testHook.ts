@@ -37,6 +37,7 @@ import type { HollowsEnemiesShown } from './hollowsEnemyArt';
 import type { EnemyBarShown } from './enemyBar';
 import type { Legibility, LegibilityUi } from './Legibility';
 import type { SandboxPanelState } from './SandboxPanel';
+import type { PlayerPixels, PlayerUi } from './PlayerView';
 
 export interface GameTestHook {
   /** The live game's summary; null on the title (042). */
@@ -92,6 +93,8 @@ export interface GameTestHook {
   keywords(): KeywordReport;
   /** 040: every summary the game can show (each round, talent, stage and gear piece), laid out as drawn: its rows (at most four), whether a line was cut, its size. */
   summaryRows(): ReturnType<Legibility['summaryRows']>;
+  /** 075: the wanderer's drawn box and hem colour, read from its texture (null on the title). */
+  wanderer(): PlayerPixels | null;
 }
 
 /**
@@ -178,9 +181,11 @@ export interface UiState {
   objectiveTick: number;
   /** The centre of the world camera's view, world px (023: screenshots wait for it to settle on the player), and the player's sprite point it follows (042: locked to it). */
   /** 069: `zoom` is the world's zoom over the view (1, or build mode's 0.75 zoomed out). */
-  camera: { x: number; y: number; player: { x: number; y: number }; fading: boolean; zoom: number };
+  camera: { x: number; y: number; player: { x: number; y: number }; fading: boolean; zoom: number; shaking: boolean };
   /** 065: the slow's wind curls are drawn round the player. */
   slowSwirl: boolean;
+  /** 075: the wanderer drawn: view, animation, scheme, trim, squash, hood, draw time and tint. Null before the scene. */
+  player: PlayerUi | null;
   /** 070: the player shows as a silhouette (a ruin block, tree, the bench or a machine in front hides them). */
   silhouette: boolean;
   /** The bottom HUD as drawn (025), view px: the hotbar row (and whether it shows) and the tube slot with each unit's icon frame and text. */

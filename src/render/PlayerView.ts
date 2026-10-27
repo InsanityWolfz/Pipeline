@@ -2,52 +2,29 @@ import type { GameObjects, Scene, Textures } from 'phaser';
 import { TintModes } from 'phaser';
 import { PLAYER_HIT_FX, WANDERER_KEY } from '../data/assets';
 import { WANDERER, WANDERER_FEEL, type WandererView } from '../data/art/wanderer';
-import { MELEE } from '../data/combat';
-import { IDLE_SPEED } from '../data/config';
+import type { Rarity } from '../data/gear';
 import { DYING_TICKS, FEET_BOX, HIT_INVULN_TICKS } from '../data/player';
-import { ARMOR_TINTS } from '../data/hudLayout';
 import { STORM_ENEMY_LOOK } from '../data/stormcrownEnemyAssets';
 import { aimFacing } from '../sim/direction';
 import { shownFacing } from './playerFacing';
-import { wornPieces, wornRelic } from '../sim/stats';
-import type { SimState } from '../sim/state';
 import { isRolling } from '../sim/movement';
 import type { Facing, PlayerState } from '../sim/player';
 import type { LinkState } from '../sim/link';
 import type { TubeState } from '../sim/tube';
 import { attuneBeat } from './attune';
 import { colorOf } from './color';
+import { PlayerClocks } from './playerClocks';
 import { textureScale } from './vector/textures';
-import { drawWanderer, REST_POSE, type WandererPose } from './vector/wandererRig';
+import { wandererAnim, wandererMotion } from './vector/wandererMotion';
+import { drawWanderer, prebakeWanderer, REST_POSE, type WandererMarks, type WandererPose } from './vector/wandererRig';
+import { activeScheme } from './wandererScheme';
 
 /** The share of a death, at its end, over which the remains fade out. */
 const DEATH_FADE_SHARE = 1 / 3;
 
-/** A multiply tint that leaves a corner's colour as drawn. */
-const UNTINTED = 0xffffff;
-
 const FEEL = WANDERER_FEEL;
 
-const viewOf = (f: Facing): WandererView => (f === 'up' || f === 'down' ? f : 'side');
-
-/** How the worn body piece shades the body (010): by its weight, Featherplate (036) without heavy plate's slow look. */
-export type BodyLook = keyof typeof ARMOR_TINTS;
-
-/** The worn body piece's look, or null with no body piece worn. */
-export function bodyLook(sim: Pick<SimState, 'gear' | 'equipped'>): BodyLook | null {
-  const body = wornPieces(sim).find((p) => p.slot === 'body');
-  if (!body?.weight) return null;
-  return wornRelic(sim, 'feather') ? 'feather' : body.weight;
-}
-
 const clamp = (v: number, lo: number, hi: number): number => Math.max(lo, Math.min(hi, v));
-
-/** How far out a punch (023) is, 0..1, from the sim's melee cooldown: full on its tick, easing back over `FEEL.jab.ticks`. */
-function jabOf(tube: Pick<TubeState, 'meleeCooldown'>): number {
-  if (tube.meleeCooldown <= 0) return 0;
-  const t = (MELEE.cooldownTicks - tube.meleeCooldown) / FEEL.jab.ticks;
-  return t >= 1 ? 0 : 1 - t * t;
-}
 
 /** The tube's local angle for the view: side aims within ±spread of level, down and up around straight down and up. */
 function localAim(view: WandererView, dx: number, dy: number, flip: boolean): number {
@@ -61,6 +38,27 @@ function localAim(view: WandererView, dx: number, dy: number, flip: boolean): nu
   return axis + clamp(off, -a, a);
 }
 
+/** 075: what the test hook's `ui().player` reports: the view and animation, the scheme and trim, the squash, where the hood is (world px from the feet), the mean draw time and whether the sprite is tinted. */
+export interface PlayerUi {
+  view: WandererView;
+  anim: ReturnType<typeof wandererAnim>;
+  scheme: string;
+  trim: Rarity | null;
+  squash: number;
+  /** The stride's phase, radians (0 and each π: a contact, the feet furthest apart). */
+  stride: number;
+  hood: [number, number];
+  drawMs: number;
+  /** Whether the sprite carries a tint (only the hit's white flash: armour never tints the body). */
+  tinted: boolean;
+}
+
+/** 075: read from the drawn texture only when the test hook's `wanderer()` asks: the drawn box (world px from the feet) and the colour at a corner of the cape's hem (the trim), or null where none shows. */
+export interface PlayerPixels {
+  bounds: { w: number; h: number; left: number; top: number } | null;
+  hemColor: [number, number, number] | null;
+}
+
 // Draws the player from sim state (016): the wanderer rig posed each frame into a
 // canvas texture. It stands on the bottom of the feet box and sorts by that point.
 export class PlayerView {
@@ -68,9 +66,14 @@ export class PlayerView {
   private readonly canvas: Textures.CanvasTexture;
   private readonly scale: number;
   private pose: WandererPose = { ...REST_POSE };
+  private readonly clocks = new PlayerClocks();
+  private readonly scheme = activeScheme();
+  private anim: PlayerUi['anim'] = 'idle';
+  private stride = 0;
+  private marks: WandererMarks = { hood: [0, 0], hem: null };
+  private drawMs = 0;
   private lastX = 0;
   private lastY = 0;
-  private flapClock = 0;
   private lastTime = -1;
   /** The facing drawn last frame, or null before the first. */
   private facing: Facing | null = null;
@@ -91,10 +94,16 @@ export class PlayerView {
       .setScale(1 / this.scale)
       .setOrigin(WANDERER.box.anchor[0] / w, WANDERER.box.anchor[1] / h);
     this.swirl = scene.add.graphics();
+    // 075: the wanderer's parts are baked at boot (in this page's scheme, nothing worn); another trim bakes when first worn.
+    prebakeWanderer(this.scheme, null, this.scale);
   }
 
-  /** Draws the player; `shown` false hides them (they're in a room not yet on screen). `hasTube` false (012) draws them empty-handed. */
-  update(p: PlayerState, tube: TubeState, link: LinkState, armor: BodyLook | null, hasTube: boolean, shown = true): void {
+  /**
+   * Draws the player; `shown` false hides them (they're in a room not yet on screen). `hasTube` false (012) draws them
+   * empty-handed. 075: `trim` is the sim's worn rarity (render never ranks rarities), `tick` the sim's tick the clocks
+   * count by. Armour shows only as the trim: the body is never tinted by its weight.
+   */
+  update(p: PlayerState, tube: TubeState, link: LinkState, trim: Rarity | null, hasTube: boolean, tick: number, shown = true): void {
     const now = this.sprite.scene.time.now;
     const dt = this.lastTime < 0 ? FEEL.frameMs : Math.min(FEEL.maxFrameMs, now - this.lastTime);
     this.lastTime = now;
@@ -103,7 +112,7 @@ export class PlayerView {
     this.sprite.setPosition(p.x, bottom).setDepth(bottom);
     this.sprite.setAlpha(p.dying > 0 ? Math.min(1, p.dying / (DYING_TICKS * DEATH_FADE_SHARE)) : 1);
 
-    this.pose = this.nextPose(p, tube, link, hasTube, dt);
+    this.pose = this.nextPose(p, tube, link, trim, hasTube, tick, now, dt);
     this.redraw(p);
     this.drawSwirl(p, bottom, now, shown);
 
@@ -111,11 +120,7 @@ export class PlayerView {
     const elapsed = HIT_INVULN_TICKS - p.hurtTicks;
     const white = p.hurtTicks > 0 && Math.floor(elapsed / PLAYER_HIT_FX.flickerTicks) % 2 === 0;
     if (white) this.sprite.setTint(colorOf(PLAYER_HIT_FX.flashColor)).setTintMode(TintModes.FILL);
-    else if (armor) {
-      // A worn body piece shades the body below the hood by its weight (Featherplate, 036, as light: no slow look).
-      const body = colorOf(ARMOR_TINTS[armor]);
-      this.sprite.setTint(UNTINTED, UNTINTED, body, body).setTintMode(TintModes.MULTIPLY);
-    } else this.sprite.clearTint();
+    else this.sprite.clearTint();
   }
 
   /** 065: slowed, pale wind curls circle the legs, fading over the slow's last ticks; in front of the legs, behind nothing else. */
@@ -141,65 +146,92 @@ export class PlayerView {
     }
   }
 
-  private nextPose(p: PlayerState, tube: TubeState, link: LinkState, hasTube: boolean, dt: number): WandererPose {
-    const prev = this.pose;
-    const frames = dt / FEEL.frameMs;
-    const k = 1 - Math.pow(1 - FEEL.ease, frames);
-    const ease = (from: number, to: number): number => from + (to - from) * k;
-
+  private nextPose(p: PlayerState, tube: TubeState, link: LinkState, trim: Rarity | null, hasTube: boolean, tick: number, now: number, dt: number): WandererPose {
     const rolling = isRolling(p);
     const dx = p.aimX - p.x;
     const dy = p.aimY - (p.y - FEEL.aimHeight);
     const ax = p.aimX - p.x;
     const ay = p.aimY - p.y;
-    const facing = rolling ? p.facing : this.facing === null ? aimFacing(ax, ay, p.facing) : shownFacing(ax, ay, this.facing, FEEL.facingBand);
+    let facing = rolling ? p.facing : this.facing === null ? aimFacing(ax, ay, p.facing) : shownFacing(ax, ay, this.facing, FEEL.facingBand);
+    // 075: the KO always plays side on, facing the side the aim was on (right when level).
+    if (p.dying > 0) facing = ax < 0 ? 'left' : 'right';
     this.facing = facing;
-    const view = viewOf(facing);
-    const flip = facing === 'left';
-    const heavy = hasTube && tube.firing;
-    const shot = heavy && tube.shotCount > 0;
-    const hit = p.hurtTicks > HIT_INVULN_TICKS - PLAYER_HIT_FX.poseTicks;
-    const dying = p.dying > 0 ? 1 - p.dying / DYING_TICKS : 0;
-    const jab = rolling || dying > 0 ? 0 : jabOf(tube);
-
-    let target: { lean: number; crouch: number; stance: number; push: number } = { lean: 0, crouch: 0, stance: WANDERER.rig.restStance, push: 0 };
-    if (heavy) target = { ...FEEL.firing };
-    if (hit) target = { ...target, lean: FEEL.hit.lean, push: FEEL.hit.push };
-    if (rolling) target = { ...target, lean: FEEL.roll.lean, crouch: FEEL.roll.crouch, stance: FEEL.roll.stance, push: 0 };
-    if (dying > 0) target = { lean: FEEL.death.lean * dying, crouch: FEEL.death.crouch * dying, stance: FEEL.death.stance, push: 0 };
-
+    const view: WandererView = facing === 'up' || facing === 'down' ? facing : 'side';
     const moved = Math.hypot(p.x - this.lastX, p.y - this.lastY);
     this.lastX = p.x;
     this.lastY = p.y;
-    const walking = !rolling && Math.hypot(p.vx, p.vy) >= IDLE_SPEED;
-    this.flapClock += dt * FEEL.flapSpeed;
-    const swing = heavy ? FEEL.flap.firing : walking ? FEEL.flap.walk : FEEL.flap.rest;
-
-    return {
-      view,
-      flip,
-      aim: localAim(view, dx, dy, flip),
-      lean: ease(prev.lean, target.lean) + (shot ? FEEL.shot.lean : 0) + jab * FEEL.jab.lean,
-      crouch: ease(prev.crouch, target.crouch),
-      stance: ease(prev.stance, target.stance),
-      push: ease(prev.push, target.push) + (shot ? FEEL.shot.push : 0) + jab * FEEL.jab.push,
-      kick: shot ? FEEL.shot.kick : prev.kick * Math.pow(FEEL.kickDecay, frames),
-      stride: walking ? prev.stride + moved * FEEL.stride : prev.stride,
-      stepping: ease(prev.stepping, walking ? 1 : 0),
-      flap: Math.sin(this.flapClock) * swing,
-      flow: prev.flow + dt * (heavy ? FEEL.flow.firing : FEEL.flow.idle),
-      glow: (shot ? FEEL.glow.shot : FEEL.glow.rest + FEEL.glow.pulse * Math.sin(this.sprite.scene.time.now * FEEL.glow.speed)) * (1 - dying),
+    const clocks = this.clocks.next({
+      p,
+      tube,
       hasTube,
       attuned: link.attuned,
       attuning: attuneBeat(link.attunePulse).gun,
-      muzzle: shot ? FEEL.muzzle.shot : FEEL.muzzle.rest,
-      jab,
+      trim,
+      scheme: this.scheme,
+      tick,
+      ms: now,
+      dtMs: dt,
+      facing,
+      aim: localAim(view, dx, dy, facing === 'left'),
+      moved,
+    });
+    this.anim = wandererAnim(clocks);
+    this.stride = clocks.stride;
+    return wandererMotion(clocks);
+  }
+
+  /** 075: what `ui().player` reports. */
+  get ui(): PlayerUi {
+    return {
+      view: this.pose.view,
+      anim: this.anim,
+      scheme: this.pose.scheme,
+      trim: this.pose.trim,
+      squash: this.pose.squash,
+      stride: this.stride,
+      hood: this.marks.hood,
+      drawMs: this.drawMs,
+      tinted: this.sprite.isTinted,
     };
+  }
+
+  /** 075: the drawn texture's box and hem colour (scans pixels, so only the test hook's `wanderer()` asks). */
+  pixels(): PlayerPixels {
+    return { bounds: this.drawnBounds(), hemColor: this.colorAt(this.marks.hem) };
+  }
+
+  /** The drawn colour at a point, world px from the feet. */
+  private colorAt(at: [number, number] | null): [number, number, number] | null {
+    if (!at) return null;
+    const s = this.scale;
+    const [ax, ay] = WANDERER.box.anchor;
+    const d = this.canvas.context.getImageData(Math.round((at[0] + ax) * s), Math.round((at[1] + ay) * s), 1, 1).data;
+    return [d[0] ?? 0, d[1] ?? 0, d[2] ?? 0];
+  }
+
+  /** The drawn pixels' box in world px, from the feet (the texture's alpha above a quarter), or null when nothing shows. */
+  private drawnBounds(): PlayerPixels['bounds'] {
+    const { width, height } = this.canvas;
+    const data = this.canvas.context.getImageData(0, 0, width, height).data;
+    let [x0, y0, x1, y1] = [width, height, -1, -1];
+    for (let y = 0; y < height; y++)
+      for (let x = 0; x < width; x++) {
+        if ((data[(y * width + x) * 4 + 3] ?? 0) < 64) continue;
+        x0 = Math.min(x0, x);
+        x1 = Math.max(x1, x);
+        y0 = Math.min(y0, y);
+        y1 = Math.max(y1, y);
+      }
+    if (x1 < 0) return null;
+    const s = this.scale;
+    const [ax, ay] = WANDERER.box.anchor;
+    return { w: (x1 - x0 + 1) / s, h: (y1 - y0 + 1) / s, left: x0 / s - ax, top: y0 / s - ay };
   }
 
   private redraw(p: PlayerState): void {
     const c = this.canvas.context;
     const s = this.scale;
+    const t0 = performance.now();
     c.setTransform(1, 0, 0, 1, 0, 0);
     c.clearRect(0, 0, this.canvas.width, this.canvas.height);
     c.setTransform(s, 0, 0, s, WANDERER.box.anchor[0] * s, WANDERER.box.anchor[1] * s);
@@ -213,7 +245,9 @@ export class PlayerView {
         c.restore();
       }
     }
-    drawWanderer(c, this.pose, s);
+    this.marks = drawWanderer(c, this.pose, s);
+    // 075: the wanderer's draw time (the rig's drawing, not the texture's upload), a running mean over about a second of frames.
+    this.drawMs += (performance.now() - t0 - this.drawMs) * 0.05;
     this.canvas.refresh();
   }
 }
