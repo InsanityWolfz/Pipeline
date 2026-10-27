@@ -121,6 +121,15 @@ Every colour comes from the palette, by id. The source of truth is `src/data/pal
 | `storm-glow` | #9a86ec |
 | `snow` | #ffffff |
 | `hit-red` | #ff4d4d |
+| `cobalt-dark` | #1f2d66 |
+| `cobalt` | #3456b4 |
+| `cobalt-light` | #6a8ee4 |
+| `hide` | #9a6a40 |
+| `hide-light` | #c8955f |
+| `bone-dark` | #a39783 |
+| `bone` | #d9d0be |
+| `bone-light` | #f4efe3 |
+| `rim-light` | #ffe6c4 |
 
 ## Vector sprites
 - **Shape data** lives in `src/data/art/`: ellipses, rounded rects, paths (written as short SVG-style strings, `M`, `L`, `Q`, `C`, `Z`) and round-capped lines, with fills (flat, linear or radial gradients), strokes, the outline flag, glows and opacity. Units are world px around an anchor.
