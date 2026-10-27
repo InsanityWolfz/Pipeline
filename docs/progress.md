@@ -15,6 +15,7 @@ Newest entry first. Entries before 050 are in docs/progress-archive.md.
 **Notes:**
 - The plan's landing tile (one below the stone) was in the Forum door's E reach; it moved west of the stone.
 - The container restarted twice during the build; nothing was lost.
+- 2026-10-27: Shaun OK'd 072.5, 072.7 and the rest; 072.9 built on this branch (a woken stone's minimap icon, the pylon's in brass, with a hover line; shot 06); main (069) merged in.
 
 ## 2026-10-26: 069 Factory numbers and tools
 **Changed:** on `claude/069-factory-numbers-tools` (InsanityWolfz/Pipeline#83), from the agent-playtest proposals Shaun picked (plan docs/plans/069-factory-numbers-tools.md, eight slices):

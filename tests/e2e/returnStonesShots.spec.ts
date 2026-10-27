@@ -1,6 +1,8 @@
 import { expect, test, type Page } from '@playwright/test';
 import { FORUM_ARENA } from '../../src/data/arenas';
 import { FIXTURES } from '../../src/data/claims';
+import { VIEW_WIDTH } from '../../src/data/config';
+import { MAP_ICONS } from '../../src/data/landmarkAssets';
 import { OVERWORLD_ROOM } from '../../src/data/overworld';
 import { returnStoneDef } from '../../src/data/returnStones';
 import { SHRINE_SITE } from '../../src/data/rooms';
@@ -12,7 +14,7 @@ import { boot, cameraSettled, quietScreen } from './helpers';
 
 // Review screenshots for 072 (REVIEW_SHOTS=1, into docs/review/072): the Sunken Forum's return stone dormant, then
 // woken as the player reaches its door; after a KO, the foundry waystone's menu listing it; the shrine pylon's menu with
-// its row; and the stone's own menu, "Travel to foundry".
+// its row; and the stone's own menu, "Travel to foundry". 072.9: the woken stone's minimap icon.
 
 const SHOTS = 'docs/review/072';
 const STONE = returnStoneDef('sunken-forum-waystone');
@@ -129,5 +131,41 @@ test.describe('review screenshots (072)', () => {
     await settle(page);
     await expect.poll(async () => openWith(page, 'returnMenu')).toEqual(['Travel to foundry']);
     await page.screenshot({ path: `${SHOTS}/05-return-stone-menu.png` });
+  });
+
+});
+
+// 072.9 (Shaun, 2026-10-27): the woken stone's minimap icon. Its own test, so taking it (`-g "minimap icon"`) leaves
+// shots 01-05 as they were; a larger window draws the small map larger. Unhovered: within the hover's 5 px the
+// crosshair covers the icon (returnStones.spec.ts checks hovering names it).
+test.describe('review screenshots (072.9)', () => {
+  test.skip(!process.env.REVIEW_SHOTS, 'set REVIEW_SHOTS=1 to capture docs/review/072');
+  test.use({ viewport: { width: 1920, height: 1080 } });
+
+  test("the woken Forum stone's minimap icon", async ({ page }) => {
+    test.setTimeout(240_000);
+    await boot(page, '?start=hollows');
+    const start = await page.evaluate(() => {
+      const g = window.__GAME__;
+      if (!g) throw new Error('no game');
+      for (const e of g.getState().enemies) if (e.enemyId !== 'bulwark') g.setEnemyHealth(e.id, 0);
+      return g.step(1).player;
+    });
+    await walk(page, FORUM_ARENA.door.leaveTo.tx, FORUM_ARENA.door.leaveTo.ty);
+    await expect.poll(async () => (await stoneShown(page))?.look).toBe('woken');
+    // Then back to the start, so the player's dot (drawn over icons) sits clear of the stone's.
+    await walk(page, Math.floor(start.x / 32), Math.floor(start.y / 32));
+    await settle(page);
+    const marker = () => page.evaluate((id) => window.__GAME__?.ui().minimap.markers.find((m) => m.stone === id), STONE.id);
+    await expect.poll(async () => (await marker())?.icon).toBe(MAP_ICONS.returnStone);
+    const m = (await marker()) ?? { x: 0, y: 0 };
+    // The pointer off the map, so its crosshair isn't over the shot.
+    const away = await screenPoint(page, VIEW_WIDTH / 4, 200);
+    await page.mouse.move(away.x, away.y);
+    await expect.poll(async () => page.evaluate(() => window.__GAME__?.ui().minimap.hover)).toBe(null);
+    // Close on the icon and the map round the Forum (its arena's icon just south of the stone's).
+    const from = await screenPoint(page, m.x - 40, m.y - 18);
+    const to = await screenPoint(page, Math.min(VIEW_WIDTH, m.x + 40), m.y + 32);
+    await page.screenshot({ path: `${SHOTS}/06-minimap-icon.png`, clip: { x: from.x, y: from.y, width: to.x - from.x, height: to.y - from.y } });
   });
 });

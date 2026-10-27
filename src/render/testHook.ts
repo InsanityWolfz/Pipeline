@@ -117,8 +117,8 @@ export interface UiState {
   hoverName: string | null;
   hoverDescription: string | null;
   buildTip: string | null;
-  /** 017, 051: the minimap, its markers (view px, with the name hovering shows), and the hovered one's name. */
-  minimap: { shown: boolean; markers: { kind: string; x: number; y: number; name?: string }[]; hover: string | null };
+  /** 017, 051: the minimap, its markers (view px, with the name hovering shows, the icon drawn and 072.9's stone id), and the hovered one's name. */
+  minimap: { shown: boolean; markers: { kind: string; x: number; y: number; name?: string; stone?: string; icon?: string }[]; hover: string | null };
   /** 051 (B.6): the foundry's minimap while it shows: carriers' lines, pieces' dots and the icons, view px. */
   foundryMap: FoundryMapShown;
   nodes: Record<number, string>;

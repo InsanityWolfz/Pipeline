@@ -77,7 +77,7 @@ Where they stand and how they wake:
 Travel:
 - 072.4 Destinations are listed claimed pylons first (claim order), then woken stones (wake order), in the waystone's
   menu and in the pylon's rows. A stone's menu has only "Travel to foundry", as the spec says.
-- 072.5 **Needs Shaun.** "Travel to foundry" from a stone arrives in the foundry, and arriving there banks the haul,
+- 072.5 OK'd by Shaun 2026-10-27. "Travel to foundry" from a stone arrives in the foundry, and arriving there banks the haul,
   as any way into the foundry does (011, 042). So a woken stone outside a boss door is, in effect, a way to bank after
   the fight without walking to a pylon. The stone itself has no deposit. Keep it, or make travel home from a stone
   not bank (it would then be the only foundry arrival that doesn't)?
@@ -87,8 +87,14 @@ Travel:
 Spawning and the sandbox:
 - 072.7 The spawn margin is a square, 7 tiles every way (data), matching a resource pylon's safe radius (5 let an
   arrival pull a fresh pack: a slammer's aggro is 5 tiles, a sniper's 10). It keeps packs from spawning there; a pack
-  spawned elsewhere can still roam past, as it can past a pylon's edge. OK?
+  spawned elsewhere can still roam past, as it can past a pylon's edge. OK'd by Shaun 2026-10-27.
 - 072.8 The sandbox's stones stand woken, but E there does nothing: the sandbox has no way to the foundry and back.
 
-Not done (the spec doesn't ask):
-- 072.9 **Needs Shaun.** No minimap icon and no hover line for the stones. Want one (a waystone icon once woken)?
+Added after the playtest:
+- 072.9 Built, as Shaun asked on 2026-10-27 ("a minimap icon for the boss waypoints is good"). A woken return stone
+  shows on the minimap as the shrine pylon's icon (a needle with its violet crystal) with the needle in brass, the
+  colour boss doors are on the minimap; its foot stands on the stone's tile, so it rises clear of the Forum's arena
+  icon just south. A dormant stone shows nothing, as a resource pylon gets its own marker only once claimed. Hovering
+  it names the stone ("Sunken Forum door"). `ui().minimap.markers` carries it (kind `returnStone`, its stone id and
+  icon); returnStones.spec.ts checks it appears once the Forum's stone wakes and that hovering names it; the sim helper
+  `wokenStonesHere` is unit-tested. Review shot docs/review/072/06-minimap-icon.png.

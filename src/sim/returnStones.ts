@@ -24,6 +24,9 @@ export function stonesHere(state: SimState): ReturnStoneDef[] {
   return RETURN_STONES.filter((s) => here.some((h) => h.id === s.id));
 }
 
+/** 072.9: the woken return stones in the player's room, in data order (the minimap marks these). */
+export const wokenStonesHere = (state: SimState): ReturnStoneDef[] => stonesHere(state).filter((s) => isWoken(state, s.id));
+
 /** True while the player stands inside any arena. */
 const inAnyArena = (state: SimState): boolean => ARENAS.some((a) => playerInside(state, a));
 

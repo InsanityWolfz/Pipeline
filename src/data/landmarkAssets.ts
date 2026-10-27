@@ -39,6 +39,8 @@ export const MAP_ICONS = {
   foundry: 'map-foundry',
   pylon: 'map-pylon',
   arena: 'map-arena',
+  /** 072.9: a woken return stone, the pylon's icon in a boss door's brass. */
+  returnStone: 'map-return-stone',
 } as const;
 
 /** 051 (B.6): the foundry map's icon frames (src/data/foundryMap.ts), by what they mark; the door shares the stairs' arch. */

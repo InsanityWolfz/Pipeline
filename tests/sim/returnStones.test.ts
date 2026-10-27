@@ -15,6 +15,7 @@ import { summarize } from '../../src/sim/summary';
 import { insideTiles, tileCentre } from '../../src/sim/tiles';
 import { WORLD } from '../../src/sim/world';
 import { die, movePlayer, run, SEED } from './fight';
+import { wokenStonesHere } from '../../src/sim/returnStones';
 
 // 072: a return waystone just outside each boss arena's door, dormant until the player first walks within reach of it
 // outside the arena, then woken for good.
@@ -146,10 +147,10 @@ describe('return stones (072): waking', () => {
     const read = readSave(JSON.stringify(makeEnvelope(snapshot(s), { build: 'x', savedAt: 'now', endCardSeen: false })));
     if (read.status !== 'ok') throw new Error(read.status);
     expect(read.state.returnStones).toEqual([FORUM.id]);
-    // SAVE_VERSION 23 (22 is 069's): main's version 21 save reads as too old, by Shaun's rule (no migration).
+    // SAVE_VERSION 23 (22 is 069's): main's version 22 save reads as too old, by Shaun's rule (no migration).
     expect(SAVE_VERSION).toBe(23);
-    const v21 = readSave(JSON.stringify({ ...makeEnvelope(snapshot(s), { build: 'x', savedAt: 'now', endCardSeen: false }), version: 21 }));
-    expect(v21.status).toBe('too-old');
+    const v22 = readSave(JSON.stringify({ ...makeEnvelope(snapshot(s), { build: 'x', savedAt: 'now', endCardSeen: false }), version: 22 }));
+    expect(v22.status).toBe('too-old');
   });
 
   it('the sandbox shows all three woken; a new game none', () => {
@@ -157,6 +158,25 @@ describe('return stones (072): waking', () => {
     expect(sb.returnStones).toEqual(RETURN_STONES.map((s) => s.id));
     expect(summarize(sb).returnStones.every((r) => r.woken)).toBe(true);
     expect(createSim(SEED).returnStones).toEqual([]);
+  });
+});
+
+describe('return stones (072.9): the minimap marks the woken ones', () => {
+  it("none while dormant; once woken, the Forum's in the overworld; none from the foundry; the sandbox's three", () => {
+    const s = hollowsAt({ tx: FORUM.tx, ty: FORUM.ty - 6 });
+    run(s, 1);
+    expect(s.roomId).toBe(OVERWORLD_ROOM);
+    expect(wokenStonesHere(s)).toEqual([]);
+    const at = tileCentre(FORUM.arrive);
+    movePlayer(s, at.x, at.y);
+    run(s, 1);
+    expect(wokenStonesHere(s).map((r) => [r.id, r.name])).toEqual([[FORUM.id, 'Sunken Forum door']]);
+    die(s);
+    expect(s.roomId).toBe(FOUNDRY_ROOM);
+    expect(wokenStonesHere(s)).toEqual([]);
+    const sb = createSandboxSim(SEED);
+    expect(sb.roomId).toBe(SANDBOX_ROOM);
+    expect(wokenStonesHere(sb)).toEqual(RETURN_STONES);
   });
 });
 

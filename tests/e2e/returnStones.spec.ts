@@ -1,6 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 import { FORUM_ARENA } from '../../src/data/arenas';
 import { FIXTURES } from '../../src/data/claims';
+import { MAP_ICONS } from '../../src/data/landmarkAssets';
 import { returnStoneDef } from '../../src/data/returnStones';
 import { menuRows } from '../../src/render/foundryLayout';
 import { screenPoint, state } from './foundryPage';
@@ -49,6 +50,8 @@ test("the Forum's return stone wakes at its door; after a KO the waystone travel
     return g.step(1);
   });
   expect(before.returnStones.map((r) => r.woken)).toEqual([false, false, false]);
+  // 072.9: a dormant stone has no minimap icon.
+  expect((await page.evaluate(() => window.__GAME__?.ui().minimap))?.markers.some((m) => m.kind === 'returnStone')).toBe(false);
 
   // To the Forum's door: walking up to its outside passes the stone, which wakes.
   const woke = await page.evaluate(([tx, ty]) => {
@@ -60,6 +63,14 @@ test("the Forum's return stone wakes at its door; after a KO the waystone travel
   }, [FORUM_ARENA.door.leaveTo.tx, FORUM_ARENA.door.leaveTo.ty] as const);
   expect(woke.find((r) => r.id === STONE.id)).toMatchObject({ woken: true, name: 'Sunken Forum door' });
   await expect.poll(async () => (await page.evaluate(() => window.__GAME__?.ui().returnStones))?.find((r) => r.id === STONE.id)?.look).toBe('woken');
+  // 072.9: woken, the minimap shows its icon (the pylon's, in a boss door's brass), and hovering it names it.
+  await expect
+    .poll(async () => (await page.evaluate(() => window.__GAME__?.ui().minimap))?.markers.find((m) => m.stone === STONE.id))
+    .toMatchObject({ kind: 'returnStone', name: 'Sunken Forum door', icon: MAP_ICONS.returnStone });
+  const icon = (await page.evaluate(() => window.__GAME__?.ui().minimap))?.markers.find((m) => m.stone === STONE.id) ?? { x: 0, y: 0 };
+  const over = await screenPoint(page, icon.x, icon.y);
+  await page.mouse.move(over.x, over.y);
+  await expect.poll(async () => (await page.evaluate(() => window.__GAME__?.ui().minimap))?.hover).toBe('Sunken Forum door');
   // Its swell over, it is drawn at its frame's size on the world, as the foundry's waystone is (32 × 48 px), whatever
   // the texture's bake scale.
   // The swell plays on the tween clock, sped up here so a slow, loaded page doesn't hold the poll.

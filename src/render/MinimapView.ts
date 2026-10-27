@@ -9,6 +9,7 @@ import { LANDMARK_LIST, type LandmarkMarker } from '../data/landmarks';
 import { MAP_ICONS } from '../data/landmarkAssets';
 import type { Room } from '../data/rooms';
 import { ARENA_MID, revealedSince, seenPlaces } from '../sim/fog';
+import { wokenStonesHere } from '../sim/returnStones';
 import type { SimState } from '../sim/state';
 import type { ScreenBox } from './bottomHud';
 import { colorOf } from './color';
@@ -20,7 +21,8 @@ import { addVector, textureScale } from './vector/textures';
 // The minimap (017): the overworld's ground in the top-right corner, with the player, and each place as an icon once
 // it's been seen. 051 (B.5): a fog of war hides every tile never on screen (src/sim/fog.ts); water, trees and rocks
 // are off it; the foundry's stairs, the shrine's pylon and the Bulwark's arena show as icons once their tile is
-// revealed, a landmark once discovered (032), a claimed pylon as its cyan dot; hovering one names it.
+// revealed, a landmark once discovered (032), a claimed pylon as its cyan dot, a woken return stone (072.9) as the
+// pylon's icon in a boss door's brass; hovering one names it.
 // Hidden in the foundry (the foundry's own map takes its place, 051 B.6), and never takes clicks meant for the world.
 
 export interface MinimapMarker {
@@ -28,6 +30,10 @@ export interface MinimapMarker {
   kind: keyof typeof MINIMAP.markers | keyof typeof MINIMAP.icons | LandmarkMarker;
   /** The landmark an icon marks (032). */
   landmark?: string;
+  /** 072.9: the return stone an icon marks. */
+  stone?: string;
+  /** The icon frame drawn for it, once drawn (none for a dot). */
+  icon?: string;
   /** 051: what hovering it says (none for the player and schematics). */
   name?: string;
   /** View px. */
@@ -150,6 +156,11 @@ export class MinimapView {
       ...(seen.shrine ? [{ kind: shrineClaimed ? ('claimed' as const) : ('shrine' as const), name: MINIMAP.names.shrine, ...tile(OVERWORLD.shrine.pylon) }] : []),
       ...(seen.arena ? [{ kind: 'arena' as const, name: HOLLOWS.arena.name, ...tile(ARENA_MID) }] : []),
       ...landmarks,
+      // 072.9: each woken return stone, its icon's foot on its tile.
+      ...wokenStonesHere(sim).map((s): MinimapMarker => {
+        const c = tile(s);
+        return { kind: 'returnStone', stone: s.id, name: s.name, x: c.x, y: c.y - MINIMAP.returnStone.lift };
+      }),
       // 033: a ping over each schematic lying on the ground out here.
       ...sim.groundItems.filter((g) => g.roomId === OVERWORLD.id && ITEMS[g.itemId]?.kind === 'schematic').map((g): MinimapMarker => ({ kind: 'schematic', ...at(g.x, g.y) })),
       { kind: 'player', ...at(sim.player.x, sim.player.y) },
@@ -188,8 +199,9 @@ export class MinimapView {
     for (const m of this.markers) {
       const frame = iconOf(m.kind);
       if (!frame) continue;
-      const key = m.landmark ?? m.kind;
+      const key = m.landmark ?? m.stone ?? m.kind;
       shownKeys.add(key);
+      m.icon = frame;
       let icon = this.icons.get(key);
       if (!icon || icon.frame.name !== frame) {
         icon?.destroy();
