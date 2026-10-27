@@ -44,6 +44,19 @@ export interface EnemyPose {
   readonly alpha?: number;
   readonly glow?: number;
   readonly charge?: number;
+  /**
+   * 076: squash about the feet (as 075's): positive squashes, negative stretches. Height scales by (1 − squash) and
+   * width by (1 + squash), so the feet stay planted.
+   */
+  readonly squash?: number;
+  /** 076: the head's own turn about its pivot, radians (positive tips toward the facing), and its lift, px (negative is up). */
+  readonly head?: number;
+  readonly headLift?: number;
+  /** 076: the legs' own turns about their pivots, radians (a leg kicked up in a stagger, legs folding in a death). */
+  readonly legBack?: number;
+  readonly legFront?: number;
+  /** 076: the body (everything but the legs and ground) shifted toward the facing, px: a lunge, a recoil. */
+  readonly shift?: number;
 }
 
 /** `turn`, `lob`, `throw` and `block` (034) only where an enemy has them (the Bulwark); `stun`, `dig` and `step` (035) likewise; `roar`, `brace` and `stomp` (041) the Bulwark's; `spray`, `flood` and `vent` (060) the Forgewright's; `blink`, `call` and `chain` (064) the Conductor's. */
