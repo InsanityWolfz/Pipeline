@@ -12,6 +12,7 @@ import { colorOf } from '../color';
 import { settings } from '../flow/settingsStore';
 import { FogView } from './FogView';
 import { CatchView, type CatchShown } from './CatchView';
+import { PoolView } from './PoolView';
 import { conductorChain, gatherLights } from './lightSources';
 import { LightPulses } from './lightPulses';
 import type { PlacedLight } from './lightCatch';
@@ -45,13 +46,15 @@ export interface LightingShown {
   lit: number;
   tint: number | null;
   fog: number;
+  /** Medium's light pools on the ground drawn now. */
+  pools: number;
   /** Times the world layer's look was set over its registry (it changes only on a change). */
   applied: number;
   /** Light catches drawn now. */
   catches: CatchShown[];
 }
 
-export const NO_LIGHTING: LightingShown = { quality: 'medium', setting: 'medium', renderer: 'webgl', off: false, ring: 0, outer: null, blend: 0, ambient: [255, 255, 255], flash: 0, wash: 0, lights: {}, placed: [], lit: 0, tint: null, fog: 0, applied: 0, catches: [] };
+export const NO_LIGHTING: LightingShown = { quality: 'medium', setting: 'medium', renderer: 'webgl', off: false, ring: 0, outer: null, blend: 0, ambient: [255, 255, 255], flash: 0, wash: 0, lights: {}, placed: [], lit: 0, tint: null, fog: 0, pools: 0, applied: 0, catches: [] };
 
 const POOL = LIGHT_BUDGET.high;
 
@@ -59,6 +62,7 @@ export class LightingView {
   private readonly scene: Scene;
   private readonly world: WorldLayer;
   private readonly fog: FogView;
+  private readonly pools: PoolView;
   private readonly wash: GameObjects.Rectangle;
   private readonly pool: GameObjects.Light[] = [];
   private readonly pulses = new LightPulses();
@@ -79,6 +83,7 @@ export class LightingView {
     this.off = import.meta.env.DEV && new URLSearchParams(window.location.search).get('mood') === 'off';
     this.webgl = scene.sys.renderer.type === WEBGL;
     this.fog = new FogView(scene);
+    this.pools = new PoolView(scene);
     this.catches = new CatchView(scene);
     this.wash = scene.add.rectangle(0, 0, VIEW_WIDTH, VIEW_HEIGHT, 0, 0).setOrigin(0).setScrollFactor(0).setDepth(DEPTHS.mood);
     if (this.webgl) for (let i = 0; i < POOL; i++) this.pool.push(scene.lights.addLight(0, 0, 1, 0xffffff, 0).setVisible(false));
@@ -116,14 +121,17 @@ export class LightingView {
     this.fog.update(view, moody ? look.fog : 0, mood.fog, deltaMs);
     const flash = moody && look.flash ? flashLevel(this.pulses.sinceStrike, flashes) : 0;
     const lights = moody && look.lights;
-    if (lights) this.scene.lights.enable().setAmbientColor(rgbInt(withFlash(mood.ambient, flash)));
+    // Phaser's per-pixel lighting only where the tier lights the ground or props with it (High); Medium lays pools.
+    const perPixel = lights && (look.litGround || look.litProps);
+    if (perPixel) this.scene.lights.enable().setAmbientColor(rgbInt(withFlash(mood.ambient, flash)));
     else if (this.webgl) this.scene.lights.disable();
-    this.world.apply(moody ? { litGround: lights && look.litGround, litProps: lights && look.litProps, tint: rgbInt(mood.ambient) } : { litGround: false, litProps: false, tint: null });
+    this.world.apply(moody ? { litGround: perPixel && look.litGround, litProps: perPixel && look.litProps, tint: rgbInt(mood.ambient) } : { litGround: false, litProps: false, tint: null });
     const picked = lights ? pickLights(gatherLights({ sim, shown, view, quality, time: this.time, flashes, pulses: this.pulses, chain: conductorChain(sim, shown) }), quality, { x: view.centerX, y: view.centerY }) : [];
     this.placed = picked.map((l) => ({ x: l.x, y: l.y, radius: l.radius, color: l.color, intensity: l.intensity * mood.lightScale }));
     this.world.lightChunks(this.placed, moody ? rgbInt(withFlash(mood.ambient, flash)) : null, view);
+    this.pools.place(lights && look.pools ? this.placed : []);
     for (const [i, light] of this.pool.entries()) {
-      const l = picked[i];
+      const l = perPixel ? picked[i] : undefined;
       const p = this.placed[i];
       if (!l || !p) {
         light.setVisible(false);
@@ -151,6 +159,7 @@ export class LightingView {
       lit: this.world.litCount,
       tint: this.world.current.tint,
       fog: this.fog.layersShown,
+      pools: this.pools.shown,
       applied: this.world.applied,
       catches: [],
     };

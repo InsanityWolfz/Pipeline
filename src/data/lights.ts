@@ -78,9 +78,21 @@ export const LIGHT_Z = 0.45;
  */
 export const LIGHT_CATCH = { maxAlpha: 0.35, nearest: 2, gain: 0.5, tiers: LIT } as const;
 
-/** What each Graphics quality tier turns on. */
-export const QUALITY_LOOK: Readonly<Record<Quality, { lights: boolean; litGround: boolean; litProps: boolean; catch: boolean; fog: number; flash: boolean }>> = {
-  low: { lights: false, litGround: false, litProps: false, catch: false, fog: 0, flash: false },
-  medium: { lights: true, litGround: true, litProps: false, catch: true, fog: 1, flash: true },
-  high: { lights: true, litGround: true, litProps: true, catch: true, fog: 2, flash: true },
+/**
+ * What each Graphics quality tier turns on: whether lights are placed at all; how they light the ground (`pools`: a
+ * soft additive pool of each light's colour on the ground, a few quads; `litGround`: Phaser's per-pixel lighting) and
+ * the props (`litProps`); the light catch, fog layers and lightning's ambient flash. (074.13: Medium lights the ground
+ * with pools, so the default costs about what Low does even on a software renderer; High uses Phaser's lighting.)
+ */
+export const QUALITY_LOOK: Readonly<Record<Quality, { lights: boolean; pools: boolean; litGround: boolean; litProps: boolean; catch: boolean; fog: number; flash: boolean }>> = {
+  low: { lights: false, pools: false, litGround: false, litProps: false, catch: false, fog: 0, flash: false },
+  medium: { lights: true, pools: true, litGround: false, litProps: false, catch: true, fog: 1, flash: true },
+  high: { lights: true, pools: false, litGround: true, litProps: true, catch: true, fog: 2, flash: true },
 };
+
+/**
+ * Medium's light pools: a soft radial texture `size` px across (white, its alpha falling off as Phaser's lights do,
+ * 1 − (d/r)²), drawn additively in the light's colour at `alpha` × the light's intensity (at most `maxAlpha`), just
+ * over the ground and under the glows, fog and everything standing.
+ */
+export const LIGHT_POOL = { size: 128, alpha: 0.3, maxAlpha: 0.55 } as const;

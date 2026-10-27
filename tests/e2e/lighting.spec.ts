@@ -55,27 +55,28 @@ test('a change on the Settings row applies to the running game at once', async (
   await flowIs(page, 'settings');
   await clickRow(page, 'quality');
   await expect.poll(async () => (await lighting(page)).quality).toBe('high');
-  // High lights the props too.
-  expect((await lighting(page)).lit).toBeGreaterThan(before.lit);
+  // High lights the ground and props per pixel, where Medium laid pools.
+  expect(before.lit).toBe(0);
+  expect((await lighting(page)).lit).toBeGreaterThan(0);
   expect(errors).toEqual([]);
 });
 
-test('each tier in the Hollows: Low tints and places no light, Medium lights the ground, High the props too, with fog', async ({ page }) => {
+test('each tier in the Hollows: Low tints and places no light, Medium lays light pools on the ground, High lights ground and props, with fog', async ({ page }) => {
   test.setTimeout(90_000);
   await hollowsGround(page);
   await setLook(page, { quality: 'low' });
   const low = await lighting(page);
-  expect(low).toMatchObject({ quality: 'low', ring: 3, lit: 0, placed: [], fog: 0, catches: [] });
+  expect(low).toMatchObject({ quality: 'low', ring: 3, lit: 0, pools: 0, placed: [], fog: 0, catches: [] });
   expect(low.tint).not.toBeNull();
   await setLook(page, { quality: 'medium' });
   const medium = await lighting(page);
-  expect(medium).toMatchObject({ quality: 'medium', ring: 3, fog: 1 });
-  expect(medium.lit).toBeGreaterThan(0);
+  expect(medium).toMatchObject({ quality: 'medium', ring: 3, fog: 1, lit: 0 });
   expect(medium.lights.face).toBe(1);
+  expect(medium.pools).toBe(medium.placed.length);
   await setLook(page, { quality: 'high' });
   const high = await lighting(page);
-  expect(high).toMatchObject({ quality: 'high', ring: 3, fog: 2 });
-  expect(high.lit).toBeGreaterThan(medium.lit);
+  expect(high).toMatchObject({ quality: 'high', ring: 3, fog: 2, pools: 0 });
+  expect(high.lit).toBeGreaterThan(0);
   // The world layer's look is set over its registry on a change only, not every frame.
   await frames(page, 10);
   expect((await lighting(page)).applied).toBe(high.applied);

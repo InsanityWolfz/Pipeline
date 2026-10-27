@@ -39,9 +39,10 @@ describe('light sources (074)', () => {
   it('turns on per tier as the spec’s table says', () => {
     expect(QUALITY_TIERS).toEqual(['low', 'medium', 'high']);
     expect(DEFAULT_SETTINGS.quality).toBe('medium');
-    expect(QUALITY_LOOK.low).toEqual({ lights: false, litGround: false, litProps: false, catch: false, fog: 0, flash: false });
-    expect(QUALITY_LOOK.medium).toEqual({ lights: true, litGround: true, litProps: false, catch: true, fog: 1, flash: true });
-    expect(QUALITY_LOOK.high).toEqual({ lights: true, litGround: true, litProps: true, catch: true, fog: 2, flash: true });
+    expect(QUALITY_LOOK.low).toEqual({ lights: false, pools: false, litGround: false, litProps: false, catch: false, fog: 0, flash: false });
+    // 074.13: Medium lights the ground with additive pools; High with Phaser's per-pixel lighting, props too.
+    expect(QUALITY_LOOK.medium).toEqual({ lights: true, pools: true, litGround: false, litProps: false, catch: true, fog: 1, flash: true });
+    expect(QUALITY_LOOK.high).toEqual({ lights: true, pools: false, litGround: true, litProps: true, catch: true, fog: 2, flash: true });
   });
 
   it('has a fog depth over the glows and under the ground decals, and a fog texture key', () => {
