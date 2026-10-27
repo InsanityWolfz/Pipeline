@@ -199,6 +199,42 @@ For Shaun's OK at the playtest; the conservative choice is what gets built.
 ## Open questions
 None.
 
+## Results
+Built on `claude/074-light-and-moods` (PR #91) to docs/plans/074-light-and-moods.md; no sim, palette or save change (`SAVE_VERSION` stays at main's, 22). `npm run check`: 306 files, 2636 unit tests green (28 new: tests/data/moods, lights; tests/render/mood, lightPick, lightCatch, groundBlend, settingsStore's quality).
+
+- **Moods, lights, fog, catch and the setting:** `src/data/moods.ts`, `src/data/lights.ts`, `GROUND_BLEND`; render in `src/render/lighting/` (WorldLayer, LightingView, lightSources, lightPulses, leyLights, FogView, CatchView) and `src/render/overworld/` (groundBlend, circleEdge, pathWear). `ui().lighting` reports quality, ring and blend, ambient, flash, lights by source and each placed light, lit objects, the world tint, fog layers and catches; the test hook gains `setLook` and `lightingOff`, and `ui().groundBakeMs`.
+- **Boss attacks' lights (mapping):** the Conductor: `blinks` (a light at each end), `lashes` (both ends and the middle), `strikes` (where each lands), and `chainSegments` while the rod chain runs (`conductor.attack === 2`, mode `swipe`); the Forgewright: `vents` to `ventEnds` (its core, 40 px up) and its `rect` flood pools while they burn (four lights over the flooded half). The Warden's and the Bulwark's have none (as the spec says).
+- **e2e (each run alone, `--workers=1`, port 5338):** tests/e2e/lighting.spec.ts, 10 tests, green: the Settings row (default Medium, steps, kept, bad value reads Medium; applied live in a running game); each tier in the Hollows (Low: no lights, nothing lit, a tint, no fog; Medium: the ground lit, one fog layer; High: props lit too, two layers; the world look set only on a change); lights while fighting (budgets 16 and 8 held every frame, muzzle flash, ley-bolt rounds lit on High only, blasts); the catch beside a ley vein (cyan, at most 0.35, none on Low); the same `getState()` on Low and High; the regions darkening in turn on High (median screen luma) and the ambient stepping at most 12 a channel a frame across Region 1's edge; an enemy's body in the Stormcrown at least 90% as bright as in Region 1 and the HP bar's pixels the same; a telegraph's reddest pixels as red; a rod strike's light and ambient flash, and neither with Flashes off. Also green: settings.spec.ts (its row list gains Graphics quality: the one older expectation changed, as the spec adds the row), newGameAfterQuit.spec.ts (at the default Medium), waypointSteady.spec.ts.
+- **Performance (lightingProbe.spec.ts, `PROBE=1`, headless Chromium on its software renderer, 1280×720, a shared 4-core machine; median of 2.5 s windows):**
+
+| Scene | Low | Medium | High |
+| --- | --- | --- | --- |
+| Stormcrown pack fight (ms a frame, mean / p95) | 64.6 / 83.3 | 140.8 / 177.1 | 212.7 / 249.1 |
+| Region 1 pack fight | 54.8 / 76.3 | 136.9 / 151.0 | 174.3 / 194.3 |
+| The Conductor's fight (Stormcrown) | 52.8 / 63.8 | 96.5 / 134.1 | 145.7 / 222.2 |
+
+  - Low against `mood=off`, interleaved six times in the Stormcrown fight: 68.2 ms against 66.8 (1.02×, budget 1.1×), 59.8 ticks a second against 60.3 (0.99×, budget 0.9×).
+  - Ticks a second held 59–62 on Low and Medium in every scene, 44–58 on High.
+  - The software renderer runs Phaser's light shader on the CPU, so these Medium and High costs are far above what a GPU pays; Shaun judges them on his laptop.
+- **Chunk bake:** without blending 4–5 ms a chunk, with it about 6.9–7.4 ms (+34% in the steadiest run, noisy on this machine): over the 25% budget (074.6).
+- **Review shots (docs/review/074):** 01–04 the same spot in each region on Low and High (04 also on Medium); 05 Region 1's blended edge with a worn road; 06 a ley line lighting a pack in the Stormcrown; 07 lightning striking a rod (its light and the ambient flash); 08 the Conductor's fight on High; 09 the Settings row. Older specs' shots were not retaken (process.md, "Review shots for the current change only").
+
+## Raised after the build
+Conservative choices built; items marked **(Shaun)** want a yes or a change at the playtest.
+
+- **074.1 Where the mood blends.** At the ground's own region edges, 48, 79 and 110 tiles out (the barrier's circle and the two cliff edges), not at the ramps' barrier lines a couple of tiles further out.
+- **074.2 Lightning on Medium.** Medium tints props, so a flash lifts the lit ground and not the props (re-tinting every prop each frame is the per-frame prop walk the build avoids); High lights props, so it lifts both.
+- **074.3 Flashes off.** No event places a flash of light (the muzzle flash, blasts, a rod strike, the Conductor's attacks, the face glow's flare), one already lit included; steady lights stay and fires flicker within ±15%.
+- **074.4 Frame times are a probe, not a check (Shaun).** The Low A/B and the tier timings are `tests/e2e/lightingProbe.spec.ts`, run with `PROBE=1`, its numbers recorded above: real-time frame-time ratios flake on a shared machine and on CI's runners. The Low A/B met its budget.
+- **074.5 Medium's and High's cost (Shaun).** On a software renderer Medium costs about 2× Low a frame in a busy fight and High about 3×. The build lights only the 160 px squares of ground a light reaches (Medium went from about 2.4× to 1.4× Low in a quiet scene), but a fight's many lights still light a lot of ground. On a GPU this should be small: please try Medium and High on your laptop; if either stutters, the cheapest cut is fewer lights on Medium (the budget is data).
+- **074.6 Chunk bake over budget (Shaun).** Blending adds about 2–3 ms to a 4–5 ms chunk bake (+34% at best measured, budget 25%); a chunk bakes once, one a frame while walking, and waypointSteady (no stutter) passes. If you see a hitch walking into new ground, the patches or the path wear can thin out (data).
+- **074.7 Kilns don't give light (Shaun).** The spec's fires are braziers, flaring vents and burning ground, so the Emberworks' kilns and chimneys, whose fire mouths glow in their art, give none, and the mood dims them like any prop. Lighting their mouths as fires would make "orange through smoke" read much more strongly; say if you want it (here or with 077's set pieces).
+- **074.8 The regions' glow pools.** The Emberworks' and the Stormcrown's per-tile glow pools now fade out at their edges: under the dark moods their hard edges read as a grid of dots.
+- **074.9 Region 1's edge** is repainted along the true circle (a ragged band of blobs). The other region edges are cliffs and keep their cliff tiles; soft edges between grounds elsewhere are slag and ash. Chasms keep a crisp rift.
+- **074.10 Tuning the spec left open:** lights sit at 0.45 × their radius (Phaser's default, 0.1, is a hot pin-point); the catch's alpha is the falloff × the light's intensity × 0.5, capped at 0.35; the fog is unlit and drawn as soft tileable wisps.
+- **074.11 Readability checks.** A telegraph's fill is translucent, so its on-screen colour follows the ground under it: the e2e checks its reddest pixels stay at least 85% as red as in Region 1. The HUD check compares the HP bar's own pixels (the HP block's box has world showing between its pieces). Brightness is measured as luma.
+- **074.12 Not lit:** the Ley Grotto's hollow light, charged storm rods and other 014 glow images keep their halos and place no light (not in the lights table).
+
 ## design.md change (approved and applied)
 Shaun approved updating design.md's art section to the new direction in chat on 2026-10-27, with the whole art pass. This wording replaces "Camera and art" in docs/design.md ("Tech and prototype scope"). It was applied in this spec's first commit:
 
