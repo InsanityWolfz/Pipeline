@@ -1,5 +1,5 @@
 import type { SlammerDef } from '../data/enemies';
-import { engage, leash, startWindup, stepAttack, toward } from './aiCommon';
+import { engage, leash, mayStart, startWindup, stepAttack, toward } from './aiCommon';
 import type { EnemyState } from './enemies';
 import { damagePlayer } from './health';
 import type { SimState } from './state';
@@ -20,7 +20,7 @@ export function slamThink(state: SimState, e: EnemyState, def: SlammerDef): [num
   const home = leash(e, def);
   if (home) return home;
   if (Math.hypot(dx, dy) > slam.triggerRange) return toward(dx, dy, def);
-  if (e.cooldown === 0) startWindup(e, def, dx, dy);
+  if (e.cooldown === 0 && mayStart(state, e)) startWindup(e, def, dx, dy);
   return [0, 0];
 }
 

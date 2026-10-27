@@ -1,5 +1,5 @@
 import type { CasterDef } from '../data/enemies';
-import { engage, inAggroBox, leash, startWindup, stepAttack, toward } from './aiCommon';
+import { engage, inAggroBox, leash, mayStart, startWindup, stepAttack, toward } from './aiCommon';
 import type { EnemyState } from './enemies';
 import { castOrb } from './orbs';
 import type { SimState } from './state';
@@ -22,7 +22,7 @@ export function castThink(state: SimState, e: EnemyState, def: CasterDef): [numb
   if (home) return home;
   if (dist < cast.backOff) return toward(-dx, -dy, def);
   if (dist > cast.aggroRange) return toward(dx, dy, def);
-  if (e.cooldown === 0) {
+  if (e.cooldown === 0 && mayStart(state, e)) {
     startWindup(e, def, dx, dy);
     return [0, 0];
   }
