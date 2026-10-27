@@ -1,5 +1,7 @@
 # 073: Enemies only attack on screen
-status: draft
+status: approved
+
+Approved by Shaun in chat, 2026-10-27 ("approve 073 and I OK its decisions"), with 073.5 changed: anything inside a boss arena follows the boss rules. Its plan is pre-approved.
 
 Drafted from Shaun's call on 071 and his interview answers, 2026-10-27 (docs/brainstorm/2026-10-27-offscreen-attacks.md). It replaces 071 (off-screen threat arrows, InsanityWolfz/Pipeline#85), which was closed unmerged.
 
@@ -78,9 +80,9 @@ None expected. Every range stays. If the build finds a flag is needed for the ex
 For Shaun's OK; each is the least surprising choice.
 - **073.1 Every wind-up counts, the kiln-tender's heal beam too.** One rule, no list to keep: an off-screen tender can't heal its pack either.
 - **073.2 Held enemies don't move in.** One that can't start off screen acts as if its cooldown weren't ready. So a sentinel or tender whose band puts it above or below you holds its fire and, past the grace, walks home and heals; a Charger in range above you stands off. Stepping toward it brings it on screen. Making held enemies walk onto the screen would be new behaviour, left out.
-- **073.3 "On screen" is the sim's box, also in boss fights.** The boss camera lift (up to 96 px) shows more above the player and less below. An add up to 96 px inside the box's bottom edge could start unseen during a boss fight; only the Bulwark has adds, and of those only its Charger reaches that far. Kept as a known gap rather than teaching the sim the render's camera.
+- **073.3 "On screen" is the sim's box.** The boss camera lift (up to 96 px) no longer matters: inside a boss arena nothing follows this rule (073.5).
 - **073.4 A wind-up you saw start completes.** Like a shot in flight (answer 3): you saw it coming, so it lands even if the enemy slips off screen.
-- **073.5 Only the boss is exempt.** The Bulwark's adds, the Warden's Wisps and Husks, and anything posted in an arena follow the rule like anywhere else.
+- **073.5 Boss arenas are exempt, adds included (changed by Shaun, 2026-10-27).** "The boss adds are immune to the max range stuff. If an enemy is in the boss arena then the boss rules apply to its attack and aggro." Any enemy inside a boss arena (the Bulwark's adds, the Warden's Wisps and Husks, anything posted there) attacks and aggros by the arena's rules, as the boss does.
 - **073.6 The Sniper keeps its long sight.** Ranges are kept: it still wakes from 320 px and stays engaged off screen within 320 px (it can't leash there, as now), taking cover and lining up, but holds its shot until it is on screen. The alternative is to leash it after the grace like everything else, which would undo its 320 px wake.
 
 ## Open questions

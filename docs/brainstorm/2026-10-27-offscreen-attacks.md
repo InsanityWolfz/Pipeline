@@ -17,3 +17,5 @@ Spec 071 (off-screen threat arrows, InsanityWolfz/Pipeline#85) was closed unmerg
 - "On screen" is the sim's view box round the player (src/sim/aiCommon.ts), not the boss camera's lifted view.
 - A wind-up already started on screen completes if the enemy leaves mid-wind-up (as answer 3).
 - Boss guards and arena adds are not exempt: only the boss itself.
+
+Approval (2026-10-27): "approve 073 and I OK its decisions". On 073.5: "the boss adds are immune to the max range stuff. if an enemy is in the boss arena then the boss rules apply to its attack and aggro".

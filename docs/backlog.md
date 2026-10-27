@@ -75,7 +75,7 @@ Only Shaun moves a spec to approved. Unattended runs only pick up approved items
 | 068 | Tougher late bosses: the Forgewright at 6,000 HP with heat filling through vents (the Flood on rhythm) and 300-HP bellows; the Conductor at 8,000 HP with a storm shield while 3+ rods stand, a 0.5 s blink-in window and a 5-circle storm call | done |
 | 069 | Factory numbers and tools: recipe cards and rates, intake in/out rates, hopper amounts, purge a lane, pipette (Q), area pick-up to the inventory, build-mode zoom | done |
 | 071 | Off-screen threat markers: a red edge arrow for each off-screen enemy winding up on you, with a setting; closed unmerged (InsanityWolfz/Pipeline#85, Shaun, 2026-10-27), replaced by 073 | dropped |
-| 073 | Enemies only attack on screen: no enemy starts an attack off screen; ranges, the 1 s leash grace and shots in flight kept; bosses exempt in their arenas | draft |
+| 073 | Enemies only attack on screen: no enemy starts an attack off screen; ranges, the 1 s leash grace and shots in flight kept; bosses exempt in their arenas | approved |
 
 008–014 were approved on Shaun's behalf for the overnight run (Shaun, 2026-10-18: "Yes, approve all"), from his interview answers. He reviews them in the morning report.
 
