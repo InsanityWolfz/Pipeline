@@ -16,7 +16,7 @@ import { colorOf } from './color';
 import { PlayerClocks } from './playerClocks';
 import { textureScale } from './vector/textures';
 import { wandererAnim, wandererMotion } from './vector/wandererMotion';
-import { drawWanderer, REST_POSE, type WandererPose } from './vector/wandererRig';
+import { drawWanderer, REST_POSE, type WandererMarks, type WandererPose } from './vector/wandererRig';
 import { activeScheme } from './wandererScheme';
 
 /** The share of a death, at its end, over which the remains fade out. */
@@ -48,6 +48,10 @@ export interface PlayerUi {
   hood: [number, number];
   bounds: { w: number; h: number; left: number; top: number } | null;
   drawMs: number;
+  /** The drawn colour at a corner of the cape's hem (the trim), as [r, g, b], or null where no hem shows. */
+  hemColor: [number, number, number] | null;
+  /** Whether the sprite carries a tint (only the hit's white flash: armour never tints the body). */
+  tinted: boolean;
 }
 
 // Draws the player from sim state (016): the wanderer rig posed each frame into a
@@ -60,7 +64,7 @@ export class PlayerView {
   private readonly clocks = new PlayerClocks();
   private readonly scheme = activeScheme();
   private anim: PlayerUi['anim'] = 'idle';
-  private hood: [number, number] = [0, 0];
+  private marks: WandererMarks = { hood: [0, 0], hem: null };
   private drawMs = 0;
   private lastX = 0;
   private lastY = 0;
@@ -169,7 +173,27 @@ export class PlayerView {
 
   /** 075: what `ui().player` reports (the bounds scan the drawn texture, so only the test hook asks). */
   get ui(): PlayerUi {
-    return { view: this.pose.view, anim: this.anim, scheme: this.pose.scheme, trim: this.pose.trim, squash: this.pose.squash, hood: this.hood, bounds: this.drawnBounds(), drawMs: this.drawMs };
+    return {
+      view: this.pose.view,
+      anim: this.anim,
+      scheme: this.pose.scheme,
+      trim: this.pose.trim,
+      squash: this.pose.squash,
+      hood: this.marks.hood,
+      bounds: this.drawnBounds(),
+      drawMs: this.drawMs,
+      hemColor: this.colorAt(this.marks.hem),
+      tinted: this.sprite.isTinted,
+    };
+  }
+
+  /** The drawn colour at a point, world px from the feet. */
+  private colorAt(at: [number, number] | null): [number, number, number] | null {
+    if (!at) return null;
+    const s = this.scale;
+    const [ax, ay] = WANDERER.box.anchor;
+    const d = this.canvas.context.getImageData(Math.round((at[0] + ax) * s), Math.round((at[1] + ay) * s), 1, 1).data;
+    return [d[0] ?? 0, d[1] ?? 0, d[2] ?? 0];
   }
 
   /** The drawn pixels' box in world px, from the feet (the texture's alpha above a quarter), or null when nothing shows. */
@@ -208,7 +232,7 @@ export class PlayerView {
         c.restore();
       }
     }
-    this.hood = drawWanderer(c, this.pose, s).hood;
+    this.marks = drawWanderer(c, this.pose, s);
     this.canvas.refresh();
     // 075: the wanderer's draw time, a running mean over about a second of frames.
     this.drawMs += (performance.now() - t0 - this.drawMs) * 0.05;

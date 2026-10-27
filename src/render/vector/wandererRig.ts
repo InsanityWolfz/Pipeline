@@ -36,6 +36,8 @@ export function viewsFor(scheme: WandererSchemeId, trim: Rarity | null): Record<
 /** Where things landed this frame, world px from the feet (for the test hook). */
 export interface WandererMarks {
   hood: [number, number];
+  /** A corner of the cape's hem (in the trim), or null in a view without one. */
+  hem: [number, number] | null;
 }
 
 /** The transform a part hangs from: its chain of joints, each turning (or flaring) by its pose channel. */
@@ -101,7 +103,7 @@ export function drawWanderer(c: CanvasRenderingContext2D, pose: WandererPose, px
     });
   };
 
-  const marks: WandererMarks = { hood: [0, 0] };
+  const marks: WandererMarks = { hood: [0, 0], hem: null };
   c.save();
   c.scale(pose.flip ? -S : S, S);
   for (const step of def.order) {
@@ -196,10 +198,12 @@ export function drawWanderer(c: CanvasRenderingContext2D, pose: WandererPose, px
     }
   }
   c.restore();
+  const world = ([x, y]: Pt): [number, number] => [x * S * (pose.flip ? -1 : 1), y * S];
   const hood = parts.get('hood');
-  if (hood) {
-    const [hx, hy] = apply(torso, hood.pivot);
-    marks.hood = [hx * S * (pose.flip ? -1 : 1), hy * S];
-  }
+  if (hood) marks.hood = world(apply(torso, hood.pivot));
+  // The hem's middle corner, for the test hook's trim check.
+  const corners = def.hem?.d.filter((cmd) => cmd[0] === 'L') ?? [];
+  const mid = corners[Math.floor(corners.length / 2)];
+  if (def.hem && mid && mid[0] === 'L') marks.hem = world(apply(mul(torso, chainMat(def, pose, def.hem.part)), [mid[1], mid[2]]));
   return marks;
 }
