@@ -1,5 +1,5 @@
 # 073: Enemies only attack on screen
-status: approved
+status: done
 
 Approved by Shaun in chat, 2026-10-27 ("approve 073 and I OK its decisions"), with 073.5 changed: anything inside a boss arena follows the boss rules. Its plan is pre-approved.
 

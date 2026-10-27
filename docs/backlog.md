@@ -76,7 +76,7 @@ Only Shaun moves a spec to approved. Unattended runs only pick up approved items
 | 069 | Factory numbers and tools: recipe cards and rates, intake in/out rates, hopper amounts, purge a lane, pipette (Q), area pick-up to the inventory, build-mode zoom | done |
 | 070 | Handling and clarity: hold E to harvest, Shift-click crafts max, the empty-tube card, greyed empty slots, the player silhouette, every harvestable tree glows | done |
 | 071 | Off-screen threat markers: a red edge arrow for each off-screen enemy winding up on you, with a setting; closed unmerged (InsanityWolfz/Pipeline#85, Shaun, 2026-10-27), replaced by 073 | dropped |
-| 073 | Enemies only attack on screen: no enemy starts an attack off screen; ranges, the 1 s leash grace and shots in flight kept; bosses exempt in their arenas | approved |
+| 073 | Enemies only attack on screen: no enemy starts an attack off screen; ranges, the 1 s leash grace and shots in flight kept; bosses exempt in their arenas | done |
 
 008–014 were approved on Shaun's behalf for the overnight run (Shaun, 2026-10-18: "Yes, approve all"), from his interview answers. He reviews them in the morning report.
 

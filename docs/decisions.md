@@ -313,3 +313,7 @@ Each plan's build notes hold the detail; these are the lasting technical choices
   - A held key reaches the sim as its own command flag (`Command.interactHeld`) next to the press (`interact`); rules that chain on a hold read the flag, so a press alone still acts once.
   - Render-side checks that read pixels (the silhouette) cache on everything that can change the answer, including each prop's current frame, and look only at a spatial bucket round the player, never every prop each frame.
   - A craft max always carries `batches` on its one craft event (even for one batch); a plain click carries none, so the feed tells them apart.
+
+- **073 enemies only attack on screen:**
+  - Whether an enemy may start an attack is one shared sim rule (`mayStart`, `aiCommon.ts`), checked beside the cooldown, so a new enemy kind inherits it; "on screen" is the same feet-in-view box that waking uses.
+  - Boss arenas override it: anything standing in an arena with the player follows the boss's wake and leash rules (`inArenaWithPlayer`, `arenaWait.ts`).
