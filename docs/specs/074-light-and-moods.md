@@ -3,6 +3,8 @@ status: approved
 
 Approved by Shaun in chat, 2026-10-27, with the whole art pass (074–081); its plan is pre-approved.
 
+Plan pre-approved by Shaun in chat, 2026-10-27. Plan: docs/plans/074-light-and-moods.md.
+
 Drafted from Shaun's art-pass interview (docs/brainstorm/2026-10-27-art-interview.md) and the style sample page he chose from (docs/art/style-test-2.html). This is the first of eight art specs, built in order: "look first, then life".
 
 ## Goal
