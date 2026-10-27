@@ -91,7 +91,7 @@ export const LIGHTNING_FLASH = { color: 'storm-pale', darkness: 0.3, holdMs: 120
 export const FOG_LOOK = {
   size: 256,
   cells: [4, 8] as const,
-  floor: 0.35,
+  floor: 0.18,
   layers: [
     { scale: 3, dir: [1, 0.25] as const, speed: 1, alpha: 1 },
     { scale: 2, dir: [-0.6, 0.8] as const, speed: 0.7, alpha: 0.7 },

@@ -15,13 +15,10 @@ const T = 32;
 const centre = { x: (WORLD_SHAPE.centre.tx + 0.5) * T, y: (WORLD_SHAPE.centre.ty + 0.5) * T };
 const tilesOut = (p: { x: number; y: number }) => Math.hypot(p.x - centre.x, p.y - centre.y) / T;
 
-/** The ley-line point `r0`–`r1` tiles out nearest a world point, world px. */
-function leyPoint(r0: number, r1: number, near: { x: number; y: number }): { x: number; y: number } {
+/** The ley-line points `r0`–`r1` tiles out, nearest a world point first, world px. */
+function leyPoints(r0: number, r1: number, near: { x: number; y: number }): { x: number; y: number }[] {
   const pts = Object.values(OVERWORLD.leyLines).flatMap((seam) => seam.map((t) => ({ x: (t.tx + 0.5) * T, y: (t.ty + 0.5) * T })));
-  const fit = pts.filter((p) => tilesOut(p) >= r0 && tilesOut(p) <= r1).sort((a, b) => Math.hypot(a.x - near.x, a.y - near.y) - Math.hypot(b.x - near.x, b.y - near.y));
-  const p = fit[0];
-  if (!p) throw new Error('no ley line there');
-  return p;
+  return pts.filter((p) => tilesOut(p) >= r0 && tilesOut(p) <= r1).sort((a, b) => Math.hypot(a.x - near.x, a.y - near.y) - Math.hypot(b.x - near.x, b.y - near.y));
 }
 
 /** The road point nearest Region 1's edge (48 tiles out), world px: where a worn road crosses the blended edge. */
@@ -73,8 +70,20 @@ test.describe('review screenshots (074)', () => {
     await openWorld(page);
     await toRegion(page, 'stormcrown');
     const here = await page.evaluate(() => window.__GAME__?.getState().player ?? { x: 0, y: 0 });
-    const ley = leyPoint(114, 138, here);
-    await walk(page, { x: ley.x - 90, y: ley.y + 20 });
+    // The nearest stretch of ley line the player can walk beside (some lie past chasms or cliffs).
+    const ley = await page.evaluate((list) => {
+      for (const p of list.slice(0, 40)) {
+        try {
+          window.__helpers?.walkTo(p.x - 90, p.y + 20);
+          return p;
+        } catch {
+          // Not reachable from here: the next nearest.
+        }
+      }
+      throw new Error('no ley line in reach');
+    }, leyPoints(114, 138, here));
+    await bannersGone(page);
+    await cameraSettled(page, 20_000);
     await setLook(page, { quality: 'high' });
     await page.evaluate((p) => {
       const g = window.__GAME__;
