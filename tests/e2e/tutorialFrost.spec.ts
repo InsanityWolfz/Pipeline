@@ -20,6 +20,8 @@ import { landmarkDef } from '../../src/data/landmarks';
 
 const HIVE = landmarkDef('husk-hive');
 const TERRACE = HOLLOWS_SITES.find((l) => l.id === 'cistern-terrace')?.pylon ?? { tx: 0, ty: 0 };
+/** A tile halfway along the walk from the Terrace up to the forum's door, where it passes the Old Grove. */
+const WAY_TO_FORUM = [117, 123] as const;
 
 /** What the first half carries into the second: the Warden's core, arrows to frost, raws for the line, ley bolts to feed. */
 const CARRIED: readonly (readonly [string, number])[] = [
@@ -166,8 +168,8 @@ test('the guided tutorial plays from leaving the foundry to its end', async ({ p
 
   // 24. Into the Bulwark's arena by its door; it falls through the hook, and its core is picked up. 060: the way to the
   // door can pass a Hollows pack (the roads up into the Emberworks moved where packs stand), so it's felled at the door too.
-  await fell(page, []);
-  await walk(page, [[HOLLOWS.arena.door.leaveTo.tx, HOLLOWS.arena.door.leaveTo.ty]]);
+  // 073: and halfway, where the way bends east past the Old Grove's packs (a walker mobbed there can't get through).
+  await trek(page, [WAY_TO_FORUM, [HOLLOWS.arena.door.leaveTo.tx, HOLLOWS.arena.door.leaveTo.ty]]);
   await fell(page, []);
   await enterArena(page, HOLLOWS.arena);
   await page.evaluate(() => {
