@@ -3,6 +3,8 @@ status: approved
 
 Approved by Shaun in chat, 2026-10-27 ("approve 073 and I OK its decisions"), with 073.5 changed: anything inside a boss arena follows the boss rules. Its plan is pre-approved.
 
+Plan pre-approved by Shaun in chat, 2026-10-27. The plan: docs/plans/073-offscreen-attacks.md.
+
 Drafted from Shaun's call on 071 and his interview answers, 2026-10-27 (docs/brainstorm/2026-10-27-offscreen-attacks.md). It replaces 071 (off-screen threat arrows, InsanityWolfz/Pipeline#85), which was closed unmerged.
 
 ## Goal
@@ -17,7 +19,7 @@ Nothing hits you from somewhere you couldn't see. An enemy starts an attack only
 ## What "on screen" means
 The sim's existing rule, `inAggroBox` in src/sim/aiCommon.ts: the enemy's feet inside the 640 × 360 view (`VIEW_WIDTH` × `VIEW_HEIGHT`) centred on the player's feet, in the room on screen. It is the same test that wakes enemies and counts their leash grace, so one rule decides both.
 - Away from a boss fight the camera is locked on the player (042), and where it clamps at a room's edge it shows more than this box, never less. So the sim's box never calls an unseen enemy "on screen".
-- 071's review found the camera eases up to 96 px above the player while a boss fights (`BOSS_LOOK.max`, src/data/arenaAssets.ts). Bosses are exempt (below), so the sim box stays. The one gap is an arena add standing below the player in a boss fight: see decision 073.3.
+- 071's review found the camera eases up to 96 px above the player while a boss fights (`BOSS_LOOK.max`, src/data/arenaAssets.ts). Anything inside a boss arena is exempt (below), so the sim box stays and the lift leaves no gap (073.3).
 
 ## Survey: every enemy's wake, leash and reach
 View half-sizes: 320 px across, 180 px up and down. "Off screen today" says whether the enemy can start its attack outside that box under today's rules.
@@ -47,13 +49,13 @@ View half-sizes: 320 px across, 180 px up and down. "Off screen today" says whet
 So the rule changes play for seven kinds: the Charger, Burrower, Sniper, bellows hound, kiln-tender, thunderhawk and storm sentinel. For the other nine it pins down what already holds. Champions (032) follow their kind. The leash grace is `leashGraceTicks`: 60 ticks (1 s) for every `ScreenLeashed` enemy except the Warden's 120 (src/data/enemies.ts, src/data/enemyBase.ts and each region's enemy file).
 
 ## Acceptance criteria
-- [ ] **No attack starts off screen.** Every enemy except an exempt boss starts a wind-up only while it is on screen (above). This covers every kind in the survey, the kiln-tender's heal beam included (073.1).
+- [ ] **No attack starts off screen.** Every enemy outside a boss arena starts a wind-up only while it is on screen (above). This covers every kind in the survey, the kiln-tender's heal beam included (073.1).
 - [ ] **Held, it acts as if its cooldown weren't ready.** An enemy whose attack would start but is off screen does what it already does while its cooldown runs: the Sniper keeps to cover or its distance, the sentinel and kiln-tender keep their band, the hawk circles, the Charger and hound stand off, the Burrower keeps tunnelling. Its cooldown stays ready, so it can start on the first tick it is back on screen. No new movement (073.2).
 - [ ] **Ranges are kept.** No reach, trigger range, wake range or band changes. A Sniper or sentinel at the screen's side edge (up to 320 px across) still fires.
 - [ ] **The leash grace stays.** A chasing enemy off screen keeps chasing for its `leashGraceTicks`, starts nothing in that time, then heads home and heals as now. A small camera wobble doesn't reset a fight.
 - [ ] **A wind-up started on screen completes** if the enemy leaves the screen during it, including the Sniper's tracking and the dash, dive or charge that follows (073.4).
 - [ ] **Shots in flight keep flying** when their shooter goes off screen: Wisp orbs, Sniper bolts, sentinel strike circles already called, hound trails and fire pools already laid.
-- [ ] **Bosses are exempt inside their arenas.** The Pylon Warden, Bulwark, Forgewright and Conductor attack as now while the player is inside their arena. Their adds and the enemies posted in their arenas are not exempt (073.5).
+- [ ] **Anything inside a boss arena is exempt.** The Pylon Warden, Bulwark, Forgewright and Conductor, their adds and every enemy posted in their arenas attack as now while the player is inside that arena (073.5).
 - [ ] The on-screen check is one shared sim helper next to `inAggroBox` (src/sim/aiCommon.ts), read by every enemy AI; the sim stays deterministic and SAVE_VERSION doesn't change (no new state).
 
 ## Data changes
@@ -71,8 +73,8 @@ None expected. Every range stays. If the build finds a flag is needed for the ex
   - The short-reach nine (Husk, slag whelp, Wisp, Pylon Warden, Shardback, cinder mote, slag golem, static mite, gale ram): a data test that each start range lies inside the view's half-height, so none can start off screen; and one staged start on screen each, so the helper is wired in.
   - The grace: a Charger pushed just off screen mid-chase keeps chasing, starts nothing, and heads home at 60 ticks.
   - Mid-wind-up: a Sniper and a sentinel that leave the screen during a wind-up started on screen still fire; a Wisp orb and a Sniper bolt in flight keep flying and hit when their shooter is off screen.
-  - The exemption: a boss fighting inside its arena still starts an attack from outside the box (the Conductor's storm call or the Bulwark's lob); a Bulwark add (Charger) in the same arena off screen does not.
-  - An invariant sweep: packs of every region over several seeds with a scripted bot (tests/sim/packBot.ts); no non-exempt wind-up ever starts with its enemy off screen.
+  - The exemption: anything inside a boss arena with the player still starts an attack from outside the box: a boss (the Conductor's storm call or the Bulwark's lob), a Bulwark add (Charger) and an enemy posted there.
+  - An invariant sweep: packs of every region over several seeds with a scripted bot (tests/sim/packBot.ts); outside a boss arena no wind-up ever starts with its enemy off screen.
 - **Playwright (e2e):** in the sandbox, a Sniper just off screen (about 240 px above the player, a clear line, cooldown ready) stays out of `windup` and fires no bolt while off screen, polling `getState()`; the player steps up until it is on screen, and it winds up and fires.
 - No review shots: nothing new is drawn.
 
