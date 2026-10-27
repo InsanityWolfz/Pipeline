@@ -149,7 +149,7 @@ export class GameScene extends Scene {
     this.enemyView = new EnemyView(this);
     this.playerView = new PlayerView(this);
     this.silhouette = new SilhouetteView(this, occluders);
-    this.effects = new EffectsView(this, this.playerView.sprite, (atDark, ms, rgb) => this.sceneCameras?.fadeThrough(atDark, ms, rgb), () => this.feel?.juice.particles);
+    this.effects = new EffectsView(this, this.playerView.sprite, (atDark, ms, rgb) => this.sceneCameras?.fadeThrough(atDark, ms, rgb), () => this.feel?.juice.particles, (id) => this.enemyView?.lastOf(id));
     this.arrowView = new ArrowView(this);
     this.bombView = new BombView(this);
     this.hud = new HudView(this);

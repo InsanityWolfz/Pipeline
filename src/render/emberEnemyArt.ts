@@ -7,6 +7,10 @@ import { defOf } from '../sim/champions';
 import type { EnemyState } from '../sim/enemies';
 import type { SimState } from '../sim/state';
 import { colorOf } from './color';
+import { KILN_TENDER_RIG } from '../data/art/kilnTender';
+import { STRIP_ENDS } from '../data/enemyAnims';
+import { stripIndex, windupPhase } from './enemyMotion';
+import { posedPoint } from './vector/enemyPose';
 
 // What the Emberworks' enemies (061) show beyond their sprite and ground telegraph, for EnemyView (through
 // hollowsEnemyArt.ts): a cinder mote swelling with its wind-up; a kiln-tender's beam in the kiln's orange from its
@@ -51,7 +55,7 @@ function drawBeam(g: GameObjects.Graphics, e: EnemyState, sim: SimState, now: nu
   if (!t || t.roomId !== e.roomId) return null;
   const view = e.facing === 'up' || e.facing === 'down' ? e.facing : 'side';
   const k = e.champion ? CHAMPIONS.scale : 1;
-  const nz = B.nozzle[view];
+  const nz = nozzleAt(e, view);
   const x0 = e.x + nz[0] * k * (e.facing === 'left' ? -1 : 1);
   const y0 = e.y + defOf(e).feetBox.h / 2 + nz[1] * k;
   const tdef = defOf(t);
@@ -72,6 +76,16 @@ function drawBeam(g: GameObjects.Graphics, e: EnemyState, sim: SimState, now: nu
   const r = G.radius * (t.champion ? CHAMPIONS.scale : 1) * Math.max(1, tdef.hurtbox.w / (G.radius * 2));
   g.fillStyle(colorOf(G.color), G.alpha[0] + (G.alpha[1] - G.alpha[0]) * pulse).fillEllipse(x1, y1, r * 2, r * 2 * G.squash);
   return { target: t.id, channel };
+}
+
+/** 076: the nozzle as the pose shows it (it swings up to aim through the wind-up), world px from the feet at 1×. */
+function nozzleAt(e: EnemyState, view: 'side' | 'down' | 'up'): readonly [number, number] {
+  const at = B.nozzle[view];
+  const def = defOf(e);
+  if (def.kind !== 'tender') return at;
+  const strip = KILN_TENDER_RIG.poses.windup ?? [];
+  const pose = e.mode === 'windup' ? strip[stripIndex(windupPhase(e.modeTicks, def.beam.windupTicks), strip.length - STRIP_ENDS, 0)] : KILN_TENDER_RIG.poses.swipe?.[0];
+  return (pose && posedPoint(KILN_TENDER_RIG, view, pose, 'nozzle', at)) ?? at;
 }
 
 export function destroyEmberArt(art: EmberArt | undefined): void {

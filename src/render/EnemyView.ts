@@ -17,11 +17,10 @@ import type { Facing } from '../sim/player';
 import { registerAnim } from './anims';
 import { colorOf } from './color';
 import { addVector, addVectorSprite, showFrame, textureScale } from './vector/textures';
-import { BURN_FLAMES, burnFlamesFrame, ICE_CRACK_TICKS, STAGE_SPRITES } from '../data/stageAssets';
 import { COLD } from '../data/tags';
 import { HOLLOWS_LOOK } from '../data/hollowsAssets';
 import { drawSeam, riseShown } from './bulwarkLook';
-import { chillTint, drawCore, drawResin } from './enemyOverlays';
+import { chillTint, drawCore, drawFlames, drawIce, drawResin } from './enemyOverlays';
 import { enemyArt, type EnemyArtShown } from './enemyArt';
 import { attacking, staggers } from './enemyReaction';
 import { drawTelegraph } from './telegraphs';
@@ -119,6 +118,11 @@ export class EnemyView {
     this.frozenUntil.set(id, this.scene.time.now + ms);
   }
 
+  /** An enemy as last drawn (076: a death's dissolve reads the Forgewright's bellows off it). */
+  lastOf(id: number): EnemyState | undefined {
+    return this.last.get(id);
+  }
+
   /** 076: the frame's hit events, which `update` turns into staggers. */
   react(hits: readonly HitEvent[]): void {
     for (const h of hits) {
@@ -177,8 +181,8 @@ export class EnemyView {
       else if (e.blockFlash > 0) d.sprite.setTint(colorOf(HOLLOWS_LOOK.block.color)).setTintMode(TintModes.MULTIPLY);
       else if (e.chill > 0 || e.frozen > 0) d.sprite.setTint(chillTint(e.frozen > 0 ? COLD.stacksToFreeze : e.chill)).setTintMode(TintModes.MULTIPLY);
       else d.sprite.clearTint();
-      this.drawIce(d, e, bottom);
-      this.drawFlames(d, e, bottom, now);
+      drawIce(this.scene, d, e, bottom);
+      drawFlames(this.scene, d, e, bottom, now);
       // 076: the bar and labels sit on its unsquashed height, so they don't bob.
       const top = bottom - d.sprite.height * d.baseScale * (e.champion ? CHAMPIONS.scale : 1) * d.sprite.originY;
       drawEnemyBar(this.scene, d.bar, e, top);
@@ -234,33 +238,6 @@ export class EnemyView {
     if (e.enemyId === CORE.enemyId || enemyDef(e.enemyId).kind === 'bulwark') d.overlay = this.scene.add.graphics().setBlendMode(BlendModes.ADD);
     this.drawn.set(e.id, d);
     return d;
-  }
-
-  /** Frozen (029): encased in ice, the casing cracking over its last ticks; hidden otherwise. */
-  private drawIce(d: Drawn, e: EnemyState, bottom: number): void {
-    if (e.frozen <= 0) {
-      d.ice?.setVisible(false);
-      return;
-    }
-    const big = enemyDef(e.enemyId).boss;
-    const cracked = e.frozen <= ICE_CRACK_TICKS;
-    const frame = big ? (cracked ? STAGE_SPRITES.iceCaseLargeCracked : STAGE_SPRITES.iceCaseLarge) : cracked ? STAGE_SPRITES.iceCaseCracked : STAGE_SPRITES.iceCase;
-    d.ice ??= addVector(this.scene, 0, 0, frame);
-    if (d.ice.frame.name !== frame) showFrame(d.ice, frame);
-    d.ice.setVisible(true).setPosition(e.x, bottom).setDepth(bottom + DEPTHS.overlayNudge);
-  }
-
-  /** Burning (060): flames lick round it, flickering out of step from enemy to enemy, bigger on a boss; hidden otherwise. */
-  private drawFlames(d: Drawn, e: EnemyState, bottom: number, now: number): void {
-    if (e.burnTicks <= 0) {
-      d.flames?.setVisible(false);
-      return;
-    }
-    const frame = burnFlamesFrame(Math.floor((now + e.id * BURN_FLAMES.phaseMs) / BURN_FLAMES.frameMs));
-    d.flames ??= addVector(this.scene, 0, 0, frame).setAlpha(BURN_FLAMES.alpha);
-    if (d.flames.frame.name !== frame) showFrame(d.flames, frame);
-    const k = enemyDef(e.enemyId).boss ? BURN_FLAMES.big : 1;
-    d.flames.setVisible(true).setScale(d.baseScale * k * (e.champion ? CHAMPIONS.scale : 1)).setPosition(e.x, bottom).setDepth(bottom + DEPTHS.overlayNudge);
   }
 
   /** Plays its anim, or holds its strip or stagger frame (076), changing only on a change so a one-shot swipe holds its last frame. */

@@ -5,12 +5,16 @@ import { familyOf, type EnemyFamily } from '../data/art/enemyFamilies';
 import { ENEMY_MOTION } from '../data/art/enemyMotion';
 import { CORE, WARDEN_RIG } from '../data/art/warden';
 import { CHAMPIONS } from '../data/champions';
-import { enemyDef, type EnemyDef } from '../data/enemies';
+import { enemyDef, type ForgewrightDef } from '../data/enemies';
+import { FORGE_SPRITES } from '../data/forgewrightAssets';
+import { bellowsPoint } from '../sim/forgewrightParts';
+import type { EnemyState } from '../sim/enemies';
+import { bellowsLook } from './ForgewrightView';
 import { DEATH_MOTES } from '../data/juice';
 import { LANDMARK_LOOK, LANDMARK_SPRITES } from '../data/landmarkAssets';
 import type { DeathEvent } from '../sim/events';
 import { colorOf } from './color';
-import { deathMoteCount, dissolveAt, moteWaves, waveCount } from './deathMotes';
+import { deathMoteCount, dissolveAt, moteWaves, waveCount, type MoteRoom } from './deathMotes';
 import { settings } from './flow/settingsStore';
 import type { Mote, Particles } from './Particles';
 import { addVector, addVectorSprite, textureScale } from './vector/textures';
@@ -18,7 +22,8 @@ import { addVector, addVectorSprite, textureScale } from './vector/textures';
 // 076: deaths dissolve into ley motes. The rig's struck `death` pose shows for a beat, then the body narrows,
 // stretches upward and fades while an additive copy in the family's first mote colour rises and fades with it, and
 // the family's motes leave the body in three waves, thinned to the tier's caps and the particle budget. Runs on the
-// tween clock (as the particles do), so a review shot can slow it. A KO clears them with the room.
+// tween clock (as the particles do), so a review shot can slow it. A KO clears them with the room. The Forgewright's
+// bellows dissolve with it.
 
 const D = ENEMY_MOTION.dissolve;
 
@@ -30,7 +35,12 @@ const HALOS: Readonly<Record<string, { at: readonly [number, number]; side: numb
 
 interface Dissolve {
   death: DeathEvent;
-  def: EnemyDef;
+  /** Where its motes rise from: the hurtbox (a bellows' own box), and whether it dissolves at a boss's pace. */
+  box: { w: number; h: number; offsetY: number };
+  boss: boolean;
+  /** A boss's core or seam halo, by enemy id. */
+  halo?: GameObjects.Graphics;
+  haloId?: string;
   family: EnemyFamily;
   /** Champion scale (032), 1 otherwise. */
   k: number;
@@ -38,7 +48,6 @@ interface Dissolve {
   tint: GameObjects.Sprite;
   base: number;
   glow?: GameObjects.Image;
-  halo?: GameObjects.Graphics;
   ms: number;
   /** The motes planned for each wave, and the next wave to throw. */
   waves: number[];
@@ -48,11 +57,14 @@ interface Dissolve {
 export class DissolveView {
   private readonly scene: Scene;
   private readonly particles: () => Particles | undefined;
+  /** The enemy as last drawn (EnemyView's), for what a death's event doesn't carry: the Forgewright's bellows. */
+  private readonly lastOf: (id: number) => EnemyState | undefined;
   private readonly live: Dissolve[] = [];
 
-  constructor(scene: Scene, particles: () => Particles | undefined) {
+  constructor(scene: Scene, particles: () => Particles | undefined, lastOf: (id: number) => EnemyState | undefined) {
     this.scene = scene;
     this.particles = particles;
+    this.lastOf = lastOf;
   }
 
   /** Dissolves running now, for the test hook. */
@@ -74,18 +86,41 @@ export class DissolveView {
     body.setScale(base);
     const family = familyOf(def.id);
     const tint = addVectorSprite(this.scene, death.x, bottom, frame).setDepth(bottom + 0.001).setFlipX(flip).setScale(base).setBlendMode(BlendModes.ADD).setTint(colorOf(family.motes[0])).setTintMode(TintModes.FILL).setAlpha(0);
-    const quality = settings().quality;
-    const p = this.particles();
-    const total = deathMoteCount(def.id, death.champion === true, { quality, liveMotes: p?.deathMotes ?? 0, liveParticles: p?.count ?? 0 });
-    const d: Dissolve = { death, def, family, k, body, tint, base, ms: 0, waves: moteWaves(total, D.waves), next: 0 };
+    const total = deathMoteCount(def.id, death.champion === true, this.room());
+    const d: Dissolve = { death, box: def.hurtbox, boss: def.boss, family, k, body, tint, base, ms: 0, waves: moteWaves(total, D.waves), next: 0 };
     if (death.champion) {
       const G = CHAMPIONS.glow;
       d.glow = addVector(this.scene, death.x, death.y + def.hurtbox.offsetY * k, LANDMARK_SPRITES.championGlow).setTint(colorOf(G.color)).setBlendMode(BlendModes.ADD).setDepth(bottom - 0.001);
       d.glow.setScale((G.radius * CHAMPIONS.scale) / LANDMARK_LOOK.championGlowPx / textureScale()).setAlpha(G.alpha[1]);
     }
-    if (HALOS[def.id] && death.facing !== 'up') d.halo = this.scene.add.graphics().setBlendMode(BlendModes.ADD).setDepth(bottom + 0.002);
+    if (HALOS[def.id] && death.facing !== 'up') {
+      d.halo = this.scene.add.graphics().setBlendMode(BlendModes.ADD).setDepth(bottom + 0.002);
+      d.haloId = def.id;
+    }
     this.live.push(d);
     this.draw(d);
+    if (def.kind === 'forgewright') this.bellows(death, def, total);
+  }
+
+  /** The Forgewright's two bellows dissolve with it, each with a quarter of its motes. */
+  private bellows(death: DeathEvent, def: ForgewrightDef, total: number): void {
+    const e = this.lastOf(death.id);
+    if (!e) return;
+    const family = familyOf(def.id);
+    e.bellows.forEach((b, i) => {
+      const at = bellowsPoint(e, def, i);
+      const frame = FORGE_SPRITES.bellows[bellowsLook(b.patch)];
+      const body = addVectorSprite(this.scene, at.x, at.y, frame).setDepth(at.y).setFlipX(i === 0);
+      const tint = addVectorSprite(this.scene, at.x, at.y, frame).setDepth(at.y + 0.001).setFlipX(i === 0).setBlendMode(BlendModes.ADD).setTint(colorOf(family.motes[0])).setTintMode(TintModes.FILL).setAlpha(0);
+      const share = waveCount(Math.round(total / 4), this.room());
+      this.live.push({ death: { ...death, x: at.x, y: at.y }, box: def.bellows.hurtbox, boss: true, family, k: 1, body, tint, base: body.scaleX, ms: 0, waves: moteWaves(share, D.waves), next: 0 });
+    });
+  }
+
+  /** What is flying now, for thinning a death's motes. */
+  private room(): MoteRoom {
+    const p = this.particles();
+    return { quality: settings().quality, liveMotes: p?.deathMotes ?? 0, liveParticles: p?.count ?? 0 };
   }
 
   /** Moves every dissolve on by `deltaMs` of the tween clock. */
@@ -109,7 +144,7 @@ export class DissolveView {
 
   /** Draws a dissolve for its time; false once it's done. */
   private draw(d: Dissolve): boolean {
-    const boss = d.def.boss;
+    const boss = d.boss;
     const look = dissolveAt(d.ms, boss, settings().flashes);
     if (look.phase === 'done') return false;
     d.body.setScale(d.base * look.sx, d.base * look.sy).setAlpha(look.alpha);
@@ -129,28 +164,28 @@ export class DissolveView {
   private throwWave(d: Dissolve, planned: number): void {
     const p = this.particles();
     if (!p || planned <= 0) return;
-    const quality = settings().quality;
-    const n = waveCount(planned, { quality, liveMotes: p.deathMotes, liveParticles: p.count });
-    const hb = d.def.hurtbox;
+    const room = this.room();
+    const n = waveCount(planned, room);
+    const hb = d.box;
     const motes: Mote[] = Array.from({ length: n }, () => ({
       x: d.death.x + (Math.random() - 0.5) * hb.w * d.k,
       y: d.death.y + (hb.offsetY + (Math.random() - 0.5) * hb.h) * d.k,
       color: d.family.motes[Math.floor(Math.random() * d.family.motes.length)] ?? d.family.motes[0],
     }));
-    const boss = d.def.boss;
+    const boss = d.boss;
     p.emitMotes(motes, {
       speed: DEATH_MOTES.speed,
       gravity: DEATH_MOTES.gravity,
       lifeMs: boss ? DEATH_MOTES.bossLifeMs : DEATH_MOTES.lifeMs,
       size: boss ? DEATH_MOTES.bossSize : DEATH_MOTES.size,
-      add: DEATH_MOTES.additive[quality],
+      add: DEATH_MOTES.additive[room.quality],
       depth: d.body.depth + 1,
     });
   }
 
   /** The boss's core or seam light, fading with its body. */
   private drawHalo(d: Dissolve, alpha: number): void {
-    const h = HALOS[d.def.id];
+    const h = d.haloId ? HALOS[d.haloId] : undefined;
     const g = d.halo;
     if (!h || !g) return;
     const side = d.death.facing === 'left' || d.death.facing === 'right';

@@ -14,7 +14,7 @@ const VIEWS = ['side', 'down', 'up'] as const;
 const MIN = 4;
 const BOSS_MIN = 6;
 /** Rigs redrawn by 076 so far, which carry their tells. The Burrower's wind-up is underground (its ripple's). */
-const REDRAWN = ['husk', 'wisp', 'warden', 'charger', 'burrower', 'shardback', 'sniper', 'bulwark'];
+const REDRAWN = ['husk', 'wisp', 'warden', 'charger', 'burrower', 'shardback', 'sniper', 'bulwark', 'cinder-mote', 'bellows-hound', 'slag-golem', 'slag-whelp', 'kiln-tender', 'forgewright'];
 /** Its wind-up is spent underground: the ripple's phases are its tell. */
 const UNDERGROUND = ['burrower'];
 const bossRig = (id: string): boolean => Object.values(ENEMIES).some((d) => d.anims === id && d.boss);

@@ -15,6 +15,7 @@ import { INK_ID, hexToRgb, paletteHex } from '../data/palette';
 import { STAGE_SPRITES, SPLIT_FLASH } from '../data/stageAssets';
 import { DRAW_HEIGHT } from '../data/tube';
 import type { SimEvents } from '../sim/events';
+import type { EnemyState } from '../sim/enemies';
 import { registerAnim } from './anims';
 import { colorOf } from './color';
 import { burstTint, tintBurst } from './roundLook';
@@ -42,10 +43,10 @@ export class EffectsView {
   /** Split flashes still drawn (029). */
   private flashes = 0;
 
-  /** `particles`: where the dissolves throw their motes (FeelView's, made after this view). */
-  constructor(scene: Scene, followed: GameObjects.Image, fadeThrough: FadeThrough, particles: () => Particles | undefined) {
+  /** `particles`: where the dissolves throw their motes (FeelView's, made after this view); `lastOf`: an enemy as last drawn. */
+  constructor(scene: Scene, followed: GameObjects.Image, fadeThrough: FadeThrough, particles: () => Particles | undefined, lastOf: (id: number) => EnemyState | undefined) {
     this.scene = scene;
-    this.dissolves = new DissolveView(scene, particles);
+    this.dissolves = new DissolveView(scene, particles, lastOf);
     this.fadeThrough = fadeThrough;
     this.camera = scene.cameras.main;
     this.followed = followed;
