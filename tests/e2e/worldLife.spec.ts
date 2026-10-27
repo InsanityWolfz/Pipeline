@@ -4,7 +4,8 @@ import { OVERWORLD, OVERWORLD_ROOM } from '../../src/data/overworld';
 import { setPieceAnchor, setPieceDef } from '../../src/data/setPieces';
 import { WORLD } from '../../src/sim/world';
 import { boot, watchErrors } from './helpers';
-import { frames, openWorld, setLook, toRegion } from './lightingPage';
+import { frames, lighting, openWorld, setLook, toRegion } from './lightingPage';
+import { SET_PIECE_LIGHTS } from '../../src/data/lights';
 import { hoverWorld, sample, toSetPiece, walkToAny, world } from './worldLifePage';
 
 // 077: the world's detail and motion in the game: each region's plants, scatter and ruin variants per built chunk;
@@ -45,6 +46,19 @@ test('the set pieces stand at their places, are named on hover, and the player s
     await hoverWorld(page, a.x, a.y - Math.min(p.look.h / 2, 60));
     await expect.poll(() => page.evaluate(() => window.__GAME__?.ui().hoverName ?? null)).toBe(p.name);
     expect(await page.evaluate(() => window.__GAME__?.ui().hoverDescription ?? null)).toBeNull();
+    // Its light (the Ley Tower's crystal, the Furnace's mouth) on High and Medium, at the place its art gives; none on Low.
+    const l = SET_PIECE_LIGHTS[id];
+    if (l && p.lightAt) {
+      const at = { x: a.x + p.lightAt[0], y: a.y + p.lightAt[1] };
+      for (const q of ['high', 'medium'] as const) {
+        await setLook(page, { quality: q });
+        const placed = (await lighting(page)).placed.find((x) => Math.abs(x.x - at.x) < 1 && Math.abs(x.y - at.y) < 1);
+        expect(placed, `${id} ${q}`).toMatchObject({ source: l.source, color: l.color, radius: l.radius });
+      }
+      await setLook(page, { quality: 'low' });
+      expect((await lighting(page)).placed).toEqual([]);
+      await setLook(page, { quality: 'medium' });
+    }
   }
   // Behind the Storm Tower (north of its footprint, on open ground): it hides the player, who shows through it.
   const tower = setPieceDef('storm-tower');
