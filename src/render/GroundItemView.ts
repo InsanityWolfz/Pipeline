@@ -1,4 +1,5 @@
 import type { GameObjects, Scene } from 'phaser';
+import type { CatchView } from './lighting/CatchView';
 import { DEPTHS, GROUND_ITEM_LIFT, SPRITES } from '../data/assets';
 import { ITEMS } from '../data/items';
 import { CACHE_BURST } from '../data/landmarks';
@@ -49,7 +50,7 @@ export class GroundItemView {
   }
 
   /** `picked` holds the ids of items picked up since the last draw; `player` is where the player stands. A schematic shows as unknown until banked (033). */
-  update(items: readonly GroundItem[], picked: ReadonlySet<number>, player: { x: number; y: number }, sim: Pick<SimState, 'research'>): void {
+  update(items: readonly GroundItem[], picked: ReadonlySet<number>, player: { x: number; y: number }, sim: Pick<SimState, 'research'>, catcher?: CatchView): void {
     this.player = { x: player.x, y: player.y };
     const live = new Set<number>();
     const shown: GroundItemShown[] = [];
@@ -69,6 +70,7 @@ export class GroundItemView {
         this.drawn.set(g.id, d);
       }
       shown.push(this.place(d, g));
+      catcher?.offer(d.item, d.item.x, d.item.y, 'item', g.id);
     }
     this.shown = shown;
     for (const [id, d] of this.drawn) {

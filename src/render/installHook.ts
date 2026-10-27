@@ -1,3 +1,4 @@
+import { updateSettings } from './flow/settingsStore';
 import { heldPart, NO_COMMAND, type Command } from '../sim/input';
 import { withUi } from './menuRequests';
 import { createSim, type SimState } from '../sim/state';
@@ -69,6 +70,11 @@ export function installTestHook(flow: FlowScene): void {
     drop: act((sim, _scene, itemId: string, x: number, y: number) => void layItem(sim, itemId, sim.roomId, x, y)),
     tweenSpeed: (scale) => {
       live().tweens.timeScale = scale;
+    },
+    setLook: (look) => updateSettings(look),
+    lightingOff: (off) => {
+      const l = live().lighting;
+      if (l) l.off = off;
     },
     claim: act((sim, _scene, site: string) => claim(sim, site)),
     completeObjectives: act((sim, _scene, count: number) => {
