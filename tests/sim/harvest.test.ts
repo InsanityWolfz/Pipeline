@@ -186,3 +186,43 @@ describe('nodes', () => {
     expect(e.health).toBeLessThan(HUSK.maxHealth);
   });
 });
+
+describe("a tree's canopy (070)", () => {
+  const canopy = TREE.canopy;
+
+  it('standing behind the trunk, under the canopy, puts the tree in reach', () => {
+    if (!canopy) throw new Error('the tree has no canopy');
+    // A tile north of the trunk: past HARVEST_REACH of its base, but under its leaves.
+    const s = arena();
+    const n = placeNode(s, 'tree', PLAYER_AT.x, PLAYER_AT.y + 32);
+    expect(32 - (FEET_BOX.h + TREE.feetBox.h) / 2).toBeGreaterThan(HARVEST_REACH);
+    run(s, 1, { interact: true });
+    expect(s.harvest?.nodeId).toBe(n.id);
+    run(s, TREE.harvestTicks - 1);
+    expect(n.uses).toBe(TREE.uses - 1);
+  });
+
+  it('reaches as far as the canopy and no farther', () => {
+    if (!canopy) throw new Error('the tree has no canopy');
+    const under = arena();
+    placeNode(under, 'tree', PLAYER_AT.x + canopy.w / 2, PLAYER_AT.y + canopy.up);
+    run(under, 1, { interact: true });
+    expect(under.harvest).not.toBeNull();
+    const above = arena();
+    placeNode(above, 'tree', PLAYER_AT.x, PLAYER_AT.y + canopy.up + 1);
+    run(above, 1, { interact: true });
+    expect(above.harvest).toBeNull();
+    const beside = arena();
+    placeNode(beside, 'tree', PLAYER_AT.x + canopy.w / 2 + 1, PLAYER_AT.y + 32);
+    run(beside, 1, { interact: true });
+    expect(beside.harvest).toBeNull();
+  });
+
+  it('a node without a canopy (a boulder) is out of reach from the same spot', () => {
+    expect(nodeDef('rubble').canopy).toBeUndefined();
+    const s = arena();
+    placeNode(s, 'rubble', PLAYER_AT.x, PLAYER_AT.y + 32);
+    run(s, 1, { interact: true });
+    expect(s.harvest).toBeNull();
+  });
+});

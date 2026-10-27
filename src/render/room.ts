@@ -9,6 +9,7 @@ import { registerAnim } from './anims';
 import { floorFrame, wallPieces, worldTileHash } from './roomTiles';
 import { hollowsFrame } from './hollowsTiles';
 import { addVectorSprite, addVector } from './vector/textures';
+import type { Occluders } from './occluders';
 
 const FLOOR_PROP_DEPTH = (DEPTHS.floor + DEPTHS.shadow) / 2;
 
@@ -19,8 +20,12 @@ export class RoomView {
   private readonly scene: Scene;
   private objects: (GameObjects.Image | GameObjects.Sprite)[] = [];
 
-  constructor(scene: Scene) {
+  private readonly occluders: Occluders | undefined;
+
+  /** `occluders` (070): ruin blocks (and the block props standing in for them) can hide the player. */
+  constructor(scene: Scene, occluders?: Occluders) {
     this.scene = scene;
+    this.occluders = occluders;
   }
 
   show(room: Room): void {
@@ -60,11 +65,13 @@ export class RoomView {
         // 044: the Hollows' cliffs, columns and fallen drums (the sandbox's Sunken Forum) in their own look.
         const hollows = hollowsFrame(symbol, tx, ty, worldTileHash(tx, ty), room);
         if (hollows) {
-          this.objects.push(addVector(this.scene, left + TILE_SIZE / 2, bottom, hollows).setDepth(bottom));
+          const image = addVector(this.scene, left + TILE_SIZE / 2, bottom, hollows).setDepth(bottom);
+          this.objects.push(image);
+          if (symbol === TILE.ruinBlock) this.occluders?.add(image);
           continue;
         }
         // A block prop (a column, a rune stone) stands in for the ruin block's look.
-        if (!blockProps.has(`${tx},${ty}`)) add(left, bottom, SPRITES.ruinBlock).setOrigin(0, 1).setDepth(bottom);
+        if (!blockProps.has(`${tx},${ty}`)) this.occluders?.add(add(left, bottom, SPRITES.ruinBlock).setOrigin(0, 1).setDepth(bottom));
       }
     }
     const crystal = room.crystal;
@@ -85,7 +92,10 @@ export class RoomView {
     if (def.layer === 'floor') sprite.setOrigin(0.5).setPosition(cx, bottom - TILE_SIZE / 2).setDepth(FLOOR_PROP_DEPTH);
     else if (def.layer === 'wall') sprite.setY(bottom + (def.drop ?? 0)).setDepth(bottom + PROP_LAYOUT.wallNudge);
     else if (def.layer === 'standing') sprite.setY(bottom - PROP_LAYOUT.standingInset).setDepth(bottom - PROP_LAYOUT.standingInset);
-    else sprite.setDepth(bottom);
+    else {
+      sprite.setDepth(bottom);
+      this.occluders?.add(sprite);
+    }
     if (def.anim.frames > 1) sprite.play({ key: def.anim.key, startFrame: (p.tx * PROP_LAYOUT.phaseX + p.ty * PROP_LAYOUT.phaseY) % def.anim.frames });
   }
 

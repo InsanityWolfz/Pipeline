@@ -22,7 +22,8 @@ test('New game, Quit to title, then New game again starts a working game', async
   await clickRow(page, 'newGame');
   await flowIs(page, 'play');
   await page.waitForFunction(() => window.__GAME__?.ui().ready === true);
-  // The new game runs: its world steps on its own.
-  await expect.poll(() => page.evaluate(() => window.__GAME__?.getState()?.tick ?? -1)).toBeGreaterThan(30);
+  // The new game runs: its world steps on its own. 070: given 20 s, as a busy two-core runner beside a heavy test file
+  // (landmarks.spec.ts, in this shard since 070's files) steps it at about 6 ticks a second, on main as on 070.
+  await expect.poll(() => page.evaluate(() => window.__GAME__?.getState()?.tick ?? -1), { timeout: 20_000 }).toBeGreaterThan(30);
   expect(errors).toEqual([]);
 });

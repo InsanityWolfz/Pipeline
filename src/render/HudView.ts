@@ -15,6 +15,10 @@ import { ResearchList, type ResearchListState } from './ResearchList';
 import { PickupFeed } from './PickupFeed';
 import { sandboxFeedAt } from './sandboxPopout';
 import { shownKey } from './itemShown';
+import { craftFeed } from './pickupFeedModel';
+import { tubeCardLabel } from './tubeCard';
+import { readyItem } from '../sim/hotbar';
+import { settings } from './flow/settingsStore';
 import { TubeSlotView, type TubeSlotState } from './TubeSlotView';
 import { CarriedHintView, type CarriedHintShown } from './CarriedHintView';
 import { CARRIED_HINT } from '../data/hints';
@@ -167,7 +171,9 @@ export class HudView {
     if (events.attunes.length > 0 && this.lastActive?.kind === 'carried') this.heldActive = this.lastActive;
     const ending = events.hints.some((h) => h.id === CARRIED_HINT.id);
     const before = this.tubeSlot.state;
-    this.tubeSlot.update(this.heldActive && sim.link.attunePulse > 0 && !ending ? this.heldActive : active, building);
+    // 070: the fist says when right click has carried rounds to fire.
+    const fist = tubeCardLabel(active, { hasTube: sim.hasTube, attuned: sim.link.attuned, carriedReady: readyItem(sim) !== null, building }, settings().bindings.use);
+    this.tubeSlot.update(this.heldActive && sim.link.attunePulse > 0 && !ending ? this.heldActive : active, building, fist);
     if (ending) {
       this.carriedHint.swap(before, before.icons[0], sim.hotbar.selected, (a) => this.tubeSlot.setAlpha(a));
       this.heldActive = null;
@@ -181,7 +187,9 @@ export class HudView {
     this.health.update(input, building ? buildBarBox(unlockedPieces(sim)) : null, dt);
     this.edges.update(this.health.shown.low, this.health.pulse);
     // 056.4, 057: in the sandbox the feed sits right of the Loadout tab, which holds the top-left, and moves out with it.
-    this.feed.update(events.pickups.map((p) => shownKey(sim, p.itemId)), dt, sim.sandbox ? sandboxFeedAt(loadoutOut) : null);
+    // 070: a craft max adds one line of everything it made.
+    const gained = [...events.pickups.map((p) => ({ key: shownKey(sim, p.itemId), count: 1 })), ...craftFeed(events.crafts).map((c) => ({ key: shownKey(sim, c.itemId), count: c.count }))];
+    this.feed.update(gained, dt, sim.sandbox ? sandboxFeedAt(loadoutOut) : null);
     // A KO closes the panel: the wake panel takes the screen (and the panel can't open again while it shows).
     if (events.woke) {
       this.inventory.setOpen(false);

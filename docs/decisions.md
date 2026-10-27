@@ -308,3 +308,8 @@ Each plan's build notes hold the detail; these are the lasting technical choices
   - Recipe cards are built from recipe data by one describer (`src/data/descriptions.ts`), so a new recipe gets its card with no new code.
   - Which piece takes E is decided in sim (`interactables.ts`): the piece under the cursor wins, then the nearest in reach; an entrance's Purge is a fallback, never ahead of a hovered piece.
   - A stored binding that leaves a newer action unbound isn't a clash; only two actions on one real key are.
+
+- **070 handling and clarity:**
+  - A held key reaches the sim as its own command flag (`Command.interactHeld`) next to the press (`interact`); rules that chain on a hold read the flag, so a press alone still acts once.
+  - Render-side checks that read pixels (the silhouette) cache on everything that can change the answer, including each prop's current frame, and look only at a spatial bucket round the player, never every prop each frame.
+  - A craft max always carries `batches` on its one craft event (even for one batch); a plain click carries none, so the feed tells them apart.

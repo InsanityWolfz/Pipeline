@@ -6,7 +6,8 @@ import { isRolling } from './movement';
 import { harvestable, nodeRects, useNode, type NodeState } from './nodes';
 import { roomById, type SimState } from './state';
 
-// Harvesting a gathering node with E: stand in reach and keep still until it's done.
+// Harvesting a gathering node with E: stand in reach and keep still until it's done. 070: with E still held as a
+// channel ends, the next channel starts on the same node, until it's empty, the player moves or E is let go.
 
 export interface HarvestState {
   /** The node being harvested (its state id). */
@@ -24,13 +25,23 @@ function gapTo(state: SimState, n: NodeState): number {
   return Math.hypot(gapX, gapY);
 }
 
+/** 070: the player's feet stand under the node's canopy (a tree's), if it has one. */
+function underCanopy(state: SimState, n: NodeState): boolean {
+  const c = nodeDef(n.nodeId).canopy;
+  const p = state.player;
+  return c !== undefined && p.y <= n.y && n.y - p.y <= c.up && Math.abs(p.x - n.x) <= c.w / 2;
+}
+
+/** The node is in reach of the player's feet: its base within HARVEST_REACH, or (070) the feet under its canopy. */
+const inReach = (state: SimState, n: NodeState): boolean => gapTo(state, n) <= HARVEST_REACH || underCanopy(state, n);
+
 /** The nearest harvestable node in reach in the player's room, by centre distance; the first placed wins ties. */
 export function nodeInReach(state: SimState): NodeState | undefined {
   const p = state.player;
   let best: NodeState | undefined;
   let bestDist = Infinity;
   for (const n of state.nodes) {
-    if (n.roomId !== state.roomId || !harvestable(n) || gapTo(state, n) > HARVEST_REACH) continue;
+    if (n.roomId !== state.roomId || !harvestable(n) || !inReach(state, n)) continue;
     const d = Math.hypot(n.x - p.x, n.y - p.y);
     if (d < bestDist) {
       bestDist = d;
@@ -67,7 +78,10 @@ export function stepHarvest(state: SimState, cmd: Command): void {
       return;
     }
     harvest.progress += 1;
-    if (n && harvest.progress >= nodeDef(n.nodeId).harvestTicks) complete(state, n);
+    if (!n || harvest.progress < nodeDef(n.nodeId).harvestTicks) return;
+    complete(state, n);
+    // The next channel's first tick is the next one, so each channel takes the full harvest time.
+    if (cmd.interactHeld && harvestable(n) && inReach(state, n)) state.harvest = { nodeId: n.id, progress: 0 };
     return;
   }
   if (!cmd.interact) return;

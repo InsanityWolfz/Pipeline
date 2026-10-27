@@ -9,6 +9,8 @@ import { harvestable, type NodeState } from '../sim/nodes';
 import { colorOf } from './color';
 import { nodeFrame } from './nodeStages';
 import { addVector, showFrame } from './vector/textures';
+import { PLAYER_SILHOUETTE } from '../data/silhouette';
+import type { Occluders } from './occluders';
 
 interface NodeSprites {
   image: GameObjects.Image;
@@ -38,8 +40,12 @@ export class NodeView {
     return [...this.sprites].filter(([, v]) => v.glow.visible).map(([id]) => id);
   }
 
-  constructor(scene: Scene) {
+  private readonly occluders: Occluders | undefined;
+
+  /** `occluders` (070): trees can hide the player. */
+  constructor(scene: Scene, occluders?: Occluders) {
     this.scene = scene;
+    this.occluders = occluders;
     this.bar = scene.add.graphics().setDepth(DEPTHS.worldUi);
   }
 
@@ -71,6 +77,7 @@ export class NodeView {
 
   private create(n: NodeState, frame: string, bottom: number): NodeSprites {
     const image = addVector(this.scene, n.x, bottom, frame);
+    if (PLAYER_SILHOUETTE.nodes.includes(n.nodeId)) this.occluders?.add(image);
     const glow = addVector(this.scene, n.x, bottom, frame).setTint(colorOf(NODE_GLOW.color)).setTintMode(TintModes.FILL);
     const sparkle = addVector(this.scene, n.x, bottom, SPRITES.nodeSparkle).setVisible(false);
     const d = NODE_DAPPLE;

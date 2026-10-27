@@ -18,6 +18,7 @@ import { inStormcrown } from '../../data/stormcrown';
 import { stormcrownFrame } from '../stormcrownTiles';
 import { isPlateau } from './plateau';
 import { pieceFrame } from '../../sim/tileLook';
+import type { Occluders } from '../occluders';
 
 // Draws the overworld (017): its ground baked into chunk textures, then every tree, rock, ruin and the foundry's ruin
 // as vector sprites sorted by their feet (067: the shrine's barrier dome is gone, its door open from the start); and
@@ -44,8 +45,12 @@ export class OverworldView {
   private shown = false;
   private claims = '';
 
-  constructor(scene: Scene) {
+  private readonly occluders: Occluders | undefined;
+
+  /** `occluders` (070): the trees and ruin blocks that can hide the player register there. */
+  constructor(scene: Scene, occluders?: Occluders) {
     this.scene = scene;
+    this.occluders = occluders;
   }
 
   /** Shows the overworld's art, building it the first time; anything else hides it. */
@@ -181,6 +186,7 @@ export class OverworldView {
     if (!frame) return null;
     const image = addVector(this.scene, x + jitter, bottom, frame).setDepth(bottom);
     if (symbol === TILE.tree && (hash >>> 16) % 2 === 0) image.setFlipX(true);
+    if (symbol === TILE.tree || symbol === TILE.ruinBlock) this.occluders?.add(image);
     return image;
   }
 

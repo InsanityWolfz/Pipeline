@@ -26,6 +26,7 @@ import { registerAnim } from './anims';
 import { arrowSpots, conduitLook, pieceIcon } from './foundryLayout';
 import { TextLine } from './textLine';
 import { addVector, addVectorSprite, textureScale } from './vector/textures';
+import type { Occluders } from './occluders';
 import { riderAt, splitterLook, tunnelLook, tunnelRiderAt } from './flatPieces';
 
 export const viewOf = (f: Facing): PieceView => (f === 'up' || f === 'down' ? f : 'side');
@@ -87,8 +88,12 @@ export class FoundryView {
   /** Pieces just placed, which drop in with a bounce when next drawn (014). */
   private readonly dropping = new Set<number>();
 
-  constructor(scene: Scene) {
+  private readonly occluders: Occluders | undefined;
+
+  /** `occluders` (070): machines can hide the player. */
+  constructor(scene: Scene, occluders?: Occluders) {
     this.scene = scene;
+    this.occluders = occluders;
     for (const views of Object.values(MACHINE_SPRITES)) for (const v of Object.values(views)) registerAnim(scene, v.working);
     for (const anim of [...Object.values(CONDUIT_ANIMS), ...Object.values(CONDUIT_CORNERS)]) registerAnim(scene, anim);
     registerAnim(scene, STATUS_MARKERS.working);
@@ -150,6 +155,7 @@ export class FoundryView {
       d.icon.setDepth(FOUNDRY_LAYOUT.itemDepth);
     } else if (p.kind === 'machine') {
       const footprint = pieceDef(p.pieceId).footprint;
+      this.occluders?.add(d.body);
       d.icon.setPosition(r.x, bottom - ICON_RISE[footprint][view]).setDepth(bottom + FOUNDRY_LAYOUT.onTopNudge);
       d.marker = addVectorSprite(this.scene, r.x, 0, STATUS_MARKERS.blocked).setOrigin(0.5, 1).setDepth(DEPTHS.worldUi);
       d.markerIcon = addVector(this.scene, r.x, 0, pieceIcon(p.pieceId)).setOrigin(0.5).setDepth(DEPTHS.worldUi + 1);

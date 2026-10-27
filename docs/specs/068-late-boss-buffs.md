@@ -134,6 +134,7 @@ For Shaun's call (recorded, not tuned):
   about 231 s. Bolts deal 9 a hit without piercing, so they break rods slowly. Arrows pierce, so a line can break two
   rods, and arrows aimed at him strike the rod behind him.
 - 068.11 The order is the Bulwark (18 s), then the Conductor, then the Forgewright, so the Conductor is not the longest.
+  Shaun, 2026-10-26, on 068.9–068.11: "Keep it as is for now." Merged untuned.
 - 068.12 064's "the Conductor grounded" review shot (stormcrownShots.spec.ts, REVIEW_SHOTS only, so CI skips it) now
   times out in `cameraSettled` at its 5 s default. The camera lift from fix-playtest-ui eases slowly there. That looks
   like main's change rather than 068's, which doesn't move him or the player, and it is left as it is (064's shots

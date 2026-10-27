@@ -56,7 +56,7 @@ export function installTestHook(flow: FlowScene): void {
       // Building with the mouse and keys works under the hook: the scene's queued actions join each tick.
       for (let i = 0; i < frames; i++) scene.stepOnce(withUi(i === 0 ? held : after, scene.takeUiCommand()));
     }),
-    craft: act((_sim, scene, recipeId: string) => scene.craft(recipeId)),
+    craft: act((_sim, scene, recipeId: string, max?: boolean) => scene.craft(recipeId, max)),
     resume: () => {
       live().manualStepping = false;
     },

@@ -42,8 +42,16 @@ export const HUD_LAYOUT = {
     wellInset: 2,
     labelPad: 2,
     melee: 'Melee',
+    /** 070: the fist's label, tube empty with a carried round ready; `{key}` is the use key (RMB or the bound key). Widens the card. */
+    tubeEmpty: 'Tube empty · {key} fires carried',
+    mouseKey: 'RMB',
+    /** 070: the widened card's well: its ring (palette id, alpha, px) and its fill, top to bottom. */
+    wide: { ring: 'cyan', ringAlpha: 0.85, ringWidth: 1.2, wellTop: 'ink', wellBottom: 'carve-dark' },
   },
 } as const;
+
+/** 070: an emptied carried-bar slot's round icon and "0", drawn at this alpha (greyed) until another round takes the slot. */
+export const CARRIED_EMPTY = { alpha: 0.35 } as const;
 
 /** The tube slot's width for `units` rounds (025): units side by side, `gap` px apart. */
 export function tubeSlotWidth(units: number): number {
