@@ -58,8 +58,3 @@ export function sheetSections(view: WandererView): SheetStrip[] {
   );
   return strips;
 }
-
-/** Every pose for one view, labelled by strip and cell, as the sheet lays them out. */
-export function sheetPoses(view: WandererView): { label: string; pose: WandererPose }[] {
-  return sheetSections(view).flatMap((s) => s.cells.map((c) => ({ label: `${s.title}: ${c.label}`, pose: c.pose })));
-}

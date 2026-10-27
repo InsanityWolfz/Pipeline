@@ -8,7 +8,7 @@ import { drawShape, drawShapes, type DrawOpts } from './draw';
 import { angleOf, apply, chain, invert, mul, rotate, rotateAbout, scaleAbout, translate, useMat, type Mat, type Pt } from './affine';
 import { drawArm, drawHose, drawLeg, hoseAt, hosePath } from './wandererBody';
 import { drawFlash, drawPulse, drawShimmer, drawTube, drawWindowFlare } from './wandererFx';
-import { bakedPart } from './partCache';
+import { bakePart, type Baked } from './partCache';
 import type { WandererPose } from './wandererPose';
 
 // Poses and draws the wanderer (016; the arcane ranger since 075) onto a canvas whose origin is at the feet, in world
@@ -22,15 +22,41 @@ export { REST_POSE, type WandererPose } from './wandererPose';
 const S = WANDERER.scale;
 
 /** The views by scheme and trim, built once each. */
-const viewCache = new Map<string, Record<WandererView, WandererViewDef>>();
+const viewCache = new Map<WandererSchemeId, Map<Rarity | null, Record<WandererView, WandererViewDef>>>();
 export function viewsFor(scheme: WandererSchemeId, trim: Rarity | null): Record<WandererView, WandererViewDef> {
-  const key = `${scheme}/${trim ?? 'none'}`;
-  let v = viewCache.get(key);
-  if (!v) {
-    v = wandererViews(scheme, trim);
-    viewCache.set(key, v);
-  }
+  let byTrim = viewCache.get(scheme);
+  if (!byTrim) viewCache.set(scheme, (byTrim = new Map()));
+  let v = byTrim.get(trim);
+  if (!v) byTrim.set(trim, (v = wandererViews(scheme, trim)));
   return v;
+}
+
+/** A view's lookups, made once per view so a frame allocates none (075 review): parts by id, the tank's and the trim's parts, the hem's middle corner, and its baked parts by scale. */
+interface ViewIndex {
+  parts: Map<string, Part>;
+  tank: Set<string>;
+  trim: Set<string>;
+  hemCorner: Pt | null;
+  baked: Map<number, Map<string, Baked | null>>;
+}
+const indexCache = new WeakMap<WandererViewDef, ViewIndex>();
+function indexOf(def: WandererViewDef): ViewIndex {
+  let ix = indexCache.get(def);
+  if (!ix) {
+    const corners = def.hem?.d.filter((cmd) => cmd[0] === 'L') ?? [];
+    const mid = corners[Math.floor(corners.length / 2)];
+    ix = { parts: new Map(def.parts.map((p) => [p.id, p])), tank: new Set(def.tankParts), trim: new Set(def.trimParts), hemCorner: mid && mid[0] === 'L' ? [mid[1], mid[2]] : null, baked: new Map() };
+    indexCache.set(def, ix);
+  }
+  return ix;
+}
+
+/** A part's bitmap at `k` canvas px per unit, from the view's index (baked on first use). */
+function bakedFor(ix: ViewIndex, p: Part, k: number, o: DrawOpts): Baked | null {
+  let byPart = ix.baked.get(k);
+  if (!byPart) ix.baked.set(k, (byPart = new Map()));
+  if (!byPart.has(p.id)) byPart.set(p.id, bakePart(p, k, o));
+  return byPart.get(p.id) ?? null;
 }
 
 /** Where things landed this frame, world px from the feet (for the test hook). */
@@ -61,14 +87,17 @@ function chainMat(def: WandererViewDef, pose: WandererPose, id: string): Mat {
 /** Bakes every part of the three views in a scheme and trim at `pxPerUnit` ahead of the first frame (075: at boot). */
 export function prebakeWanderer(scheme: WandererSchemeId, trim: Rarity | null, pxPerUnit: number): void {
   const o: DrawOpts = { outline: OUTLINE_WIDTH / S, blurScale: pxPerUnit * S };
-  for (const [view, def] of Object.entries(viewsFor(scheme, trim))) for (const p of def.parts) bakedPart(`${scheme}/${trim ?? 'none'}/${view}`, p, pxPerUnit * S, o);
+  for (const def of Object.values(viewsFor(scheme, trim))) {
+    const ix = indexOf(def);
+    for (const p of def.parts) bakedFor(ix, p, pxPerUnit * S, o);
+  }
 }
 
 /** Draws the wanderer with its feet at the canvas origin; `pxPerUnit` is canvas px per world px. */
 export function drawWanderer(c: CanvasRenderingContext2D, pose: WandererPose, pxPerUnit: number): WandererMarks {
   const def = viewsFor(pose.scheme, pose.trim)[pose.view];
-  const parts = new Map(def.parts.map((p) => [p.id, p]));
-  const bakeKey = `${pose.scheme}/${pose.trim ?? 'none'}/${pose.view}`;
+  const ix = indexOf(def);
+  const parts = ix.parts;
   const o: DrawOpts = { outline: OUTLINE_WIDTH / S, blurScale: pxPerUnit * S };
   const lit = pose.attuned && pose.attuning === null;
   const hipY = -WANDERER.hipHeight + pose.crouch;
@@ -77,7 +106,6 @@ export function drawWanderer(c: CanvasRenderingContext2D, pose: WandererPose, px
   const fig: Mat = chain(scaleAbout(1 + pose.squash, 1 - pose.squash, [0, 0]), translate(0, pose.drop), rotateAbout(pose.turn, [0, -pose.turnAt]));
   const torso: Mat = chain(fig, translate(pose.push, hipY), rotate(pose.lean), translate(pose.shove, 0));
   const tank: Mat = chain(torso, translate(0, pose.tank.bob), scaleAbout(1 + pose.tank.squash, 1 - pose.tank.squash, def.tankBase));
-  const tankParts = new Set(def.tankParts);
 
   // The tube, rigid in the feet's frame: held at the hip (tucked in to the chest for a roll), or lying where it dropped.
   const RL = WANDERER_MOTION.roll;
@@ -101,10 +129,10 @@ export function drawWanderer(c: CanvasRenderingContext2D, pose: WandererPose, px
   };
   const drawPart = (p: Part | undefined): void => {
     if (!p) return;
-    const base = tankParts.has(p.id) ? tank : torso;
-    const baked = bakedPart(bakeKey, p, pxPerUnit * S, o);
+    const base = ix.tank.has(p.id) ? tank : torso;
+    const baked = bakedFor(ix, p, pxPerUnit * S, o);
     inFrame(mul(base, chainMat(def, pose, p.id)), () => {
-      if (def.trimParts.includes(p.id) && pose.trimPulse < 1) c.globalAlpha *= pose.trimPulse;
+      if (ix.trim.has(p.id) && pose.trimPulse < 1) c.globalAlpha *= pose.trimPulse;
       if (baked) c.drawImage(baked.image, baked.x, baked.y, baked.w, baked.h);
       else drawShapes(c, p.shapes, o);
     });
@@ -209,8 +237,6 @@ export function drawWanderer(c: CanvasRenderingContext2D, pose: WandererPose, px
   const hood = parts.get('hood');
   if (hood) marks.hood = world(apply(torso, hood.pivot));
   // The hem's middle corner, for the test hook's trim check.
-  const corners = def.hem?.d.filter((cmd) => cmd[0] === 'L') ?? [];
-  const mid = corners[Math.floor(corners.length / 2)];
-  if (def.hem && mid && mid[0] === 'L') marks.hem = world(apply(mul(torso, chainMat(def, pose, def.hem.part)), [mid[1], mid[2]]));
+  if (def.hem && ix.hemCorner) marks.hem = world(apply(mul(torso, chainMat(def, pose, def.hem.part)), ix.hemCorner));
   return marks;
 }

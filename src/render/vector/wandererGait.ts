@@ -20,8 +20,6 @@ export interface Gait {
   squash: number;
   /** The tank's bob (up negative) and squash. */
   tank: { bob: number; squash: number };
-  /** The bob's wave: 1 at its lowest, just after a contact. */
-  wave: number;
 }
 
 const wrap = (p: number): number => ((p % TAU) + TAU) % TAU;
@@ -82,6 +80,5 @@ export function gaitAt(view: WandererView, phase: number, amount: number, stance
     bob,
     squash,
     tank,
-    wave,
   };
 }

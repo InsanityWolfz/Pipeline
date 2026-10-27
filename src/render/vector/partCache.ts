@@ -2,7 +2,7 @@ import type { Part, PathCmd, Shape } from '../../data/art/types';
 import { drawShapes, type DrawOpts } from './draw';
 
 // 075: the wanderer's parts baked once into small bitmaps at the drawing's resolution, the first time each is drawn
-// (by scheme, trim, view and scale), so a frame stamps a dozen images instead of re-drawing a hundred shapes. Its
+// (per view and scale, kept by the rig), so a frame stamps a dozen images instead of re-drawing a hundred shapes. Its
 // limbs, hose and effects stay live vector: they bend every frame.
 
 export interface Baked {
@@ -36,15 +36,8 @@ export function shapeBounds(s: Shape, outline: number): [number, number, number,
   return [Math.min(...xs) - pad, Math.min(...ys) - pad, Math.max(...xs) + pad, Math.max(...ys) + pad];
 }
 
-const cache = new Map<string, Baked | null>();
-
-/**
- * The part baked at `k` canvas px per unit (null outside a browser). `key` names what the part's shapes depend on
- * beyond its id (the scheme, the trim, the view).
- */
-export function bakedPart(key: string, part: Part, k: number, o: DrawOpts): Baked | null {
-  const id = `${key}/${part.id}@${k.toFixed(3)}`;
-  if (cache.has(id)) return cache.get(id) ?? null;
+/** The part baked at `k` canvas px per unit, or null outside a browser. The rig keeps each view's bakes (wandererRig.ts). */
+export function bakePart(part: Part, k: number, o: DrawOpts): Baked | null {
   let baked: Baked | null = null;
   if (typeof document !== 'undefined' && part.shapes.length > 0) {
     const boxes = part.shapes.map((s) => shapeBounds(s, o.outline));
@@ -62,6 +55,5 @@ export function bakedPart(key: string, part: Part, k: number, o: DrawOpts): Bake
       baked = { image, x, y, w: image.width / k, h: image.height / k };
     }
   }
-  cache.set(id, baked);
   return baked;
 }
