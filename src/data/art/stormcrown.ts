@@ -14,7 +14,7 @@ const slateFoot = { linear: [0, -12, 0, 0] as const, stops: [{ at: 0, color: 'st
 const ironBar = { linear: [-3, 0, 3, 0] as const, stops: [{ at: 0, color: 'iron-light' }, { at: 0.45, color: 'iron' }, { at: 1, color: 'iron-dark' }] };
 
 /** An iron rod: a slate footing, a tall iron post with two brass bands, a forked crown and a cyan spark (variant: height and lean). */
-function ironRod(variant: number): Shape[] {
+export function ironRod(variant: number): Shape[] {
   const top = variant === 0 ? -74 : -62;
   return [
     shadow(11, 3.5, -1),
@@ -31,7 +31,7 @@ function ironRod(variant: number): Shape[] {
 }
 
 /** A cairn: three or four slate stones heaped, each lit on its top-left (variant: the heap's shape). */
-function cairn(variant: number): Shape[] {
+export function cairn(variant: number): Shape[] {
   const stones: readonly (readonly [number, number, number, number])[] =
     variant === 0
       ? [[-13, -11, 26, 11], [-10, -20, 18, 10], [-6, -28, 12, 9]]

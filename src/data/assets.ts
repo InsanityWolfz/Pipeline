@@ -244,6 +244,8 @@ export const KO_FADE_MS = 250;
 /** A ground item's sprite bottom sits this far below its ground point, so it rests on its shadow, px. */
 export const GROUND_ITEM_LIFT = 3;
 
+export { AMBIENT_FRAMES, PLANT_FRAMES, SCATTER_FRAMES, SET_PIECE_FRAMES, VARIANT_FRAMES, WEATHER_TEXTURES } from './worldArtAssets';
+
 /** Textures drawn at runtime (014): the soft glow and the vignette; the low-HP edges (031), white to be tinted. */
 export const FX_TEXTURES = { glow: 'fx-glow', vignette: 'fx-vignette', lowHp: 'fx-low-hp', fog: 'fx-fog', lightPool: 'fx-light-pool' } as const;
 
@@ -279,6 +281,10 @@ export const DEPTHS = {
   lightPool: 0.2,
   /** 074: the region's fog, hugging the ground: over the glows, under the ground decals (telegraphs) and anything standing. */
   fog: 0.3,
+  /** 077: plants, flat in depth: over the ground and glows, under the fog, telegraphs, items and anything standing. */
+  decor: 0.27,
+  /** 077: the weather, over everything standing (and the silhouette), under the supply line's motes, bars, names and the HUD. */
+  weather: 98_500,
   /** 070: the player's silhouette while hidden behind a prop, over every prop and under the world's UI and motes. */
   silhouette: 98_000,
   /** Drifting motes, over the world. */

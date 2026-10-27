@@ -114,3 +114,14 @@ export const QUALITY_LOOK: Readonly<Record<Quality, { lights: boolean; pools: bo
  * over the ground and under the glows, fog and everything standing.
  */
 export const LIGHT_POOL = { size: 128, alpha: 0.3, maxAlpha: 0.55 } as const;
+
+/**
+ * 077: the set pieces that give light (Medium and High), placed where each piece's art says (`lightAt` in
+ * src/data/setPieces.ts): the Ley Tower's cracked crystal is a ley light (breathing with 014's glows), the Great
+ * Furnace's mouth and the Great Crucible's glow are fires (flickering ±15%). The other set pieces give none.
+ */
+export const SET_PIECE_LIGHTS: Readonly<Record<string, { readonly source: 'ley' | 'fire'; readonly color: string; readonly radius: number; readonly intensity: number; readonly priority: number; readonly flicker?: boolean }>> = {
+  'ley-tower': { source: 'ley', color: 'cyan', radius: 96, intensity: 0.7, priority: 3 },
+  'great-furnace': { source: 'fire', color: 'cinder', radius: 96, intensity: 0.9, priority: 2, flicker: true },
+  'great-crucible': { source: 'fire', color: 'cinder', radius: 72, intensity: 0.8, priority: 2, flicker: true },
+};
