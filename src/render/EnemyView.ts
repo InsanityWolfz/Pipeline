@@ -64,8 +64,11 @@ interface Drawn {
   hollows?: HollowsArt | undefined;
   /** Whether its telegraph last drew the Bulwark's back wave shaded (054). */
   waveShaded?: boolean;
-  /** 076: when (scene ms) its stagger started, or null; the art it showed last frame, and the frame or anim it shows. */
-  staggerAt: number | null;
+  /**
+   * 076: ms its stagger has run, or null: on the tween clock (a review shot can slow it), and held with the sprite
+   * through hit-stop and freezing. The art it showed last frame, and the frame or anim it shows.
+   */
+  staggerMs: number | null;
   art?: EnemyArtShown;
   shown: string;
 }
@@ -130,6 +133,7 @@ export class EnemyView {
   update(enemies: readonly EnemyState[], sim: SimState, catcher?: CatchView): void {
     const live = new Set<number>();
     const now = this.scene.time.now;
+    const dt = this.scene.game.loop.delta * this.scene.tweens.timeScale;
     this.last.clear();
     for (const e of enemies) {
       live.add(e.id);
@@ -137,8 +141,8 @@ export class EnemyView {
       const d = this.drawn.get(e.id) ?? this.create(e);
       // 076: a heavy frame's hits or a punch stagger it (its hit-stop holds the start); a wind-up or an attack cuts a stagger off at once.
       const hits = this.hits.get(e.id);
-      if (hits && staggers(hits, defOf(e).maxHealth, enemyDef(e.enemyId).boss)) d.staggerAt = now;
-      if (attacking(e.mode)) d.staggerAt = null;
+      if (hits && staggers(hits, defOf(e).maxHealth, enemyDef(e.enemyId).boss)) d.staggerMs = -dt;
+      if (attacking(e.mode)) d.staggerMs = null;
       const until = this.frozenUntil.get(e.id);
       if (until !== undefined && now < until) {
         d.sprite.anims.pause();
@@ -157,7 +161,8 @@ export class EnemyView {
       if (d.angle !== undefined && Math.abs(d.angle - e.angle) > 1e-6) d.turnUntil = now + HOLLOWS_LOOK.turnHoldMs;
       d.angle = e.angle;
       // Freezing (029) holds the sprite, pose and all, as hit-stop does.
-      const art = e.frozen > 0 && d.art ? d.art : enemyArt(e, def, anims, view, now < (d.turnUntil ?? 0), d.staggerAt === null ? null : now - d.staggerAt, now);
+      if (d.staggerMs !== null && e.frozen <= 0) d.staggerMs += dt;
+      const art = e.frozen > 0 && d.art ? d.art : enemyArt(e, def, anims, view, now < (d.turnUntil ?? 0), d.staggerMs, now);
       d.art = art;
       this.show(d, art, e.frozen > 0);
       // A champion (032) is drawn 1.5× its kind; 076: squashed about its feet.
@@ -214,7 +219,7 @@ export class EnemyView {
       telegraph: this.scene.add.graphics().setDepth(DEPTHS.groundFx),
       bar: makeEnemyBar(this.scene, e.id),
       hollows: makeHollowsArt(this.scene, enemyDef(e.enemyId)),
-      staggerAt: null,
+      staggerMs: null,
       shown: '',
     };
     if (e.champion) {

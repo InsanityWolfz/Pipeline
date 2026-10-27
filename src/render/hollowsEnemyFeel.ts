@@ -46,7 +46,11 @@ export class HollowsEnemyFeel {
       const was = this.modes.get(e.id);
       this.modes.set(e.id, e.mode);
       if (kind === 'burrower') {
-        this.trail(e.id, e.underground && Math.hypot(e.vx, e.vy) > HOLLOWS_ENEMY_LOOK.ripple.minSpeed, deltaMs, () => j.burst('rippleDust', e.x, e.y + D.rippleDrop, e.y - 1));
+        // 076: through its wind-up the dust thickens, from every `dust.ms` to every `rippleWindup.dustMs` at the peak.
+        const def = enemyDef(e.enemyId);
+        const k = def.kind === 'burrower' && e.mode === 'windup' ? Math.min(1, e.modeTicks / def.burrow.windupTicks) : -1;
+        const every = k < 0 ? D.ms : D.ms + (HOLLOWS_ENEMY_LOOK.rippleWindup.dustMs - D.ms) * k;
+        this.trail(e.id, e.underground && (k >= 0 || Math.hypot(e.vx, e.vy) > HOLLOWS_ENEMY_LOOK.ripple.minSpeed), deltaMs, () => j.burst('rippleDust', e.x, e.y + D.rippleDrop, e.y - 1), every);
         continue;
       }
       if (kind === 'sniper') {
@@ -78,10 +82,10 @@ export class HollowsEnemyFeel {
     this.forget(live);
   }
 
-  /** While `on`, kicks up dust every `dust.ms` (counted per enemy). */
-  private trail(id: number, on: boolean, deltaMs: number, kick: () => void): void {
+  /** While `on`, kicks up dust every `every` ms (`dust.ms` unless told; counted per enemy). */
+  private trail(id: number, on: boolean, deltaMs: number, kick: () => void, every: number = D.ms): void {
     const since = (this.dust.get(id) ?? 0) + deltaMs;
-    if (on && since >= D.ms) {
+    if (on && since >= every) {
       kick();
       this.dust.set(id, 0);
     } else this.dust.set(id, since);

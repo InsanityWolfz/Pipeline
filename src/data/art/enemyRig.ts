@@ -21,6 +21,8 @@ export interface EnemyPart extends Part {
   readonly role: EnemyRole;
   /** Arm turns are mirrored (the right arm of a front or back view). */
   readonly mirror?: boolean;
+  /** 076: a glow part (eyes, runes) that rides the head's turn and lift instead of the body's. */
+  readonly follows?: 'head';
 }
 
 /** One frame's pose. Every field is optional; missing ones rest at 0 (or 1 for `alpha`, `scaleY`, `glow`). */
@@ -49,7 +51,7 @@ export interface EnemyPose {
    * width by (1 + squash), so the feet stay planted.
    */
   readonly squash?: number;
-  /** 076: the head's own turn about its pivot, radians (positive tips toward the facing), and its lift, px (negative is up). */
+  /** 076: the head's own turn about its pivot (the view's first head part's), radians (positive tips toward the facing), and its lift, px (negative is up). Every head part, and glow parts that follow it, turn together. */
   readonly head?: number;
   readonly headLift?: number;
   /** 076: the legs' own turns about their pivots, radians (a leg kicked up in a stagger, legs folding in a death). */
@@ -57,6 +59,10 @@ export interface EnemyPose {
   readonly legFront?: number;
   /** 076: the body (everything but the legs and ground) shifted toward the facing, px: a lunge, a recoil. */
   readonly shift?: number;
+  /** 076: the arms drawn apart, px: the back arm moved back (or left) and the front arm forward (or right); negative draws them together. */
+  readonly spread?: number;
+  /** 076: both arms (and what they hold: a shield, a hammer, a staff) raised, px. */
+  readonly raise?: number;
 }
 
 /** `turn`, `lob`, `throw` and `block` (034) only where an enemy has them (the Bulwark); `stun`, `dig` and `step` (035) likewise; `roar`, `brace` and `stomp` (041) the Bulwark's; `spray`, `flood` and `vent` (060) the Forgewright's; `blink`, `call` and `chain` (064) the Conductor's. */
@@ -82,7 +88,7 @@ export interface EnemyRigDef {
    * 076: the part each wind-up strip throws (claw, fist, hammer, staff, plate, head) and a point on it, style px in
    * the part's own coordinates, per view: its coil and peak carry it well clear of where it rests, so the tell reads.
    */
-  readonly tells?: Readonly<Partial<Record<EnemyPoseName, { readonly part: string; readonly at: readonly [number, number] }>>>;
+  readonly tells?: Readonly<Partial<Record<EnemyPoseName, { readonly part: string | Readonly<Record<'side' | 'down' | 'up', string>>; readonly at: Readonly<Record<'side' | 'down' | 'up', readonly [number, number]>> }>>>;
 }
 
 /**

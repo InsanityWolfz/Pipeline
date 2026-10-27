@@ -29,9 +29,14 @@ export function partMat(rig: EnemyRigDef, view: EnemyView, pose: EnemyPose, part
   const lean = (pose.lean ?? 0) * (view === 'side' ? 1 : FACE_ON_LEAN);
   const shift = view === 'side' ? (pose.shift ?? 0) : 0;
   const body = chain(translate(shift, pose.bob ?? 0), rotateAbout(lean, rig.hip));
-  if (part.role === 'arm-back') return chain(body, turn(part, pose.armBack ?? 0));
-  if (part.role === 'arm-front') return chain(body, turn(part, pose.armFront ?? 0));
-  if (part.role === 'head') return chain(body, translate(0, pose.headLift ?? 0), turn(part, (pose.head ?? 0) * (view === 'side' ? 1 : FACE_ON_LEAN)));
+  const spread = pose.spread ?? 0;
+  const raise = -(pose.raise ?? 0);
+  if (part.role === 'arm-back') return chain(body, translate(-spread, raise), turn(part, pose.armBack ?? 0));
+  if (part.role === 'arm-front') return chain(body, translate(spread, raise), turn(part, pose.armFront ?? 0));
+  if (part.role === 'head' || part.follows === 'head') {
+    const pivot = rig.views[view].find((p) => p.role === 'head')?.pivot ?? part.pivot;
+    return chain(body, translate(0, pose.headLift ?? 0), rotateAbout((pose.head ?? 0) * (view === 'side' ? 1 : FACE_ON_LEAN), pivot));
+  }
   if (part.role === 'charge') {
     const k = pose.charge ?? 0;
     return k > 0 ? chain(body, scaleAbout(k, k, part.pivot)) : null;
