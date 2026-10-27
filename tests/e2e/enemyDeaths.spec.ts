@@ -46,9 +46,13 @@ async function spawnAndKill(page: Page, ids: readonly string[], spots: readonly 
   );
 }
 
-/** Watches the particles every frame for `ms` of real time: the most death motes, live particles and dissolves seen, and how long the dissolves ran (from the first frame showing one). */
-async function watch(page: Page, ms: number) {
-  return page.evaluate(async (limit) => {
+/**
+ * Watches the particles every frame for `ms` of real time (or, `untilDone`, until the dissolves have run out: High on a
+ * loaded runner can draw a frame a second): the most death motes, live particles and dissolves seen, and how long the
+ * dissolves ran (from the first frame showing one).
+ */
+async function watch(page: Page, ms: number, untilDone = false) {
+  return page.evaluate(async ([limit, done]) => {
     const g = window.__GAME__;
     if (!g) throw new Error('no game');
     const start = performance.now();
@@ -65,9 +69,10 @@ async function watch(page: Page, ms: number) {
       live = Math.max(live, p.live);
       dissolving = Math.max(dissolving, p.dissolving);
       if (dissolving > 0 && p.dissolving === 0 && endedAt < 0) endedAt = performance.now() - start - startedAt;
+      if (done && endedAt >= 0) break;
     }
     return { motes, live, dissolving, endedAt };
-  }, ms);
+  }, [ms, untilDone] as const);
 }
 
 test('a death dissolves in about 600 ms (a boss in 1.4 s), and nothing lingers', async ({ page }) => {
@@ -88,16 +93,17 @@ test('a death dissolves in about 600 ms (a boss in 1.4 s), and nothing lingers',
   expect(errors).toEqual([]);
 });
 
-test.setTimeout(120_000);
+test.setTimeout(240_000);
 
 test('Low throws half the motes of Medium, High half again', async ({ page }) => {
   const thrown: Record<string, number> = {};
   for (const q of ['low', 'medium', 'high'] as const) {
     await sandbox(page, q);
-    // Slowed on the tween clock, every wave of the one death is still flying when the last is thrown.
-    await page.evaluate(() => window.__GAME__?.tweenSpeed(0.25));
+    // Slowed on the tween clock, every wave of the one death is still flying when the last is thrown, however slowly
+    // a loaded runner draws High.
+    await page.evaluate(() => window.__GAME__?.tweenSpeed(0.1));
     await spawnAndKill(page, ['husk'], [[60, 0]]);
-    thrown[q] = (await watch(page, 3500)).motes;
+    thrown[q] = (await watch(page, 60_000, true)).motes;
   }
   expect(thrown).toEqual({ low: DEATH_MOTES.count.medium / 2, medium: DEATH_MOTES.count.medium, high: DEATH_MOTES.count.medium * 1.5 });
 });
@@ -107,9 +113,9 @@ test('ten Hollows enemies killed at once never pass a tier’s death-mote cap or
   const kinds = ['charger', 'shardback', 'sniper', 'burrower', 'charger', 'shardback', 'sniper', 'charger', 'shardback', 'sniper'];
   for (const q of ['low', 'medium', 'high'] as const) {
     await sandbox(page, q);
-    await page.evaluate(() => window.__GAME__?.tweenSpeed(0.5));
+    await page.evaluate(() => window.__GAME__?.tweenSpeed(0.1));
     await spawnAndKill(page, kinds, ring);
-    const seen = await watch(page, 2500);
+    const seen = await watch(page, 60_000, true);
     expect(seen.dissolving, q).toBe(10);
     expect(seen.motes, q).toBeGreaterThan(0);
     expect(seen.motes, q).toBeLessThanOrEqual(DEATH_MOTES.liveCap[q]);

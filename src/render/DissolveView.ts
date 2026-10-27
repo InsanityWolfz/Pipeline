@@ -146,17 +146,18 @@ export class DissolveView {
   private draw(d: Dissolve): boolean {
     const boss = d.boss;
     const look = dissolveAt(d.ms, boss, settings().flashes);
-    if (look.phase === 'done') return false;
-    d.body.setScale(d.base * look.sx, d.base * look.sy).setAlpha(look.alpha);
-    d.tint.setScale(d.base * look.sx, d.base * look.sy).setAlpha(look.tint);
-    d.glow?.setAlpha(CHAMPIONS.glow.alpha[1] * look.alpha);
-    if (d.halo) this.drawHalo(d, look.alpha);
+    // Its waves are thrown on time, and all of them even if a slow frame jumps past its end.
     const struck = boss ? D.bossStruckMs : D.struckMs;
     const fade = boss ? D.bossFadeMs : D.fadeMs;
     while (d.next < d.waves.length && d.ms >= struck + (fade * d.next) / D.waves) {
       this.throwWave(d, d.waves[d.next] ?? 0);
       d.next += 1;
     }
+    if (look.phase === 'done') return false;
+    d.body.setScale(d.base * look.sx, d.base * look.sy).setAlpha(look.alpha);
+    d.tint.setScale(d.base * look.sx, d.base * look.sy).setAlpha(look.tint);
+    d.glow?.setAlpha(CHAMPIONS.glow.alpha[1] * look.alpha);
+    if (d.halo) this.drawHalo(d, look.alpha);
     return true;
   }
 
