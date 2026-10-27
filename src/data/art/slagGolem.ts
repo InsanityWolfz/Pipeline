@@ -1,4 +1,4 @@
-import { DEATH_POSES, type EnemyPart, type EnemyPose, type EnemyRigDef } from './enemyRig';
+import { legacyRig, type EnemyPart, type EnemyPose, type EnemyRigDef } from './enemyRig';
 import { ellipse, line, path } from './types';
 
 // The slag golem and its whelps (061, drafts for Shaun's review). The golem: a hunched lump of cooling slag, dark crust
@@ -62,7 +62,7 @@ const SPLIT_DEATH: readonly EnemyPose[] = [
   { sink: 8, scaleY: 0.45, glow: 0, alpha: 0.35 },
 ];
 
-export const SLAG_GOLEM_RIG: EnemyRigDef = {
+export const SLAG_GOLEM_RIG: EnemyRigDef = legacyRig({
   id: 'slag-golem',
   scale: 1,
   box: { size: [64, 64], anchor: [32, 58] },
@@ -90,7 +90,7 @@ export const SLAG_GOLEM_RIG: EnemyRigDef = {
     hit: [{ lean: -0.1, bob: 1, glow: 0.8 }],
     death: SPLIT_DEATH,
   },
-};
+});
 
 const blob: EnemyPart = {
   id: 'body',
@@ -101,7 +101,7 @@ const blob: EnemyPart = {
 const nubs: EnemyPart = { id: 'nubs', role: 'leg-front', pivot: [0, -2], shapes: [ellipse(-4, -1.5, 2.5, 1.8, { fill: 'ash-dark', outline: true }), ellipse(4, -1.5, 2.5, 1.8, { fill: 'ash-dark', outline: true })] };
 const eyes = (xs: readonly number[]): EnemyPart => ({ id: 'eyes', role: 'glow', pivot: [0, -9], shapes: xs.map((x) => ellipse(x, -9.5, 1.1, 0.9, { fill: 'cinder-light', glow: { color: 'cinder', blur: 3 } })) });
 
-export const SLAG_WHELP_RIG: EnemyRigDef = {
+export const SLAG_WHELP_RIG: EnemyRigDef = legacyRig({
   id: 'slag-whelp',
   scale: 1,
   box: { size: [32, 28], anchor: [16, 24] },
@@ -126,6 +126,5 @@ export const SLAG_WHELP_RIG: EnemyRigDef = {
       { lean: 0.2, glow: 0.8 },
     ],
     hit: [{ lean: -0.25, scaleY: 0.85, glow: 0.7 }],
-    death: DEATH_POSES,
   },
-};
+});

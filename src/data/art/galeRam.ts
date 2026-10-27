@@ -1,4 +1,4 @@
-import { DEATH_POSES, type EnemyPart, type EnemyRigDef } from './enemyRig';
+import { legacyRig, type EnemyPart, type EnemyRigDef } from './enemyRig';
 import { ellipse, line, path, rect } from './types';
 
 // The gale ram (065, draft for Shaun's review): a heavy wind construct of the builders, a broad slate housing on four
@@ -75,7 +75,7 @@ const hub = (side: boolean): EnemyPart => ({
   shapes: [ellipse(side ? 14 : 0, -22, side ? 1.2 : 2.4, 2.4, { fill: 'cyan-glow', glow: { color: 'cyan', blur: 5 } })],
 });
 
-export const GALE_RAM_RIG: EnemyRigDef = {
+export const GALE_RAM_RIG: EnemyRigDef = legacyRig({
   id: 'gale-ram',
   scale: 1,
   box: { size: [60, 56], anchor: [30, 50] },
@@ -106,6 +106,5 @@ export const GALE_RAM_RIG: EnemyRigDef = {
     ],
     recover: [{ sink: 0.5, armFront: 0.2, glow: 0.3 }],
     hit: [{ lean: -0.15, bob: 1, armFront: 0.5, glow: 0.7 }],
-    death: DEATH_POSES,
   },
-};
+});

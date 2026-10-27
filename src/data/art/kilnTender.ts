@@ -1,4 +1,4 @@
-import { DEATH_POSES, type EnemyPart, type EnemyRigDef } from './enemyRig';
+import { legacyRig, type EnemyPart, type EnemyRigDef } from './enemyRig';
 import { ellipse, line, path, rect, solid } from './types';
 
 // The kiln-tender (061, draft for Shaun's review): a small domed kiln of the old builders on three spindly iron legs,
@@ -53,7 +53,7 @@ const nozzle = (side: boolean): EnemyPart => ({
     : [line([7, -28, 11, -33], 2.4, 'brass', true), ellipse(11.5, -34, 1.8, 1.6, { fill: 'brass-light', outline: true })],
 });
 
-export const KILN_TENDER_RIG: EnemyRigDef = {
+export const KILN_TENDER_RIG: EnemyRigDef = legacyRig({
   id: 'kiln-tender',
   scale: 1,
   box: { size: [44, 52], anchor: [22, 46] },
@@ -79,6 +79,5 @@ export const KILN_TENDER_RIG: EnemyRigDef = {
     ],
     recover: [{ glow: 0.3 }],
     hit: [{ lean: -0.18, bob: 1, glow: 0.5 }],
-    death: DEATH_POSES,
   },
-};
+});

@@ -2,8 +2,6 @@ import { type Cameras, type GameObjects, type Scene } from 'phaser';
 import {
   animFrames,
   DEPTHS,
-  ENEMY_ANIMS,
-  ENEMY_FX,
   FIRE_BURST,
   DEPOSIT_SWIRL,
   KO_FADE_MS,
@@ -13,8 +11,6 @@ import {
 } from '../data/assets';
 import { MELEE } from '../data/combat';
 import { CAMERA_LERP, DOOR_FADE_MS } from '../data/config';
-import { enemyDef } from '../data/enemies';
-import { CHAMPIONS } from '../data/champions';
 import { INK_ID, hexToRgb, paletteHex } from '../data/palette';
 import { STAGE_SPRITES, SPLIT_FLASH } from '../data/stageAssets';
 import { DRAW_HEIGHT } from '../data/tube';
@@ -24,11 +20,13 @@ import { colorOf } from './color';
 import { burstTint, tintBurst } from './roundLook';
 import { addVector, addVectorSprite } from './vector/textures';
 import { settings } from './flow/settingsStore';
+import { DissolveView } from './DissolveView';
+import type { Particles } from './Particles';
 
 /** Fades both cameras out over `ms` in colour `rgb`, calls `atDark`, and fades back in (SceneCameras.fadeThrough). */
 export type FadeThrough = (atDark: () => void, ms: number, rgb: readonly [number, number, number]) => void;
 
-// One-shot effects driven by sim events: corpses, pickup sparkles,
+// One-shot effects driven by sim events: deaths (076: dissolving, DissolveView), pickup sparkles,
 // fire bursts, muzzle flashes, the punch's swoosh, the deposit swirl, and the KO fade. Nothing here feeds back into the sim.
 export class EffectsView {
   private readonly scene: Scene;
@@ -37,15 +35,17 @@ export class EffectsView {
   private readonly followed: GameObjects.Image;
   /** Both cameras' fade to dark and back (SceneCameras.fadeThrough), which the KO's fade shares with the doors'. */
   private readonly fadeThrough: FadeThrough;
-  /** Corpses still on screen; a KO clears them with the rest of the room. */
-  private readonly corpses = new Set<GameObjects.Sprite>();
+  /** 076: deaths dissolving; a KO clears them with the rest of the room. */
+  readonly dissolves: DissolveView;
   /** Punch swooshes still drawn (023), for the test hook. */
   private live = 0;
   /** Split flashes still drawn (029). */
   private flashes = 0;
 
-  constructor(scene: Scene, followed: GameObjects.Image, fadeThrough: FadeThrough) {
+  /** `particles`: where the dissolves throw their motes (FeelView's, made after this view). */
+  constructor(scene: Scene, followed: GameObjects.Image, fadeThrough: FadeThrough, particles: () => Particles | undefined) {
     this.scene = scene;
+    this.dissolves = new DissolveView(scene, particles);
     this.fadeThrough = fadeThrough;
     this.camera = scene.cameras.main;
     this.followed = followed;
@@ -53,12 +53,12 @@ export class EffectsView {
     registerAnim(scene, FIRE_BURST);
     registerAnim(scene, MUZZLE_FLASH);
     registerAnim(scene, DEPOSIT_SWIRL);
-    for (const set of Object.values(ENEMY_ANIMS)) registerAnim(scene, set.death);
   }
 
   /** Plays the effects for events since the last frame. `player` is where the player stands now. */
   play(events: SimEvents, player: { x: number; y: number }): void {
-    for (const d of events.deaths) this.corpse(d.enemyId, d.x, d.y, d.facing === 'left', d.champion === true);
+    for (const d of events.deaths) this.dissolves.start(d);
+    this.dissolves.update(this.scene.game.loop.delta * this.scene.tweens.timeScale);
     for (const p of events.pickups) this.pickup(p.x, p.y);
     // 042.10: with Flashes off, no burst, muzzle or Split flash (nor the Cold Burst's frost tint on it).
     const flashes = settings().flashes;
@@ -74,31 +74,6 @@ export class EffectsView {
     }
     // A KO's wake, or Continue's (042): the same fade in the foundry.
     if (events.woke) this.koFade(player);
-  }
-
-  private corpse(enemyId: string, x: number, y: number, flip: boolean, champion: boolean): void {
-    const def = enemyDef(enemyId);
-    const death = ENEMY_ANIMS[def.anims]?.death;
-    if (!death) return;
-    // A champion's falls at its own size (032).
-    const k = champion ? CHAMPIONS.scale : 1;
-    const bottom = y + (def.feetBox.h * k) / 2;
-    const sprite = addVectorSprite(this.scene, x, bottom, animFrames(death)[0] ?? '')
-      .setDepth(bottom)
-      .setFlipX(flip);
-    sprite.setScale(sprite.scaleX * k);
-    this.corpses.add(sprite);
-    sprite.once('destroy', () => this.corpses.delete(sprite));
-    sprite.play(death.key);
-    sprite.once('animationcomplete', () => {
-      this.scene.tweens.add({
-        targets: sprite,
-        alpha: 0,
-        delay: ENEMY_FX.corpseLingerMs,
-        duration: ENEMY_FX.corpseFadeMs,
-        onComplete: () => sprite.destroy(),
-      });
-    });
   }
 
   /** Ley light spiralling up off the player's feet as the haul is banked. */
@@ -191,10 +166,7 @@ export class EffectsView {
    * while it darkens, then jumps to the player at spawn and follows again.
    */
   private koFade(player: { x: number; y: number }): void {
-    for (const corpse of this.corpses) {
-      this.scene.tweens.killTweensOf(corpse);
-      corpse.destroy();
-    }
+    this.dissolves.clear();
     this.camera.stopFollow();
     // The HUD fades with the world (016: it draws on its own camera); a door's fade asked for meanwhile joins this one.
     this.fadeThrough(() => {

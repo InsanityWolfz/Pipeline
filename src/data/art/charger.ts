@@ -1,4 +1,4 @@
-import { DEATH_POSES, type EnemyPart, type EnemyRigDef } from './enemyRig';
+import { legacyRig, type EnemyPart, type EnemyRigDef } from './enemyRig';
 import { ellipse, flat, path, rect, solid, trim } from './types';
 
 // The Charger (035, draft for Shaun's review): a horned ram-construct of grey-blue quarry
@@ -93,7 +93,7 @@ const bodyBack: EnemyPart = {
   ],
 };
 
-export const CHARGER_RIG: EnemyRigDef = {
+export const CHARGER_RIG: EnemyRigDef = legacyRig({
   id: 'charger',
   scale: 1,
   box: { size: [72, 56], anchor: [34, 48] },
@@ -128,6 +128,5 @@ export const CHARGER_RIG: EnemyRigDef = {
       { lean: -0.1, tilt: 0.06, sink: 2, scaleY: 0.95, glow: 0.1 },
     ],
     hit: [{ lean: -0.12, bob: 1, glow: 0.35 }],
-    death: DEATH_POSES,
   },
-};
+});

@@ -1,4 +1,4 @@
-import type { GameObjects, Scene } from 'phaser';
+import { BlendModes, type GameObjects, type Scene } from 'phaser';
 import type { ParticleBurst } from '../data/juice';
 import { colorOf } from './color';
 
@@ -15,6 +15,15 @@ interface Particle {
   gravity: number;
   age: number;
   life: number;
+  /** 076: a death's ley mote, counted against the live death-mote cap. */
+  mote: boolean;
+}
+
+/** 076: one death mote: where it starts (already lifted to the body), its colour, size and look. */
+export interface Mote {
+  x: number;
+  y: number;
+  color: string;
 }
 
 const between = (r: readonly [number, number]): number => r[0] + Math.random() * (r[1] - r[0]);
@@ -22,6 +31,7 @@ const between = (r: readonly [number, number]): number => r[0] + Math.random() *
 export class Particles {
   private readonly scene: Scene;
   private readonly live: Particle[] = [];
+  private motes = 0;
 
   constructor(scene: Scene) {
     this.scene = scene;
@@ -48,8 +58,26 @@ export class Particles {
         gravity: burst.gravity,
         age: 0,
         life: between(burst.lifeMs),
+        mote: false,
       });
     }
+  }
+
+  /** 076: death motes, one from each point, drifting at `speed` px/s all round and rising (`gravity` < 0); additive with `add`. */
+  emitMotes(motes: readonly Mote[], o: { speed: readonly [number, number]; gravity: number; lifeMs: readonly [number, number]; size: number; add: boolean; depth: number }): void {
+    for (const m of motes) {
+      const angle = Math.random() * Math.PI * 2;
+      const speed = between(o.speed);
+      const rect = this.scene.add.rectangle(m.x, m.y, o.size, o.size, colorOf(m.color)).setOrigin(0.5).setDepth(o.depth);
+      if (o.add) rect.setBlendMode(BlendModes.ADD);
+      this.live.push({ rect, x: m.x, y: m.y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed, gravity: o.gravity, age: 0, life: between(o.lifeMs), mote: true });
+      this.motes += 1;
+    }
+  }
+
+  /** 076: death motes flying now. */
+  get deathMotes(): number {
+    return this.motes;
   }
 
   update(deltaMs: number): void {
@@ -59,6 +87,7 @@ export class Particles {
       if (!p) continue;
       p.age += deltaMs;
       if (p.age >= p.life) {
+        if (p.mote) this.motes -= 1;
         p.rect.destroy();
         this.live.splice(i, 1);
         continue;
@@ -74,5 +103,6 @@ export class Particles {
   clear(): void {
     for (const p of this.live) p.rect.destroy();
     this.live.length = 0;
+    this.motes = 0;
   }
 }

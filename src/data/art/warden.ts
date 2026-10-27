@@ -1,4 +1,4 @@
-import { DEATH_POSES, type EnemyPart, type EnemyRigDef } from './enemyRig';
+import { legacyRig, type EnemyPart, type EnemyRigDef } from './enemyRig';
 import { ellipse, flat, line, path, rect, solid } from './types';
 
 // The Pylon Warden (016, draft for Shaun's review): a mossy stone guardian with
@@ -56,7 +56,7 @@ const eye = (x: number): EnemyPart => ({
   shapes: [rect(x - 3.5, -50, 7, 2, 1, { fill: 'cyan', glow: { color: 'cyan', blur: 5 } })],
 });
 
-export const WARDEN_RIG: EnemyRigDef = {
+export const WARDEN_RIG: EnemyRigDef = legacyRig({
   id: 'warden',
   scale: 0.95,
   box: { size: [80, 80], anchor: [40, 70] },
@@ -107,6 +107,5 @@ export const WARDEN_RIG: EnemyRigDef = {
     ],
     recover: [{ armBack: -0.35, armFront: -0.35, lean: 0.22, sink: 4, scaleY: 0.94, glow: 0.4 }],
     hit: [{ lean: -0.15, bob: 1 }],
-    death: DEATH_POSES,
   },
-};
+});

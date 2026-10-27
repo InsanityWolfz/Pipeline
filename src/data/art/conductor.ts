@@ -1,5 +1,5 @@
 import { CONDUCTOR_SPRITES } from '../conductorAssets';
-import { DEATH_POSES, type EnemyPart, type EnemyRigDef } from './enemyRig';
+import { legacyRig, type EnemyPart, type EnemyRigDef } from './enemyRig';
 import { ellipse, flat, line, path, rect, solid, type Shape, type VectorSprite } from './types';
 
 // The Conductor (064, draft for Shaun's review): a tall robed storm construct of the lost builders, its slate-violet
@@ -87,7 +87,7 @@ const staff = (from: readonly [number, number], to: readonly [number, number], m
   };
 };
 
-export const CONDUCTOR_RIG: EnemyRigDef = {
+export const CONDUCTOR_RIG: EnemyRigDef = legacyRig({
   id: 'conductor',
   scale: 1,
   box: { size: [96, 140], anchor: [48, 130] },
@@ -126,9 +126,8 @@ export const CONDUCTOR_RIG: EnemyRigDef = {
     call: [{ armFront: -2.8, armBack: -0.8, lean: -0.16, bob: -5, glow: 1 }],
     // The rod chain: its arms spread wide, the staff out to one side.
     chain: [{ armFront: -1.3, armBack: -1.3, bob: -4, scaleY: 1.03, glow: 1 }],
-    death: DEATH_POSES,
   },
-};
+});
 
 /** An arena rod's socket: an iron collar on a slate block, its rune ring. */
 const SOCKET: Shape[] = [

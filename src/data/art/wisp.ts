@@ -1,4 +1,4 @@
-import { DEATH_POSES, type EnemyPart, type EnemyRigDef } from './enemyRig';
+import { legacyRig, type EnemyPart, type EnemyRigDef } from './enemyRig';
 import { ellipse, line, path, type Shape } from './types';
 
 // The Wisp (016, draft for Shaun's review): a floating violet flame spirit behind a
@@ -38,7 +38,7 @@ const orb = (x: number): EnemyPart => ({
   shapes: [ellipse(x, -21, 4.5, 4.5, { fill: { radial: [x, -21, 4.5], stops: [{ at: 0, color: 'snow' }, { at: 0.5, color: 'wisp-light' }, { at: 1, color: 'wisp' }] }, glow: { color: 'wisp-light', blur: 8 } })],
 });
 
-export const WISP_RIG: EnemyRigDef = {
+export const WISP_RIG: EnemyRigDef = legacyRig({
   id: 'wisp',
   scale: 0.9,
   box: { size: [48, 54], anchor: [24, 44] },
@@ -58,6 +58,5 @@ export const WISP_RIG: EnemyRigDef = {
       { bob: -4, lean: -0.15, armFront: -0.2, charge: 0 },
     ],
     hit: [{ bob: -2, lean: -0.3, scaleY: 0.92 }],
-    death: DEATH_POSES,
   },
-};
+});

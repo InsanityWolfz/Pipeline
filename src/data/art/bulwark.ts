@@ -1,4 +1,4 @@
-import { DEATH_POSES, type EnemyPart, type EnemyRigDef } from './enemyRig';
+import { legacyRig, type EnemyPart, type EnemyRigDef } from './enemyRig';
 import { ellipse, flat, line, path, rect, solid, trim, type Shape } from './types';
 
 // The Bulwark (034, draft for Shaun's review): a hulking construct of grey-blue quarry
@@ -90,7 +90,7 @@ function shield(face: boolean, x: number): EnemyPart {
   };
 }
 
-export const BULWARK_RIG: EnemyRigDef = {
+export const BULWARK_RIG: EnemyRigDef = legacyRig({
   id: 'bulwark',
   scale: 1,
   box: { size: [112, 104], anchor: [56, 94] },
@@ -162,6 +162,5 @@ export const BULWARK_RIG: EnemyRigDef = {
     ],
     brace: [{ lean: 0.16, step: -4, lift: 6, armBack: 0.6, sink: 1, glow: 1 }],
     stomp: [{ lean: 0.07, step: -2, sink: 5, scaleY: 0.9, glow: 1 }],
-    death: DEATH_POSES,
   },
-};
+});

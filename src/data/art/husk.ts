@@ -1,4 +1,4 @@
-import { DEATH_POSES, type EnemyPart, type EnemyRigDef } from './enemyRig';
+import { legacyRig, type EnemyPart, type EnemyRigDef } from './enemyRig';
 import { ellipse, flat, line, path, rect, solid } from './types';
 
 // The Husk (016): a hunched bundle of straw bound with leather, stick arms with
@@ -73,7 +73,7 @@ const hood = (front: boolean): EnemyPart => ({
     : [path('M -10 -31 Q 0 -49 10 -31 Q 0 -25 -10 -31 Z', solid('straw-dark')), path('M -4 -42 Q 0 -36 0 -28', { stroke: { color: 'straw', width: 1 } })],
 });
 
-export const HUSK_RIG: EnemyRigDef = {
+export const HUSK_RIG: EnemyRigDef = legacyRig({
   id: 'husk',
   scale: 0.8,
   box: { size: [48, 54], anchor: [24, 44] },
@@ -107,6 +107,5 @@ export const HUSK_RIG: EnemyRigDef = {
       { lean: 0.18, armFront: 1.4, armBack: 0.4, step: 2 },
     ],
     hit: [{ lean: -0.25, bob: 1, armFront: -0.4, armBack: -0.3 }],
-    death: DEATH_POSES,
   },
-};
+});

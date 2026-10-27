@@ -1,4 +1,4 @@
-import { DEATH_POSES, type EnemyPart, type EnemyRigDef } from './enemyRig';
+import { legacyRig, type EnemyPart, type EnemyRigDef } from './enemyRig';
 import { ellipse, flat, line, path, rect, solid, trim } from './types';
 
 // The bellows hound (061, draft for Shaun's review): a lean forge-hound construct of the old builders, an iron frame on
@@ -99,7 +99,7 @@ const bodyUp: EnemyPart = {
   ],
 };
 
-export const BELLOWS_HOUND_RIG: EnemyRigDef = {
+export const BELLOWS_HOUND_RIG: EnemyRigDef = legacyRig({
   id: 'bellows-hound',
   scale: 1,
   box: { size: [68, 56], anchor: [32, 50] },
@@ -129,6 +129,5 @@ export const BELLOWS_HOUND_RIG: EnemyRigDef = {
     ],
     recover: [{ lean: -0.05, sink: 1, glow: 0.3 }],
     hit: [{ lean: -0.15, bob: 1, glow: 0.45 }],
-    death: DEATH_POSES,
   },
-};
+});

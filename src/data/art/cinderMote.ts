@@ -1,4 +1,4 @@
-import { DEATH_POSES, type EnemyPart, type EnemyRigDef } from './enemyRig';
+import { legacyRig, type EnemyPart, type EnemyRigDef } from './enemyRig';
 import { ellipse, line, path, type Shape } from './types';
 
 // The cinder mote (061, draft for Shaun's review): a floating ember of the old forges held in a little cage of cooled
@@ -49,7 +49,7 @@ const sparks: EnemyPart = {
   shapes: [ellipse(4, CY - 12, 0.9, 0.9, { fill: 'cinder-light', glow: { color: 'cinder', blur: 2 } }), ellipse(-3, CY - 15, 0.7, 0.7, { fill: 'cinder-light', glow: { color: 'cinder', blur: 2 } })],
 };
 
-export const CINDER_MOTE_RIG: EnemyRigDef = {
+export const CINDER_MOTE_RIG: EnemyRigDef = legacyRig({
   id: 'cinder-mote',
   scale: 1,
   box: { size: [44, 48], anchor: [22, 42] },
@@ -78,6 +78,5 @@ export const CINDER_MOTE_RIG: EnemyRigDef = {
       { charge: 1.8, glow: 1, alpha: 0.6 },
     ],
     hit: [{ bob: -1, lean: -0.25, scaleY: 0.9, glow: 1 }],
-    death: DEATH_POSES,
   },
-};
+});

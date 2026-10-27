@@ -1,5 +1,5 @@
 import { FORGE_SPRITES } from '../forgewrightAssets';
-import { DEATH_POSES, type EnemyPart, type EnemyRigDef } from './enemyRig';
+import { legacyRig, type EnemyPart, type EnemyRigDef } from './enemyRig';
 import { ellipse, flat, line, path, rect, solid, trim, type Shape, type VectorSprite } from './types';
 
 // The Forgewright (060, draft for Shaun's review): a hulking smith construct of the lost builders, riveted iron plates
@@ -80,7 +80,7 @@ const eye = (x: number, w: number): EnemyPart => ({
   shapes: [rect(x - w / 2, -84, w, 2.4, 1, { fill: 'cinder-light', glow: { color: 'cinder', blur: 5 } })],
 });
 
-export const FORGEWRIGHT_RIG: EnemyRigDef = {
+export const FORGEWRIGHT_RIG: EnemyRigDef = legacyRig({
   id: 'forgewright',
   scale: 1,
   box: { size: [128, 150], anchor: [64, 140] },
@@ -120,9 +120,8 @@ export const FORGEWRIGHT_RIG: EnemyRigDef = {
       { sink: 3, lean: 0.22, tilt: 0.07, armFront: 0.6, armBack: 0.5, glow: 0.2 },
       { sink: 4, lean: 0.18, tilt: -0.06, armFront: 0.5, armBack: 0.6, glow: 0.15 },
     ],
-    death: DEATH_POSES,
   },
-};
+});
 
 /** A bellows' iron frame and brass nozzle, with `folds` (leather) between its boards. */
 function bellows(folds: readonly Shape[], nozzle: Shape): Shape[] {

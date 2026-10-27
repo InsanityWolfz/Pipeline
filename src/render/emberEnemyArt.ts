@@ -36,7 +36,10 @@ export function makeEmberArt(scene: Scene, def: EnemyDef): EmberArt | undefined 
 /** Shows the extras for this frame. */
 export function drawEmberArt(art: EmberArt, sprite: GameObjects.Sprite, e: EnemyState, def: EnemyDef, sim: SimState, now: number): void {
   // The mote swells as its burst nears.
-  if (def.kind === 'mote' && e.mode === 'windup') sprite.setScale(sprite.scaleX * (1 + EMBER_ENEMY_LOOK.swell.grow * Math.min(1, e.modeTicks / def.swell.windupTicks)));
+  if (def.kind === 'mote' && e.mode === 'windup') {
+    const k = 1 + EMBER_ENEMY_LOOK.swell.grow * Math.min(1, e.modeTicks / def.swell.windupTicks);
+    sprite.setScale(sprite.scaleX * k, sprite.scaleY * k);
+  }
   if (def.kind === 'tender' && art.light) art.beam = drawBeam(art.light, e, sim, now);
 }
 

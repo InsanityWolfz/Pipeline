@@ -1,4 +1,4 @@
-import { DEATH_POSES, type EnemyPart, type EnemyRigDef } from './enemyRig';
+import { legacyRig, type EnemyPart, type EnemyRigDef } from './enemyRig';
 import { ellipse, line, path } from './types';
 
 // The static mite (065, draft for Shaun's review): a tiny spark-beetle of the builders' storm-works, a brass-rimmed
@@ -52,7 +52,7 @@ const spark: EnemyPart = {
   shapes: [ellipse(0, CY - 3, 4, 4, { fill: { radial: [0, CY - 3, 4], stops: [{ at: 0, color: 'snow' }, { at: 0.5, color: 'cyan-glow' }, { at: 1, color: { id: 'cyan', alpha: 0 } }] }, glow: { color: 'cyan', blur: 5 } })],
 };
 
-export const STATIC_MITE_RIG: EnemyRigDef = {
+export const STATIC_MITE_RIG: EnemyRigDef = legacyRig({
   id: 'static-mite',
   scale: 1,
   box: { size: [32, 28], anchor: [16, 22] },
@@ -83,6 +83,5 @@ export const STATIC_MITE_RIG: EnemyRigDef = {
     // Backing off, skittering.
     recover: [{ lean: -0.2, step: 1, glow: 0.4 }],
     hit: [{ lean: -0.3, bob: -1, glow: 1 }],
-    death: DEATH_POSES,
   },
-};
+});

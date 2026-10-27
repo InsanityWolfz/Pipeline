@@ -1,4 +1,4 @@
-import { DEATH_POSES, type EnemyPart, type EnemyRigDef } from './enemyRig';
+import { legacyRig, type EnemyPart, type EnemyRigDef } from './enemyRig';
 import { ellipse, flat, line, path, rect, solid, trim, type Shape, type VectorSprite } from './types';
 
 // The Burrower (035, draft for Shaun's review): a segmented quarry-borer of grey-blue
@@ -65,7 +65,7 @@ const front: EnemyPart = {
 /** From behind: the tail plates stacked, tapering. */
 const back: EnemyPart = { id: 'body', role: 'body', pivot: [0, -11], shapes: [...plate(0, -12, 10, 8), ...plate(0, -8, 7, 5.5), path('M -2 -4 L 2 -4 L 0 -1 Z', solid('iron'))] };
 
-export const BURROWER_RIG: EnemyRigDef = {
+export const BURROWER_RIG: EnemyRigDef = legacyRig({
   id: 'burrower',
   scale: 1,
   box: { size: [60, 44], anchor: [28, 36] },
@@ -97,9 +97,8 @@ export const BURROWER_RIG: EnemyRigDef = {
     // Dazed on the surface: slumped flat, its light low.
     recover: [{ lean: 0.1, sink: 2, scaleY: 0.86, tilt: 0.12, glow: 0.15 }],
     hit: [{ lean: -0.15, bob: 1, glow: 0.5 }],
-    death: DEATH_POSES,
   },
-};
+});
 
 /** The ripple underground: a mound of cracked earth with pebbles, two frames that EnemyView alternates as it moves. */
 const mound = (shift: number): Shape[] => [

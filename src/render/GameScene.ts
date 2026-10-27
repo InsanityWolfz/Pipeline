@@ -149,7 +149,7 @@ export class GameScene extends Scene {
     this.enemyView = new EnemyView(this);
     this.playerView = new PlayerView(this);
     this.silhouette = new SilhouetteView(this, occluders);
-    this.effects = new EffectsView(this, this.playerView.sprite, (atDark, ms, rgb) => this.sceneCameras?.fadeThrough(atDark, ms, rgb));
+    this.effects = new EffectsView(this, this.playerView.sprite, (atDark, ms, rgb) => this.sceneCameras?.fadeThrough(atDark, ms, rgb), () => this.feel?.juice.particles);
     this.arrowView = new ArrowView(this);
     this.bombView = new BombView(this);
     this.hud = new HudView(this);
@@ -261,6 +261,8 @@ export class GameScene extends Scene {
     if (!this.room.fading && this.playerView) this.sceneCameras?.attuneLook(sim, this.room.shownRoomId, this.playerView.sprite);
     this.sceneCameras?.bossLook(bossLookTarget(sim), this.game.loop.delta);
     this.effects.play(this.pending, sim.player);
+    // 076: the frame's hits, for the enemies' staggers.
+    this.enemyView?.react(this.pending.hits);
     if (this.pending.identifies.length > 0) this.site?.identified();
     if (this.pending.woke) this.wake?.show(this.pending.lost, sim);
     const shown = this.room.shownRoomId;

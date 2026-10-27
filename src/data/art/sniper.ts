@@ -1,4 +1,4 @@
-import { DEATH_POSES, type EnemyPart, type EnemyRigDef } from './enemyRig';
+import { legacyRig, type EnemyPart, type EnemyRigDef } from './enemyRig';
 import { ellipse, flat, line, path, rect, solid, trim } from './types';
 
 // The Sniper construct (035, draft for Shaun's review): a tall, spindly tripod of iron legs
@@ -45,7 +45,7 @@ const glowFront: EnemyPart = {
 /** From behind: a vent grille on its back. */
 const vents: EnemyPart = { id: 'vents', role: 'body', pivot: [0, -36], shapes: [0, 1, 2].map((i) => line([-3.5, -40 + i * 3, 3.5, -40 + i * 3], 1.2, 'hollow-dark'))};
 
-export const SNIPER_RIG: EnemyRigDef = {
+export const SNIPER_RIG: EnemyRigDef = legacyRig({
   id: 'sniper',
   scale: 1,
   box: { size: [48, 64], anchor: [24, 58] },
@@ -77,6 +77,5 @@ export const SNIPER_RIG: EnemyRigDef = {
     ],
     recover: [{ lean: -0.04, glow: 0.4 }],
     hit: [{ lean: -0.14, bob: 1, glow: 0.5 }],
-    death: DEATH_POSES,
   },
-};
+});

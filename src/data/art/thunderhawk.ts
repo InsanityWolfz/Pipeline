@@ -1,4 +1,4 @@
-import { DEATH_POSES, type EnemyPart, type EnemyRigDef } from './enemyRig';
+import { legacyRig, type EnemyPart, type EnemyRigDef } from './enemyRig';
 import { ellipse, line, path, type Shape } from './types';
 
 // The thunderhawk (065, draft for Shaun's review): a storm bird construct of the old builders, slate plates on a brass
@@ -75,7 +75,7 @@ const faceBody = (front: boolean): EnemyPart => ({
   ],
 });
 
-export const THUNDERHAWK_RIG: EnemyRigDef = {
+export const THUNDERHAWK_RIG: EnemyRigDef = legacyRig({
   id: 'thunderhawk',
   scale: 1,
   box: { size: [68, 76], anchor: [34, 66] },
@@ -105,6 +105,5 @@ export const THUNDERHAWK_RIG: EnemyRigDef = {
     // The climb away: low still, beating hard to rise.
     recover: [{ bob: 8, lean: -0.15, armBack: 0.55, armFront: 0.55, glow: 0.5 }],
     hit: [{ bob: -1, lean: -0.3, armBack: -0.2, armFront: 0.3, glow: 1 }],
-    death: DEATH_POSES,
   },
-};
+});

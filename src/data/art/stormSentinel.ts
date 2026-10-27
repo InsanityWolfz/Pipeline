@@ -1,4 +1,4 @@
-import { DEATH_POSES, type EnemyPart, type EnemyRigDef } from './enemyRig';
+import { legacyRig, type EnemyPart, type EnemyRigDef } from './enemyRig';
 import { ellipse, line, path, rect, solid } from './types';
 
 // The storm sentinel (065, draft for Shaun's review): a squat turret of the builders' storm-works, a slate drum banded in
@@ -65,7 +65,7 @@ const sparks: EnemyPart = {
   shapes: [ellipse(0, -53, 6, 6, { fill: { radial: [0, -53, 6], stops: [{ at: 0, color: 'snow' }, { at: 0.5, color: { id: 'cyan-glow', alpha: 0.8 } }, { at: 1, color: { id: 'cyan', alpha: 0 } }] }, glow: { color: 'cyan', blur: 6 } })],
 };
 
-export const STORM_SENTINEL_RIG: EnemyRigDef = {
+export const STORM_SENTINEL_RIG: EnemyRigDef = legacyRig({
   id: 'storm-sentinel',
   scale: 1,
   box: { size: [48, 76], anchor: [24, 68] },
@@ -96,6 +96,5 @@ export const STORM_SENTINEL_RIG: EnemyRigDef = {
     ],
     recover: [{ glow: 0.25 }],
     hit: [{ lean: -0.15, bob: 1, glow: 0.8 }],
-    death: DEATH_POSES,
   },
-};
+});

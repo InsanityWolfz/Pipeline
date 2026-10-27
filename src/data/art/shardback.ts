@@ -1,4 +1,4 @@
-import { DEATH_POSES, type EnemyPart, type EnemyRigDef } from './enemyRig';
+import { legacyRig, type EnemyPart, type EnemyRigDef } from './enemyRig';
 import { ellipse, flat, line, path, rect, solid, trim, type Shape } from './types';
 
 // The Shardback (035, draft for Shaun's review): the Bulwark's little cousin, a squat
@@ -64,7 +64,7 @@ const arm = (from: readonly [number, number], to: readonly [number, number], mir
   shapes: [line([from[0], from[1], to[0], to[1]], 6, 'hollow', true), ellipse(to[0], to[1] + 1.5, 4.5, 4, solid('hollow-light'))],
 });
 
-export const SHARDBACK_RIG: EnemyRigDef = {
+export const SHARDBACK_RIG: EnemyRigDef = legacyRig({
   id: 'shardback',
   scale: 1,
   box: { size: [64, 60], anchor: [32, 52] },
@@ -97,6 +97,5 @@ export const SHARDBACK_RIG: EnemyRigDef = {
     recover: [{ armFront: 0.35, lean: 0.18, sink: 2, scaleY: 0.95, glow: 0.3 }],
     hit: [{ lean: -0.1, bob: 1, glow: 0.6 }],
     block: [{ armFront: -0.15, lean: -0.08, glow: 1 }],
-    death: DEATH_POSES,
   },
-};
+});
