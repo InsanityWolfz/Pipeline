@@ -8,8 +8,9 @@ import { HALL, run } from './fight';
 import { foundry, put } from './foundryKit';
 
 // Area pick-up (063): a box dragged over the foundry counts every piece wholly inside it (never a fixture), and Pick up
-// lifts them all at once, as picking each up by hand does, but everything they held goes to the stash. A stash that
-// can't hold the lot refuses the whole pick-up; the tutorial's build lock refuses it as it refuses a single pick-up.
+// lifts them all at once, as picking each up by hand does; 069: everything they held goes to the inventory, the stash
+// taking what it can't hold. If the two together can't hold the lot, the whole pick-up is refused; the tutorial's build
+// lock refuses it as it refuses a single pick-up.
 
 const ids = (s: SimState, box: ReturnType<typeof boxOf>): string[] => piecesInBox(s.foundry, box).map((p) => p.pieceId);
 
@@ -50,7 +51,7 @@ describe('area pick-up', () => {
     expect(s.events.areaPickUps).toEqual([{ count: 2, items: {} }]);
   });
 
-  it('sends everything the pieces held to the stash, none to the inventory', () => {
+  it('069: sends everything the pieces held to the inventory first (063 sent it to the stash)', () => {
     const s = foundry();
     const c = put<ConduitState>(s, 'conduit', 3, 3, 'right');
     c.item = 'wood';
@@ -66,30 +67,48 @@ describe('area pick-up', () => {
     const tin = put<TunnelInState>(s, 'underground-entrance', 3, 6, 'right');
     put(s, 'underground-exit', 6, 6, 'right');
     tin.tunnel = [{ item: 'fiber', progress: 0 }, null];
-    s.inventory = {};
-    s.stash = { wood: 1 };
+    s.inventory = { wood: 1 };
+    s.stash = {};
     run(s, 1, { area: { box: boxOf({ tx: 3, ty: 3 }, { tx: 6, ty: 6 }), action: 'pickUp' } });
     expect(s.foundry.pieces).toEqual([]);
-    expect(s.inventory).toEqual({});
+    expect(s.stash).toEqual({});
     // The craft in progress gives back its input (1 wood), as by hand.
-    expect(s.stash).toEqual({ wood: 5, shaft: 3, stone: 7, arrow: 5, fiber: 1 });
+    expect(s.inventory).toEqual({ wood: 5, shaft: 3, stone: 7, arrow: 5, fiber: 1 });
     expect(s.events.areaPickUps[0]?.items).toEqual({ wood: 4, shaft: 3, stone: 7, arrow: 5, fiber: 1 });
   });
 
-  it('is refused whole when the stash can not hold it all, with a stash-full hint', () => {
+  it('069: sends what the inventory can’t hold to the stash', () => {
+    const s = foundry();
+    const h = put<HopperState>(s, 'hopper', 3, 4, 'up');
+    h.item = 'stone';
+    h.count = 7;
+    const k = put<CrateState>(s, 'crate', 4, 4, 'up');
+    k.contents = { arrow: 5 };
+    s.inventory = { wood: 2 };
+    s.stash = {};
+    expect(areaPickUp(s, boxOf({ tx: 3, ty: 4 }, { tx: 4, ty: 4 }), { inventory: 8, stash: Infinity })).toBe(true);
+    expect(stashTotal(s.inventory)).toBe(8);
+    expect(stashTotal(s.stash)).toBe(6);
+    expect(stashTotal(s.inventory) + stashTotal(s.stash)).toBe(2 + 7 + 5);
+  });
+
+  it('is refused whole only when the inventory and the stash together can not hold it all, with the full hint', () => {
     const s = foundry();
     const h = put<HopperState>(s, 'hopper', 3, 4, 'up');
     h.item = 'stone';
     h.count = 7;
     put(s, 'conduit', 4, 4, 'up');
+    s.inventory = { wood: 2 };
     s.stash = { wood: 5 };
     const box = boxOf({ tx: 3, ty: 4 }, { tx: 4, ty: 4 });
-    expect(areaPickUp(s, box, 11)).toBe(false);
+    expect(areaPickUp(s, box, { inventory: 5, stash: 8 })).toBe(false);
     expect(s.foundry.pieces).toHaveLength(2);
     expect(s.stash).toEqual({ wood: 5 });
+    expect(s.inventory).toEqual({ wood: 2 });
     expect(s.events.pickUpFails).toEqual([{ tx: 3, ty: 4, reason: 'stash-full' }]);
-    expect(areaPickUp(s, box, 12)).toBe(true);
-    expect(stashTotal(s.stash)).toBe(12);
+    expect(areaPickUp(s, box, { inventory: 5, stash: 9 })).toBe(true);
+    expect(s.inventory).toEqual({ wood: 2, stone: 3 });
+    expect(s.stash).toEqual({ wood: 5, stone: 4 });
   });
 
   it('is refused by the build lock, picking up nothing', () => {

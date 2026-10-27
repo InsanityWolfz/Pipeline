@@ -5,6 +5,7 @@ import { INVENTORY_GRID } from '../data/hudPanels';
 import { pieceDef } from '../data/pieces';
 import { usableItem } from '../sim/hotbar';
 import type { HopperAmount } from '../sim/input';
+import { clickAmount } from './menuRequests';
 import type { CrateState, HopperState } from '../sim/pieces';
 import type { SimState } from '../sim/state';
 import type { ScreenBox } from './bottomHud';
@@ -34,7 +35,7 @@ const layoutOf = (mode: InventoryShown['mode']): GridLayout => inventoryLayout(m
 // The grid inventory (047, note 12): I or Tab opens it alone; E at a hopper or crate opens its screen, the container's
 // own slots on top and the grid underneath; E at the stash (052) opens its screen, the stash's own scrolling grid on
 // top. Each slot is one stack (047.1), marked while any of it is at risk (031); the grid scrolls by rows past 8×5
-// (047.2), and Sort orders it. With a container or the stash open, a click moves one, Shift+click half and Ctrl+click
+// (047.2), and Sort orders it. With a container or the stash open, a click moves one (069: ten on a hopper's), Shift+click half and Ctrl+click
 // the whole stack, either way; a stack dragged onto the carried bar goes on that slot. The world keeps running. Clicks
 // arrive from the router; the moves go to the sim as commands.
 export class InventoryPanel {
@@ -174,9 +175,13 @@ export class InventoryPanel {
     this.draw();
   }
 
-  /** A press on the panel: on Sort, returns 'sort'; on a slot, remembers it for the release. */
-  pressAt(x: number, y: number, amount: HopperAmount): 'sort' | null {
+  /**
+   * A press on the panel: on Sort, returns 'sort'; on a slot, remembers it for the release, with the amount its
+   * modifiers move on the screen that's open (069: a hopper's plain click moves ten).
+   */
+  pressAt(x: number, y: number, mods: { shift: boolean; ctrl: boolean }): 'sort' | null {
     this.press = null;
+    const amount = clickAmount(mods, this.mode === 'bag' ? null : this.mode);
     if (!this.isOpen) return null;
     const L = this.layout;
     const S = L.sort;

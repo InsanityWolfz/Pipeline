@@ -124,16 +124,16 @@ export function pickUp(state: SimState, tx: number, ty: number): void {
 }
 
 /**
- * Removes the piece covering a foundry tile wherever the player is, putting what it held in the inventory, or (063: an
- * area pick-up) the stash.
+ * Removes the piece covering a foundry tile wherever the player is, putting what it held in the inventory, the stash,
+ * or (069: an area pick-up, which shares it out after) a store of its own.
  */
-export function removePieceAt(state: SimState, tx: number, ty: number, into: 'inventory' | 'stash' = 'inventory'): void {
+export function removePieceAt(state: SimState, tx: number, ty: number, into: 'inventory' | 'stash' | Inventory = 'inventory'): void {
   const piece = pieceAt(state.foundry, tx, ty);
   if (!piece) return;
   const items = pieceContents(piece);
   // An underground exit takes what's under the floor back with it (052.2).
   for (const [itemId, n] of Object.entries(unpair(state.foundry, piece))) items[itemId] = count(items, itemId) + n;
-  const store = into === 'stash' ? state.stash : state.inventory;
+  const store = into === 'stash' ? state.stash : into === 'inventory' ? state.inventory : into;
   for (const [itemId, n] of Object.entries(items)) store[itemId] = count(store, itemId) + n;
   state.foundry.pieces = state.foundry.pieces.filter((p) => p !== piece);
   state.events.pickUps.push({ id: piece.id, pieceId: piece.pieceId, items });

@@ -41,3 +41,31 @@ export function portPlate(pylons: number, perMinute: number): string {
 export function portHover(plate: string, waiting: boolean): string {
   return waiting ? `${plate}${PORT_SEPARATOR}waiting` : plate;
 }
+
+/**
+ * 069: a recipe card's words, e.g. "1 wood → 2 shafts · 1.0 s", and a running machine's items a minute ("120 shafts/min",
+ * as a port's plate reads its rate). Item names are lower case; a count other than one is plural, except raw materials
+ * and these items, which read as amounts ("2 ley dust", "1 rope").
+ */
+export const RECIPE_CARD = {
+  join: ' + ',
+  arrow: ' → ',
+  sep: ' · ',
+  seconds: (s: string): string => `${s} s`,
+  perMinute: (n: number, item: string): string => `${n} ${item}/min`,
+  /** Decimal places of a craft's seconds. */
+  places: 1,
+  uncounted: ['rope', 'ley-dust', 'ley-steel', 'ley-glass', 'stormsteel', 'storm-glass'] as readonly string[],
+} as const;
+
+/**
+ * 069: the words of the intake's readout lines after an entrance's fill: its measured rate in and its round's fire rate,
+ * each a rate to one decimal ("12/30 · in 2.3/s · fires 4/s").
+ */
+export const READOUT_TEXT = {
+  sep: ' · ',
+  inRate: (n: string): string => `in ${n}/s`,
+  fires: (n: string): string => `fires ${n}/s`,
+  /** Decimal places a rate shows (a trailing .0 dropped). */
+  places: 1,
+} as const;

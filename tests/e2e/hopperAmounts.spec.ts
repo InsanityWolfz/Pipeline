@@ -3,7 +3,7 @@ import { enterFoundry, pieceAt, standStill, state, step, toggleBuild } from './f
 import { slotPoint } from './gridPage';
 import { boot, watchErrors } from './helpers';
 
-// 022, 047: in a hopper's screen (its own row over the grid inventory) a click moves one,
+// 022, 047: in a hopper's screen (its own row over the grid inventory) a click moves one (069: ten, or all if fewer),
 // Shift+click half (rounded up) and Ctrl+click the whole stack, in and out; the screen stays
 // open with live counts, and never prints those controls (Shaun). With REVIEW_SHOTS=1 it
 // captures docs/review/022.
@@ -53,7 +53,7 @@ async function expectHopper(page: Page, count: number): Promise<void> {
     .toBe(count);
 }
 
-test('a click moves one, Shift+click half and Ctrl+click the stack, in and out, with the hopper\'s screen open throughout', async ({ page }) => {
+test('a click moves ten (069), Shift+click half and Ctrl+click the stack, in and out, with the hopper\'s screen open throughout', async ({ page }) => {
   // About 25 s alone (the walk into the foundry and a dozen clicks): room for parallel workers.
   test.setTimeout(90_000);
   const errors = watchErrors(page);
@@ -66,32 +66,38 @@ test('a click moves one, Shift+click half and Ctrl+click the stack, in and out, 
   // Only what's in the hopper: nothing yet, though arrows are carried.
   expect((await ui(page))?.pickerCounts).toEqual([]);
 
-  // In: 1, then half of 29 (15), then the other 14.
+  // In: 10, then half of 20 (10), then the other 10.
   await clickRow(page, 'put');
-  await expectHopper(page, 1);
+  await expectHopper(page, 10);
   expect((await ui(page))?.pickerOpen).toBe(true);
-  // The hopper's row follows: its one stack of 1; the grid's arrows show 29.
-  await expect.poll(async () => (await ui(page))?.pickerCounts).toEqual([1]);
-  await expect.poll(async () => (await ui(page))?.inventory.slots.find((sl) => sl.itemId === 'arrow')?.count).toBe(29);
+  // The hopper's row follows: its one stack of 10; the grid's arrows show 20.
+  await expect.poll(async () => (await ui(page))?.pickerCounts).toEqual([10]);
+  await expect.poll(async () => (await ui(page))?.inventory.slots.find((sl) => sl.itemId === 'arrow')?.count).toBe(20);
   await clickRow(page, 'put', ['Shift']);
-  await expectHopper(page, 16);
-  expect((await state(page)).inventory.arrow).toBe(14);
+  await expectHopper(page, 20);
+  expect((await state(page)).inventory.arrow).toBe(10);
   await clickRow(page, 'put', ['Control']);
   await expectHopper(page, 30);
   expect((await state(page)).inventory.arrow ?? 0).toBe(0);
   expect((await ui(page))?.pickerOpen).toBe(true);
 
-  // Out: 1, then half of 29 (15), then Ctrl+Shift (Ctrl wins) the other 14, and the hopper forgets arrows.
+  // Out: 10, then half of 20 (10), then Ctrl+Shift (Ctrl wins) the other 10, and the hopper forgets arrows.
   await clickRow(page, 'take');
-  await expectHopper(page, 29);
+  await expectHopper(page, 20);
   await clickRow(page, 'take', ['Shift']);
-  await expectHopper(page, 14);
-  expect(await hopper(page)).toEqual({ item: 'arrow', count: 14 });
+  await expectHopper(page, 10);
+  expect(await hopper(page)).toEqual({ item: 'arrow', count: 10 });
   await clickRow(page, 'take', ['Control', 'Shift']);
   await expectHopper(page, 0);
   expect(await hopper(page)).toEqual({ item: null, count: 0 });
   expect((await state(page)).inventory.arrow).toBe(30);
   expect((await ui(page))?.pickerOpen).toBe(true);
+
+  // Fewer than ten: a click moves them all.
+  await step(page, 1, { deposit: { id: (pieceAt(await state(page), HOPPER.tx, HOPPER.ty)?.id ?? -1), itemId: 'arrow', amount: 'all', stack: 4 } });
+  await expectHopper(page, 4);
+  await clickRow(page, 'take');
+  await expectHopper(page, 0);
   expect(errors).toEqual([]);
 });
 

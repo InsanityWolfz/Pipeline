@@ -1,4 +1,4 @@
-import type { Game } from 'phaser';
+import type { Game, Scene } from 'phaser';
 import { VIEW_HEIGHT, VIEW_WIDTH } from '../data/config';
 
 // The screen (016): the game shows the same 640×360 of the world as always, at the
@@ -22,6 +22,14 @@ export function fitScreen(windowWidth: number, windowHeight: number, dpr: number
   const zoom = Math.max(1, Math.floor(Math.min(windowWidth / VIEW_WIDTH, windowHeight / VIEW_HEIGHT)));
   const scale = zoom * Math.max(1, dpr);
   return { zoom, scale, width: Math.round(VIEW_WIDTH * scale), height: Math.round(VIEW_HEIGHT * scale) };
+}
+
+/**
+ * Backbuffer px per view px, for turning the pointer into view px: the UI camera's zoom (the screen fit's scale). 069:
+ * not the main camera's, which build mode's zoom changes.
+ */
+export function viewScale(scene: Scene): number {
+  return scene.cameras.getCamera(UI_CAMERA)?.zoom ?? scene.cameras.main.zoom;
 }
 
 /** A pointer's backbuffer position in view px (the 640×360 space the HUD is laid out in). */

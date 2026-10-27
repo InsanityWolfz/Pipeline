@@ -4,6 +4,7 @@ import { pickUp, place } from './placement';
 import { areaPickUp } from './area';
 import { deleteBlueprint, saveBlueprint } from './blueprints';
 import { stamp } from './stamp';
+import { setStageRound } from './stages';
 import type { SimState } from './state';
 
 // Build mode: toggled in the foundry. While it's on the player can still walk,
@@ -18,8 +19,10 @@ export function maskCommand(state: SimState, cmd: Command): Command {
 export function stepBuild(state: SimState, cmd: Command): void {
   if (cmd.toggleBuild) state.building = !state.building && state.roomId === FOUNDRY_ROOM;
   if (cmd.place) {
-    const { pieceId, tx, ty, facing, inFrom, mirrored } = cmd.place;
-    place(state, pieceId, tx, ty, facing, { ...(inFrom ? { inFrom } : {}), ...(mirrored ? { mirrored } : {}) });
+    const { pieceId, tx, ty, facing, inFrom, mirrored, round } = cmd.place;
+    const piece = place(state, pieceId, tx, ty, facing, { ...(inFrom ? { inFrom } : {}), ...(mirrored ? { mirrored } : {}) });
+    // 069: the pipette's copy of a stage's round.
+    if (piece?.kind === 'machine' && round !== undefined) setStageRound(piece, round);
   }
   if (cmd.pickUp) pickUp(state, cmd.pickUp.tx, cmd.pickUp.ty);
   // 063: the area tool's box: saved first (so a save and pick-up keeps what it lifts), then picked up; a save and

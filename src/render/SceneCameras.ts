@@ -7,6 +7,7 @@ import type { SimState } from '../sim/state';
 import { attuneBeat } from './attune';
 import { intakeAnchor } from './foundryLayout';
 import { UI_CAMERA, type ScreenFit } from './scale';
+import { centredBounds, stepZoom, zoomAt, type Bounds } from './zoom';
 
 // The scene's two cameras (016): the main one follows the world, zoomed by the
 // screen fit; the UI one draws everything with scroll factor 0 (the HUD, menus,
@@ -20,9 +21,14 @@ export class SceneCameras {
   private atDark: (() => void)[] = [];
   /** How far up the camera sits off the player now, view px (fix-playtest-ui: eased toward a fighting boss's bossLookShift). */
   private lift = 0;
+  private fit: ScreenFit;
+  /** 069: build mode's zoom step (BUILD_ZOOMS), and the shown room's own camera bounds. */
+  private zoomStep = 0;
+  private room: Bounds | null = null;
 
   constructor(scene: Scene, fit: ScreenFit) {
     this.scene = scene;
+    this.fit = fit;
     this.ui = scene.cameras.add(0, 0, fit.width, fit.height, false, UI_CAMERA).setOrigin(0, 0);
     this.applyFit(fit);
     scene.events.on('prerender', () => this.route());
@@ -30,8 +36,39 @@ export class SceneCameras {
 
   /** Matches both cameras to the backbuffer. Called on boot and whenever the window changes. */
   applyFit(fit: ScreenFit): void {
-    this.scene.cameras.main.setSize(fit.width, fit.height).setZoom(fit.scale);
+    this.fit = fit;
+    this.scene.cameras.main.setSize(fit.width, fit.height);
     this.ui.setSize(fit.width, fit.height).setZoom(fit.scale);
+    this.applyZoom();
+  }
+
+  /** 069: a room was just shown (its bounds set): keeps them, so the zoomed-out view can centre a narrower room. */
+  roomShown(): void {
+    const b = this.scene.cameras.main.getBounds();
+    this.room = { x: b.x, y: b.y, w: b.width, h: b.height };
+    this.applyZoom();
+  }
+
+  /** 069: the wheel in build mode steps the world's zoom (down out, up in). */
+  zoomBy(steps: number): void {
+    this.zoomStep = stepZoom(this.zoomStep, steps);
+    this.applyZoom();
+  }
+
+  /** 069: out of build mode the world is at 1× again. */
+  resetZoom(): void {
+    if (this.zoomStep === 0) return;
+    this.zoomStep = 0;
+    this.applyZoom();
+  }
+
+  /** The main camera at the fit's scale times the zoom; the room's bounds widened to centre it in a wider view. */
+  private applyZoom(): void {
+    const main = this.scene.cameras.main;
+    main.setZoom(this.fit.scale * zoomAt(this.zoomStep));
+    if (!this.room) return;
+    const b = centredBounds(this.room, main.width / main.zoom);
+    main.setBounds(b.x, b.y, b.w, b.h);
   }
 
   /**

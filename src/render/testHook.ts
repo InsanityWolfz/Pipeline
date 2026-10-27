@@ -177,7 +177,8 @@ export interface UiState {
   /** The objective line's finished-goal tick, its alpha (0 once faded): screenshots wait for it to go (028). */
   objectiveTick: number;
   /** The centre of the world camera's view, world px (023: screenshots wait for it to settle on the player), and the player's sprite point it follows (042: locked to it). */
-  camera: { x: number; y: number; player: { x: number; y: number }; fading: boolean };
+  /** 069: `zoom` is the world's zoom over the view (1, or build mode's 0.75 zoomed out). */
+  camera: { x: number; y: number; player: { x: number; y: number }; fading: boolean; zoom: number };
   /** 065: the slow's wind curls are drawn round the player. */
   slowSwirl: boolean;
   /** The bottom HUD as drawn (025), view px: the hotbar row (and whether it shows) and the tube slot with each unit's icon frame and text. */
@@ -215,6 +216,8 @@ export interface UiState {
   enemyBars: EnemyBarShown[];
   /** 032: the waystone's menu while open (two or more claimed pylons): each row's text and box, view px; else null. */
   waystone: { text: string; x: number; y: number; w: number; h: number }[] | null;
+  /** 069: an intake entrance's purge menu while open: its row's text and box, view px; else null. */
+  purgeMenu: { text: string; x: number; y: number; w: number; h: number }[] | null;
   /** 033: the diagrams drawn on the foundry, restored parts, running effects and the wing door. */
   research: ResearchShown;
   /** 058: the last few banners that started (discoveries, schematics, recipe unlocks), oldest first. */
@@ -260,6 +263,8 @@ export interface UiState {
   hoverBox: { x: number; y: number; w: number; h: number } | null;
   /** 050: whether the hover tag draws the name line (not over a champion, whose nameplate names it). */
   hoverNameDrawn: boolean;
+  /** 069: the hover readout's lines as drawn over a machine or the intake (each line's text), empty while none shows. */
+  hoverLines: string[];
   /** 042: the flow screens as drawn (the title's rows, a card's lines and buttons, Settings, the note). */
   flow: FlowUi;
   /** 044: the Sandbox panel as drawn (056, 057: its tabs, the rows of each panel all the way out with their boxes, the key list, every box drawn), or null outside the sandbox. */

@@ -1,6 +1,9 @@
 import { INTAKE_CAP_ICON, INTAKE_EMPTY_ICON } from '../data/foundryAssets';
 import { ammoDef } from '../data/ammo';
 import { CAPPED_LABEL } from '../data/objectives';
+import { READOUT_TEXT } from '../data/descriptions';
+import { trimNumber } from '../data/rulesText';
+import type { EntranceRate } from '../sim/intakeRates';
 import { INTAKE } from '../data/foundry';
 import { RECIPES } from '../data/recipes';
 import { itemDef } from '../data/items';
@@ -34,15 +37,21 @@ export function machineLines(m: MachineState): Line[] {
   ];
 }
 
+/** A rate as the readout shows it: one decimal, no trailing .0. */
+const rate = (n: number): string => trimNumber(n, READOUT_TEXT.places);
+
 /**
  * The intake's lines (019, 024), one per entrance west to east: its ammo (the tube emblem when empty) and its
- * count out of the cap, or the cap emblem and "capped" while it's shut.
+ * count out of the cap, or the cap emblem and "capped" while it's shut. 069: with the sim's `rates`, an open entrance's
+ * line goes on with its measured rate in and, holding a round, that round's fire rate.
  */
-export function intakeLines(entrances: readonly EntranceState[], cap: number): Line[] {
-  return entrances.map((e): Line => {
+export function intakeLines(entrances: readonly EntranceState[], cap: number, rates: readonly EntranceRate[] = []): Line[] {
+  return entrances.map((e, i): Line => {
     if (!e.open) return [INTAKE_CAP_ICON, CAPPED_LABEL];
     const icon = e.ammoId ? itemDef(ammoDef(e.ammoId).itemId).icon : INTAKE_EMPTY_ICON;
-    return [icon, `${e.count}/${cap}`];
+    const r = rates[i];
+    const words = [`${e.count}/${cap}`, ...(r ? [READOUT_TEXT.inRate(rate(r.inPerSecond))] : []), ...(r?.firesPerSecond != null ? [READOUT_TEXT.fires(rate(r.firesPerSecond))] : [])];
+    return [icon, words.join(READOUT_TEXT.sep)];
   });
 }
 

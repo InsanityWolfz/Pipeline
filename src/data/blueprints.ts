@@ -2,7 +2,8 @@
 // named, and their words. Rules are in src/sim/area.ts, src/sim/blueprints.ts and src/sim/stamp.ts. Tuning values.
 
 /**
- * How many items the stash can hold before an area pick-up is refused whole (063). The stash has no practical limit
+ * How many items the stash can hold before an area pick-up is refused whole (063; 069: with the inventory's
+ * INVENTORY_CAP, src/data/items.ts, the two together). The stash has no practical limit
  * (052), so this is unbounded: the refusal can't fire today, but the rule is there for a stash that one day fills.
  */
 export const STASH_CAP = Number.POSITIVE_INFINITY;
@@ -40,8 +41,8 @@ export const BLUEPRINT_NAMING = {
 
 /** What the player reads (063). */
 export const BLUEPRINT_TEXT = {
-  /** An area pick-up the stash can't hold, refused whole: the hint over the build bar. */
-  stashFull: 'The stash is full',
+  /** An area pick-up the inventory and the stash can't hold between them (069), refused whole: the hint over the build bar. */
+  stashFull: 'The inventory and the stash are full',
   /** The build bar's Tools group label and its cells' hover lines. */
   tools: 'Tools',
   /** The cells' hover lines, with the bound key (the build strip has no room for two more entries). */

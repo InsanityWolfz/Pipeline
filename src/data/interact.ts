@@ -14,6 +14,7 @@ export const INTERACT_KINDS = [
   'stash',
   'bench',
   'cache',
+  'entrance',
   'diagram',
   'hopper',
   'crate',
@@ -57,9 +58,14 @@ export const INTERACT_PROMPTS: Readonly<Record<InteractKind, InteractPrompt>> = 
   // never on the player's chest.
   bench: { key: 'E', rise: 0, beside: TILE_SIZE * 0.75 },
   cache: { key: 'E', rise: OVER },
+  // 069: an intake entrance (its mouth tile's centre) offers Purge.
+  entrance: { key: 'E', rise: OVER },
   diagram: { key: 'E', rise: OVER },
   hopper: { key: 'E', rise: OVER },
   crate: { key: 'E', rise: OVER },
   // A node's point is its feet; the same height as the gathering objective's prompt (012).
   node: { key: 'E', rise: OVER },
 };
+
+/** 069: the purge menu's one row, opened by E at an intake entrance holding rounds. */
+export const PURGE_TEXT = { row: 'Purge' } as const;

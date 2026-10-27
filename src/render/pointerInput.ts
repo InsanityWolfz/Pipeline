@@ -6,13 +6,15 @@ import type { Facing } from '../sim/player';
 import type { ConduitLay } from './dragPath';
 import { BuildDrag } from './buildDrag';
 import { clickMods, heldButtons, isLeftPress, type BuildInput } from './clickInput';
-import { toView } from './scale';
+import { toView, viewScale } from './scale';
 import type { BlueprintInput } from './blueprintInput';
 
-/** The build ghost's turn and flip, read when a press starts a place (they live on Controls). */
+/** The build ghost's turn and flip, and (069) a pipetted conduit's turn and stage's round, read when a press starts a place (they live on Controls). */
 export interface GhostPose {
   facing: Facing;
   mirrored: boolean;
+  turn: Facing | null;
+  round: string | null;
 }
 
 // The mouse for Controls (split out of controls.ts): the aim under the cursor, presses that land on the UI, and build
@@ -20,6 +22,7 @@ export interface GhostPose {
 export class PointerInput {
   private readonly pointer: Input.Pointer;
   private readonly camera: Cameras.Scene2D.Camera;
+  private readonly scene: Scene;
   /** Build mode's mouse: places, pick-ups and conduit drags (src/render/buildDrag.ts). */
   readonly drag = new BuildDrag();
   build: BuildInput = {
@@ -44,6 +47,7 @@ export class PointerInput {
     this.ghost = ghost;
     this.tools = tools;
     this.pointer = scene.input.activePointer;
+    this.scene = scene;
     this.camera = scene.cameras.main;
     scene.input.mouse?.disableContextMenu();
     scene.input.on('pointerdown', (p: Input.Pointer) => this.pointerDown(p));
@@ -75,9 +79,9 @@ export class PointerInput {
     return { tx: Math.floor(this.aimX / TILE_SIZE), ty: Math.floor(this.aimY / TILE_SIZE) };
   }
 
-  /** A pointer's position in view px (the HUD's 640×360 layout), whatever the backbuffer resolution (016). */
+  /** A pointer's position in view px (the HUD's 640×360 layout), whatever the backbuffer resolution (016) or build mode's zoom (069). */
   private view(p: { x: number; y: number }): { x: number; y: number } {
-    return toView(p.x, p.y, this.camera.zoom);
+    return toView(p.x, p.y, viewScale(this.scene));
   }
 
   /** The cursor in view px (020: for menu rows lighting under it). */
@@ -131,7 +135,7 @@ export class PointerInput {
     const tile = this.tileUnder(p);
     if (this.toolPress(p, tile)) return;
     if (p.rightButtonDown()) this.drag.pickUp(tile);
-    else if (p.leftButtonDown()) this.drag.press(tile, this.build.pieceId(), this.ghost.facing, this.ghost.mirrored);
+    else if (p.leftButtonDown()) this.drag.press(tile, this.build.pieceId(), this.ghost.facing, this.ghost.mirrored, { turn: this.ghost.turn, round: this.ghost.round });
   }
 
   /**

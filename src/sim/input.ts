@@ -13,9 +13,9 @@ export type AreaAction = 'pickUp' | 'save' | 'saveAndPickUp';
 
 /**
  * How many a hopper deposit or withdraw moves (022), like an inventory stack: one,
- * half the stack (rounded up), or all of it.
+ * half the stack (rounded up), or all of it. 069: or ten (all, if fewer), a hopper screen's plain click.
  */
-export type HopperAmount = 'one' | 'half' | 'all';
+export type HopperAmount = 'one' | 'ten' | 'half' | 'all';
 
 export interface Command {
   moveX: Axis;
@@ -40,9 +40,10 @@ export interface Command {
   /** A piece to place this tick (an edge), or null. */
   /**
    * `inFrom` shapes a conduit (013): left out, a single conduit joins a lone side
-   * feeder as a corner. `mirrored` makes a splitter's side its left (033).
+   * feeder as a corner. `mirrored` makes a splitter's side its left (033). 069: `round` sets a stage machine's round
+   * (the pipette's copy).
    */
-  place: { pieceId: string; tx: number; ty: number; facing: Facing; inFrom?: Facing; mirrored?: boolean } | null;
+  place: { pieceId: string; tx: number; ty: number; facing: Facing; inFrom?: Facing; mirrored?: boolean; round?: string } | null;
   /** A tile whose piece to pick up this tick (an edge), or null. */
   pickUp: { tx: number; ty: number } | null;
   /**
@@ -81,6 +82,8 @@ export interface Command {
   takeStash: { itemId: string | null; amount?: HopperAmount; stack?: number } | null;
   /** Put some of a held kind into the stash, standing at it, this tick (an edge, 052: the stash screen's click), or null; amounts as `takeStash`'s. */
   stashPut: { itemId: string; amount: HopperAmount; stack?: number } | null;
+  /** 069: purge this intake entrance (an index into INTAKE.entrances), standing at it, this tick (an edge), or null. */
+  purge: number | null;
   /** Identify every carried piece at the bench this tick (an edge). */
   identify: boolean;
   /** At the bench this tick (an edge, 036): wear a piece by id (the worn one comes off), or take a slot off with `{ slot, id: null }`; null for no change. */
@@ -122,6 +125,7 @@ export const NO_COMMAND: Readonly<Command> = {
   travel: null,
   takeStash: null,
   stashPut: null,
+  purge: null,
   identify: false,
   equip: null,
   restore: null,
