@@ -215,7 +215,8 @@ export class WorldLife {
     }
     this.bolt.clear();
     if (!this.flash) return;
-    this.flash.age += dt;
+    // On the tween clock, so a screenshot can hold the bolt (tweenSpeed).
+    this.flash.age += dt * this.scene.tweens.timeScale;
     if (this.flash.age >= L.boltMs || !this.hooks.flashes()) {
       this.flash = null;
       return;
