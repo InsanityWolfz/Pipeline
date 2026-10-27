@@ -1,10 +1,10 @@
-import { test, type Page } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
 import { OVERWORLD, OVERWORLD_ROOM } from '../../src/data/overworld';
 import { SET_PIECES, setPieceAnchor, setPieceDef } from '../../src/data/setPieces';
 import { WORLD } from '../../src/sim/world';
 import { boot } from './helpers';
 import { frames, openWorld, setLook, toRegion, type Region } from './lightingPage';
-import { toSetPiece, walkToAny, weather } from './worldLifePage';
+import { toSetPiece, walkToAny, weather, world } from './worldLifePage';
 
 // Review screenshots for 077 (REVIEW_SHOTS=1, into docs/review/077): each region's detail on Low and High, each set
 // piece on High, two frames of a swaying meadow, a pond's ripples and a ley line's beads, each region's weather on
@@ -58,9 +58,10 @@ test.describe('review screenshots (077)', () => {
     const room = WORLD[OVERWORLD_ROOM];
     const pond = [...(room?.terrain?.ponds ?? [])].sort((p, q) => Math.hypot(p.cx - 146, p.cy - 150) - Math.hypot(q.cx - 146, q.cy - 150))[0];
     if (!pond) throw new Error('no pond');
-    await walkToAny(page, [{ x: (pond.cx + 0.5) * 32, y: (pond.cy + pond.ry * 1.6 + 1) * 32 }, { x: (pond.cx + pond.rx * 1.6 + 1) * 32, y: (pond.cy + 0.5) * 32 }]);
-    await page.evaluate(() => new Promise((r) => setTimeout(r, 2500)));
-    await shot(page, '32-pond-ripples', true);
+    // Below the pond, far enough that it sits in the upper half of the view, clear of the player.
+    await walkToAny(page, [2, 3, 4].map((d) => ({ x: (pond.cx + 0.5 - pond.rx - 2) * 32, y: (pond.cy + pond.ry + d) * 32 })));
+    await expect.poll(async () => (await world(page)).ripples, { timeout: 30_000 }).toBeGreaterThanOrEqual(1);
+    await shot(page, '32-pond-ripples');
     const line = OVERWORLD.leyLines.shrine;
     const mid = line[Math.floor(line.length / 2)] ?? { tx: 0, ty: 0 };
     await walkToAny(page, [-1, 1, -2, 2, -3, 3].map((d) => ({ x: (mid.tx + 0.5 + d) * 32, y: (mid.ty + 1.5) * 32 })));
@@ -76,7 +77,8 @@ test.describe('review screenshots (077)', () => {
     await setLook(page, { quality: 'high', flashes: true });
     const tower = setPieceDef('storm-tower');
     const a = setPieceAnchor(tower, 32);
-    await walkToAny(page, [{ x: a.x - 90, y: a.y - 40 }, { x: a.x + 90, y: a.y - 40 }]);
+    // North of it, so its crown sits in the middle of the view and the bolt shows coming down onto it.
+    await walkToAny(page, [{ x: a.x - 60, y: a.y - 200 }, { x: a.x + 60, y: a.y - 200 }, { x: a.x - 90, y: a.y - 120 }]);
     await page.evaluate(() => window.__GAME__?.tweenSpeed(0.02));
     await page.evaluate(async () => {
       const g = window.__GAME__;

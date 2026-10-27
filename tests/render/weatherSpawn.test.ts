@@ -68,16 +68,16 @@ describe('weather (077)', () => {
     const m = new WeatherModel(createRng(2));
     const t = layerTargets(weatherWeights(moodAt(70)), 'high', false);
     const want = t.reduce((n, x) => n + x.count, 0);
+    const m1 = WEATHER_MARGIN + 1;
+    let outside = 0;
+    const counts = new Set<number>();
     for (let i = 0; i < 600; i++) {
       m.step(16, view, t, 1000, east);
-      for (const p of m.particles) {
-        expect(p.x).toBeGreaterThanOrEqual(view.x - WEATHER_MARGIN - 1);
-        expect(p.x).toBeLessThanOrEqual(view.x + view.width + WEATHER_MARGIN + 1);
-        expect(p.y).toBeGreaterThanOrEqual(view.y - WEATHER_MARGIN - 1);
-        expect(p.y).toBeLessThanOrEqual(view.y + view.height + WEATHER_MARGIN + 1);
-      }
-      expect(m.count()).toBe(want);
+      for (const p of m.particles) if (p.x < view.x - m1 || p.x > view.x + view.width + m1 || p.y < view.y - m1 || p.y > view.y + view.height + m1) outside += 1;
+      counts.add(m.count());
     }
+    expect(outside).toBe(0);
+    expect([...counts]).toEqual([want]);
     expect(m.recycled).toBeGreaterThan(0);
     // The camera moves on: the field follows the view, never the map.
     const far = { ...view, x: view.x + 5000 };

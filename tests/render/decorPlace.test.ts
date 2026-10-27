@@ -24,7 +24,6 @@ const C = GROUND.chunk;
 const every = (fn: (tx: number, ty: number) => void) => {
   for (let ty = 0; ty < H; ty++) for (let tx = 0; tx < W; tx++) fn(tx, ty);
 };
-const dist = (a: { tx: number; ty: number }, tx: number, ty: number) => Math.max(Math.abs(a.tx - tx), Math.abs(a.ty - ty));
 
 /** A small stable hash of a list, for pinning it. */
 const fnv = (s: string): string => {
@@ -41,6 +40,13 @@ describe('decor placement (077)', () => {
     for (const r of roads) for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) roadNear.add(`${r.tx + dx},${r.ty + dy}`);
     const points = [...(room.pylons ?? []), ...OVERWORLD.nodes, ...(room.altars ?? []), ...(room.caches ?? []), OVERWORLD.startStone, OVERWORLD.entrance.door];
     const gates = new Set((room.gateTiles ?? []).map((t) => `${t.tx},${t.ty}`));
+    // Tiles within 2 of a fixed thing, and within a spring's pool plus 2, worked out once.
+    const nearPoint = new Set<string>();
+    for (const q of points) for (let dy = -2; dy <= 2; dy++) for (let dx = -2; dx <= 2; dx++) nearPoint.add(`${q.tx + dx},${q.ty + dy}`);
+    for (const sp of OVERWORLD.springs) for (let dy = -5; dy <= 5; dy++) for (let dx = -5; dx <= 5; dx++) if (Math.hypot(dx, dy) <= sp.radius + 2) nearPoint.add(`${sp.tx + dx},${sp.ty + dy}`);
+    const inArena = (tx: number, ty: number) => BOSS_ARENAS.some((a) => tx >= a.bounds.x0 && tx <= a.bounds.x1 && ty >= a.bounds.y0 && ty <= a.bounds.y1);
+    const g = GROTTO.area;
+    const bad: string[] = [];
     let plants = 0;
     let marks = 0;
     every((tx, ty) => {
@@ -50,18 +56,20 @@ describe('decor placement (077)', () => {
         if (!p) continue;
         marks += 1;
         const at = `${tx},${ty}`;
-        expect(WALKABLE.includes(room.rows[ty]?.[tx] ?? ''), at).toBe(true);
-        expect(roadNear.has(at), `${at} by a road`).toBe(false);
-        expect(onBarrier(tx, ty), at).toBe(false);
-        expect(gates.has(at), at).toBe(false);
-        expect(room.rows[ty]?.[tx], at).not.toBe(TILE.ramp);
-        for (const a of BOSS_ARENAS) expect(tx >= a.bounds.x0 && tx <= a.bounds.x1 && ty >= a.bounds.y0 && ty <= a.bounds.y1, `${at} in ${a.id}`).toBe(false);
-        for (const q of points) expect(dist(q, tx, ty), `${at} near ${q.tx},${q.ty}`).toBeGreaterThan(2);
-        for (const s of OVERWORLD.springs) expect(Math.hypot(s.tx - tx, s.ty - ty), `${at} by ${s.id}`).toBeGreaterThan(s.radius + 2);
-        const g = GROTTO.area;
-        expect(tx >= g.x0 && tx <= g.x1 && ty >= g.y0 && ty <= g.y1, `${at} in the Grotto`).toBe(false);
+        const why = [
+          !WALKABLE.includes(room.rows[ty]?.[tx] ?? '') && 'solid',
+          roadNear.has(at) && 'by a road',
+          onBarrier(tx, ty) && 'barrier',
+          gates.has(at) && 'gate',
+          room.rows[ty]?.[tx] === TILE.ramp && 'ramp',
+          inArena(tx, ty) && 'arena',
+          nearPoint.has(at) && 'near a fixed thing',
+          tx >= g.x0 && tx <= g.x1 && ty >= g.y0 && ty <= g.y1 && 'grotto',
+        ].filter(Boolean);
+        if (why.length > 0) bad.push(`${at}: ${why.join(', ')}`);
       }
     });
+    expect(bad).toEqual([]);
     expect(plants).toBeGreaterThan(1000);
     expect(marks).toBeGreaterThan(plants);
   });
