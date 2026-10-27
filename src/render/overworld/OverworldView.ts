@@ -155,8 +155,7 @@ export class OverworldView {
       this.bakeMs.push(performance.now() - started);
       tex.refresh();
     }
-    const ground = this.scene.add.image(x0, y0, key).setOrigin(0).setScale(1 / scale).setDepth(DEPTHS.floor).setVisible(this.shown);
-    const objects: GameObjects.Image[] = [this.world?.addGround(ground) ?? ground];
+    const objects: GameObjects.Image[] = this.groundTiles(key, x0, y0, w, h, scale);
     for (let ty = y0 / T; ty < (y0 + h) / T; ty++) {
       const row = room.rows[ty] ?? '';
       for (let tx = x0 / T; tx < (x0 + w) / T; tx++) {
@@ -166,6 +165,29 @@ export class OverworldView {
     }
     this.chunks.set(id, { key, objects });
     return true;
+  }
+
+  /**
+   * 074: a chunk's ground drawn as squares of `GROUND.lightTile` world px, each a frame of its texture: each frame only
+   * the squares a light reaches are lit (WorldLayer.lightChunks), so the lighting's cost follows the lights, not the screen.
+   */
+  private groundTiles(key: string, x0: number, y0: number, w: number, h: number, scale: number): GameObjects.Image[] {
+    const S = GROUND.lightTile;
+    const texture = this.scene.textures.get(key);
+    const out: GameObjects.Image[] = [];
+    for (let sy = 0; sy < h; sy += S) {
+      for (let sx = 0; sx < w; sx += S) {
+        const name = `${sx},${sy}`;
+        const px = Math.round(sx * scale);
+        const py = Math.round(sy * scale);
+        const pw = Math.min(Math.round((sx + S) * scale), texture.source[0]?.width ?? 0) - px;
+        const ph = Math.min(Math.round((sy + S) * scale), texture.source[0]?.height ?? 0) - py;
+        if (!texture.has(name)) texture.add(name, 0, px, py, pw, ph);
+        const image = this.scene.add.image(x0 + px / scale, y0 + py / scale, key, name).setOrigin(0).setScale(1 / scale).setDepth(DEPTHS.floor).setVisible(this.shown);
+        out.push(this.world?.addChunk(image) ?? image);
+      }
+    }
+    return out;
   }
 
   /** A tile's standing sprite, if it has one, at the bottom centre of the tile. */

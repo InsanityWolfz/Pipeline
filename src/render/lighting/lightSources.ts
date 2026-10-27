@@ -116,7 +116,9 @@ function nodesNear(nodes: readonly NodeState[], roomId: string, v: View): NodeSt
     nodes.forEach((n, i) => {
       if (n.nodeId !== 'ley-vein' && n.nodeId !== 'cinder-vent') return;
       const k = `${n.roomId}|${Math.floor(n.x / C)},${Math.floor(n.y / C)}`;
-      map.set(k, [...(map.get(k) ?? []), i]);
+      const list = map.get(k);
+      if (list) list.push(i);
+      else map.set(k, [i]);
     });
     nodeBuckets = { of: nodes, length: nodes.length, map };
   }

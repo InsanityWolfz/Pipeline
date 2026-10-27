@@ -123,6 +123,13 @@ function stroke(c: CanvasRenderingContext2D, lines: readonly number[][], width: 
   c.globalAlpha = 1;
 }
 
+/** Adds items to a map's list (made on first use). */
+export function push<K, V>(map: Map<K, V[]>, key: K, items: readonly V[]): void {
+  const list = map.get(key);
+  if (list) list.push(...items);
+  else map.set(key, [...items]);
+}
+
 /** Soft edges, then cracks, over the regions' ground (before the paths, ponds and ley lines go over it). */
 export function paintBlend(c: CanvasRenderingContext2D, each: Each, symbol: Symbol, plateau: (tx: number, ty: number) => boolean, paved: (tx: number, ty: number) => boolean): void {
   const cls = (tx: number, ty: number) => groundClass(tx, ty, symbol, plateau);
@@ -134,10 +141,10 @@ export function paintBlend(c: CanvasRenderingContext2D, each: Each, symbol: Symb
     for (const s of SIDES) {
       const there = cls(tx + s.dx, ty + s.dy);
       if (there === here || !B.edge.pairs.some((p) => p.spill === there && p.into === here)) continue;
-      spills.set(there, [...(spills.get(there) ?? []), ...edgeBlobs(tx, ty, s.dx, s.dy, hash)]);
+      push(spills, there, edgeBlobs(tx, ty, s.dx, s.dy, hash));
     }
     const ground = crackGround(here, paved(tx, ty));
-    if (ground) cracks.set(ground, [...(cracks.get(ground) ?? []), ...crackOf(tx, ty, hash, ground)]);
+    if (ground) push(cracks, ground, crackOf(tx, ty, hash, ground));
   });
   for (const [ground, blobs] of spills) {
     c.fillStyle = inkCss(CLASS_COLOR[ground]);

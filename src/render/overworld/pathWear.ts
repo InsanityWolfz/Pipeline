@@ -3,7 +3,7 @@ import { TILE_SIZE } from '../../data/config';
 import type { TilePos } from '../../data/tiles';
 import { worldTileHash } from '../roomTiles';
 import { inkCss } from '../vector/draw';
-import { CLASS_COLOR, groundClass } from './groundBlend';
+import { CLASS_COLOR, groundClass, push } from './groundBlend';
 import { pathStrokes } from './pathStrokes';
 
 // 074: worn paths. Over 059's joined dirt (its outline and width unchanged): a darker trodden centre, the ground on
@@ -72,7 +72,7 @@ export function paintPathWear(
         if (onDirt(x - uy * side * 4, y + ux * side * 4)) continue;
         const color = CLASS_COLOR[groundClass(Math.floor(x / T - uy * side), Math.floor(y / T + ux * side), symbol, plateau)];
         const r = P.creepRadius[0] + roll(x, y, 9) * (P.creepRadius[1] - P.creepRadius[0]);
-        creep.set(color, [...(creep.get(color) ?? []), { x, y, r }]);
+        push(creep, color, [{ x, y, r }]);
       }
       if (s % P.pebbleStep < P.creepStep && roll(px, py, 21) < 0.6) {
         const across = (roll(px, py, 22) - 0.5) * (W - 14);

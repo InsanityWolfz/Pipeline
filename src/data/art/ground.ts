@@ -71,6 +71,8 @@ export const GROUND = {
    */
   ahead: 1,
   keep: 2,
+  /** 074: a chunk's ground is drawn in squares this many world px across, each lit only while a light reaches it. */
+  lightTile: 160,
   /** 053: the world's cliff edge past the Hollows, away from its face: flat plateau stone, and its darker cracks. */
   plateau: 'hollow-dark',
   plateauEdge: 'rock-dark',
