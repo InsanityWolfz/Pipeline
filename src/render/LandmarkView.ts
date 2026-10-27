@@ -1,3 +1,4 @@
+import type { WorldLayer } from './lighting/WorldLayer';
 import { BlendModes, type GameObjects, type Scene } from 'phaser';
 import { DEPTHS, FX_TEXTURES } from '../data/assets';
 import { TILE_SIZE } from '../data/config';
@@ -57,7 +58,11 @@ export class LandmarkView {
   private tuftCount = 0;
   private built = false;
 
-  constructor(scene: Scene, banner: Banner) {
+  private readonly world: WorldLayer | undefined;
+
+  /** `world` (074): the dressing takes the region's mood and lights. */
+  constructor(scene: Scene, banner: Banner, world?: WorldLayer) {
+    this.world = world;
     this.scene = scene;
     this.banner = banner;
   }
@@ -108,9 +113,18 @@ export class LandmarkView {
       for (const f of l.features) if (f.kind === 'pond') this.buildPond(l, f);
       if (l.cache) {
         const sprite = addVector(this.scene, (l.cache.tx + 0.5) * T, (l.cache.ty + 1) * T, LANDMARK_SPRITES.cacheSealed).setDepth((l.cache.ty + 1) * T);
+        this.world?.addProp(sprite);
         this.caches.set(l.id, { sprite, frame: 'sealed' });
       }
     }
+  }
+
+  private ground(o: GameObjects.Image): GameObjects.Image {
+    return this.world?.addGround(o) ?? o;
+  }
+
+  private prop(o: GameObjects.Image): GameObjects.Image {
+    return this.world?.addProp(o) ?? o;
   }
 
   /** Slabs round the hollow's lip (none on a node, guard or the path in), and its light breathing over it. */
@@ -127,7 +141,7 @@ export class LandmarkView {
       const onPath = OVERWORLD.paths.some((p) => nearAny(x, y, p, H.clear.path));
       if (nearAny(x, y, busy, H.clear.things) || onPath) continue;
       const frame = kind === 'frost' ? LANDMARK_SPRITES.lipFrost : LANDMARK_SPRITES.lip;
-      this.decals.push(addVector(this.scene, x, y, frame).setDepth(DEPTHS.floor + H.depth).setFlipX(tileHash(i, l.area.x0 - WORLD_SHIFT.dx) % 2 === 0));
+      this.decals.push(this.ground(addVector(this.scene, x, y, frame).setDepth(DEPTHS.floor + H.depth).setFlipX(tileHash(i, l.area.x0 - WORLD_SHIFT.dx) % 2 === 0)));
       this.lipCount += 1;
     }
     const look = kind === 'frost' ? H.coldLight : H.leyLight;
@@ -144,13 +158,13 @@ export class LandmarkView {
       const x = cx + Math.cos(a) * f.rx * M.tuftRim * T;
       const y = cy + Math.sin(a) * f.ry * M.tuftRim * T;
       if (nearAny(x, y, [...l.nodes, ...l.guards, ...(l.pylon ? [l.pylon] : [])], M.tuftClear)) continue;
-      this.decals.push(addVector(this.scene, x, y, LANDMARK_SPRITES.marshTuft).setDepth(y));
+      this.decals.push(this.prop(addVector(this.scene, x, y, LANDMARK_SPRITES.marshTuft).setDepth(y)));
       this.tuftCount += 1;
     }
     for (let i = 0; i < M.lilies; i++) {
       const a = M.lilyFrom + i * M.lilyStep;
       const [kx, ky] = M.lilyAt;
-      this.decals.push(addVector(this.scene, cx + Math.cos(a) * f.rx * kx * T, cy + Math.sin(a) * f.ry * ky * T, LANDMARK_SPRITES.lily).setDepth(DEPTHS.floor + M.lilyDepth));
+      this.decals.push(this.ground(addVector(this.scene, cx + Math.cos(a) * f.rx * kx * T, cy + Math.sin(a) * f.ry * ky * T, LANDMARK_SPRITES.lily).setDepth(DEPTHS.floor + M.lilyDepth)));
     }
   }
 }

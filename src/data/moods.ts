@@ -82,3 +82,18 @@ export const MOOD_EDGES: readonly { readonly radius: number; readonly inner: Rin
  * `darkness` for `holdMs`, then it eases back over `easeMs`. With Flashes off (042.10) there is none.
  */
 export const LIGHTNING_FLASH = { color: 'storm-pale', darkness: 0.3, holdMs: 120, easeMs: 400 } as const;
+
+/**
+ * The fog (074): a tileable texture `size` px square of soft wisps (two octaves of value noise on `cells` lattices,
+ * clear below `floor`), made once and tiled over the view. Each layer is drawn `scale`× and drifts along `dir` at the
+ * mood's speed × `speed`, its alpha the mood's × `alpha`. Medium draws the first layer; High both, drifting apart.
+ */
+export const FOG_LOOK = {
+  size: 256,
+  cells: [4, 8] as const,
+  floor: 0.35,
+  layers: [
+    { scale: 3, dir: [1, 0.25] as const, speed: 1, alpha: 1 },
+    { scale: 2, dir: [-0.6, 0.8] as const, speed: 0.7, alpha: 0.7 },
+  ],
+} as const;

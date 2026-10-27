@@ -19,6 +19,7 @@ import { stormcrownFrame } from '../stormcrownTiles';
 import { isPlateau } from './plateau';
 import { pieceFrame } from '../../sim/tileLook';
 import type { Occluders } from '../occluders';
+import type { WorldLayer } from '../lighting/WorldLayer';
 
 // Draws the overworld (017): its ground baked into chunk textures, then every tree, rock, ruin and the foundry's ruin
 // as vector sprites sorted by their feet (067: the shrine's barrier dome is gone, its door open from the start); and
@@ -26,6 +27,9 @@ import type { Occluders } from '../occluders';
 // (its ground and its standing sprites) is built as the camera nears it and dropped once it's far behind.
 
 const T = TILE_SIZE;
+
+/** 074: `?blend=off` (dev only) bakes the ground without its blending, to measure what blending costs a chunk. */
+const BLEND = !(import.meta.env.DEV && typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('blend') === 'off');
 
 const { safe: SAFE } = SITE_LOOK;
 
@@ -44,11 +48,16 @@ export class OverworldView {
   private room: Room | null = null;
   private shown = false;
   private claims = '';
+  /** 074: each chunk's ground bake time, ms, for the probe. */
+  readonly bakeMs: number[] = [];
 
   private readonly occluders: Occluders | undefined;
 
-  /** `occluders` (070): the trees and ruin blocks that can hide the player register there. */
-  constructor(scene: Scene, occluders?: Occluders) {
+  private readonly world: WorldLayer | undefined;
+
+  /** `occluders` (070): the trees and ruin blocks that can hide the player register there. `world` (074): the ground and everything standing take the region's mood and lights. */
+  constructor(scene: Scene, occluders?: Occluders, world?: WorldLayer) {
+    this.world = world;
     this.scene = scene;
     this.occluders = occluders;
   }
@@ -141,10 +150,13 @@ export class OverworldView {
     if (tex) {
       const c = tex.context;
       c.setTransform(scale, 0, 0, scale, -x0 * scale, -y0 * scale);
-      drawGround(c, room, x0, y0, w, h, scale);
+      const started = performance.now();
+      drawGround(c, room, x0, y0, w, h, scale, BLEND);
+      this.bakeMs.push(performance.now() - started);
       tex.refresh();
     }
-    const objects: GameObjects.Image[] = [this.scene.add.image(x0, y0, key).setOrigin(0).setScale(1 / scale).setDepth(DEPTHS.floor).setVisible(this.shown)];
+    const ground = this.scene.add.image(x0, y0, key).setOrigin(0).setScale(1 / scale).setDepth(DEPTHS.floor).setVisible(this.shown);
+    const objects: GameObjects.Image[] = [this.world?.addGround(ground) ?? ground];
     for (let ty = y0 / T; ty < (y0 + h) / T; ty++) {
       const row = room.rows[ty] ?? '';
       for (let tx = x0 / T; tx < (x0 + w) / T; tx++) {
@@ -187,7 +199,7 @@ export class OverworldView {
     const image = addVector(this.scene, x + jitter, bottom, frame).setDepth(bottom);
     if (symbol === TILE.tree && (hash >>> 16) % 2 === 0) image.setFlipX(true);
     if (symbol === TILE.tree || symbol === TILE.ruinBlock) this.occluders?.add(image);
-    return image;
+    return this.world?.addProp(image) ?? image;
   }
 
   /** Each claimed pylon's safe ground (032: every claimed pylon, at its own radius): a green wash and a ley ring. */

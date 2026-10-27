@@ -10,6 +10,7 @@ import { NO_LEGIBILITY_UI } from './Legibility';
 import type { GameScene } from './GameScene';
 import { NO_BLUEPRINT_UI } from './BlueprintUi';
 import type { GameUiState } from './testHook';
+import { NO_LIGHTING } from './lighting/LightingView';
 
 // What a game scene shows, for the test hook's ui() (split from GameScene in 042). Every view may be missing (before
 // the scene is created, or on the title's blank), so each falls back to its empty value.
@@ -64,5 +65,6 @@ export function gameUi(g: GameScene): GameUiState {
     ...(g.legibility?.ui ?? NO_LEGIBILITY_UI),
     sandbox: g.sim.sandbox ? (g.sandboxPanel?.state ?? { open: false, rows: [], keys: [], boxes: [], tabs: [], sliding: false }) : null,
     sandboxDrawn: g.sandboxPanel?.drawn ?? false,
+    lighting: g.lighting?.shown ?? NO_LIGHTING,
   };
 }
