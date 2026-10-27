@@ -25,6 +25,11 @@ function fake(x = 0, y = 0): Fake & GameObjects.Image {
     displayWidth: 160,
     displayHeight: 160,
     sets: 0,
+    depth: -1,
+    setDepth(d: number) {
+      o.depth = d;
+      return o;
+    },
     setLighting(v: boolean) {
       o.lighting = v;
       return o;
@@ -74,5 +79,25 @@ describe('WorldLayer (074)', () => {
     expect([w.applied, prop.tint]).toEqual([1, 0x111111]);
     w.apply({ litGround: false, litProps: false, tint: 0x222222 });
     expect([w.applied, prop.tint]).toEqual([2, 0x222222]);
+  });
+
+  it('on High lights only the props a light reaches (so lit props stay few), the rest tinted, and lets them go again', () => {
+    const w = new WorldLayer();
+    w.apply({ litGround: true, litProps: true, tint: 0x333333 });
+    const near = w.addProp(fake(100, 100));
+    const far = w.addProp(fake(2000, 2000));
+    w.lightProps([{ x: 110, y: 90, radius: 48 }], view);
+    expect([near.lighting, near.tint]).toEqual([true, null]);
+    expect([far.lighting, far.tint]).toEqual([false, 0x333333]);
+    w.lightProps([], view);
+    expect([near.lighting, near.tint]).toEqual([false, 0x333333]);
+  });
+
+  it('lights no prop below High', () => {
+    const w = new WorldLayer();
+    w.apply({ litGround: false, litProps: false, tint: 0x333333 });
+    const near = w.addProp(fake(100, 100));
+    w.lightProps([{ x: 110, y: 90, radius: 48 }], view);
+    expect([near.lighting, near.tint]).toEqual([false, 0x333333]);
   });
 });

@@ -75,7 +75,8 @@ export class SiteView {
     for (const at of here) {
       let sprite = this.pylons.get(at.site);
       if (!sprite) {
-        sprite = addVectorSprite(this.scene, 0, 0, PYLON_SPRITES.off).setOrigin(0.5, 1);
+        // Where it stands from the start, so the world layer files it by its place (074 review).
+        sprite = addVectorSprite(this.scene, (at.tx + 0.5) * TILE_SIZE, (at.ty + 1) * TILE_SIZE, PYLON_SPRITES.off).setOrigin(0.5, 1);
         this.world?.addProp(sprite);
         this.pylons.set(at.site, sprite);
       }

@@ -36,7 +36,7 @@ export const REGION_MOODS: Readonly<Record<Ring, RegionMood>> = {
   2: SUNNY,
   3: {
     name: 'dusk',
-    ambient: { color: 'hollow', darkness: 0.55 },
+    ambient: { color: 'hollow', darkness: 0.7 },
     wash: { color: 'hollow-dark', alpha: 0.04 },
     fog: { color: 'hollow-dark', alpha: 0.1, speed: 4 },
     lights: { ley: 'cyan', fire: 'cinder', accent: 'vein' },

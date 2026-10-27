@@ -44,7 +44,7 @@ describe('region moods (074)', () => {
     };
     const table = [
       { ring: 0, ambient: '#fcfef4', wash: ['sun', 0.04], fog: null, accent: 'sun', scale: 0.3 },
-      { ring: 3, ambient: '#a7b0be', wash: ['hollow-dark', 0.04], fog: ['hollow-dark', 0.1, 4], accent: 'vein', scale: 1 },
+      { ring: 3, ambient: '#8f9aac', wash: ['hollow-dark', 0.04], fog: ['hollow-dark', 0.1, 4], accent: 'vein', scale: 1 },
       { ring: 4, ambient: '#af8477', wash: ['flame-dark', 0.06], fog: ['ash-dark', 0.15, 6], accent: 'cinder-light', scale: 1.2 },
       { ring: 5, ambient: '#4c4b60', wash: ['storm-dark', 0.06], fog: ['storm-dark', 0.1, 12], accent: 'storm-glow', scale: 1.8 },
     ] as const;

@@ -135,6 +135,7 @@ export class LightingView {
     const picked = lights ? pickLights(gatherLights({ sim, shown, view, quality, time: this.time, flashes, pulses: this.pulses, chain: conductorChain(sim, shown) }), quality, { x: view.centerX, y: view.centerY }) : [];
     this.placed = picked.map((l) => ({ x: l.x, y: l.y, radius: l.radius, color: l.color, intensity: l.intensity * mood.lightScale, source: l.source }));
     this.world.lightChunks(this.placed, moody ? tint : null, view);
+    this.world.lightProps(perPixel ? this.placed : [], view);
     this.pools.place(lights && look.pools ? this.placed : []);
     for (const [i, light] of this.pool.entries()) {
       const l = perPixel ? picked[i] : undefined;
