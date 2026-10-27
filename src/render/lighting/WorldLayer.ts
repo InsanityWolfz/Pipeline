@@ -40,6 +40,8 @@ export class WorldLayer {
   /** Props by bucket (`PROP_BUCKET` px squares of where they stand), and those lit now. */
   private readonly propBuckets = new Map<string, Set<WorldObject>>();
   private readonly propsLit = new Set<WorldObject>();
+  /** 077: flat props (plants) and the depth each lies at unlit. */
+  private readonly flats = new Map<WorldObject, number>();
   /** The overworld's ground chunks, lit only where a light reaches (`lightChunks`). */
   private readonly chunks = new Set<GameObjects.Image>();
   private chunksLit = 0;
@@ -98,6 +100,16 @@ export class WorldLayer {
   }
 
   /**
+   * 077: a prop lying flat at one depth (a plant): as a prop, but lit it sits a hair deeper, so the lit ones draw
+   * together after the unlit (one batch each), as lit chunks do.
+   */
+  addFlat<T extends WorldObject>(o: T): T {
+    this.flats.set(o, o.depth);
+    o.once('destroy', () => this.flats.delete(o));
+    return this.addProp(o);
+  }
+
+  /**
    * Per frame, on High: lights the props a light reaches (a light's circle, reaching up a prop's height, over the
    * buckets it touches) and lets go of the rest lit last frame, back to the ambient's tint.
    */
@@ -115,10 +127,17 @@ export class WorldLayer {
         }
       }
     }
-    for (const o of this.propsLit) if (!reached.has(o)) paint(o, false, this.look.tint);
-    for (const o of reached) if (!this.propsLit.has(o)) paint(o, true, null);
+    for (const o of this.propsLit) if (!reached.has(o)) this.paintProp(o, false, this.look.tint);
+    for (const o of reached) if (!this.propsLit.has(o)) this.paintProp(o, true, null);
     this.propsLit.clear();
     for (const o of reached) this.propsLit.add(o);
+  }
+
+  /** Paints a prop lit or tinted; a flat one (077) moves a hair deeper while lit. */
+  private paintProp(o: WorldObject, lit: boolean, tint: number | null): void {
+    const flat = this.flats.get(o);
+    if (flat !== undefined) o.setDepth(flat + (lit ? LIT_NUDGE : 0));
+    paint(o, lit, tint);
   }
 
   private add<T extends WorldObject>(set: Set<WorldObject>, o: T, lit: boolean): T {

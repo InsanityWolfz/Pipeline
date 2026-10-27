@@ -37,12 +37,12 @@ function vine(v: number): Shape[] {
 /** Quarry chips: small angular flakes of pale stone. */
 const chips = (v: number): Shape[] =>
   (v === 0 ? [[-5, 0, 0.2], [0, -2, 1.3], [3, 1.5, 2.2], [5.5, -1, 0.9]] : [[-3, 1, 0.6], [2, -1, 1.8], [-0.5, -2.5, 2.9]]).map(([x = 0, y = 0, a = 0], i) =>
-    path(`M ${x - 1.6} ${y + 0.6} L ${x - 0.3} ${y - 1.2 - (a % 1)} L ${x + 1.7} ${y - 0.2} L ${x + 0.5} ${y + 1.1} Z`, { fill: i % 2 ? 'hollow-pale' : 'hollow-light', outline: true }),
+    path(`M ${x - 1.6} ${y + 0.6} L ${x - 0.3} ${y - 1.2 - (a % 1)} L ${x + 1.7} ${y - 0.2} L ${x + 0.5} ${y + 1.1} Z`, { fill: i % 2 ? 'hollow-pale' : 'hollow-light', stroke: { color: { id: 'hollow-dark', alpha: 0.5 }, width: 0.4 } }),
   );
 
 /** A half-buried cut flag: the top edge of a squared paving stone showing through the dust. */
 const FLAG: Shape[] = [
-  path('M -9 1 L -7 -3 L 8 -3.5 L 9.5 0.5 Q 0 2.5 -9 1 Z', { fill: { linear: [0, -3.5, 0, 1] as const, stops: [{ at: 0, color: 'flag-light' }, { at: 0.4, color: 'flag' }, { at: 1, color: 'flag-dark' }] }, outline: true }),
+  path('M -9 1 L -7 -3 L 8 -3.5 L 9.5 0.5 Q 0 2.5 -9 1 Z', { fill: { linear: [0, -3.5, 0, 1] as const, stops: [{ at: 0, color: 'flag-light' }, { at: 0.4, color: 'flag' }, { at: 1, color: 'flag-dark' }] }, stroke: { color: { id: 'flag-dark', alpha: 0.8 }, width: 0.5 } }),
   line([-6, -2.4, 7, -2.8], 0.6, { id: 'snow', alpha: 0.25 }),
   line([1, -3.2, 0.5, 1.2], 0.6, 'flag-dark'),
 ];

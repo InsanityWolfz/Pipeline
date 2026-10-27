@@ -77,7 +77,7 @@ function reed(v: number): Shape[] {
 }
 
 /** Pebbles: a few small stones (variant: how many). */
-const pebbles = (v: number): Shape[] => (v === 0 ? [...stone(-4, 0, 2.2, 1.6, 'rock-dark', 'rock', 'rock-light'), ...stone(2, 1.5, 1.5, 1.1, 'rock-dark', 'rock', 'rock-light'), ...stone(4, -2, 1.1, 0.8, 'rock', 'rock-light', 'rock-pale')] : [...stone(-1, 0, 2.8, 1.9, 'rock-dark', 'rock', 'rock-light'), ...stone(3.5, -1.5, 1.2, 0.9, 'rock', 'rock-light', 'rock-pale')]);
+const pebbles = (v: number): Shape[] => (v === 0 ? [...stone(-4, 0, 2.2, 1.6, 'rock-dark', 'rock', 'rock-light', false), ...stone(2, 1.5, 1.5, 1.1, 'rock-dark', 'rock', 'rock-light', false), ...stone(4, -2, 1.1, 0.8, 'rock', 'rock-light', 'rock-pale', false)] : [...stone(-1, 0, 2.8, 1.9, 'rock-dark', 'rock', 'rock-light', false), ...stone(3.5, -1.5, 1.2, 0.9, 'rock', 'rock-light', 'rock-pale', false)]);
 
 /** Leaf litter under a grove: fallen leaves, dark and straw-brown. */
 const litter = (v: number): Shape[] => [

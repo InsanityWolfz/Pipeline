@@ -8,7 +8,7 @@ import { ellipse, flat, line, path, rect, type Ink, type Shape, type VectorSprit
 // Harp, a giant stone frame strung with brass wires that shiver in the wind (a 4-frame loop over it).
 
 const g = (x0: number, y0: number, x1: number, y1: number, stops: readonly (readonly [number, Ink])[]) => ({ linear: [x0, y0, x1, y1] as const, stops: stops.map(([at, color]) => ({ at, color })) });
-const SLATE = (x0: number, y0: number, x1: number, y1: number) => g(x0, y0, x1, y1, [[0, 'storm-pale'], [0.25, 'storm-light'], [0.65, 'storm'], [1, 'storm-dark']]);
+const SLATE = (x0: number, y0: number, x1: number, y1: number) => g(x0, y0, x1, y1, [[0, 'storm-pale'], [0.45, 'storm-light'], [0.85, 'storm'], [1, 'storm-dark']]);
 const BRASS = (x0: number, y0: number, x1: number, y1: number) => g(x0, y0, x1, y1, [[0, 'brass-light'], [0.4, 'brass'], [1, 'brass-dark']]);
 const GLASS = (x0: number, y0: number, x1: number, y1: number) => g(x0, y0, x1, y1, [[0, 'snow'], [0.3, 'storm-pale'], [1, 'storm-glow']]);
 const rim = (pts: readonly number[], a = 0.4): Shape => line(pts, 0.8, { id: 'snow', alpha: a });

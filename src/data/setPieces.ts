@@ -85,7 +85,7 @@ export const SET_PIECES: readonly SetPieceDef[] = [
     look: { w: 200, h: 130 },
     base: { x0: -80, x1: 80, y0: -32 },
     loopMs: 220,
-    halos: [{ x: -58, y: -62, color: 'vein', radius: 10, breathe: true }],
+    halos: [{ x: -58, y: -62, color: 'vein', radius: 7, breathe: true }],
   },
   {
     id: 'aqueduct-head',

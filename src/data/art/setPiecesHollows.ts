@@ -79,9 +79,10 @@ const giantBlock = (f: number): Shape[] => {
   const bx = px + Math.sin(a) * len;
   const by = py + Math.cos(a) * len;
   return [
-    line([px - 4, py, bx - 7, by - 2], 0.9, 'iron'),
-    line([px + 4, py, bx + 7, by - 2], 0.9, 'iron'),
-    ...[0.25, 0.5, 0.75].flatMap((k) => [ellipse(px - 4 + (bx - 7 - px + 4) * k, py + (by - 2 - py) * k, 1, 1.4, { stroke: { color: 'iron-light', width: 0.5 } }), ellipse(px + 4 + (bx + 7 - px - 4) * k, py + (by - 2 - py) * k, 1, 1.4, { stroke: { color: 'iron-light', width: 0.5 } })]),
+    line([px - 4, py, bx - 7, by - 2], 1.2, 'iron-dark'),
+    line([px + 4, py, bx + 7, by - 2], 1.2, 'iron-dark'),
+    line([px - 4.4, py, bx - 7.4, by - 2], 0.4, 'iron-light'),
+    line([px + 3.6, py, bx + 6.6, by - 2], 0.4, 'iron-light'),
     rect(bx - 11, by - 2, 22, 16, 1.5, { fill: QUARRY(bx - 11, by - 2, bx + 11, by + 14), outline: true }),
     rect(bx - 11, by - 4, 22, 4, 1, { fill: 'hollow-pale', outline: true }),
     line([bx - 9, by + 4, bx + 9, by + 4], 0.6, { id: 'hollow-dark', alpha: 0.6 }),
@@ -104,7 +105,8 @@ const AQUEDUCT_HEAD: Shape[] = [
   ...[-28, 28].map((x) => path(`M ${x - 7} -32 L ${x - 7} -56 Q ${x} -64 ${x + 7} -56 L ${x + 7} -32 Z`, { fill: g(x, -64, x, -32, [[0, 'ink'], [1, 'hollow-dark']]), outline: true })),
   ...[-20, 20].map((x) => path(`M ${x - 5} -84 L ${x - 5} -102 Q ${x} -108 ${x + 5} -102 L ${x + 5} -84 Z`, { fill: 'ink', outline: true })),
   // The dry spillway: a channel down the middle of every stage, cascade lips stepping down, rust streaks either side.
-  rect(-8, -160, 16, 160, 1, { fill: g(-8, 0, 8, 0, [[0, 'hollow-dark'], [0.5, 'iron-dark'], [1, 'hollow-dark']]), outline: true }),
+  rect(-7, -160, 14, 160, 1, { fill: g(-7, 0, 7, 0, [[0, 'hollow-dark'], [0.45, 'hollow'], [1, 'hollow-dark']]), outline: true }),
+  line([-1, -156, -1, -4], 2.4, { id: 'hollow-dark', alpha: 0.7 }),
   ...[-150, -124, -100, -78, -54, -30].map((y) => rect(-10, y, 20, 3, 1, { fill: 'hollow-light', outline: true })),
   ...[-12, 12].map((x) => path(`M ${x} -150 Q ${x + 2} -100 ${x - 1} -40 L ${x + 2} -40 Q ${x + 4} -100 ${x + 2} -150 Z`, { fill: { id: 'iron-rust', alpha: 0.55 } })),
   rim([-42, -30, -43, -76], 0.35),
@@ -150,9 +152,13 @@ const craneCradle = (f: number): Shape[] => {
   const cy = py + Math.cos(a) * len;
   const links = 9;
   return [
+    line([px, py, cx, cy], 1.4, 'iron-dark'),
+    line([px - 0.4, py, cx - 0.4, cy], 0.5, 'iron-light'),
     ...Array.from({ length: links }, (_, i) => {
       const k = (i + 0.5) / links;
-      return ellipse(px + (cx - px) * k, py + (cy - py) * k, 1.1, 2, { stroke: { color: i % 2 ? 'iron-light' : 'iron', width: 0.7 } });
+      const x = px + (cx - px) * k;
+      const y = py + (cy - py) * k;
+      return line([x - 1, y, x + 1, y], 0.7, 'iron-light');
     }),
     // The cradle: a brass-bound frame of timber holding a cut block.
     line([cx, cy, cx - 12, cy + 8], 0.8, 'iron'),

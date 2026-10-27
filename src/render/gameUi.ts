@@ -11,6 +11,7 @@ import type { GameScene } from './GameScene';
 import { NO_BLUEPRINT_UI } from './BlueprintUi';
 import type { GameUiState } from './testHook';
 import { NO_LIGHTING } from './lighting/LightingView';
+import { NO_WEATHER, NO_WORLD } from './world/worldShown';
 
 // What a game scene shows, for the test hook's ui() (split from GameScene in 042). Every view may be missing (before
 // the scene is created, or on the title's blank), so each falls back to its empty value.
@@ -66,5 +67,7 @@ export function gameUi(g: GameScene): GameUiState {
     sandbox: g.sim.sandbox ? (g.sandboxPanel?.state ?? { open: false, rows: [], keys: [], boxes: [], tabs: [], sliding: false }) : null,
     sandboxDrawn: g.sandboxPanel?.drawn ?? false,
     lighting: g.lighting?.shown ?? NO_LIGHTING,
+    world: g.worldLife?.world ?? NO_WORLD,
+    weather: g.worldLife?.weatherShown ?? NO_WEATHER,
   };
 }

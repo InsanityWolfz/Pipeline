@@ -32,6 +32,17 @@ export interface SwayWind {
 
 type View = { x: number; y: number; width: number; height: number };
 
+/** Files an object in its chunk's square; returns the square's list. */
+function put(map: Map<string, Map<string, SwayEntry[]>>, chunk: string, e: SwayEntry): SwayEntry[] {
+  const buckets = map.get(chunk) ?? new Map<string, SwayEntry[]>();
+  map.set(chunk, buckets);
+  const b = `${Math.floor(e.x / SWAY.bucket)},${Math.floor(e.y / SWAY.bucket)}`;
+  const list = buckets.get(b) ?? [];
+  list.push(e);
+  buckets.set(b, list);
+  return list;
+}
+
 /** A plant's angle at `timeMs` in a wind, degrees: within amplitude × (1 + SWAY.lean). */
 export function swayAngle(e: Pick<SwayEntry, 'x' | 'y' | 'kind' | 'period' | 'phase'>, timeMs: number, wind: SwayWind): number {
   const amp = SWAY.amplitude[e.kind];
@@ -47,12 +58,16 @@ export function swayAngle(e: Pick<SwayEntry, 'x' | 'y' | 'kind' | 'period' | 'ph
 export interface SwayStep {
   updated: number;
   chunks: string[];
+  /** The first few angles turned this frame (for the test hook: they change frame to frame). */
+  sample: number[];
 }
 
 export class SwayStepper {
   private readonly size: number;
   /** Each built chunk's objects, by its key, in squares by `bx,by`. */
   private readonly chunks = new Map<string, Map<string, SwayEntry[]>>();
+  /** Objects that outlive chunks (tree nodes, drawn by NodeView), by chunk key and square, added and removed one by one. */
+  private readonly fixed = new Map<string, Map<string, SwayEntry[]>>();
   /** Chunks whose objects rest at 0 already (Low). */
   private readonly rested = new Set<string>();
   private cursor = 0;
@@ -65,12 +80,18 @@ export class SwayStepper {
   }
 
   add(chunk: string, e: SwayEntry): void {
-    const buckets = this.chunks.get(chunk) ?? new Map<string, SwayEntry[]>();
-    this.chunks.set(chunk, buckets);
-    const b = `${Math.floor(e.x / SWAY.bucket)},${Math.floor(e.y / SWAY.bucket)}`;
-    const list = buckets.get(b) ?? [];
-    list.push(e);
-    buckets.set(b, list);
+    put(this.chunks, chunk, e);
+  }
+
+  /** An object that isn't a chunk's (a tree node): kept by where it stands until `remove` is called. Returns `remove`. */
+  addFixed(e: SwayEntry): () => void {
+    const chunk = `${Math.floor(e.x / this.size)},${Math.floor(e.y / this.size)}`;
+    const list = put(this.fixed, chunk, e);
+    this.rested.delete(chunk);
+    return () => {
+      const i = list.indexOf(e);
+      if (i >= 0) list.splice(i, 1);
+    };
   }
 
   /** Drops a chunk's objects (the chunk was dropped). */
@@ -99,36 +120,44 @@ export class SwayStepper {
     const y1 = view.y + view.height + m;
     const chunks: string[] = [];
     const inView: SwayEntry[] = [];
-    for (let cy = Math.floor(y0 / this.size); cy <= Math.floor(y1 / this.size); cy++) {
-      for (let cx = Math.floor(x0 / this.size); cx <= Math.floor(x1 / this.size); cx++) {
+    // The chunks the view itself touches (at most 2 × 2: the view is 640 × 360, a chunk 640 px), and the rows a margin
+    // below it (tree feet standing just below the view, their canopies in it); within them, objects near the view.
+    for (let cy = Math.floor(view.y / this.size); cy <= Math.floor((view.y + view.height - 1 + m) / this.size); cy++) {
+      for (let cx = Math.floor(view.x / this.size); cx <= Math.floor((view.x + view.width - 1) / this.size); cx++) {
         const key = `${cx},${cy}`;
-        const buckets = this.chunks.get(key);
-        if (!buckets) continue;
+        const sets = [this.chunks.get(key), this.fixed.get(key)].filter((b): b is Map<string, SwayEntry[]> => b !== undefined);
+        if (sets.length === 0) continue;
         chunks.push(key);
         if (cap <= 0) {
           if (this.rested.has(key)) continue;
           this.rested.add(key);
-          for (const list of buckets.values()) for (const e of list) this.turn(e, 0);
+          for (const buckets of sets) for (const list of buckets.values()) for (const e of list) this.turn(e, 0);
           continue;
         }
         this.rested.delete(key);
-        for (let by = Math.floor(y0 / SWAY.bucket); by <= Math.floor(y1 / SWAY.bucket); by++) {
-          for (let bx = Math.floor(x0 / SWAY.bucket); bx <= Math.floor(x1 / SWAY.bucket); bx++) {
-            for (const e of buckets.get(`${bx},${by}`) ?? []) if (e.x >= x0 && e.x <= x1 && e.y >= y0 && e.y <= y1 + SWAY.bucket) inView.push(e);
+        for (const buckets of sets) {
+          for (let by = Math.floor(y0 / SWAY.bucket); by <= Math.floor(y1 / SWAY.bucket); by++) {
+            for (let bx = Math.floor(x0 / SWAY.bucket); bx <= Math.floor(x1 / SWAY.bucket); bx++) {
+              for (const e of buckets.get(`${bx},${by}`) ?? []) if (e.x >= x0 && e.x <= x1 && e.y >= y0 && e.y <= y1 + SWAY.bucket) inView.push(e);
+            }
           }
         }
       }
     }
-    if (cap <= 0 || inView.length === 0) return { updated: 0, chunks };
+    if (cap <= 0 || inView.length === 0) return { updated: 0, chunks, sample: [] };
     const n = inView.length;
     const count = Math.min(cap, n);
     const start = n <= cap ? 0 : this.cursor % n;
+    const sample: number[] = [];
     for (let i = 0; i < count; i++) {
       const e = inView[(start + i) % n];
-      if (e) this.turn(e, swayAngle(e, timeMs, wind));
+      if (!e) continue;
+      const a = swayAngle(e, timeMs, wind);
+      this.turn(e, a);
+      if (sample.length < 4) sample.push(Math.round(a * 1000) / 1000);
     }
     this.cursor = n <= cap ? 0 : (start + count) % n;
-    return { updated: count, chunks };
+    return { updated: count, chunks, sample };
   }
 
   private turn(e: SwayEntry, angle: number): void {

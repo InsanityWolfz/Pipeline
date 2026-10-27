@@ -121,7 +121,7 @@ describe('decor placement (077)', () => {
     every((tx, ty) => {
       const base = pieceFrame(room, tx, ty);
       if (!base) return;
-      const f = variantFrame(room, base, tx, ty);
+      const f = variantFrame(room.rows, base, tx, ty);
       if (f !== base) swapped += 1;
       expect(baseOfVariant(f)).toBe(base);
       if (base.startsWith('ow-cut-block') || base.startsWith('ow-hive-stone')) expect(f).toBe(base);

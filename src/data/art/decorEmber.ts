@@ -31,7 +31,7 @@ function thorn(v: number): Shape[] {
 
 /** Cooled slag drips: dark glassy puddles with a cinder glint. */
 const slag = (v: number): Shape[] => [
-  path(v === 0 ? 'M -7 0 Q -6 -2.5 -2 -2 Q 2 -3.5 6 -1.5 Q 8 0.5 4 1.6 Q -1 2.6 -7 0 Z' : 'M -5 -1 Q -3 -3 1 -2.2 Q 5 -2 5.5 0.5 Q 3 2.4 -1 2 Q -5 1.4 -5 -1 Z', { fill: { linear: [-6, -3, 6, 2] as const, stops: [{ at: 0, color: 'ash' }, { at: 0.5, color: 'ash-dark' }, { at: 1, color: 'iron-dark' }] }, outline: true }),
+  path(v === 0 ? 'M -7 0 Q -6 -2.5 -2 -2 Q 2 -3.5 6 -1.5 Q 8 0.5 4 1.6 Q -1 2.6 -7 0 Z' : 'M -5 -1 Q -3 -3 1 -2.2 Q 5 -2 5.5 0.5 Q 3 2.4 -1 2 Q -5 1.4 -5 -1 Z', { fill: { linear: [-6, -3, 6, 2] as const, stops: [{ at: 0, color: 'ash' }, { at: 0.5, color: 'ash-dark' }, { at: 1, color: 'iron-dark' }] }, alpha: 0.9 }),
   ellipse(-2, -1.2, 2, 0.6, flat({ id: 'snow', alpha: 0.2 })),
   { ...ellipse(v === 0 ? 3 : 1, -0.6, 0.8, 0.6, flat('cinder')), glow: { color: 'cinder', blur: 2.5 } },
 ];
@@ -40,7 +40,7 @@ const slag = (v: number): Shape[] => [
 const SOOT: Shape[] = [ellipse(0, 0, 8, 3, { fill: { id: 'ash-dark', alpha: 0.35 } }), ellipse(-3, -0.5, 4, 1.8, { fill: { id: 'ash-dark', alpha: 0.35 } }), ellipse(4, 0.8, 2.6, 1.2, { fill: { id: 'iron-dark', alpha: 0.25 } })];
 
 /** Clinker: fused lumps of iron-dark and ash. */
-const CLINKER: Shape[] = [...stone(-3, 0, 2.6, 1.8, 'iron-dark', 'ash-dark', 'ash'), ...stone(2.5, 1, 1.8, 1.3, 'iron-dark', 'iron', 'ash-light'), ...stone(1, -2, 1.2, 0.9, 'ash-dark', 'ash', 'ash-light')];
+const CLINKER: Shape[] = [...stone(-3, 0, 2.6, 1.8, 'iron-dark', 'ash-dark', 'ash', false), ...stone(2.5, 1, 1.8, 1.3, 'iron-dark', 'iron', 'ash-light', false), ...stone(1, -2, 1.2, 0.9, 'ash-dark', 'ash', 'ash-light', false)];
 
 const sootStone = { linear: [0, -12, 0, 0] as const, stops: [{ at: 0, color: 'ash' }, { at: 1, color: 'ash-dark' }] };
 const stack = { linear: [-8, 0, 8, 0] as const, stops: [{ at: 0, color: 'ash-light' }, { at: 0.5, color: 'ash' }, { at: 1, color: 'ash-dark' }] };

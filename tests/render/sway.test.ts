@@ -100,6 +100,20 @@ describe('sway (077)', () => {
     for (const [key, list] of byChunk) if (!s.chunks.includes(key)) for (const f of list) expect(f.turns, key).toBe(0);
   });
 
+  it('steps a tree node (added on its own) while in view, keeps it when its chunk drops, and lets it go when removed', () => {
+    const stepper = new SwayStepper(C);
+    const node = new Fake();
+    const remove = stepper.addFixed({ target: node, x: 2 * C + 10, y: 2 * C + 10, kind: 'tree', period: 4500, phase: 0 });
+    stepper.step(view, 500, wind, 300);
+    expect(node.turns).toBe(1);
+    stepper.removeChunk('2,2');
+    stepper.step(view, 600, wind, 300);
+    expect(node.turns).toBe(2);
+    remove();
+    stepper.step(view, 700, wind, 300);
+    expect(node.turns).toBe(2);
+  });
+
   it('forgets a dropped chunk', () => {
     const { stepper } = world(5);
     expect(stepper.builtChunks).toBe(25);

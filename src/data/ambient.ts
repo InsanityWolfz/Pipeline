@@ -38,6 +38,7 @@ export const SWAY: {
   readonly perFrame: Readonly<Record<Quality, number>>;
   readonly margin: number;
   readonly bucket: number;
+  readonly nodes: readonly string[];
 } = {
   amplitude: { grass: 4, flower: 3, fern: 2.5, reed: 2.5, vine: 3, tree: 0.6 },
   periodMs: { grass: [2400, 3600], flower: [2400, 3600], fern: [2400, 3600], reed: [2400, 3600], vine: [2400, 3600], tree: [4000, 5000] },
@@ -47,6 +48,8 @@ export const SWAY: {
   margin: 64,
   /** The stepper keeps each chunk's objects in squares this many px across, so a frame looks only at those in view. */
   bucket: 160,
+  /** Gathering nodes that sway like trees (018's tree nodes). */
+  nodes: ['tree'],
 };
 
 /**

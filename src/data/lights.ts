@@ -23,7 +23,7 @@ interface LightSource {
   /** Fires: a radius per kind, and the flicker (± share) and its rate (Hz); the kilns' and chimneys' placing. */
   readonly radii?: Readonly<Record<string, number>>;
   readonly kiln?: { readonly rise: number; readonly perTile: number; readonly max: number };
-  readonly chimney?: { readonly rises: readonly number[]; readonly intensity: number };
+  readonly chimney?: { readonly rises: readonly number[]; readonly intensity: number; readonly stumpRise: number };
   readonly flicker?: number;
   readonly flickerHz?: number;
   /** Ley lines: a light every this many tiles along a line, by tier. */
@@ -49,14 +49,14 @@ export const LIGHT_SOURCES = {
    * Fires: braziers, flaring Emberworks vents, burning ground; a ±`flicker` flicker. 074.7: the Emberworks' kiln mouths
    * and chimney tops too: a light per row of kilns side by side, `kiln.rise` px up from their feet, its radius `kiln`
    * plus `kiln.perTile` a kiln past the first (at most `kiln.max`); a light at each chimney's lip, `chimney.rises` px up
-   * by its look (the frame emberworksTiles picks).
+   * by its look (the frame emberworksTiles picks; 077: a broken stump's at its own lip, `stumpRise`).
    */
   fire: {
     color: 'cinder',
     radius: 64,
     radii: { brazier: 64, vent: 72, ground: 40, kiln: 60, chimney: 40 },
     kiln: { rise: 10, perTile: 14, max: 104 },
-    chimney: { rises: [76, 68] as const, intensity: 0.7 },
+    chimney: { rises: [76, 68] as const, intensity: 0.7, stumpRise: 36 },
     intensity: 0.9,
     priority: 2,
     tiers: LIT,

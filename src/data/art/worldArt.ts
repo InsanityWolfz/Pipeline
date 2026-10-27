@@ -20,7 +20,7 @@ const RIPPLE = one(AMBIENT_FRAMES.ripple, [24, 14], [12, 7], [ellipse(0, 0, 10, 
 const GLINT = one(AMBIENT_FRAMES.glint, [8, 8], [4, 4], [line([-3, 0, 3, 0], 0.6, 'snow'), line([0, -2, 0, 2], 0.6, 'snow'), ellipse(0, 0, 0.9, 0.9, { fill: 'snow' })]);
 
 /** A ley bead: a soft 6 px streak of light, its head bright, pointing along +x (render turns it along the line). */
-const BEAD = one(AMBIENT_FRAMES.bead, [12, 6], [6, 3], [{ ...line([-3, 0, 3, 0], 1.8, { id: 'cyan-glow', alpha: 0.7 }), glow: { color: 'cyan', blur: 3 } }, ellipse(2.2, 0, 1.1, 0.9, { fill: 'snow' })]);
+const BEAD = one(AMBIENT_FRAMES.bead, [12, 6], [6, 3], [{ ...line([-3, 0, 3, 0], 1.8, 'cyan-glow'), glow: { color: 'cyan', blur: 3 } }, ellipse(2.2, 0, 1.1, 0.9, { fill: 'snow' })]);
 
 export const WORLD_ART_SPRITES: readonly VectorSprite[] = [
   ...MEADOW_DECOR,

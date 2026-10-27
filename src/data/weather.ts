@@ -101,7 +101,12 @@ export const WEATHER_LIGHTNING = {
   playerMargin: 6,
   rodNodeMargin: 4,
   boltMs: 220,
+  /** The bolt's widths (064's look: a wide storm-glow glow, a cyan-glow bolt, a snow core): px. */
+  boltWidth: 2.2,
+  glowWidth: 9,
+  /** Where it comes from: this many px over the view's top edge, up to `spread` px either side of its target. */
   above: 24,
+  spread: 60,
   step: 18,
   jag: 9,
   riseRod: 74,

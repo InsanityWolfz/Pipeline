@@ -14,6 +14,7 @@ import { pathStrokes } from './pathStrokes';
 import { paintBlend, paintPatches } from './groundBlend';
 import { paintCircleEdge } from './circleEdge';
 import { paintPathWear } from './pathWear';
+import { paintScatter } from '../world/scatter';
 import { inHollows, regionAt } from '../../data/hollows';
 import { COURTYARD } from '../../data/roads';
 import { fromCentre, WORLD_SHAPE } from '../../data/worldShape';
@@ -94,7 +95,7 @@ function frost(c: CanvasRenderingContext2D, each: (fn: (tx: number, ty: number, 
 }
 
 /** Draws the ground under the world rectangle (x0, y0, w, h), with tiles a margin around it so blobs cross chunk edges seamlessly. */
-export function drawGround(c: CanvasRenderingContext2D, room: Room, x0: number, y0: number, w: number, h: number, pxPerUnit: number, blend = true): void {
+export function drawGround(c: CanvasRenderingContext2D, room: Room, x0: number, y0: number, w: number, h: number, pxPerUnit: number, blend = true, scatter = true): void {
   const symbol = (tx: number, ty: number): string | undefined => room.rows[ty]?.[tx];
   const margin = 3;
   const tx0 = Math.max(0, Math.floor(x0 / T) - margin);
@@ -163,6 +164,8 @@ export function drawGround(c: CanvasRenderingContext2D, room: Room, x0: number, 
     ellipse(c, x + ((hash >>> 5) % 20) - 10, y + ((hash >>> 9) % 14) - 7, 2.2, 1.4, GROUND.pathFleck);
   });
   frost(c, each);
+  // 077: the regions' ground scatter, over the ground and its blending, under the landmarks' ground, ponds and ley seams.
+  if (scatter) paintScatter(c, room, tx0, ty0, tx1, ty1, pxPerUnit);
   paintLandmarks(c, each, symbol);
   // Ponds: a sandy rim, the shallows, deep water, and the light on it.
   for (const p of room.terrain?.ponds ?? []) {

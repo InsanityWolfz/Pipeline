@@ -21,7 +21,7 @@ function windGrass(v: number): Shape[] {
 /** Slate shards: thin dark flakes, lit on one edge. */
 const slate = (v: number): Shape[] =>
   (v === 0 ? [[-5, 0, 4], [1, -1.5, 3], [4, 1.5, 2.4]] : [[-3, 0.5, 4.5], [3, -1, 3.5]]).flatMap(([x = 0, y = 0, w = 0]) => [
-    path(`M ${x - w / 2} ${y + 0.8} L ${x - w / 2 + 1} ${y - 1} L ${x + w / 2} ${y - 0.6} L ${x + w / 2 - 0.6} ${y + 1} Z`, { fill: 'storm-dark', outline: true }),
+    path(`M ${x - w / 2} ${y + 0.8} L ${x - w / 2 + 1} ${y - 1} L ${x + w / 2} ${y - 0.6} L ${x + w / 2 - 0.6} ${y + 1} Z`, { fill: 'storm-dark', alpha: 0.85 }),
     line([x - w / 2 + 1, y - 0.9, x + w / 2, y - 0.5], 0.5, 'storm-light'),
   ]);
 
