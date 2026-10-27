@@ -3,6 +3,8 @@ status: approved
 
 Approved by Shaun in chat, 2026-10-27, with the whole art pass (074–081); its plan is pre-approved.
 
+Plan pre-approved by Shaun in chat, 2026-10-27. Plan: docs/plans/075-wanderer-redesign.md.
+
 Drafted from Shaun's art-pass interview (docs/brainstorm/2026-10-27-art-interview.md, answers 5–8, 10, 11 and 17) and the "pushed further" card of the style sample page he chose from (docs/art/style-test-2.html). This is art spec 2 of 8, built in order after 074. Shaun asked for no sample pages first ("Just build it"); he reviews the result at the playtest.
 
 ## Goal
