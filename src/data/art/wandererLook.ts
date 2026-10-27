@@ -81,6 +81,4 @@ export function big(t: Tone, box: readonly [number, number, number, number]): Sh
 export const TONES = {
   brass: { dark: 'brass-dark', mid: 'brass', light: 'brass-light' },
   leather: { dark: 'leather-dark', mid: 'leather', light: 'strap' },
-  bone: { dark: 'bone-dark', mid: 'robe', light: 'robe' },
-  breeches: { dark: 'iron-dark', mid: 'iron-dark', light: 'iron' },
 } as const satisfies Record<string, Tone>;

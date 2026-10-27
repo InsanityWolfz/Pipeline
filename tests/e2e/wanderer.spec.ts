@@ -11,6 +11,7 @@ import { boot, cameraSettled, watchErrors } from './helpers';
 // the scheme.
 
 const player = (page: Page) => page.evaluate(() => window.__GAME__?.ui().player ?? null);
+const pixels = (page: Page) => page.evaluate(() => window.__GAME__?.wanderer() ?? null);
 
 /** Waits for a frame drawn from the sim's current tick. */
 async function drawn(page: Page): Promise<void> {
@@ -106,7 +107,7 @@ test('the trim follows the best rarity worn, from the sim; nothing worn is the p
     expect((await page.evaluate(() => window.__GAME__?.getState().wornRarity)) ?? null).toBe(want);
     await expect.poll(async () => (await player(page))?.trim ?? null).toBe(want);
     await expect.poll(async () => {
-      const c = (await player(page))?.hemColor;
+      const c = (await pixels(page))?.hemColor;
       return c ? nearestTrim(c) : null;
     }).toBe(want ?? 'none');
   };
@@ -130,7 +131,7 @@ test('stands 40–44 world px tall side on and from the front', async ({ page })
   for (const [dx, dy, view] of [[200, -14, 'side'], [0, 200, 'down']] as const) {
     await aimAt(page, dx, dy, 20);
     await expect.poll(async () => (await player(page))?.view).toBe(view);
-    const top = (await player(page))?.bounds?.top ?? 0;
+    const top = (await pixels(page))?.bounds?.top ?? 0;
     // From the soles (the feet's point) to the hood's tip.
     expect(-top, view).toBeGreaterThanOrEqual(40);
     expect(-top, view).toBeLessThanOrEqual(44);
@@ -200,7 +201,7 @@ test('at game size the hit moves the hood 3 px or more and the KO ends lying dow
   const ko = await player(page);
   expect(ko?.anim).toBe('ko');
   expect(ko?.view).toBe('side');
-  const b = ko?.bounds;
+  const b = (await pixels(page))?.bounds;
   expect(b).not.toBeNull();
   expect((b?.w ?? 0) / (b?.h ?? 1)).toBeGreaterThanOrEqual(1.4);
   expect((await cam()).at).toEqual(koStart.at);

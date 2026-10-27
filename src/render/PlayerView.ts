@@ -38,7 +38,7 @@ function localAim(view: WandererView, dx: number, dy: number, flip: boolean): nu
   return axis + clamp(off, -a, a);
 }
 
-/** 075: what the test hook's `ui().player` reports: the view and animation, the scheme and trim, the squash, where the hood is (world px from the feet), the drawn bounds (world px) and the mean draw time. */
+/** 075: what the test hook's `ui().player` reports: the view and animation, the scheme and trim, the squash, where the hood is (world px from the feet), the mean draw time and whether the sprite is tinted. */
 export interface PlayerUi {
   view: WandererView;
   anim: ReturnType<typeof wandererAnim>;
@@ -46,12 +46,15 @@ export interface PlayerUi {
   trim: Rarity | null;
   squash: number;
   hood: [number, number];
-  bounds: { w: number; h: number; left: number; top: number } | null;
   drawMs: number;
-  /** The drawn colour at a corner of the cape's hem (the trim), as [r, g, b], or null where no hem shows. */
-  hemColor: [number, number, number] | null;
   /** Whether the sprite carries a tint (only the hit's white flash: armour never tints the body). */
   tinted: boolean;
+}
+
+/** 075: read from the drawn texture only when the test hook's `wanderer()` asks: the drawn box (world px from the feet) and the colour at a corner of the cape's hem (the trim), or null where none shows. */
+export interface PlayerPixels {
+  bounds: { w: number; h: number; left: number; top: number } | null;
+  hemColor: [number, number, number] | null;
 }
 
 // Draws the player from sim state (016): the wanderer rig posed each frame into a
@@ -173,7 +176,7 @@ export class PlayerView {
     return wandererMotion(clocks);
   }
 
-  /** 075: what `ui().player` reports (the bounds scan the drawn texture, so only the test hook asks). */
+  /** 075: what `ui().player` reports. */
   get ui(): PlayerUi {
     return {
       view: this.pose.view,
@@ -182,11 +185,14 @@ export class PlayerView {
       trim: this.pose.trim,
       squash: this.pose.squash,
       hood: this.marks.hood,
-      bounds: this.drawnBounds(),
       drawMs: this.drawMs,
-      hemColor: this.colorAt(this.marks.hem),
       tinted: this.sprite.isTinted,
     };
+  }
+
+  /** 075: the drawn texture's box and hem colour (scans pixels, so only the test hook's `wanderer()` asks). */
+  pixels(): PlayerPixels {
+    return { bounds: this.drawnBounds(), hemColor: this.colorAt(this.marks.hem) };
   }
 
   /** The drawn colour at a point, world px from the feet. */
@@ -199,7 +205,7 @@ export class PlayerView {
   }
 
   /** The drawn pixels' box in world px, from the feet (the texture's alpha above a quarter), or null when nothing shows. */
-  private drawnBounds(): PlayerUi['bounds'] {
+  private drawnBounds(): PlayerPixels['bounds'] {
     const { width, height } = this.canvas;
     const data = this.canvas.context.getImageData(0, 0, width, height).data;
     let [x0, y0, x1, y1] = [width, height, -1, -1];

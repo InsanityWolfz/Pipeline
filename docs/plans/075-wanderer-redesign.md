@@ -71,7 +71,7 @@ lines by a long way. Each slice lists its tests first and is committed with `npm
 ### 5. Schemes, trim, title, sheet and hooks
 - tests/render/wandererScheme.test.ts: `?scheme=cobalt|rust|bone` parse, a bad or missing value reads as cobalt.
 - PlayerView: the trim from `getState`'s rarity (render never ranks), no weight tint, `ui().player` =
-  `{ view, anim, scheme, trim, squash, hood, bounds, drawMs }`.
+  `{ view, anim, scheme, trim, squash, hood, drawMs, tinted }`, and the texture's bounds and hem colour from the hook's `wanderer()` (pixel scans kept out of `ui()`, which tests poll every frame).
 - TitleWanderer: the side idle in the chosen scheme with its existing motion.
 - Contact sheet: one section per table row per view (strips sampled from `wandererMotion`), plus facing left, trims and
   schemes; `sheetSections` feeds both the page and the e2e test.
