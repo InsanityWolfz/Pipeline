@@ -1,6 +1,6 @@
 import type { GameObjects, Scene } from 'phaser';
 import { DEPTHS, SPRITES } from '../data/assets';
-import { toView } from './scale';
+import { toView, viewScale } from './scale';
 import { addVector } from './vector/textures';
 
 /** Which cursor shows, and where it draws (for the test hook). */
@@ -32,7 +32,7 @@ export class CursorView {
   /** Follows the mouse; `pointer` shows the arrow (a menu is open, or the mouse is over clickable HUD), else the crosshair; `shown` false hides both. */
   update(pointer: boolean, shown = true): void {
     const p = this.scene.input.activePointer;
-    const at = toView(p.x, p.y, this.scene.cameras.main.zoom);
+    const at = toView(p.x, p.y, viewScale(this.scene));
     this.crosshair.setPosition(at.x, at.y).setVisible(shown && !pointer);
     this.pointer.setPosition(at.x, at.y).setVisible(shown && pointer);
   }

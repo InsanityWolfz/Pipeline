@@ -16,6 +16,23 @@ Newest entry first. Entries before 050 are in docs/progress-archive.md.
 - The plan's landing tile (one below the stone) was in the Forum door's E reach; it moved west of the stone.
 - The container restarted twice during the build; nothing was lost.
 
+## 2026-10-26: 069 Factory numbers and tools
+**Changed:** on `claude/069-factory-numbers-tools` (InsanityWolfz/Pipeline#83), from the agent-playtest proposals Shaun picked (plan docs/plans/069-factory-numbers-tools.md, eight slices):
+- the intake's hover reads each entrance's fill, inflow over the last 5 s and its round's fire rate ("12/30 · in 2.3/s · fires 4/s");
+- recipe cards on machine hovers and build-bar tips ("1 wood → 2 shafts · 1.0 s"), numbers from the sim;
+- hopper screens move 10 a click (Shift half, Ctrl the stack);
+- a Purge menu on an entrance's mouth empties it; a hopper or crate under the cursor keeps E;
+- area pick-up fills the inventory first, then the stash;
+- a pipette on Q copies a piece (and a stage's round) into the hand;
+- the wheel over the world zooms the foundry out to 0.75×.
+
+`SAVE_VERSION` 22 (the rate window and the purge event). Reviewed: two blocking findings fixed (E at a hopper by the intake opened Purge; E didn't close the purge menu), plus five suggestions (unbound keys no longer reset every binding, one stage-round helper, `hudLayout.ts` under 300 lines). `npm run check` 2570 tests; CI green. Raised for Shaun: 069.1–069.11; 069.10 (0.75× or 0.6× zoom) needs his call.
+
+**Next:** Shaun's playtest (`?playtest`, the foundry); his call on 069.10 and OK on the rest; "merge 83".
+
+**Notes:**
+- guidedTutorialShots "07 the goal panel" fails on main since 067 (the waypoint reads "edge"); an older spec's shot, not retaken.
+
 ## 2026-10-26: 068 Tougher late bosses
 **Changed:** on `claude/068-late-boss-buffs` (InsanityWolfz/Pipeline#82), from Shaun's playtest calls (docs/brainstorm/2026-10-26-playtest-calls.md; plan docs/plans/068-late-boss-buffs.md):
 - the Forgewright: 6,000 health; heat keeps filling through vents (only a flood resets it); bellows of 300 that patch in 3 s; slam and spray 20% faster;

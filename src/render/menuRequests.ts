@@ -3,16 +3,20 @@ import type { AreaAction, Command, HopperAmount } from '../sim/input';
 import type { AreaBox } from '../sim/area';
 import type { SandboxCommand } from '../sim/sandbox';
 
-/** How many a click on a stack moves (022, 047): Ctrl+click the whole stack (Ctrl wins over Shift), Shift+click half, a plain click one. */
-export function clickAmount(mods: { shift: boolean; ctrl: boolean }): HopperAmount {
+/**
+ * How many a click on a stack moves (022, 047): Ctrl+click the whole stack (Ctrl wins over Shift), Shift+click half, a
+ * plain click one; 069: on a hopper's screen, a plain click ten (or all, if fewer).
+ */
+export function clickAmount(mods: { shift: boolean; ctrl: boolean }, screen: 'hopper' | 'crate' | 'stash' | null = null): HopperAmount {
   if (mods.ctrl) return 'all';
-  return mods.shift ? 'half' : 'one';
+  if (mods.shift) return 'half';
+  return screen === 'hopper' ? 'ten' : 'one';
 }
 
 /** The commands that menus send: the hopper, pylon, stash and bench menus' choices. */
-export type MenuCommand = Pick<Command, 'area' | 'deleteBlueprint' | 'deposit' | 'withdraw' | 'sortInventory' | 'assignSlot' | 'pylon' | 'travel' | 'takeStash' | 'stashPut' | 'identify' | 'equip' | 'restore' | 'summon' | 'takeTalent' | 'respec' | 'sandbox'>;
+export type MenuCommand = Pick<Command, 'area' | 'deleteBlueprint' | 'deposit' | 'withdraw' | 'sortInventory' | 'assignSlot' | 'pylon' | 'travel' | 'takeStash' | 'stashPut' | 'purge' | 'identify' | 'equip' | 'restore' | 'summon' | 'takeTalent' | 'respec' | 'sandbox'>;
 
-const NONE: MenuCommand = { area: null, deleteBlueprint: null, deposit: null, withdraw: null, sortInventory: false, assignSlot: null, pylon: null, travel: null, takeStash: null, stashPut: null, identify: false, equip: null, restore: null, summon: null, takeTalent: null, respec: false, sandbox: null };
+const NONE: MenuCommand = { area: null, deleteBlueprint: null, deposit: null, withdraw: null, sortInventory: false, assignSlot: null, pylon: null, travel: null, takeStash: null, stashPut: null, purge: null, identify: false, equip: null, restore: null, summon: null, takeTalent: null, respec: false, sandbox: null };
 
 // Choices clicked in the world's menus, held until the next tick takes them.
 export class MenuRequests {
@@ -66,6 +70,11 @@ export class MenuRequests {
   /** Puts one, half or the whole of a clicked inventory stack into the stash (052: the stash screen's click). */
   stashPut(itemId: string, amount: HopperAmount, stack?: number): void {
     this.pending.stashPut = { itemId, amount, ...(stack !== undefined ? { stack } : {}) };
+  }
+
+  /** 069: the purge menu's choice: empty this intake entrance into the stash. */
+  purge(entrance: number): void {
+    this.pending.purge = entrance;
   }
 
   /** Identifies every carried piece at the bench. */

@@ -84,10 +84,11 @@ test("the Bulwark's locked door shows the E prompt in reach, and the seal hums u
 test('the build strip shows only in build mode, with the bound keys, clear of the HP block and under the tube slot', async ({ page }) => {
   test.setTimeout(150_000);
   const errors = watchErrors(page);
-  // 042: the player rebound rotate to Q and build to V.
+  // 042: the player rebound rotate to Q and build to V (stored before 069 added the pipette, which Q's rebinding leaves unbound).
+  const stored = Object.fromEntries(Object.entries(DEFAULT_BINDINGS).filter(([action]) => action !== 'pipette'));
   await page.addInitScript(
     ([key, v, bindings]) => localStorage.setItem(key, JSON.stringify({ version: v, master: 0.7, music: 1, effects: 1, muted: true, flashes: true, bindings })),
-    [STORAGE_KEYS.settings, SETTINGS_VERSION, { ...DEFAULT_BINDINGS, rotate: 'Q', build: 'V' }] as const,
+    [STORAGE_KEYS.settings, SETTINGS_VERSION, { ...stored, rotate: 'Q', build: 'V' }] as const,
   );
   await boot(page, '?start=field');
   await enterFoundry(page);

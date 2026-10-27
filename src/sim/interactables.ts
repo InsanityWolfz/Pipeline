@@ -10,6 +10,8 @@ import { usableInReach } from './foundryUse';
 import { nodeInReach } from './harvest';
 import { pieceRect } from './pieces';
 import { diagramInReach } from './research';
+import { entranceTakesE } from './purge';
+import { INTAKE } from '../data/foundry';
 import { roomOf, type SimState } from './state';
 import { tileCentre } from './tiles';
 import { stoneInReach } from './tutorial';
@@ -62,6 +64,10 @@ export function interactTarget(state: SimState): InteractTarget | null {
   if (stone) return at('return-stone', tileCentre(stone));
   const cache = cacheInReach(state);
   if (cache) return isOpened(state, cache.id) ? null : at('cache', tileCentre(cache));
+  // 069: an intake entrance holding rounds offers Purge (the one under the cursor, or one nearer than any diagram).
+  const entrance = entranceTakesE(state);
+  const mouth = entrance === null ? undefined : INTAKE.entrances[entrance];
+  if (mouth) return at('entrance', tileCentre(mouth));
   const diagram = diagramInReach(state);
   if (diagram) return at('diagram', diagram.rect);
   const piece = usableInReach(state);

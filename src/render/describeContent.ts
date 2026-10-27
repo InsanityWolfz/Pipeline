@@ -21,6 +21,8 @@ import { reachedRounds } from './describeLinks';
 import type { Seen } from './describeRound';
 import { bonusSources, chipsOf, fill, madeBy } from './statSteps';
 import { line, type Description, type TipLine } from './tipTypes';
+import { pieceCard } from '../sim/recipeCard';
+import { cardText } from './recipeText';
 
 // Talents, relics, stages, gear and the build bar's other pieces described (040): chips from
 // their lines' scopes and the keywords their rules make or spend; a summary of their
@@ -107,7 +109,7 @@ export function describeGear(seen: Seen, pieceId: number): Description | null {
 }
 
 /** A stage: its generated line and which of the player's rounds it takes; its keyword's rule with numbers, its cost, and every round it takes and gives. */
-export function describeStage(seen: Seen, id: string): Description {
+export function describeStage(seen: Seen, id: string, speed = 1): Description {
   const st = stageDef(id);
   const tag = tagDef(st.tag);
   const name = (r: string): string => itemDef(ammoDef(r).itemId).name;
@@ -125,8 +127,11 @@ export function describeStage(seen: Seen, id: string): Description {
     source: { kind: 'stage', id },
     name: st.name,
     chips: chipsOf([tag.keyword]),
-    summary: [line(stageLineText(st)), takesLine(takes), ...hint(bonuses)],
-    breakdown: [...rules.map((r) => line(`${KEYWORDS[r.k].name}: ${r.text}`)), line(fill(W.cost, { cost: stageCost(st) })), line(gives.join(LINE_SEP))],
+    // 069: its recipe card (on its plain round, at the machine speed now) leads, as a machine's does. A summary holds
+    // three lines (040), so its generated line ("Cold: added to any round", which its chip already names) moves to the
+    // breakdown (069.3).
+    summary: [...cardLines(id, speed), takesLine(takes), ...hint(bonuses)],
+    breakdown: [...cardLines(id, speed), line(stageLineText(st)), ...rules.map((r) => line(`${KEYWORDS[r.k].name}: ${r.text}`)), line(fill(W.cost, { cost: stageCost(st) })), line(gives.join(LINE_SEP))],
     bonuses,
   };
 }
@@ -138,7 +143,15 @@ function takesLine(takes: readonly string[]): TipLine {
 }
 
 /** A build-bar piece that isn't a stage (015): its name and description, nothing more to break down. */
-export function describePiece(id: string): Description {
+export function describePiece(id: string, speed = 1): Description {
   const def = pieceDef(id);
-  return { source: { kind: 'piece', id }, name: def.name, chips: [], summary: [line(def.description)], breakdown: [line(def.description)], bonuses: 0 };
+  // 069: a machine's recipe card first, at the machine speed now (`speed`, 033), so it shows if the summary is cut.
+  const card = cardLines(id, speed);
+  return { source: { kind: 'piece', id }, name: def.name, chips: [], summary: [...card, line(def.description)], breakdown: [...card, line(def.description)], bonuses: 0 };
+}
+
+/** 069: a machine piece's recipe card as a line, from the sim's numbers; none for any other piece. */
+function cardLines(pieceId: string, speed: number): TipLine[] {
+  const card = pieceCard(pieceId, speed);
+  return card ? [line(cardText(card))] : [];
 }

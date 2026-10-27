@@ -132,14 +132,16 @@ describe('slots (063)', () => {
     expect(s.events.blueprintSaveFails).toEqual([{ reason: 'empty' }]);
   });
 
-  it('Save and pick up saves the box, then lifts it into the stash', () => {
+  it('Save and pick up saves the box, then lifts it into the inventory (069; 063 lifted it into the stash)', () => {
     const s = table();
     const k = put<CrateState>(s, 'crate', 3, 3, 'up');
     k.contents = { arrow: 3 };
+    const held = s.inventory.arrow ?? 0;
     run(s, 1, { area: { box: ALL, action: 'saveAndPickUp' } });
     expect(s.blueprints.map((b) => b.pieces.length)).toEqual([1]);
     expect(s.foundry.pieces).toEqual([]);
-    expect(s.stash.arrow).toBe(3);
+    expect(s.inventory.arrow).toBe(held + 3);
+    expect(s.stash.arrow ?? 0).toBe(0);
   });
 
   it('Save and pick up picks nothing up when the save fails (all 8 slots full, none named)', () => {

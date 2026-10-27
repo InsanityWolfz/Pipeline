@@ -130,6 +130,13 @@ export const STACK_SIZES = { raw: 50, part: 100, round: 100, thrown: 20, armor: 
 /** The families whose rounds are thrown (047.1: they stack 20). */
 export const THROWN_FAMILIES: readonly string[] = ['bomb', 'landmine'];
 
+/**
+ * 069: how many items the inventory can hold before a purge or an area pick-up sends the rest to the stash (or is
+ * refused). The inventory has no limit (047.2: the grid scrolls), so this is unbounded: the rule is there for an
+ * inventory that one day fills, as 063's STASH_CAP is for the stash.
+ */
+export const INVENTORY_CAP = Number.POSITIVE_INFINITY;
+
 /** How many of an item one slot holds (047.1). */
 export function stackSize(id: string): number {
   const def = itemDef(id);

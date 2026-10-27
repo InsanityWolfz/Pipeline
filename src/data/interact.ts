@@ -16,6 +16,7 @@ export const INTERACT_KINDS = [
   // 072: a woken return stone outside a boss arena's door (E offers "Travel to foundry").
   'return-stone',
   'cache',
+  'entrance',
   'diagram',
   'hopper',
   'crate',
@@ -61,9 +62,14 @@ export const INTERACT_PROMPTS: Readonly<Record<InteractKind, InteractPrompt>> = 
   // 072: the stone stands as tall as the waystone.
   'return-stone': { key: 'E', rise: OVER },
   cache: { key: 'E', rise: OVER },
+  // 069: an intake entrance (its mouth tile's centre) offers Purge.
+  entrance: { key: 'E', rise: OVER },
   diagram: { key: 'E', rise: OVER },
   hopper: { key: 'E', rise: OVER },
   crate: { key: 'E', rise: OVER },
   // A node's point is its feet; the same height as the gathering objective's prompt (012).
   node: { key: 'E', rise: OVER },
 };
+
+/** 069: the purge menu's one row, opened by E at an intake entrance holding rounds. */
+export const PURGE_TEXT = { row: 'Purge' } as const;

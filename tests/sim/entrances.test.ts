@@ -1,3 +1,4 @@
+import { fireRate } from '../../src/sim/emissions';
 import { describe, expect, it } from 'vitest';
 import { ammoDef } from '../../src/data/ammo';
 import { CONDUIT_TICKS, ENTRANCE_CAPS, INTAKE, SPREAD_STEP } from '../../src/data/foundry';
@@ -153,6 +154,9 @@ describe('the intake in getState', () => {
         count: [3, 0, 2][i] ?? 0,
         cap: ENTRANCE_CAPS[0],
         cooldown: [0, 0, 7][i] ?? 0,
+        // 069: the measured rate in (no line here), and a fed entrance's round's shots a second.
+        inPerSecond: 0,
+        firesPerSecond: [fireRate(s, 'arrow'), null, fireRate(s, 'bomb')][i] ?? null,
       })),
       volley: ['arrow', 'bomb'],
       lanes: [-SPREAD_STEP / 2, SPREAD_STEP / 2],

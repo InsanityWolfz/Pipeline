@@ -1,6 +1,5 @@
 import type { Scene } from 'phaser';
 import { Input } from 'phaser';
-import { rotateCw } from '../sim/direction';
 import { NO_COMMAND, type Axis, type Command } from '../sim/input';
 import type { Tile } from '../sim/pieces';
 import type { Facing } from '../sim/player';
@@ -11,6 +10,7 @@ import { onSettings, settings } from './flow/settingsStore';
 import { MenuRequests, type UiCommand } from './menuRequests';
 import { PointerInput } from './pointerInput';
 import { BlueprintInput } from './blueprintInput';
+import { turnHand, type Hand } from './pipette';
 
 export type { BuildInput } from './clickInput';
 
@@ -49,6 +49,11 @@ export class Controls {
   facing: Facing = 'right';
   /** Flip (G since 042, F before) turns a splitter's ghost to send items out its left (033); sent with every place. */
   mirrored = false;
+  /** 069: a pipetted conduit's turn (the side it takes from), turned with the ghost by R; null for none. */
+  turn: Facing | null = null;
+  /** 069: a pipetted stage's round, placed with it; null for none. */
+  round: string | null = null;
+  private pipettePending = false;
   /** 063: build mode's tools: the Area tool's box and the blueprint ghost. */
   readonly tools = new BlueprintInput();
 
@@ -84,10 +89,11 @@ export class Controls {
     listenKeys(keys, ammo, {
       dodge: () => (this.dodgePending = true),
       // R and G only turn and flip the ghost in build mode (063: the blueprint ghost, while one is held).
-      rotate: () => void (this.mouse.build.building && (this.tools.ghost ? this.tools.turn() : (this.facing = rotateCw(this.facing)))),
+      rotate: () => void (this.mouse.build.building && (this.tools.ghost ? this.tools.turn() : Object.assign(this, turnHand(this.facing, this.turn)))),
       flip: () => void (this.mouse.build.building && (this.tools.ghost ? this.tools.mirror() : (this.mirrored = !this.mirrored))),
       area: () => void (this.mouse.build.building && this.tools.toggleArea()),
       blueprints: () => void (this.mouse.build.building && this.tools.toggleList()),
+      pipette: () => (this.pipettePending = this.mouse.build.building),
       interact: () => (this.interactPending = this.interactPress = true),
       menu: (key) => (this.menuKeys[key] = true),
       build: () => (this.buildPending = true),
@@ -149,6 +155,28 @@ export class Controls {
     this.interactPending = false;
   }
 
+  /** 069: Q was pressed in build mode since the last call (the router copies the piece under the cursor). */
+  takePipette(): boolean {
+    const pressed = this.pipettePending;
+    this.pipettePending = false;
+    return pressed;
+  }
+
+  /** 069: the pipette's hand: its facing, side, turn and round (null empties them; the router clears the bar's selection). */
+  setHand(hand: Hand | null): void {
+    this.turn = hand?.turn ?? null;
+    this.round = hand?.round ?? null;
+    if (!hand) return;
+    this.facing = hand.facing;
+    this.mirrored = hand.mirrored;
+  }
+
+  /** 069: a piece picked on the bar (or the wheel) drops the pipette's turn and round. */
+  clearHand(): void {
+    this.turn = null;
+    this.round = null;
+  }
+
   /** Wheel notches since the last call: positive scrolls down. */
   takeWheel(): number {
     const n = this.wheelPending;
@@ -181,6 +209,7 @@ export class Controls {
     for (const k of Object.keys(this.menuKeys) as (keyof Controls['menuKeys'])[]) this.menuKeys[k] = false;
     this.interactPress = false;
     this.wheelPending = 0;
+    this.pipettePending = false;
   }
 
   private clearPresses(): void {

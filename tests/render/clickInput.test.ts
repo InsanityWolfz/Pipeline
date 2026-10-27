@@ -28,6 +28,16 @@ describe('clickMods and clickAmount', () => {
     expect(clickAmount(clickMods({ shiftKey: false, ctrlKey: true }))).toBe('all');
     expect(clickAmount(clickMods({ shiftKey: true, ctrlKey: true }))).toBe('all');
   });
+
+  it('069: on a hopper’s screen a plain click is ten; Shift half and Ctrl all as anywhere', () => {
+    expect(clickAmount(clickMods({ shiftKey: false, ctrlKey: false }), 'hopper')).toBe('ten');
+    expect(clickAmount(clickMods({ shiftKey: true, ctrlKey: false }), 'hopper')).toBe('half');
+    expect(clickAmount(clickMods({ shiftKey: false, ctrlKey: true }), 'hopper')).toBe('all');
+    expect(clickAmount(clickMods({ shiftKey: true, ctrlKey: true }), 'hopper')).toBe('all');
+    // A crate's and the stash's screens keep 047's one.
+    expect(clickAmount(clickMods({ shiftKey: false, ctrlKey: false }), 'crate')).toBe('one');
+    expect(clickAmount(clickMods({ shiftKey: false, ctrlKey: false }), 'stash')).toBe('one');
+  });
 });
 
 describe('heldButtons (047: left fires the volley, right uses the carried item)', () => {

@@ -9,6 +9,10 @@ import { ChoiceMenu, type Choice } from './ChoiceMenu';
 import type { Controls } from './controls';
 import { RestorePanel } from './RestorePanel';
 import { diagramInReach } from '../sim/research';
+import { entranceTakesE, purgeable } from '../sim/purge';
+import { PURGE_TEXT } from '../data/interact';
+import { itemDef } from '../data/items';
+import { ammoDef } from '../data/ammo';
 import { GearPanel } from './GearPanel';
 import { altarInReach, altarState } from '../sim/altar';
 import { offeringModel } from './altarPanel';
@@ -19,10 +23,10 @@ import type { TipHit } from './tipTypes';
 type PylonChoice = 'deposit' | 'travel' | { stone: string };
 
 /** The site menus' part of `ui()`. */
-export type SiteUiState = Pick<UiState, 'siteOpen' | 'waystone' | 'pylonMenu' | 'returnMenu' | 'restorePanel' | 'altarPanel' | 'gearPanel'>;
+export type SiteUiState = Pick<UiState, 'siteOpen' | 'waystone' | 'pylonMenu' | 'returnMenu' | 'purgeMenu' | 'restorePanel' | 'altarPanel' | 'gearPanel'>;
 
 /** The site menus' part of `ui()` before the scene has built them. */
-export const NO_SITE_UI: SiteUiState = { siteOpen: false, waystone: null, pylonMenu: null, returnMenu: null, restorePanel: null, altarPanel: null, gearPanel: null };
+export const NO_SITE_UI: SiteUiState = { siteOpen: false, waystone: null, pylonMenu: null, returnMenu: null, purgeMenu: null, restorePanel: null, altarPanel: null, gearPanel: null };
 /** A waystone row (032): the destination to travel to, a claimed site or (072) a woken return stone, by id. */
 type WaystoneChoice = { site: string };
 
@@ -44,6 +48,9 @@ export class SiteMenus {
   private readonly restore: RestorePanel;
   /** The altar's offering (034), in the restore panel's style, opened by E at an awake altar. */
   private readonly offering: RestorePanel;
+  /** 069: an intake entrance's purge menu (its one row, Purge), and the entrance it was opened at. */
+  private readonly purge: ChoiceMenu<number>;
+  private purgeAt: number | null = null;
 
   constructor(scene: Scene) {
     this.pylon = new ChoiceMenu(scene);
@@ -52,10 +59,11 @@ export class SiteMenus {
     this.stone = new ChoiceMenu(scene);
     this.restore = new RestorePanel(scene);
     this.offering = new RestorePanel(scene, offeringModel);
+    this.purge = new ChoiceMenu(scene);
   }
 
   private get menus(): readonly ChoiceMenu<unknown>[] {
-    return [this.pylon, this.waystone, this.stone];
+    return [this.pylon, this.waystone, this.stone, this.purge];
   }
 
   /** 050 (A.13): the wheel scrolls the bench's gear list while it's open; returns whether it took the steps. */
@@ -95,9 +103,14 @@ export class SiteMenus {
 
   /**
    * E was pressed with the restore panel open (033): E again restores, as clicking Restore does, and the panel
-   * closes; without the cost it stays open and nothing is sent. Returns whether the panel took the press.
+   * closes; without the cost it stays open and nothing is sent; 069: E closes the purge menu. Returns whether a panel took the press.
    */
   pressAgain(controls: Controls): boolean {
+    // 069 (review): E again closes the purge menu, as Esc does, so it never reopens it or stacks the restore panel.
+    if (this.purge.isOpen) {
+      this.purge.close();
+      return true;
+    }
     // The altar's offering (034) works the same: E again summons.
     if (this.offering.isOpen) {
       const altar = this.offering.confirm;
@@ -123,7 +136,12 @@ export class SiteMenus {
   interact(sim: SimState): 'stash' | null {
     const diagram = diagramInReach(sim);
     const altar = altarInReach(sim);
-    if (diagram) this.restore.open(diagram.node);
+    // 069: an intake entrance holding rounds, under the cursor or nearer than any diagram (src/sim/purge.ts).
+    const entrance = entranceTakesE(sim);
+    if (entrance !== null) {
+      this.purgeAt = entrance;
+      this.purge.open();
+    } else if (diagram) this.restore.open(diagram.node);
     // An altar's offering (034): only once its boss has fallen (a dim altar does nothing).
     else if (altar && altarState(sim, altar.id) !== 'dim') this.offering.open(altar.id);
     else if (claimedPylonInReach(sim)) this.pylon.open();
@@ -162,10 +180,12 @@ export class SiteMenus {
       else if (gear.kind === 'equip') controls.menus.equip({ id: gear.id });
       return true;
     }
+    const purge = this.purge.valueAt(x, y);
     if (w) controls.menus.travel(w.site);
     else if (home) controls.menus.travel(FOUNDRY_ROOM);
     else if (typeof p === 'object') controls.menus.travel(p.stone);
     else if (p) controls.menus.pylon(p);
+    else if (purge !== undefined) controls.menus.purge(purge);
     else return false;
     for (const m of this.menus) m.flashAt(x, y);
     this.close();
@@ -191,6 +211,10 @@ export class SiteMenus {
     if (this.bench.isOpen && !fixtureInReach(sim, 'bench')) this.bench.close();
     // 047: the bench's Stages panel is gone; tagged rounds are crafted in the crafting menu (C).
     this.bench.update(sim);
+    // 069: the purge menu closes once its entrance is out of reach or empty (not as the cursor leaves the mouth for the menu).
+    const e = this.purgeAt === null ? undefined : sim.link.entrances[this.purgeAt];
+    if (this.purge.isOpen && (this.purgeAt === null || !purgeable(sim, this.purgeAt))) this.purge.close();
+    this.purge.show(this.purgeAt !== null && e?.ammoId ? [{ icons: [itemDef(ammoDef(e.ammoId).itemId).icon, SITE_ICONS.stash], text: PURGE_TEXT.row, value: this.purgeAt }] : []);
     if (this.waystone.isOpen && !fixtureInReach(sim, 'waystone')) this.waystone.close();
     this.waystone.show((this.waystone.isOpen ? travelDestinations(sim) : []).map((d) => ({ icons: [SITE_ICONS.travel], text: travelText(d.name), value: { site: d.id } })));
     if (this.stone.isOpen && !usableStoneInReach(sim)) this.stone.close();
@@ -204,6 +228,7 @@ export class SiteMenus {
       waystone: this.waystone.isOpen ? this.waystone.rowsShown : null,
       pylonMenu: this.pylon.isOpen ? this.pylon.rowsShown : null,
       returnMenu: this.stone.isOpen ? this.stone.rowsShown : null,
+      purgeMenu: this.purge.isOpen ? this.purge.rowsShown : null,
       restorePanel: this.restore.state, altarPanel: this.offering.state, gearPanel: this.bench.state };
   }
 }

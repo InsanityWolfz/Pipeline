@@ -30,7 +30,8 @@ export function drawPointerUi(g: GameScene, sim: SimState, { controls, topOf, wa
     controls?.facing ?? 'right',
     controls?.mirrored ?? false,
     (...a) => canPlace(sim, ...a),
-    (t, f) => ghostShape(controls?.heldLay() ?? null, t, f, (u, d) => conduitInFrom(sim, u.tx, u.ty, d)),
+    // 069: a pipetted conduit's ghost shows its turn rather than auto-joining.
+    (t, f) => ghostShape(controls?.heldLay() ?? null, t, f, (u, d) => controls?.turn ?? conduitInFrom(sim, u.tx, u.ty, d)),
     highlightOf(sim),
     buildLocked(sim),
   );

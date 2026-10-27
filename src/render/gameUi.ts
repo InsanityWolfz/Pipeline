@@ -1,4 +1,5 @@
 import { fontsReady } from './fonts';
+import { UI_CAMERA } from './scale';
 import { NO_SITE_UI } from './SiteMenus';
 import { NO_HOVER_UI } from './HoverView';
 import { NO_ROOM_UI } from './RoomViews';
@@ -12,6 +13,13 @@ import type { GameUiState } from './testHook';
 
 // What a game scene shows, for the test hook's ui() (split from GameScene in 042). Every view may be missing (before
 // the scene is created, or on the title's blank), so each falls back to its empty value.
+
+/** 069: the world's zoom over the view: the main camera's over the UI camera's (both carry the screen fit). */
+function worldZoom(g: GameScene): number {
+  const main = g.cameras?.main;
+  const ui = g.cameras?.getCamera(UI_CAMERA);
+  return main && ui ? main.zoom / ui.zoom : 1;
+}
 
 export function gameUi(g: GameScene): GameUiState {
   const main = g.cameras?.main?.worldView;
@@ -40,7 +48,7 @@ export function gameUi(g: GameScene): GameUiState {
     ...(g.tutorial?.state ?? NO_TUTORIAL_UI),
     // 042: the camera locks to the player: its centre, and the player's sprite point.
     // 046: `fading` while a door's fade runs, so screenshots can wait it out on state.
-    camera: { x: main?.centerX ?? 0, y: main?.centerY ?? 0, player: { x: g.playerView?.sprite.x ?? 0, y: g.playerView?.sprite.y ?? 0 }, fading: g.cameras?.main?.fadeEffect.isRunning ?? false },
+    camera: { x: main?.centerX ?? 0, y: main?.centerY ?? 0, player: { x: g.playerView?.sprite.x ?? 0, y: g.playerView?.sprite.y ?? 0 }, fading: g.cameras?.main?.fadeEffect.isRunning ?? false, zoom: worldZoom(g) },
     // 065: the slow's wind curls round the player.
     slowSwirl: g.playerView?.swirling ?? false,
     hud: g.hud?.bottom ?? null,

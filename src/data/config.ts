@@ -24,3 +24,9 @@ export const DOOR_FADE_MS = 150;
 
 /** Camera follow easing per frame (0..1, lower is smoother). 1 since 042: locked to the player, no easing pan. */
 export const CAMERA_LERP = 1;
+
+/**
+ * 069: build mode's world zooms, the wheel stepping between them (1× and zoomed out to 0.75×, so the foundry fits);
+ * leaving build mode is the first again.
+ */
+export const BUILD_ZOOMS = [1, 0.75] as const;

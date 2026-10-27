@@ -6,6 +6,7 @@ import { describeGear, describePiece, describeStage, describeTalent } from './de
 import { describeKeyword } from './describeGlossary';
 import { describeRound, type Seen } from './describeRound';
 import { chipOf } from './statSteps';
+import { machineSpeed } from '../sim/research';
 import type { Chip, Description, TipSource } from './tipTypes';
 
 // The describe module (040): what a round, a stage, a talent, a gear piece (relics included),
@@ -26,19 +27,22 @@ function describeItem(name: string): Description {
   return { source: { kind: 'item', id: name }, name, chips: [], summary: [], breakdown: [], bonuses: 0 };
 }
 
+/** 069: the machine speed now (033) for a recipe card, where the caller passed the research (1 otherwise). */
+const speedOf = (seen: Seen): number => (seen.research ? machineSpeed({ research: seen.research }) : 1);
+
 /** Whatever a tip's source is, described; null for a gear piece that's gone or a reserved keyword. */
 export function describe(seen: Seen, src: TipSource): Description | null {
   switch (src.kind) {
     case 'round':
       return describeRound(seen, src.id);
     case 'stage':
-      return describeStage(seen, src.id);
+      return describeStage(seen, src.id, speedOf(seen));
     case 'talent':
       return describeTalent(seen, src.id);
     case 'gear':
       return describeGear(seen, Number(src.id));
     case 'piece':
-      return describePiece(src.id);
+      return describePiece(src.id, speedOf(seen));
     case 'keyword':
       return describeKeyword(seen, src.id as ChipId);
     case 'item':

@@ -6,20 +6,27 @@ import { buildAtStand, clickAt, clickMenuRow, dragBox, put, restoreTable, ui, wa
 // Blueprints and area pick-up (063), with the real mouse and keys in ?playtest (the sandbox can't reach the foundry).
 // The Area tool (X, or its Tools cell) drags a box over the grid: the box and every piece wholly inside it show while
 // dragging, and on release a small menu offers Pick up and Cancel (the save rows wait on the Blueprint table). Pick up
-// lifts them all at once into the stash; Esc and right click back out of the menu, then the tool, then build mode.
+// lifts them all at once, what they held into the inventory (069; 063: the stash); Esc and right click back out of the menu, then the tool, then build mode.
 // Once the table is restored: saving (8 slots, then overwrite), the list (P), deleting, and placing turned and mirrored.
 
-test('the Area tool drags a box, shows what it counts, and Pick up lifts it all into the stash', async ({ page }) => {
+test('the Area tool drags a box, shows what it counts, and Pick up lifts it all, its contents into the inventory (069)', async ({ page }) => {
   test.setTimeout(60_000);
   const errors = watchErrors(page);
   await buildAtStand(page);
   await put(page, [
     { pieceId: 'conduit', tx: 6, ty: 10, facing: 'right' },
     { pieceId: 'cutter', tx: 7, ty: 10, facing: 'right' },
+    { pieceId: 'crate', tx: 8, ty: 10, facing: 'right' },
     { pieceId: 'conduit', tx: 9, ty: 10, facing: 'right' },
   ]);
+  // A few of something carried into the crate, so the pick-up has contents to hand back.
+  const carried = Object.entries((await state(page)).inventory).find(([, n]) => n >= 4)?.[0];
+  if (!carried) throw new Error('nothing carried');
+  const crate = (await state(page)).foundry.pieces.find((p) => p.pieceId === 'crate');
+  await step(page, 1, { deposit: { id: crate?.id ?? -1, itemId: carried, amount: 'all', stack: 4 } });
   const before = await state(page);
-  const counted = before.foundry.pieces.filter((p) => p.ty === 10 && p.tx <= 7).map((p) => p.id);
+  expect(before.foundry.pieces.find((p) => p.pieceId === 'crate')).toMatchObject({ contents: { [carried]: 4 } });
+  const counted = before.foundry.pieces.filter((p) => p.ty === 10 && p.tx <= 8).map((p) => p.id);
   // The Tools cells show in build mode; X takes the Area tool.
   expect((await ui(page))?.blueprints.tools.cells.map((c) => [c.tool, c.locked])).toEqual([
     ['area', false],
@@ -34,6 +41,10 @@ test('the Area tool drags a box, shows what it counts, and Pick up lifts it all 
   await expect.poll(async () => (await ui(page))?.blueprints.menu?.map((r) => r.text)).toEqual(['Pick up', 'Cancel']);
   await clickMenuRow(page, 'Pick up');
   await expect.poll(async () => (await state(page)).foundry.pieces.map((p) => p.tx)).toEqual([9]);
+  // The crate's contents came back to the inventory, none to the stash.
+  const after = await state(page);
+  expect(after.inventory[carried]).toBe((before.inventory[carried] ?? 0) + 4);
+  expect(after.stash[carried] ?? 0).toBe(before.stash[carried] ?? 0);
   expect((await ui(page))?.blueprints.menu).toBeNull();
   expect((await ui(page))?.blueprints.tool).toBe('area');
   expect(errors).toEqual([]);
@@ -91,7 +102,7 @@ test('the restored Blueprint table adds Save rows; a save with all 8 slots full 
   await expect.poll(async () => (await ui(page))?.blueprints.menu?.map((r) => r.text)).toEqual(['Overwrite Shafts', ...[2, 3, 4, 5, 6, 7, 8].map((n) => `Overwrite Shafts ${n}`), 'Cancel']);
   await clickMenuRow(page, 'Overwrite Shafts 3');
   await expect.poll(async () => (await state(page)).blueprints.list.map((b) => b.pieces.length)).toEqual([2, 2, 1, 2, 2, 2, 2, 2]);
-  // Its name was its own to reuse; the cutter alone went to the stash.
+  // Its name was its own to reuse; the cutter alone was picked up.
   expect((await state(page)).blueprints.list[2]?.name).toBe('Shafts 3');
   expect((await state(page)).foundry.pieces.filter((p) => p.ty === 10).map((p) => p.pieceId)).toEqual(['crate']);
   expect(errors).toEqual([]);

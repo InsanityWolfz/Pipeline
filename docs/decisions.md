@@ -303,6 +303,12 @@ Each plan's build notes hold the detail; these are the lasting technical choices
   - An untargetable window (`blinkIn`) covers a boss's body only, never its parts; homing keeps its lock through it, so a blink doesn't drop every lock.
   - Heat resets only on a flood (`floodPools.ts`), never on a vent.
 
+- **069 factory numbers and tools:**
+  - Rates the player reads are measured in the sim over a whole-second window saved with the state (`link.inflow`), never in render; a rate that can't be seen measured (the tube's fire rate in the foundry) is the round's own rate.
+  - Recipe cards are built from recipe data by one describer (`src/data/descriptions.ts`), so a new recipe gets its card with no new code.
+  - Which piece takes E is decided in sim (`interactables.ts`): the piece under the cursor wins, then the nearest in reach; an entrance's Purge is a fallback, never ahead of a hovered piece.
+  - A stored binding that leaves a newer action unbound isn't a clash; only two actions on one real key are.
+
 - **072 boss return points:**
   - Return stones are data (`src/data/returnStones.ts`: place, wake radius, landing tile, pack margin) read by sim rules; a fourth boss door gets a stone by a new row.
   - Fast-travel destinations come from one sim list (`travelDestinations`) carrying each entry's `kind`, so every menu shows the same places in the same order.

@@ -238,6 +238,8 @@ describe('sim state', () => {
     const forge = ['bellowsBreaks', 'bellowsPatches', 'vents', 'ventEnds', 'slams', 'sprays', 'floodStarts', 'floods'] as const;
     // 063: area pick-ups, blueprints saved, refused and deleted, and stamped.
     const blueprints = ['areaPickUps', 'blueprintSaves', 'blueprintSaveFails', 'blueprintDeletes', 'stamps'] as const;
+    // 069: an intake entrance purged.
+    const factory = ['purges'] as const;
     // 061: the Emberworks' enemies: motes bursting, hounds dashing, golems slamming and splitting, tenders' beams.
     const ember = ['moteBursts', 'deathBursts', 'dashes', 'golemSlams', 'golemSplits', 'beams', 'beamBreaks'] as const;
     // 064: the Stormcrown's: lightning striking a storm rod, and lightning arcs; the Conductor's strikes, rods, blinks and attacks.
@@ -246,8 +248,8 @@ describe('sim state', () => {
     const stormEnemies = ['dives', 'zaps', 'discharges', 'sentinelCalls', 'gusts'] as const;
     // 072: a return stone waking.
     const returns = ['returnWakes'] as const;
-    expect(Object.keys(summary.events).sort()).toEqual([...lists, ...later, ...site, ...hollows, ...relics, ...talents, ...mines, ...balance, ...lock, ...save, ...onboarding, ...fire, ...forge, ...ember, ...storm, ...stormEnemies, ...returns, ...blueprints, 'lost', 'ko', 'woke', 'tubeTaken'].sort());
-    for (const name of [...lists, ...later, ...site, ...hollows, ...relics, ...talents, ...mines, ...balance, ...lock, ...save, ...onboarding, ...fire, ...forge, ...ember, ...storm, ...stormEnemies, ...returns, ...blueprints]) expect(summary.events[name], name).toEqual([]);
+    expect(Object.keys(summary.events).sort()).toEqual([...lists, ...later, ...site, ...hollows, ...relics, ...talents, ...mines, ...balance, ...lock, ...save, ...onboarding, ...fire, ...forge, ...ember, ...storm, ...stormEnemies, ...returns, ...blueprints, ...factory, 'lost', 'ko', 'woke', 'tubeTaken'].sort());
+    for (const name of [...lists, ...later, ...site, ...hollows, ...relics, ...talents, ...mines, ...balance, ...lock, ...save, ...onboarding, ...fire, ...forge, ...ember, ...storm, ...stormEnemies, ...returns, ...blueprints, ...factory]) expect(summary.events[name], name).toEqual([]);
     expect(summary.events.ko).toBe(false);
     expect(summary.events.lost).toEqual({});
     expect(summary.events.tubeTaken).toBe(false);
