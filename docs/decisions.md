@@ -302,3 +302,8 @@ Each plan's build notes hold the detail; these are the lasting technical choices
   - A boss shield is the plating check (`plated`, `blockPlated` in `src/sim/bossParts.ts`): the Forgewright's plating and the Conductor's storm shield share every rule (piercing glances on, arcs and burn spread skip).
   - An untargetable window (`blinkIn`) covers a boss's body only, never its parts; homing keeps its lock through it, so a blink doesn't drop every lock.
   - Heat resets only on a flood (`floodPools.ts`), never on a vent.
+
+- **072 boss return points:**
+  - Return stones are data (`src/data/returnStones.ts`: place, wake radius, landing tile, pack margin) read by sim rules; a fourth boss door gets a stone by a new row.
+  - Fast-travel destinations come from one sim list (`travelDestinations`) carrying each entry's `kind`, so every menu shows the same places in the same order.
+  - A sprite scaled for an effect divides by `textureScale()` like every other view, and `ui()` reports drawn sizes, not the tween's factor, so a test can catch a wrong scale.

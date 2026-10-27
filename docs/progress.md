@@ -2,6 +2,20 @@
 
 Newest entry first. Entries before 050 are in docs/progress-archive.md.
 
+## 2026-10-27: 072 Boss return points
+**Changed:** on `claude/072-boss-return-points` (InsanityWolfz/Pipeline#86), from the agent-playtest proposals Shaun picked (plan docs/plans/072-boss-return-points.md):
+- a return stone stands three tiles west of each boss arena's door (the Bulwark's Forum, the Anvil Hall, the Conductor's hall); it wakes when the player passes within 2.5 tiles from outside, never from inside an arena;
+- woken stones join fast travel (claimed pylons first, then stones in the order they woke), and a stone offers "Travel to foundry"; a travel lands on the tile west of the stone, clear of the door's E;
+- packs never spawn within 7 tiles of a stone; woken stones survive KOs and saves.
+
+`SAVE_VERSION` 23 (069 takes 22). Reviewed: one blocking finding fixed (the stone was drawn at about twice its size; `ui()` now reports its drawn size and the e2e checks it), plus four suggestions (the spawn margin from 5 to 7 tiles, matching a pylon's safe zone). `npm run check` 2539 tests; CI green. Raised for Shaun: 072.1–072.9; 072.5, 072.7 and 072.9 need his call.
+
+**Next:** Shaun's playtest; his calls on 072.5 (travelling home banks the haul), 072.7 (7-tile margin), 072.9 (a minimap icon); "merge 86".
+
+**Notes:**
+- The plan's landing tile (one below the stone) was in the Forum door's E reach; it moved west of the stone.
+- The container restarted twice during the build; nothing was lost.
+
 ## 2026-10-26: 068 Tougher late bosses
 **Changed:** on `claude/068-late-boss-buffs` (InsanityWolfz/Pipeline#82), from Shaun's playtest calls (docs/brainstorm/2026-10-26-playtest-calls.md; plan docs/plans/068-late-boss-buffs.md):
 - the Forgewright: 6,000 health; heat keeps filling through vents (only a flood resets it); bellows of 300 that patch in 3 s; slam and spray 20% faster;
