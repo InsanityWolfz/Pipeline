@@ -313,3 +313,8 @@ Each plan's build notes hold the detail; these are the lasting technical choices
   - A held key reaches the sim as its own command flag (`Command.interactHeld`) next to the press (`interact`); rules that chain on a hold read the flag, so a press alone still acts once.
   - Render-side checks that read pixels (the silhouette) cache on everything that can change the answer, including each prop's current frame, and look only at a spatial bucket round the player, never every prop each frame.
   - A craft max always carries `batches` on its one craft event (even for one batch); a plain click carries none, so the feed tells them apart.
+
+- **074 light and region moods:**
+  - Lighting is render-only and never feeds the sim: region and ring moods, light sources and quality tiers are data (`src/data`), drawn by a lighting layer in render.
+  - Characters sit in a never-darkened layer and take only a light's catch, so enemies and telegraphs stay readable in every mood.
+  - Lights reach only what's near them: ground is lit in 160 px squares and props one by one only where a light reaches, which keeps draw calls low on High.

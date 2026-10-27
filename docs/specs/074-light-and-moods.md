@@ -1,5 +1,5 @@
 # 074: Light and region moods
-status: approved
+status: done
 
 Approved by Shaun in chat, 2026-10-27, with the whole art pass (074–081); its plan is pre-approved.
 
