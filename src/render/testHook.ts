@@ -37,6 +37,7 @@ import type { HollowsEnemiesShown } from './hollowsEnemyArt';
 import type { EnemyBarShown } from './enemyBar';
 import type { Legibility, LegibilityUi } from './Legibility';
 import type { SandboxPanelState } from './SandboxPanel';
+import type { PlayerUi } from './PlayerView';
 
 export interface GameTestHook {
   /** The live game's summary; null on the title (042). */
@@ -181,6 +182,8 @@ export interface UiState {
   camera: { x: number; y: number; player: { x: number; y: number }; fading: boolean; zoom: number };
   /** 065: the slow's wind curls are drawn round the player. */
   slowSwirl: boolean;
+  /** 075: the wanderer drawn: view, animation, scheme, trim, squash, hood, drawn bounds and draw time. Null before the scene. */
+  player: PlayerUi | null;
   /** 070: the player shows as a silhouette (a ruin block, tree, the bench or a machine in front hides them). */
   silhouette: boolean;
   /** The bottom HUD as drawn (025), view px: the hotbar row (and whether it shows) and the tube slot with each unit's icon frame and text. */

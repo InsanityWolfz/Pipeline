@@ -103,7 +103,11 @@ describe('the wanderer rig', () => {
         expect(ids).toContain(view.window.lit);
         expect(ids).toContain(view.window.dormant);
       }
-      if (view.trail) expect(ids).toContain(view.trail);
+      // 075: the swinging parts (075 renamed 016's cloak trail into the cape's chain of joints) are real parts on real joints.
+      for (const [id, links] of Object.entries(view.chains)) {
+        expect(ids).toContain(id);
+        for (const ch of links) expect(view.joints[ch], `${name}: ${id} on ${ch}`).toBeDefined();
+      }
     }
   });
 

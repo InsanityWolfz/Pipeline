@@ -4,10 +4,11 @@ import { MAX_TEXTURE_SCALE } from '../../data/art/style';
 import { WANDERER } from '../../data/art/wanderer';
 import { TITLE_SCREEN } from '../../data/titleScreen';
 import { drawWanderer, REST_POSE } from '../vector/wandererRig';
+import { activeScheme } from '../wandererScheme';
 
 // The title's wanderer (050, F): posed on the ridge from the player rig as 042 painted it, but drawn live into its own
 // canvas texture, so it breathes (the hips dip and rise), its cloak and hose sway in the wind, and the tube's glow
-// pulses. Real time: the title isn't the sim.
+// pulses. Real time: the title isn't the sim. 075: the side idle of the arcane ranger, in the scheme `?scheme=` picks.
 
 /** The wanderer's motion at a moment: the hips' dip (style px), the cloak's swing (radians), the hose's sway (px), the muzzle's and face's glow. */
 export interface TitleMotion {
@@ -82,8 +83,13 @@ export class TitleWanderer {
     c.clearRect(0, 0, this.canvas.width, this.canvas.height);
     c.scale(k, k);
     c.translate(WANDERER.box.anchor[0], WANDERER.box.anchor[1]);
-    // Side on, facing the ruin, the tube lowered a little toward it and lit (042's pose), breathing in the wind.
-    drawWanderer(c, { ...REST_POSE, view: 'side', flip: false, aim: W.aim, glow: W.glow * m.glow, muzzle: m.muzzle, crouch: m.crouch, flap: m.flap, hoseSway: m.hose }, k);
+    // Side on, facing the ruin, the tube lowered a little toward it and lit (042's pose), breathing in the wind. 075: the
+    // arcane ranger's side idle in the chosen scheme, its cape and hood tail swaying with the wind.
+    drawWanderer(
+      c,
+      { ...REST_POSE, view: 'side', scheme: activeScheme(), aim: W.aim, glow: W.glow * m.glow, muzzle: m.muzzle, crouch: m.crouch, cape: { trail: 0, sway: m.flap, tail: m.flap * 0.6 }, hoodTail: m.flap * 0.8, hoseSway: m.hose },
+      k,
+    );
     this.canvas.refresh();
   }
 }

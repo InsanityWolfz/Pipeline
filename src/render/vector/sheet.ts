@@ -1,6 +1,6 @@
 import { WANDERER, type WandererView } from '../../data/art/wanderer';
 import { drawWanderer, type WandererPose } from './wandererRig';
-import { sheetPoses } from './wandererPoses';
+import { sheetSections } from './wandererPoses';
 import { ENEMY_RIGS } from '../../data/art/enemies';
 import { vectorFrames } from './catalog';
 import { MACHINE_IDS } from '../../data/foundryAssets';
@@ -48,14 +48,15 @@ const wandererCell = (label: string, pose: WandererPose): Cell => ({
   label,
   size: WANDERER.box.size,
   anchor: WANDERER.box.anchor,
-  draw: (c, px) => drawWanderer(c, pose, px),
+  draw: (c, px) => {
+    drawWanderer(c, pose, px);
+  },
 });
 
+// 075: one section per strip of the spec's table, per view, each sampled from the motion.
 for (const view of ['side', 'down', 'up'] as const satisfies readonly WandererView[]) {
-  section(`Wanderer: ${view}`, sheetPoses(view).map((p) => wandererCell(p.label, p.pose)));
+  for (const strip of sheetSections(view)) section(`Wanderer ${view}: ${strip.title}`, strip.cells.map((c) => wandererCell(c.label, c.pose)));
 }
-const sideIdle = sheetPoses('side')[0];
-if (sideIdle) section('Wanderer: facing left', [wandererCell('idle', { ...sideIdle.pose, flip: true })]);
 
 // Grouped for review (020): each machine on its own row, then each family of sprites. A dev-only page: it groups
 // by frame-name prefixes rather than the asset tables, which is fine for a review sheet that ships in no build.
