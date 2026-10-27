@@ -3,6 +3,7 @@ import { LIGHT_BUDGET, LIGHT_CATCH, LIGHT_SOURCES, QUALITY_LOOK, ROUND_LIGHTS } 
 import { paletteHex } from '../../src/data/palette';
 import { DEFAULT_SETTINGS, QUALITY_TIERS } from '../../src/data/settings';
 import { DEPTHS, FX_TEXTURES } from '../../src/data/assets';
+import { EMBERWORKS_SPRITES } from '../../src/data/emberworksAssets';
 
 // 074: what gives light, by tier and priority; the budgets; the light catch; the quality tiers.
 
@@ -22,7 +23,9 @@ describe('light sources (074)', () => {
     expect([S.forgewright.color, S.forgewright.radius, S.forgewright.intensity, S.forgewright.priority]).toEqual(['cinder', 88, 1.2, 1]);
     expect([S.rodStrike.color, S.rodStrike.radius, S.rodStrike.intensity, S.rodStrike.priority, S.rodStrike.ms]).toEqual(['storm-pale', 112, 1.5, 1, 200]);
     expect([S.burst.color, S.burst.radius, S.burst.intensity, S.burst.priority, S.burst.ms]).toEqual([{ physical: 'cyan-glow', fire: 'cinder', cold: 'foam', lightning: 'storm-glow' }, 1.5, 1, 2, 150]);
-    expect([S.fire.color, S.fire.intensity, S.fire.priority, S.fire.flicker, S.fire.radii]).toEqual(['cinder', 0.9, 2, 0.15, { brazier: 64, vent: 72, ground: 40 }]);
+    expect([S.fire.color, S.fire.intensity, S.fire.priority, S.fire.flicker, S.fire.radii]).toEqual(['cinder', 0.9, 2, 0.15, { brazier: 64, vent: 72, ground: 40, kiln: 60, chimney: 40 }]);
+    // 074.7: a chimney light per look of the stack (the sprite list's order).
+    expect(S.fire.chimney.rises).toHaveLength(EMBERWORKS_SPRITES.chimney.length);
     expect([S.ley.radius, S.ley.intensity, S.ley.priority]).toEqual([1.5, 0.7, 3]);
     expect([S.leyLine.color, S.leyLine.radius, S.leyLine.intensity, S.leyLine.priority, S.leyLine.every]).toEqual(['cyan', 40, 0.5, 3, { medium: 6, high: 3 }]);
     expect([ROUND_LIGHTS.radius, ROUND_LIGHTS.intensity, ROUND_LIGHTS.priority, ROUND_LIGHTS.tiers]).toEqual([28, 0.7, 4, ['high']]);

@@ -36,16 +36,17 @@ describe('region moods (074)', () => {
     expect(isPaletteId(ROOM_MOOD.foundry?.tint ?? '')).toBe(true);
   });
 
-  it('matches the spec’s table: ambients, washes, fog, accents and light scales', () => {
+  // 074 review: the dark regions retuned toward the approved "Ley-lit" card (docs/art/style-test-2.html): dusky, not pale haze.
+  it('matches the spec’s table as retuned: ambients, washes, fog, accents and light scales', () => {
     const near = (got: [number, number, number], want: string) => {
       const w = hexToRgb(want);
       for (const i of [0, 1, 2]) expect(Math.abs((got[i] ?? 0) - (w[i] ?? 0))).toBeLessThanOrEqual(2);
     };
     const table = [
       { ring: 0, ambient: '#fcfef4', wash: ['sun', 0.04], fog: null, accent: 'sun', scale: 0.3 },
-      { ring: 3, ambient: '#c6ceda', wash: ['hollow-dark', 0.04], fog: ['hollow-pale', 0.1, 4], accent: 'vein', scale: 0.8 },
-      { ring: 4, ambient: '#d39882', wash: ['flame-dark', 0.05], fog: ['ash', 0.18, 6], accent: 'cinder-light', scale: 1 },
-      { ring: 5, ambient: '#757490', wash: ['storm-dark', 0.06], fog: ['storm-light', 0.12, 12], accent: 'storm-glow', scale: 1.4 },
+      { ring: 3, ambient: '#a7b0be', wash: ['hollow-dark', 0.04], fog: ['hollow-dark', 0.1, 4], accent: 'vein', scale: 1 },
+      { ring: 4, ambient: '#af8477', wash: ['flame-dark', 0.06], fog: ['ash-dark', 0.15, 6], accent: 'cinder-light', scale: 1.2 },
+      { ring: 5, ambient: '#4c4b60', wash: ['storm-dark', 0.06], fog: ['storm-dark', 0.1, 12], accent: 'storm-glow', scale: 1.8 },
     ] as const;
     for (const t of table) {
       const m = REGION_MOODS[t.ring];

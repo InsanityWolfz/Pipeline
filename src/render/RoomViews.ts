@@ -84,14 +84,14 @@ export class RoomViews {
     this.landmarks = new LandmarkView(scene, this.banner, world);
     this.research = new ResearchView(scene);
     this.schematics = new SchematicView(scene, this.banner);
-    this.hollows = new HollowsView(scene);
-    this.emberworks = new EmberworksView(scene);
-    this.stormcrown = new StormcrownView(scene);
+    this.hollows = new HollowsView(scene, world);
+    this.emberworks = new EmberworksView(scene, world);
+    this.stormcrown = new StormcrownView(scene, world);
     this.arcs = new ArcView(scene);
     this.relics = new RelicView(scene);
     this.talentFx = new TalentFxView(scene);
     this.mines = new MineView(scene);
-    this.arenaDoors = new ArenaDoorView(scene);
+    this.arenaDoors = new ArenaDoorView(scene, world);
   }
 
   /** The pointer, view px: 051's minimap names the icon under it. */

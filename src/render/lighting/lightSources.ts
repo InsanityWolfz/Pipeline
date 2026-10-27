@@ -10,7 +10,7 @@ import { ventState, type NodeState } from '../../sim/nodes';
 import { roomById, type SimState } from '../../sim/state';
 import { chainSegments } from '../../sim/conductorAi';
 import { conductorDefOf } from '../../sim/conductorRods';
-import { leyLinePoints, springPoints } from './leyLights';
+import { firePoints, leyLinePoints, springPoints } from './fixedLights';
 import type { LightCandidate } from './lightPick';
 import type { LightPulses } from './lightPulses';
 
@@ -85,6 +85,8 @@ export function gatherLights(input: SourceInput): LightCandidate[] {
   if (room.terrain) {
     for (const s of springPoints(v, PAD)) add('ley', s.x, s.y, SPRING_LOOK.light.radius * S.ley.radius, SPRING_LOOK.light.color, S.ley.intensity * (0.75 + 0.25 * breathe(time, 3)), S.ley.priority);
     for (const l of leyLinePoints(v, quality, PAD)) add('leyLine', l.x, l.y, S.leyLine.radius, S.leyLine.color, S.leyLine.intensity, S.leyLine.priority);
+    // 074.7: the Emberworks' kiln mouths and chimney tops burn.
+    for (const f of firePoints(room.rows, v, PAD)) add('fire', f.x, f.y, f.radius, S.fire.color, f.intensity * flicker(time, f.x * 0.37 + f.y), S.fire.priority);
   }
   // Burning ground: a cinder mote's pool, a hound's trail; the Forgewright's flood is its own (a boss attack).
   for (const pool of sim.floodPools) {
