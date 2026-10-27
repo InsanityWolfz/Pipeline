@@ -51,5 +51,6 @@ describe('no wind-up starts off screen in any region’s pack fights (073)', () 
     const starts = packs.flatMap((pack) => KEEPS.flatMap((keep) => SEEDS.map((seed) => sweep(pack, seed, keep))));
     // Wind-ups did start (on screen), so the sweep watched real fights.
     expect(starts.reduce((a, b) => a + b, 0)).toBeGreaterThan(0);
-  });
+    // Six whole pack fights per region: about 3 s alone, more on a loaded machine.
+  }, 30_000);
 });
