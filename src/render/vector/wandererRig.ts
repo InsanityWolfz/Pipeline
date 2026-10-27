@@ -58,6 +58,12 @@ function chainMat(def: WandererViewDef, pose: WandererPose, id: string): Mat {
   );
 }
 
+/** Bakes every part of the three views in a scheme and trim at `pxPerUnit` ahead of the first frame (075: at boot). */
+export function prebakeWanderer(scheme: WandererSchemeId, trim: Rarity | null, pxPerUnit: number): void {
+  const o: DrawOpts = { outline: OUTLINE_WIDTH / S, blurScale: pxPerUnit * S };
+  for (const [view, def] of Object.entries(viewsFor(scheme, trim))) for (const p of def.parts) bakedPart(`${scheme}/${trim ?? 'none'}/${view}`, p, pxPerUnit * S, o);
+}
+
 /** Draws the wanderer with its feet at the canvas origin; `pxPerUnit` is canvas px per world px. */
 export function drawWanderer(c: CanvasRenderingContext2D, pose: WandererPose, pxPerUnit: number): WandererMarks {
   const def = viewsFor(pose.scheme, pose.trim)[pose.view];

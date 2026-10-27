@@ -16,7 +16,7 @@ import { colorOf } from './color';
 import { PlayerClocks } from './playerClocks';
 import { textureScale } from './vector/textures';
 import { wandererAnim, wandererMotion } from './vector/wandererMotion';
-import { drawWanderer, REST_POSE, type WandererMarks, type WandererPose } from './vector/wandererRig';
+import { drawWanderer, prebakeWanderer, REST_POSE, type WandererMarks, type WandererPose } from './vector/wandererRig';
 import { activeScheme } from './wandererScheme';
 
 /** The share of a death, at its end, over which the remains fade out. */
@@ -88,6 +88,8 @@ export class PlayerView {
       .setScale(1 / this.scale)
       .setOrigin(WANDERER.box.anchor[0] / w, WANDERER.box.anchor[1] / h);
     this.swirl = scene.add.graphics();
+    // 075: the wanderer's parts are baked at boot (in this page's scheme, nothing worn); another trim bakes when first worn.
+    prebakeWanderer(this.scheme, null, this.scale);
   }
 
   /**
@@ -233,8 +235,8 @@ export class PlayerView {
       }
     }
     this.marks = drawWanderer(c, this.pose, s);
-    this.canvas.refresh();
-    // 075: the wanderer's draw time, a running mean over about a second of frames.
+    // 075: the wanderer's draw time (the rig's drawing, not the texture's upload), a running mean over about a second of frames.
     this.drawMs += (performance.now() - t0 - this.drawMs) * 0.05;
+    this.canvas.refresh();
   }
 }
