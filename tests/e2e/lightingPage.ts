@@ -152,28 +152,6 @@ export function fightFrames(page: Page, item: string, frames: number, ticksPerFr
   );
 }
 
-/** Mean brightness ((r + g + b) / 3, 0–255) of a screenshot's pixels in a box (view px of the page), optionally only where `mask` is set. */
-export async function brightness(page: Page, png: Buffer, box: { x: number; y: number; w: number; h: number }): Promise<number> {
-  return page.evaluate(
-    async ([b64, b]) => {
-      const img = new Image();
-      img.src = `data:image/png;base64,${b64}`;
-      await img.decode();
-      const c = document.createElement('canvas');
-      c.width = img.width;
-      c.height = img.height;
-      const ctx = c.getContext('2d');
-      if (!ctx) throw new Error('no 2d');
-      ctx.drawImage(img, 0, 0);
-      const d = ctx.getImageData(b.x, b.y, b.w, b.h).data;
-      let sum = 0;
-      for (let i = 0; i < d.length; i += 4) sum += ((d[i] ?? 0) + (d[i + 1] ?? 0) + (d[i + 2] ?? 0)) / 3;
-      return sum / (d.length / 4);
-    },
-    [png.toString('base64'), box] as const,
-  );
-}
-
 /** The pixels of a box in a screenshot, as [r, g, b] triples. */
 export async function pixels(page: Page, png: Buffer, box: { x: number; y: number; w: number; h: number }): Promise<number[][]> {
   return page.evaluate(

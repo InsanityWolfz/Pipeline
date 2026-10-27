@@ -184,11 +184,14 @@ function alongRoad(r0: number, r1: number): { x: number; y: number }[] {
   throw new Error('no road across the edge');
 }
 
+/** A pixel's brightness as the eye sees it (Rec. 601 luma, 0–255): green grass reads brighter than grey stone of the same channel mean. */
+const luma = (p: readonly number[]): number => 0.299 * (p[0] ?? 0) + 0.587 * (p[1] ?? 0) + 0.114 * (p[2] ?? 0);
+
 /** The screen's median brightness over the world (clear of the HUD's top and bottom): the ground, however much road or prop is in view. */
 async function worldBrightness(page: Page): Promise<number> {
   const size = page.viewportSize() ?? { width: 1280, height: 720 };
   const px = await pixels(page, await page.screenshot(), { x: 0, y: Math.round(size.height * 0.2), w: size.width, h: Math.round(size.height * 0.55) });
-  const b = px.map((p) => ((p[0] ?? 0) + (p[1] ?? 0) + (p[2] ?? 0)) / 3).sort((x, y) => x - y);
+  const b = px.map(luma).sort((x, y) => x - y);
   return b[Math.floor(b.length / 2)] ?? 0;
 }
 
@@ -219,7 +222,7 @@ async function enemyBody(page: Page): Promise<number> {
     return Math.abs((p[0] ?? 0) - (q[0] ?? 0)) + Math.abs((p[1] ?? 0) - (q[1] ?? 0)) + Math.abs((p[2] ?? 0) - (q[2] ?? 0)) > 90;
   });
   expect(body.length).toBeGreaterThan(200);
-  return body.reduce((s, p) => s + ((p[0] ?? 0) + (p[1] ?? 0) + (p[2] ?? 0)) / 3, 0) / body.length;
+  return body.reduce((s, p) => s + luma(p), 0) / body.length;
 }
 
 /** The HP bar's pixels: the top-left of the HP block the HUD reports (view px), inset clear of its rounded corners and of the world showing between its pieces. */
