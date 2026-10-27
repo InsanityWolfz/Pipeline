@@ -65,7 +65,7 @@ async function holdFire(page: Page, dx: number, dy: number): Promise<void> {
   await page.mouse.down({ button: 'right' });
 }
 
-/** Rounds of the looks in turn, `ms` each; the mean of each look's windows. */
+/** Rounds of the looks in turn, `ms` each; each look's median window. */
 async function interleave(page: Page, looks: readonly Look[], rounds: number, ms: number, refill: () => Promise<void>): Promise<Record<string, { mean: number; p95: number; ticksPerSecond: number }>> {
   const all: Window[] = [];
   for (let r = 0; r < rounds; r++) {
@@ -77,8 +77,12 @@ async function interleave(page: Page, looks: readonly Look[], rounds: number, ms
   const out: Record<string, { mean: number; p95: number; ticksPerSecond: number }> = {};
   for (const l of looks) {
     const w = all.filter((x) => x.look === l);
-    const avg = (f: (x: Window) => number) => Math.round((w.reduce((s, x) => s + f(x), 0) / w.length) * 10) / 10;
-    out[l] = { mean: avg((x) => x.mean), p95: avg((x) => x.p95), ticksPerSecond: avg((x) => x.ticksPerSecond) };
+    // The median window: a burst from another process on the machine spoils one window, not the look's figure.
+    const median = (f: (x: Window) => number) => {
+      const v = w.map(f).sort((a, b) => a - b);
+      return Math.round((v[Math.floor(v.length / 2)] ?? 0) * 10) / 10;
+    };
+    out[l] = { mean: median((x) => x.mean), p95: median((x) => x.p95), ticksPerSecond: median((x) => x.ticksPerSecond) };
   }
   return out;
 }
@@ -102,7 +106,7 @@ test.describe('lighting probe (074)', () => {
     await openWorld(page);
     await toRegion(page, 'stormcrown');
     await holdFire(page, 140, 0);
-    const ab = await interleave(page, ['off', 'low'], 4, 2500, keepPack(page, STORM_PACK));
+    const ab = await interleave(page, ['off', 'low'], 6, 2500, keepPack(page, STORM_PACK));
     const tiers = await interleave(page, ['low', 'medium', 'high'], 3, 2500, keepPack(page, STORM_PACK));
     await page.mouse.up({ button: 'right' });
     const report = { ab, tiers, frameRatio: (ab.low?.mean ?? 0) / (ab.off?.mean ?? 1), tickRatio: (ab.low?.ticksPerSecond ?? 0) / (ab.off?.ticksPerSecond ?? 1) };
@@ -144,7 +148,7 @@ test.describe('lighting probe (074)', () => {
       runs.off.push(...(await bake('?start=hollows&blend=off')));
       runs.on.push(...(await bake('?start=hollows')));
     }
-    const mean = (xs: number[]) => Math.round((xs.reduce((a, b) => a + b, 0) / Math.max(1, xs.length)) * 10) / 10;
+    const mean = (xs: number[]) => Math.round((xs.reduce((a, b) => a + b, 0) / Math.max(1, xs.length)) * 100) / 100;
     const report = { chunks: { off: runs.off.length, on: runs.on.length }, meanMs: { off: mean(runs.off), on: mean(runs.on) }, ratio: mean(runs.on) / Math.max(0.001, mean(runs.off)) };
     console.log('bake', JSON.stringify(report));
     await info.attach('bake.json', { body: JSON.stringify(report, null, 2), contentType: 'application/json' });

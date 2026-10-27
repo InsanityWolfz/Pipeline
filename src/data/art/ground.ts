@@ -191,10 +191,10 @@ export const GROUND_BLEND = {
     centre: 0.42,
     centreColor: 'dirt-dark',
     centreAlpha: 0.2,
-    creepStep: 7,
-    creepRadius: [2.5, 5.5] as const,
+    creepStep: 12,
+    creepRadius: [3.5, 7] as const,
     creepIn: 5,
-    pebbleStep: 13,
+    pebbleStep: 19,
     pebble: ['rock-light', 'rock-dark'] as const,
   },
 } as const;

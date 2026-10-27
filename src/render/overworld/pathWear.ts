@@ -40,7 +40,10 @@ export function paintPathWear(
   const lines = pathStrokes(paths).filter((s) => s.color === GROUND.path).map((s) => s.pts);
   const segs: [Pt, Pt][] = lines.flatMap((pts) => pts.slice(1).map((b, i): [Pt, Pt] => [pts[i] ?? b, b])).filter(([a, b]) => near(a, b));
   if (segs.length === 0) return;
-  const onDirt = (x: number, y: number) => segs.some(([a, b]) => toSegment(x, y, a, b) < W / 2 - 1);
+  const half = W / 2 - 1;
+  const onDirt = (x: number, y: number) =>
+    segs.some(([a, b]) => x > Math.min(a[0], b[0]) - half && x < Math.max(a[0], b[0]) + half && y > Math.min(a[1], b[1]) - half && y < Math.max(a[1], b[1]) + half && toSegment(x, y, a, b) < half);
+  const inRect = (x: number, y: number) => x > rect.x0 - 12 && x < rect.x0 + rect.w + 12 && y > rect.y0 - 12 && y < rect.y0 + rect.h + 12;
   // The trodden centre, one stroke over every stretch so crossings aren't darker.
   c.globalAlpha = P.centreAlpha;
   c.strokeStyle = inkCss(P.centreColor);
@@ -65,6 +68,8 @@ export function paintPathWear(
     for (let s = 0; s < len; s += P.creepStep) {
       const px = a[0] + ux * s;
       const py = a[1] + uy * s;
+      // Only marks that can reach this chunk.
+      if (!inRect(px - uy * W, py + ux * W) && !inRect(px + uy * W, py - ux * W) && !inRect(px, py)) continue;
       for (const side of [-1, 1]) {
         const off = W / 2 + 2 - roll(px, py, side + 3) * P.creepIn;
         const x = px - uy * side * off;

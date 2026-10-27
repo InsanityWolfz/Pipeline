@@ -108,8 +108,9 @@ function stroke(c: CanvasRenderingContext2D, lines: readonly number[][], width: 
   c.globalAlpha = alpha;
   c.strokeStyle = inkCss(color);
   c.lineWidth = width;
-  c.lineCap = 'round';
-  c.lineJoin = 'round';
+  // Butt ends and mitred joins: a crack is hair-thin, and round ones cost the bake more for no difference you can see.
+  c.lineCap = 'butt';
+  c.lineJoin = 'miter';
   c.beginPath();
   for (const pts of lines) {
     for (let i = 0; i + 1 < pts.length; i += 2) {
