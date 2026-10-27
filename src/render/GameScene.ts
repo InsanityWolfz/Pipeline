@@ -48,6 +48,8 @@ import { RoomFollow } from './roomFollow';
 import { BlueprintUi } from './BlueprintUi';
 import { Occluders } from './occluders';
 import { SilhouetteView } from './SilhouetteView';
+import { WorldLayer } from './lighting/WorldLayer';
+import { LightingView } from './lighting/LightingView';
 
 const FIRST_PIECE = BUILD_BAR[0] ?? '';
 
@@ -91,6 +93,8 @@ export class GameScene extends Scene {
   legibility?: Legibility;
   /** 070: the player's silhouette behind props. */
   silhouette?: SilhouetteView;
+  /** 074: the region's mood and light. */
+  lighting?: LightingView;
   /** 044: the Sandbox panel (056, 057: the sandbox's controls, pop-outs there, and only there). */
   sandboxPanel?: SandboxPanel;
   /** The room on screen. It lags the player's room through a door's fade (roomFollow.ts). */
@@ -135,9 +139,11 @@ export class GameScene extends Scene {
     this.events.on(MENU_HOVER_EVENT, () => this.feel?.sound.play(SOUNDS.menuHover));
     // 070: the props that can hide the player, for its silhouette.
     const occluders = new Occluders();
-    this.roomViews = new RoomViews(this, occluders);
+    // 074: the ground and props the region's mood and lights reach.
+    const world = new WorldLayer();
+    this.roomViews = new RoomViews(this, occluders, world);
     this.foundryView = new FoundryView(this, occluders);
-    this.nodeView = new NodeView(this, occluders);
+    this.nodeView = new NodeView(this, occluders, world);
     this.groundItemView = new GroundItemView(this);
     this.enemyView = new EnemyView(this);
     this.playerView = new PlayerView(this);
@@ -150,7 +156,8 @@ export class GameScene extends Scene {
     this.blueprintUi = new BlueprintUi(this);
     this.tunnelView = new TunnelView(this);
     this.hover = new HoverView(this);
-    this.site = new SiteView(this, occluders);
+    this.site = new SiteView(this, occluders, world);
+    this.lighting = new LightingView(this, world);
     this.siteMenus = new SiteMenus(this);
     this.wake = new WakeView(this);
     this.tutorial = new TutorialUi(this);
@@ -258,6 +265,7 @@ export class GameScene extends Scene {
     const shown = this.room.shownRoomId;
     this.feel?.update(sim, this.pending, shown, this.game.loop.delta);
     this.roomViews?.update(sim, this.pending, shown, this.game.loop.delta);
+    this.lighting?.update(sim, this.pending, shown, this.game.loop.delta);
     // 051: the fixed HUD boxes the waypoint arrow keeps clear of.
     const mapBox = this.roomViews?.mapBox;
     const hudBoxes = [...(this.hud?.fixedBoxes ?? []), ...(mapBox ? [mapBox] : [])];
@@ -272,11 +280,14 @@ export class GameScene extends Scene {
     const inFoundry = shown === FOUNDRY_ROOM;
     this.foundryView?.update(sim.foundry, inFoundry, sim.building);
     this.nodeView?.update(inRoom(sim.nodes, shown), sim.harvest, this.game.loop.delta);
-    this.groundItemView?.update(inRoom(sim.groundItems, shown), picked, sim.player, sim);
-    this.enemyView?.update(inRoom(sim.enemies, shown), sim);
+    const catches = this.lighting?.catches;
+    this.groundItemView?.update(inRoom(sim.groundItems, shown), picked, sim.player, sim, catches);
+    this.enemyView?.update(inRoom(sim.enemies, shown), sim, catches);
     // Through a door's fade the player is already in the next room; hide them until it shows.
     this.playerView?.update(sim.player, sim.tube, sim.link, bodyLook(sim), sim.hasTube, shown === sim.roomId);
     if (this.playerView) this.silhouette?.update(this.playerView.sprite, shown === sim.roomId && sim.player.dying === 0);
+    if (this.playerView && shown === sim.roomId) catches?.offer(this.playerView.sprite, sim.player.x, sim.player.y, 'player', 0);
+    catches?.end();
     this.arrowView?.update(inRoom(sim.arrows, shown));
     this.bombView?.update(inRoom(sim.bombs, shown));
     this.site?.update(sim, shown);

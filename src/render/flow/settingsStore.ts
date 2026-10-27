@@ -1,4 +1,4 @@
-import { BIND_ACTIONS, DEFAULT_SETTINGS, FIXED_KEYS, MOUSE_INPUTS, NEWER_ACTIONS, SANDBOX_ONLY, SETTINGS_VERSION, VOLUME_STEP, type BindAction, type Settings } from '../../data/settings';
+import { BIND_ACTIONS, DEFAULT_SETTINGS, FIXED_KEYS, MOUSE_INPUTS, NEWER_ACTIONS, QUALITY_TIERS, SANDBOX_ONLY, SETTINGS_VERSION, VOLUME_STEP, type BindAction, type Quality, type Settings } from '../../data/settings';
 import { STORAGE_KEYS } from '../../data/save';
 import { SOUND_SETTINGS_KEY } from '../../data/sounds';
 import { readKey, writeKey } from './storage';
@@ -18,6 +18,11 @@ export const roundVolume = (v: number): number => Math.round(Math.min(1, Math.ma
 export const stepVolume = (v: number, dir: 1 | -1): number => Math.round(roundVolume(v + dir * VOLUME_STEP) * 10) / 10;
 
 const clampVolume = (v: unknown, fallback: number): number => (typeof v === 'number' && v >= 0 && v <= 1 ? Math.round(roundVolume(v) * 10) / 10 : fallback);
+
+const isQuality = (v: unknown): v is Quality => typeof v === 'string' && (QUALITY_TIERS as readonly string[]).includes(v);
+
+/** The next Graphics quality tier (074: the Settings row steps Low → Medium → High → Low). */
+export const nextQuality = (q: Quality): Quality => QUALITY_TIERS[(QUALITY_TIERS.indexOf(q) + 1) % QUALITY_TIERS.length] ?? 'medium';
 
 /** Stored settings checked field by field (a bad field takes its default), or null with none stored. */
 export function parseSettings(raw: string | null): Settings | null {
@@ -58,6 +63,8 @@ export function parseSettings(raw: string | null): Settings | null {
     effects: clampVolume(d.effects, D.effects),
     muted: typeof d.muted === 'boolean' ? d.muted : D.muted,
     flashes: typeof d.flashes === 'boolean' ? d.flashes : D.flashes,
+    // 074: a missing or bad value reads as Medium, so the settings' version stays 1.
+    quality: isQuality(d.quality) ? d.quality : D.quality,
     bindings: clean ? bindings : { ...D.bindings },
   };
 }

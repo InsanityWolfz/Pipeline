@@ -1,11 +1,11 @@
 import type { Scene } from 'phaser';
-import { BIND_ACTIONS, DEFAULT_BINDINGS, type BindAction } from '../../data/settings';
+import { BIND_ACTIONS, DEFAULT_BINDINGS, type BindAction, type Quality } from '../../data/settings';
 import { nameOf } from '../keys';
-import { rebind, settings, stepVolume, updateSettings } from './settingsStore';
+import { nextQuality, rebind, settings, stepVolume, updateSettings } from './settingsStore';
 import { SettingsView } from './SettingsView';
 import type { MenuRowShown } from './MenuColumn';
 
-// Settings' behaviour (042): the volume steppers, the toggles, the key list (click a row, press a key; Esc cancels; a
+// Settings' behaviour (042): the volume steppers, the toggles (074: Graphics quality steps through its tiers), the key list (click a row, press a key; Esc cancels; a
 // used key swaps; Reset to defaults), and the save rows, which the flow scene carries out.
 
 /** What Settings asks of the flow scene. */
@@ -20,6 +20,8 @@ export interface SettingsActions {
   click(): void;
   /** 044: the sandbox: no save rows (it never touches the save), and the panel's key in the key list. */
   sandbox: boolean;
+  /** 074: the Graphics quality the renderer forces (the Canvas renderer runs as Low), or null when the setting rules. */
+  fixedQuality: Quality | null;
 }
 
 const VOLUMES = ['master', 'music', 'effects'] as const;
@@ -41,7 +43,7 @@ export class SettingsScreen {
   }
 
   open(): void {
-    this.view.showMain({ settings: settings(), damaged: this.act.damaged(), notes: this.act.notes(), saveRows: !this.act.sandbox });
+    this.view.showMain({ settings: settings(), damaged: this.act.damaged(), notes: this.act.notes(), saveRows: !this.act.sandbox, quality: this.act.fixedQuality ?? settings().quality });
   }
 
   close(): void {
@@ -70,6 +72,8 @@ export class SettingsScreen {
       updateSettings({ [id]: stepVolume(s[id], hit.part === 'up' ? 1 : -1) });
     } else if (id === 'mute') updateSettings({ muted: !s.muted });
     else if (id === 'flashes') updateSettings({ flashes: !s.flashes });
+    // 074: Low → Medium → High, live; fixed at Low on the Canvas renderer.
+    else if (id === 'quality' && !this.act.fixedQuality) updateSettings({ quality: nextQuality(s.quality) });
     else if (id === 'keys') return this.view.showKeys(s, null, this.act.sandbox);
     else if (id === 'export') this.act.exportSave();
     else if (id === 'import') this.act.importSave();

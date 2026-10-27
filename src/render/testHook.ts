@@ -37,6 +37,8 @@ import type { HollowsEnemiesShown } from './hollowsEnemyArt';
 import type { EnemyBarShown } from './enemyBar';
 import type { Legibility, LegibilityUi } from './Legibility';
 import type { SandboxPanelState } from './SandboxPanel';
+import type { LightingShown } from './lighting/LightingView';
+import type { Quality } from '../data/settings';
 
 export interface GameTestHook {
   /** The live game's summary; null on the title (042). */
@@ -59,6 +61,10 @@ export interface GameTestHook {
   drop(itemId: string, x: number, y: number): SimSummary;
   /** Scales the speed of every tween (1 is normal), so a screenshot can catch a short effect mid-way. */
   tweenSpeed(scale: number): void;
+  /** 074: sets the Graphics quality and Flashes, as their Settings rows do (stored, applied live). */
+  setLook(look: { quality?: Quality; flashes?: boolean }): void;
+  /** 074: skips every mood, light and fog (as `?mood=off` does), for the frame-time A/B in one page. */
+  lightingOff(off: boolean): void;
   /** The player's room as rows of tiles a player can stand on ('.') or not ('#'), solid things included: for test helpers that find paths. */
   passable(): string[];
   /** Claims a site outright, as holding E at its cleared pylon would (028: the e2e's "or set it claimed"). */
@@ -127,6 +133,8 @@ export interface UiState {
   supply: { started: number; inFlight: { itemId: string; progress: number; site: string; icon: string; iconShown: boolean }[] };
   /** 053: the overworld's ground chunks built now, as `cx,cy` keys (only those near the camera are). */
   overworldChunks: string[];
+  /** 074: each overworld ground chunk's bake time so far, ms. */
+  groundBakeMs: readonly number[];
   /** The camera shakes asked for since boot, oldest first (the last 50) (021). */
   shakes: string[];
   /** 060: burn beats' small numbers shown since boot, and enemies drawn with flames on them now. */
@@ -273,6 +281,8 @@ export interface UiState {
   sandbox: SandboxPanelState | null;
   /** 056: whether any of the sandbox controls' objects is on screen, read from the objects themselves (never outside the sandbox). */
   sandboxDrawn: boolean;
+  /** 074: the region's mood and light as drawn: quality, the mood's ring and blend, the ambient and flash, lights by source, lit objects, fog layers, and light catches. */
+  lighting: LightingShown;
 }
 
 /** ui() without the flow's part: what a GameScene reports. */

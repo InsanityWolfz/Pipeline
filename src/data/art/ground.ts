@@ -71,6 +71,8 @@ export const GROUND = {
    */
   ahead: 1,
   keep: 2,
+  /** 074: a chunk's ground is drawn in squares this many world px across, each lit only while a light reaches it. */
+  lightTile: 160,
   /** 053: the world's cliff edge past the Hollows, away from its face: flat plateau stone, and its darker cracks. */
   plateau: 'hollow-dark',
   plateauEdge: 'rock-dark',
@@ -123,3 +125,79 @@ export const SUPPLY_LOOK = {
   /** A haul's plate takes its raw's colour. */
   moteColors: { wood: 'wood-light', stone: 'rock-pale', fiber: 'leaf-light', 'ley-crystal': 'cyan-glow', 'ley-iron': 'iron-light', 'husk-resin': 'resin-light', rimestone: 'snow', cinderite: 'cinder-light', stormglass: 'storm-pale' } as Readonly<Record<string, string>>,
 } as const;
+
+/**
+ * 074: the ground's blending and variation, baked into the chunks with the rest of the ground (no cost per frame), each
+ * tile's look from its fixed hash. Flat paint only: no collision, nothing standing, and it never covers a path, a ley
+ * line or a telegraph (paths and ley lines are painted over it; telegraphs are drawn above the ground).
+ */
+export const GROUND_BLEND = {
+  /**
+   * Soft edges where two grounds meet (`spill` creeps into `into`): `blobs` rounded blobs along each shared tile edge,
+   * each `radius` px (min, max) and reaching up to `depth` px into the tile, so the edge is a ragged band, never a
+   * straight tile edge.
+   */
+  edge: {
+    pairs: [
+      { spill: 'slag', into: 'ember' },
+      { spill: 'ember', into: 'slag' },
+    ] as readonly { readonly spill: GroundClass; readonly into: GroundClass }[],
+    blobs: 3,
+    radius: [4, 8] as const,
+    depth: 7,
+  },
+  /**
+   * Region 1's edge with the Hollows (the barrier's circle): the two grounds meet along the true circle, not the tiles'
+   * steps, wobbling by `wobble` px (two waves of `waves` per circle), with a grass blob every `blobStep` px of arc along
+   * it (`blobRadius` px), and a stray tuft of each ground on the other's side one sample in `strayEvery`, up to `strayOut`
+   * px off the edge, so it reads as a ragged band of overlapping rounded blobs.
+   */
+  circle: { wobble: [7, 4] as const, waves: [53, 131] as const, blobStep: 9, blobRadius: [3, 9] as const, strayEvery: 3, strayOut: 14, strayRadius: [2, 4.5] as const, reach: 2 },
+  /** Broad soft patches of lighter and darker ground: one centred on a tile in `every`, `radius` tiles (min, max), at `alpha`, in each region's own colours (light, dark). */
+  patches: {
+    every: 41,
+    radius: [2, 4] as const,
+    alpha: 0.2,
+    colors: {
+      grass: ['grass-light', 'grass-dark'],
+      hollows: ['hollow-pale', 'hollow'],
+      ember: ['ash-pale', 'ash'],
+      storm: ['storm-pale', 'storm'],
+    } as Readonly<Partial<Record<GroundClass, readonly [string, string]>>>,
+  },
+  /**
+   * Cracks with a lit lip on stone, paving, ash and slate: one on a tile in `every` (per ground; Region 1's grass has
+   * none, its paving does), a dark groove `width` px with its lower-right lip lit (light from the top left) `lip` px off.
+   */
+  cracks: {
+    every: { paving: 5, hollows: 7, ember: 6, storm: 5 } as Readonly<Partial<Record<GroundClass | 'paving', number>>>,
+    colors: {
+      paving: ['rock-dark', 'rock-pale'],
+      hollows: ['hollow-dark', 'hollow-pale'],
+      ember: ['ash-dark', 'ash-pale'],
+      storm: ['storm-dark', 'storm-pale'],
+    } as Readonly<Partial<Record<GroundClass | 'paving', readonly [string, string]>>>,
+    width: 0.9,
+    lip: 0.7,
+    lipAlpha: 0.45,
+    alpha: 0.6,
+  },
+  /**
+   * Worn paths (059's joined shape, its outline and width unchanged): a darker trodden centre `centre` × the path's
+   * width; the ground creeping in at its edges, a blob every `creepStep` px along each side, `creepRadius` px, up to
+   * `creepIn` px in; and a pebble every `pebbleStep` px, lit on top.
+   */
+  path: {
+    centre: 0.42,
+    centreColor: 'dirt-dark',
+    centreAlpha: 0.2,
+    creepStep: 12,
+    creepRadius: [3.5, 7] as const,
+    creepIn: 5,
+    pebbleStep: 19,
+    pebble: ['rock-light', 'rock-dark'] as const,
+  },
+} as const;
+
+/** 074: a tile's ground for blending: a region's own ground, or a feature that has its own (slag, a chasm, plateau stone). */
+export type GroundClass = 'grass' | 'hollows' | 'ember' | 'storm' | 'slag' | 'chasm' | 'plateau';

@@ -1,4 +1,5 @@
 import type { Scene } from 'phaser';
+import type { WorldLayer } from './lighting/WorldLayer';
 import { HOLLOWS_LOOK } from '../data/hollowsAssets';
 import { OVERWORLD_ROOM } from '../data/overworld';
 import { STORMCROWN } from '../data/stormcrown';
@@ -37,9 +38,9 @@ export class StormcrownView {
   private time = 0;
   private shownState: StormcrownShown = NO_STORMCROWN_SHOWN;
 
-  constructor(scene: Scene) {
+  constructor(scene: Scene, world?: WorldLayer) {
     this.curtain = new RingCurtain(scene);
-    this.conductor = new ConductorView(scene);
+    this.conductor = new ConductorView(scene, world);
   }
 
   get shown(): StormcrownShown {

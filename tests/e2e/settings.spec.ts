@@ -28,6 +28,8 @@ test('the pause menu: Resume, Settings (back to the pause menu), and Quit to tit
     'Effects volume',
     'Mute',
     'Flashes',
+    // 074: Graphics quality, after Flashes.
+    'Graphics quality',
     'Key bindings',
     'Export save',
     'Import save',
