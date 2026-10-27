@@ -92,6 +92,10 @@ export const DEFAULT_BINDINGS: Readonly<Record<BindAction, string>> = {
  */
 export const FIXED_KEYS: readonly string[] = ['ESC', 'TAB', 'M', 'OPEN_BRACKET', 'CLOSED_BRACKET'];
 
+/** 074: the Graphics quality tiers, in the order the Settings row steps through them. */
+export const QUALITY_TIERS = ['low', 'medium', 'high'] as const;
+export type Quality = (typeof QUALITY_TIERS)[number];
+
 export interface Settings {
   version: typeof SETTINGS_VERSION;
   /** 0..1 in 0.1 steps; the heard level is master × channel (042.9: music is the room ambience loops, effects every one-shot). */
@@ -101,6 +105,8 @@ export interface Settings {
   muted: boolean;
   /** 042.10: off removes the bright flashes; telegraphs, damage numbers and the danger reds never change. */
   flashes: boolean;
+  /** 074: Graphics quality, Low, Medium or High: how much light, fog and light catch the world draws. */
+  quality: Quality;
   bindings: Record<BindAction, string>;
 }
 
@@ -111,6 +117,7 @@ export const DEFAULT_SETTINGS: Readonly<Settings> = {
   effects: 1,
   muted: false,
   flashes: true,
+  quality: 'medium',
   bindings: { ...DEFAULT_BINDINGS },
 };
 
@@ -160,12 +167,14 @@ export const SETTINGS_TEXT = {
     effects: 'Effects volume',
     mute: 'Mute',
     flashes: 'Flashes',
+    quality: 'Graphics quality',
     keys: 'Key bindings',
     export: 'Export save',
     import: 'Import save',
     damaged: 'Export damaged save',
     back: 'Back',
   },
+  quality: { low: 'Low', medium: 'Medium', high: 'High' } as Readonly<Record<Quality, string>>,
   on: 'On',
   off: 'Off',
   notes: (n: number): string => (n === 1 ? '1 feedback note stored' : `${n} feedback notes stored`),
