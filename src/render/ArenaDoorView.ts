@@ -1,4 +1,5 @@
 import type { GameObjects, Scene } from 'phaser';
+import type { WorldLayer } from './lighting/WorldLayer';
 import { arenaDoorFrames } from '../data/arenaAssets';
 import { TILE_SIZE } from '../data/config';
 import { HOLLOWS_LOOK } from '../data/hollowsAssets';
@@ -41,7 +42,8 @@ export class ArenaDoorView {
   private time = 0;
   shown: ArenaDoorShown[] = [];
 
-  constructor(scene: Scene) {
+  /** `world` (074 review): the doors take the region's mood and lights (the seal over a fighting arena's door is light, so stays out). */
+  constructor(scene: Scene, world?: WorldLayer) {
     this.doors = ARENAS.map((arena) => {
       const tiles = arena.door.tiles;
       const x0 = Math.min(...tiles.map((t) => t.tx)) * T;
@@ -49,6 +51,7 @@ export class ArenaDoorView {
       const ty = tiles[0]?.ty ?? 0;
       const bottom = (ty + 1) * T;
       const image = addVector(scene, (x0 + x1) / 2, bottom, arenaDoorFrames(tiles.length).sealed).setDepth(bottom).setVisible(false);
+      world?.addProp(image);
       const seal = scene.add.graphics().setVisible(false);
       return { arena, image, seal, x0, x1, ty, sealState: 'down', fadeMs: 0 };
     });

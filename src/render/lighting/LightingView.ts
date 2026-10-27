@@ -3,6 +3,7 @@ import { DEPTHS } from '../../data/assets';
 import { TILE_SIZE, VIEW_HEIGHT, VIEW_WIDTH } from '../../data/config';
 import { LIGHT_BUDGET, LIGHT_Z, QUALITY_LOOK, type LightSourceId } from '../../data/lights';
 import { OVERWORLD_ROOM } from '../../data/overworld';
+import { LIGHTNING_FLASH } from '../../data/moods';
 import { FOUNDRY_ROOM } from '../../data/rooms';
 import type { Quality } from '../../data/settings';
 import { WORLD_SHAPE } from '../../data/worldShape';
@@ -45,6 +46,8 @@ export interface LightingShown {
   /** World objects with lighting on, and the world layer's tint (0xrrggbb) or null. */
   lit: number;
   tint: number | null;
+  /** The tint on the ground chunks no light reaches (the ambient, a lightning flash included), or null. */
+  groundTint: number | null;
   fog: number;
   /** Medium's light pools on the ground drawn now. */
   pools: number;
@@ -54,7 +57,7 @@ export interface LightingShown {
   catches: CatchShown[];
 }
 
-export const NO_LIGHTING: LightingShown = { quality: 'medium', setting: 'medium', renderer: 'webgl', off: false, ring: 0, outer: null, blend: 0, ambient: [255, 255, 255], flash: 0, wash: 0, lights: {}, placed: [], lit: 0, tint: null, fog: 0, pools: 0, applied: 0, catches: [] };
+export const NO_LIGHTING: LightingShown = { quality: 'medium', setting: 'medium', renderer: 'webgl', off: false, ring: 0, outer: null, blend: 0, ambient: [255, 255, 255], flash: 0, wash: 0, lights: {}, placed: [], lit: 0, tint: null, groundTint: null, fog: 0, pools: 0, applied: 0, catches: [] };
 
 const POOL = LIGHT_BUDGET.high;
 
@@ -120,15 +123,19 @@ export class LightingView {
     this.wash.setFillStyle(wash ? rgbInt(wash.rgb) : 0, wash?.alpha ?? 0);
     this.fog.update(view, moody ? look.fog : 0, mood.fog, deltaMs);
     const flash = moody && look.flash ? flashLevel(this.pulses.sinceStrike, flashes) : 0;
+    // What carries the ambient as a tint takes the flash in a few steps (props are set again only on a change).
+    const stepped = Math.round(flash * LIGHTNING_FLASH.steps) / LIGHTNING_FLASH.steps;
+    const tint = rgbInt(withFlash(mood.ambient, stepped));
     const lights = moody && look.lights;
     // Phaser's per-pixel lighting only where the tier lights the ground or props with it (High); Medium lays pools.
     const perPixel = lights && (look.litGround || look.litProps);
     if (perPixel) this.scene.lights.enable().setAmbientColor(rgbInt(withFlash(mood.ambient, flash)));
     else if (this.webgl) this.scene.lights.disable();
-    this.world.apply(moody ? { litGround: perPixel && look.litGround, litProps: perPixel && look.litProps, tint: rgbInt(mood.ambient) } : { litGround: false, litProps: false, tint: null });
+    this.world.apply(moody ? { litGround: perPixel && look.litGround, litProps: perPixel && look.litProps, tint } : { litGround: false, litProps: false, tint: null });
     const picked = lights ? pickLights(gatherLights({ sim, shown, view, quality, time: this.time, flashes, pulses: this.pulses, chain: conductorChain(sim, shown) }), quality, { x: view.centerX, y: view.centerY }) : [];
-    this.placed = picked.map((l) => ({ x: l.x, y: l.y, radius: l.radius, color: l.color, intensity: l.intensity * mood.lightScale }));
-    this.world.lightChunks(this.placed, moody ? rgbInt(withFlash(mood.ambient, flash)) : null, view);
+    this.placed = picked.map((l) => ({ x: l.x, y: l.y, radius: l.radius, color: l.color, intensity: l.intensity * mood.lightScale, source: l.source }));
+    this.world.lightChunks(this.placed, moody ? tint : null, view);
+    this.world.lightProps(perPixel ? this.placed : [], view);
     this.pools.place(lights && look.pools ? this.placed : []);
     for (const [i, light] of this.pool.entries()) {
       const l = perPixel ? picked[i] : undefined;
@@ -158,6 +165,7 @@ export class LightingView {
       placed: picked.map((l, i) => ({ source: l.source, x: l.x, y: l.y, radius: l.radius, color: l.color, intensity: this.placed[i]?.intensity ?? 0 })),
       lit: this.world.litCount,
       tint: this.world.current.tint,
+      groundTint: this.world.groundTint,
       fog: this.fog.layersShown,
       pools: this.pools.shown,
       applied: this.world.applied,

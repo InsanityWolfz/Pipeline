@@ -3,10 +3,13 @@ import { GROUND } from '../../data/art/ground';
 import { LIGHT_SOURCES } from '../../data/lights';
 import { OVERWORLD } from '../../data/overworld';
 import { SPRINGS } from '../../data/springs';
+import { TILE } from '../../data/rooms';
+import { worldTileHash } from '../roomTiles';
 import type { Quality } from '../../data/settings';
 
 // 074: the overworld's fixed lights, worked out once and bucketed by ground chunk so a frame looks only at the chunks
-// in view: a light every `every.high` tiles along each ley line (Medium keeps every other one), and the Ley Springs.
+// in view: a light every `every.high` tiles along each ley line (Medium keeps every other one), the Ley Springs, and
+// (074.7) the Emberworks' kiln mouths and chimney tops.
 
 const T = TILE_SIZE;
 const C = GROUND.chunk;
@@ -81,4 +84,48 @@ export function springPoints(view: { x: number; y: number; width: number; height
   springBuckets ??= bucket(SPRINGS.map((s) => ({ x: (s.tx + 0.5) * T, y: (s.ty + 0.5) * T })));
   const b = springBuckets;
   return keysIn(view, pad).flatMap((k) => b.get(k) ?? []).filter((p) => inside(p, view, pad));
+}
+
+/** A fire that stays put: where, its radius and intensity. */
+export interface FixedFire {
+  x: number;
+  y: number;
+  radius: number;
+  intensity: number;
+}
+
+/**
+ * The kilns' and chimneys' fires on a map: a light per row of front kilns side by side (a kiln with another in front of
+ * it shows its brick top, not its mouth), at the row's middle; a light at each chimney's lip, by the stack's look.
+ */
+export function firesOf(rows: readonly string[]): FixedFire[] {
+  const F = LIGHT_SOURCES.fire;
+  const out: FixedFire[] = [];
+  for (const [ty, row] of rows.entries()) {
+    const below = rows[ty + 1] ?? '';
+    const front = (tx: number) => row[tx] === TILE.kiln && below[tx] !== TILE.kiln;
+    for (let tx = 0; tx < row.length; tx++) {
+      if (row[tx] === TILE.chimney) {
+        const rises = F.chimney.rises;
+        out.push({ x: (tx + 0.5) * T, y: (ty + 1) * T - (rises[worldTileHash(tx, ty) % rises.length] ?? 0), radius: F.radii.chimney, intensity: F.chimney.intensity });
+        continue;
+      }
+      if (!front(tx) || front(tx - 1)) continue;
+      let end = tx;
+      while (front(end + 1)) end += 1;
+      const n = end - tx + 1;
+      out.push({ x: ((tx + end + 1) / 2) * T, y: (ty + 1) * T - F.kiln.rise, radius: Math.min(F.kiln.max, F.radii.kiln + (n - 1) * F.kiln.perTile), intensity: F.intensity });
+    }
+  }
+  return out;
+}
+
+const fireBuckets = new WeakMap<readonly string[], Map<string, FixedFire[]>>();
+
+/** The kilns' and chimneys' fires round a view on a map (`rows`), worked out once a map. */
+export function firePoints(rows: readonly string[], view: { x: number; y: number; width: number; height: number }, pad: number): FixedFire[] {
+  let b = fireBuckets.get(rows);
+  if (!b) fireBuckets.set(rows, (b = bucket(firesOf(rows))));
+  const map = b;
+  return keysIn(view, pad).flatMap((k) => map.get(k) ?? []).filter((p) => inside(p, view, pad + p.radius));
 }

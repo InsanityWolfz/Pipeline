@@ -15,8 +15,8 @@ describe('moodAt (074)', () => {
     expect(moodAt(63)).toMatchObject({ ring: 3, blend: 0 });
     expect(moodAt(95)).toMatchObject({ ring: 4, blend: 0 });
     expect(moodAt(130)).toMatchObject({ ring: 5, blend: 0 });
-    expect(moodAt(130).lightScale).toBe(1.4);
-    expect(moodAt(130).ambient).toEqual(ambientRgb('storm', 0.75));
+    expect(moodAt(130).lightScale).toBe(1.8);
+    expect(moodAt(130).ambient).toEqual(ambientRgb('storm-dark', 0.85));
   });
 
   it('darkens region by region, Region 1 to the Stormcrown', () => {
@@ -46,10 +46,10 @@ describe('moodAt (074)', () => {
   it('carries the wash, the fog (none in Region 1) and the light scale through the blend', () => {
     expect(moodAt(10).fog.alpha).toBe(0);
     expect(moodAt(10).wash.alpha).toBe(0.04);
-    expect(moodAt(130).fog).toMatchObject({ alpha: 0.12, speed: 12, rgb: hexToRgb(paletteHex('storm-light')) });
+    expect(moodAt(130).fog).toMatchObject({ alpha: 0.1, speed: 12, rgb: hexToRgb(paletteHex('storm-dark')) });
     const edge = moodAt(MOOD_EDGES[0]?.radius ?? 0);
     expect(edge.fog.alpha).toBeCloseTo(0.05, 5);
-    expect(edge.lightScale).toBeCloseTo(0.55, 5);
+    expect(edge.lightScale).toBeCloseTo(0.65, 5);
   });
 });
 

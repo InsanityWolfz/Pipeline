@@ -3,7 +3,7 @@ import { WORLD_SHAPE } from './worldShape';
 
 // Region moods (074): the light each danger ring's world sits in. Render reads it; the sim never does. Region 1 is
 // sunny (Realm of the Mad God), Stonefall Hollows dusky, the Emberworks orange through smoke, the Stormcrown dark (Hollow
-// Knight). Only the world layer (ground, props, nodes) takes the ambient; the readability layer (enemies, telegraphs,
+// Knight); the dark regions are tuned toward the approved "Ley-lit" card (docs/art/style-test-2.html; 074 review). Only the world layer (ground, props, nodes) takes the ambient; the readability layer (enemies, telegraphs,
 // rounds, items, the player, the HUD) never does. Every colour is a palette id.
 
 export interface RegionMood {
@@ -36,27 +36,27 @@ export const REGION_MOODS: Readonly<Record<Ring, RegionMood>> = {
   2: SUNNY,
   3: {
     name: 'dusk',
-    ambient: { color: 'hollow-light', darkness: 0.5 },
+    ambient: { color: 'hollow', darkness: 0.7 },
     wash: { color: 'hollow-dark', alpha: 0.04 },
-    fog: { color: 'hollow-pale', alpha: 0.1, speed: 4 },
+    fog: { color: 'hollow-dark', alpha: 0.1, speed: 4 },
     lights: { ley: 'cyan', fire: 'cinder', accent: 'vein' },
-    lightScale: 0.8,
+    lightScale: 1,
   },
   4: {
     name: 'smoke',
-    ambient: { color: 'rust', darkness: 0.6 },
-    wash: { color: 'flame-dark', alpha: 0.05 },
-    fog: { color: 'ash', alpha: 0.18, speed: 6 },
+    ambient: { color: 'rust-dark', darkness: 0.6 },
+    wash: { color: 'flame-dark', alpha: 0.06 },
+    fog: { color: 'ash-dark', alpha: 0.15, speed: 6 },
     lights: { ley: 'cyan', fire: 'cinder', accent: 'cinder-light' },
-    lightScale: 1,
+    lightScale: 1.2,
   },
   5: {
     name: 'storm',
-    ambient: { color: 'storm', darkness: 0.75 },
+    ambient: { color: 'storm-dark', darkness: 0.85 },
     wash: { color: 'storm-dark', alpha: 0.06 },
-    fog: { color: 'storm-light', alpha: 0.12, speed: 12 },
+    fog: { color: 'storm-dark', alpha: 0.1, speed: 12 },
     lights: { ley: 'cyan', fire: 'cinder', accent: 'storm-glow' },
-    lightScale: 1.4,
+    lightScale: 1.8,
   },
 };
 
@@ -79,9 +79,10 @@ export const MOOD_EDGES: readonly { readonly radius: number; readonly inner: Rin
 
 /**
  * Lightning's flash (Stormcrown): a rod struck or the Conductor's strikes landing lift the ambient toward `color` at
- * `darkness` for `holdMs`, then it eases back over `easeMs`. With Flashes off (042.10) there is none.
+ * `darkness` for `holdMs`, then it eases back over `easeMs`. With Flashes off (042.10) there is none. Tinted props and
+ * ground take the flash in `steps` steps (so the props' tint is set again a few times a strike, not every frame).
  */
-export const LIGHTNING_FLASH = { color: 'storm-pale', darkness: 0.3, holdMs: 120, easeMs: 400 } as const;
+export const LIGHTNING_FLASH = { color: 'storm-pale', darkness: 0.3, holdMs: 120, easeMs: 400, steps: 4 } as const;
 
 /**
  * The fog (074): a tileable texture `size` px square of soft wisps (two octaves of value noise on `cells` lattices,

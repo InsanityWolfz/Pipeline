@@ -13,6 +13,13 @@ export interface PlacedLight {
   radius: number;
   color: string;
   intensity: number;
+  /** What gives it (lights.ts's source ids). */
+  source?: string;
+}
+
+/** The lights that catch on a sprite: all of them, but the wanderer's own face glow never catches on the wanderer (074 review). */
+export function lightsFor<L extends PlacedLight>(kind: 'enemy' | 'player' | 'item', lights: readonly L[]): readonly L[] {
+  return kind === 'player' ? lights.filter((l) => l.source !== 'face') : lights;
 }
 
 /** A light's falloff `d` px from it: 1 at the light, 0 at its radius (Phaser's lights fall off as 1 − (d/r)²). */

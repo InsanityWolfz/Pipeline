@@ -20,8 +20,10 @@ interface LightSource {
   readonly flareMs?: number;
   /** How far above its point the light sits, px (the face in the hood, a rod's crown). */
   readonly rise?: number;
-  /** Fires: a radius per kind, and the flicker (± share) and its rate (Hz). */
+  /** Fires: a radius per kind, and the flicker (± share) and its rate (Hz); the kilns' and chimneys' placing. */
   readonly radii?: Readonly<Record<string, number>>;
+  readonly kiln?: { readonly rise: number; readonly perTile: number; readonly max: number };
+  readonly chimney?: { readonly rises: readonly number[]; readonly intensity: number };
   readonly flicker?: number;
   readonly flickerHz?: number;
   /** Ley lines: a light every this many tiles along a line, by tier. */
@@ -43,8 +45,24 @@ export const LIGHT_SOURCES = {
   rodStrike: { color: 'storm-pale', radius: 112, intensity: 1.5, priority: 1, tiers: LIT, ms: 200, rise: 40 },
   /** Blasts (`bursts` events), coloured by damage type; radius × the blast's. */
   burst: { color: { physical: 'cyan-glow', fire: 'cinder', cold: 'foam', lightning: 'storm-glow' }, radius: 1.5, intensity: 1, priority: 2, tiers: LIT, ms: 150 },
-  /** Fires: braziers, flaring Emberworks vents, burning ground; a ±`flicker` flicker. */
-  fire: { color: 'cinder', radius: 64, radii: { brazier: 64, vent: 72, ground: 40 }, intensity: 0.9, priority: 2, tiers: LIT, flicker: 0.15, flickerHz: 7 },
+  /**
+   * Fires: braziers, flaring Emberworks vents, burning ground; a ±`flicker` flicker. 074.7: the Emberworks' kiln mouths
+   * and chimney tops too: a light per row of kilns side by side, `kiln.rise` px up from their feet, its radius `kiln`
+   * plus `kiln.perTile` a kiln past the first (at most `kiln.max`); a light at each chimney's lip, `chimney.rises` px up
+   * by its look (the frame emberworksTiles picks).
+   */
+  fire: {
+    color: 'cinder',
+    radius: 64,
+    radii: { brazier: 64, vent: 72, ground: 40, kiln: 60, chimney: 40 },
+    kiln: { rise: 10, perTile: 14, max: 104 },
+    chimney: { rises: [76, 68] as const, intensity: 0.7 },
+    intensity: 0.9,
+    priority: 2,
+    tiers: LIT,
+    flicker: 0.15,
+    flickerHz: 7,
+  },
   /** Ley crystals, veins, pylons and Ley Springs, in their GLOWS colour, radius × theirs, breathing with today's glows. */
   ley: { color: 'cyan', radius: 1.5, intensity: 0.7, priority: 3, tiers: LIT },
   /** Ley lines: a light every `every` tiles (by tier) along each line in view. */

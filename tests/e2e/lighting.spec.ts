@@ -343,6 +343,16 @@ test('lightning striking a rod lights it and flashes the Stormcrown’s ambient,
   expect(on?.flash ?? 0).toBeGreaterThan(0);
   expect(on?.lights.rodStrike ?? 0).toBeGreaterThan(0);
   expect(on?.placed.find((l) => l.source === 'rodStrike')).toMatchObject({ color: 'storm-pale', radius: 112 });
+  // Medium, the default: the ground chunks and the props, which carry the ambient as a tint, flash too.
+  const steady = (l: { ambient: readonly number[] }) => ((l.ambient[0] ?? 0) << 16) | ((l.ambient[1] ?? 0) << 8) | (l.ambient[2] ?? 0);
+  const brighter = (tint: number | null, than: number) => tint !== null && [16, 8, 0].every((k) => ((tint >> k) & 0xff) >= ((than >> k) & 0xff)) && tint !== than;
+  await setLook(page, { quality: 'medium' });
+  const medium = await strike();
+  expect(medium?.flash ?? 0).toBeGreaterThan(0);
+  expect(medium?.pools ?? 0).toBeGreaterThan(0);
+  expect(brighter(medium?.groundTint ?? null, steady(medium ?? { ambient: [] }))).toBe(true);
+  expect(brighter(medium?.tint ?? null, steady(medium ?? { ambient: [] }))).toBe(true);
+  await setLook(page, { quality: 'high' });
   await setLook(page, { flashes: false });
   const off = await strike();
   expect(off).not.toBeNull();

@@ -2,6 +2,22 @@
 
 Newest entry first. Entries before 050 are in docs/progress-archive.md.
 
+## 2026-10-27: 074 Light and region moods
+**Changed:** on `claude/074-light-and-moods` (InsanityWolfz/Pipeline#91), art pass 1 of 8, from Shaun's art interview and his pick of the "pushed vector, ley light, a mood per region" direction (docs/brainstorm/2026-10-27-art-interview.md, docs/art/style-test-2.html; plan docs/plans/074-light-and-moods.md):
+- a mood per region as data: Region 1 stays sunny; the Hollows dusky (`hollow` 0.7, `hollow-dark` fog); the Emberworks rust-dark with ash smoke and a flame wash; the Stormcrown dark (`storm-dark` 0.85) with fog and lightning flashes that obey the Flashes setting;
+- glowing things light what's near them: ley lines, crystals, pylons and springs, fires and the Emberworks' kilns and chimneys, the muzzle flash, bosses' attacks, rod lightning and blasts; the player and enemies are never darkened and only take a light's catch;
+- ground blending: soft terrain edges, worn roads, patches and cracks;
+- Settings → Graphics quality: Low (a tint, no lights), Medium (the default: soft light pools on the ground), High (per-pixel light on the ground and the props a light reaches);
+- design.md's "Camera and art" rewritten for the art pass, with Shaun's approval.
+
+`SAVE_VERSION` stays 22. Reviewed: one blocking finding fixed (on Medium, lightning didn't flash the ground), the dark moods retuned toward the approved sample, kiln fires added, altars and arena doors moved into the mood. `npm run check` 2646 tests; CI green. Raised for Shaun: 074.1–074.14; 074.5, 074.7, 074.13 and 074.14 need his call.
+
+**Next:** Shaun's playtest, trying High on his laptop; his OK on the moods, the kiln fires and Medium's light pools; "merge 91". 075 and 076 retake their region shots once this is in.
+
+**Notes:**
+- Frame times (headless software renderer, loaded machine): a Stormcrown fight 127 / 123 / 385 ms on Low / Medium / High; Low costs no more than the moods off (0.97×). High lights only what a light reaches: 29 draw calls a frame, against 218 before.
+- The sim runs fixed ticks, but under about 6 fps (`MAX_TICKS_PER_FRAME` 10) the game slows rather than skip; true on main too.
+
 ## 2026-10-27: 075 The wanderer redesign
 **Changed:** on `claude/075-wanderer-redesign` (InsanityWolfz/Pipeline#92), art pass 2 of 8, from Shaun's art interview (docs/brainstorm/2026-10-27-art-interview.md; plan docs/plans/075-wanderer-redesign.md):
 - the wanderer is now an arcane ranger: a pointed hood with the faceless cyan glow, a knee-length cape, a ley-etched jerkin, bracers, a rune strap, and the minigun tube, hose and brass tank kept; soft gradients, a rim light and the thin ink outline;

@@ -28,7 +28,10 @@ export function ambientRgb(color: string, darkness: number): Rgb {
   return [m(r), m(g), m(b)];
 }
 
-const mix = (a: Rgb, b: Rgb, t: number): Rgb => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t].map(Math.round) as unknown as Rgb;
+/** An Rgb from three channels, rounded. */
+const rgb = (r: number, g: number, b: number): Rgb => [Math.round(r), Math.round(g), Math.round(b)];
+
+const mix = (a: Rgb, b: Rgb, t: number): Rgb => rgb(a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t);
 const lerp = (a: number, b: number, t: number): number => a + (b - a) * t;
 
 /** A region mood's looks, unblended. */
@@ -92,7 +95,8 @@ const FLASH_RGB = ambientRgb(LIGHTNING_FLASH.color, LIGHTNING_FLASH.darkness);
 /** The ambient lifted toward the flash's by `level`; a channel never goes darker than it was. */
 export function withFlash(ambient: Rgb, level: number): Rgb {
   if (level <= 0) return ambient;
-  return ambient.map((c, i) => Math.round(Math.max(c, c + ((FLASH_RGB[i] ?? c) - c) * level))) as unknown as Rgb;
+  const lift = (c: number, to: number) => Math.max(c, c + (to - c) * level);
+  return rgb(lift(ambient[0], FLASH_RGB[0]), lift(ambient[1], FLASH_RGB[1]), lift(ambient[2], FLASH_RGB[2]));
 }
 
 /** An Rgb as Phaser's 0xrrggbb. */
