@@ -232,6 +232,8 @@ export interface UiState {
   enemyBars: EnemyBarShown[];
   /** 076: each drawn enemy's art: family, pose, wind-up phase, reaction, squash, the frame shown and the tremble. */
   enemyArt: EnemyArtUi[];
+  /** 076: the boot's vector bake: wall ms, texture pages, frames and the enemy frames among them. */
+  vectorBake: { ms: number; pages: number; frames: number; enemyFrames: number };
   /** 032: the waystone's menu while open (two or more claimed pylons): each row's text and box, view px; else null. */
   waystone: { text: string; x: number; y: number; w: number; h: number }[] | null;
   /** 069: an intake entrance's purge menu while open: its row's text and box, view px; else null. */

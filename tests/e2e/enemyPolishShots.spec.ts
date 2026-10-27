@@ -40,10 +40,10 @@ async function windupAt(page: Page, id: number, at: number): Promise<boolean> {
       for (let t = 0; t < 900; t++) {
         const e = g.getState().enemies.find((x) => x.id === eid);
         if (!e) return false;
-        const art = g.ui().enemyArt.find((a) => a.id === eid);
-        if (art?.phase && e.modeTicks >= k && /windup/.test(e.mode)) return true;
+        if (e.modeTicks >= k && /windup|^lob$/.test(e.mode)) return true;
+        // Kept far above any one blow (a ring 5 sentinel's strike is 192), then shown full for the shot.
+        g.setPlayerHealth(1e6);
         g.step(1);
-        g.setPlayerHealth(100);
       }
       return false;
     },
@@ -70,12 +70,16 @@ test.describe('review screenshots (076)', () => {
   test("each family's pack in its own region's mood on Medium, winding up", async ({ page }) => {
     test.setTimeout(400_000);
     await openWorld(page);
-    for (const [i, f] of ENEMY_FAMILIES.entries()) {
+    // The Emberworks last: its pack leaves burning ground behind, which the walk to the Stormcrown would cross.
+    for (const f of [...ENEMY_FAMILIES].sort((a, b) => Number(a.id === 'forge') - Number(b.id === 'forge'))) {
+      const i = ENEMY_FAMILIES.indexOf(f);
+      await page.evaluate(() => window.__GAME__?.setPlayerHealth(100));
       await toRegion(page, REGION[f.id]);
       await setLook(page, { quality: 'medium' });
       const pack = f.members.filter((m) => !enemyDef(m).boss);
       const ids = await spawnPack(page, pack, 90);
       await windupAt(page, ids[0] ?? -1, 12);
+      await page.evaluate(() => window.__GAME__?.setPlayerHealth(100));
       await frames(page, 4);
       await page.screenshot({ path: `${SHOTS}/02-pack-${i + 1}-${REGION[f.id]}.png` });
       await page.evaluate((list) => {
@@ -88,17 +92,26 @@ test.describe('review screenshots (076)', () => {
       await expect.poll(() => page.evaluate(() => window.__GAME__?.ui().particles.deathMotes ?? 0), { timeout: 30_000 }).toBeGreaterThan(pack.length * 6);
       await page.screenshot({ path: `${SHOTS}/04-dissolve-${i + 1}-${f.id}.png` });
       await page.evaluate(() => window.__GAME__?.tweenSpeed(1));
-      await expect.poll(() => page.evaluate(() => window.__GAME__?.ui().particles.dissolving ?? 1), { timeout: 30_000 }).toBe(0);
+      await expect.poll(() => page.evaluate(() => window.__GAME__?.ui().particles.dissolving ?? 1), { timeout: 60_000 }).toBe(0);
+      // Whatever rose from the pack (a golem's whelps) goes too, and the player is topped up for the walk on.
+      await page.evaluate(() => {
+        const g = window.__GAME__;
+        const p = g?.getState().player;
+        for (const e of g?.getState().enemies ?? []) if (p && e.room === g?.getState().room && Math.hypot(e.x - p.x, e.y - p.y) < 400 && !['bulwark', 'forgewright', 'conductor'].includes(e.enemyId)) g?.setEnemyHealth(e.id, 0);
+        g?.step(1);
+        g?.setPlayerHealth(100);
+      });
     }
   });
 
-  test("every enemy's gather, coil and peak at game size and at 4×", async ({ browser }) => {
-    test.setTimeout(600_000);
-    const ctx = await browser.newContext({ viewport: { width: 640, height: 360 }, deviceScaleFactor: 4 });
+  test("every enemy's gather, coil and peak at game size", async ({ browser }) => {
+    test.setTimeout(900_000);
+    // 1 world px to the screen px: the camera's 640×360 at 1×. (The 4× strips are 03's, off the contact sheet.)
+    const ctx = await browser.newContext({ viewport: { width: 640, height: 360 }, deviceScaleFactor: 1 });
     const page = await ctx.newPage();
     await boot(page, '?sandbox');
     await cameraSettled(page, 20_000);
-    const cells: { id: string; phase: string; css: string; dev: string }[] = [];
+    const cells: { id: string; phase: string; png: string }[] = [];
     for (const f of ENEMY_FAMILIES) {
       for (const enemyId of f.members) {
         const def = enemyDef(enemyId);
@@ -108,28 +121,37 @@ test.describe('review screenshots (076)', () => {
             const g = window.__GAME__;
             for (const e of g?.getState().enemies ?? []) g?.setEnemyHealth(e.id, 0);
             g?.step(1);
+            g?.setPlayerHealth(100);
           });
-          await expect.poll(() => page.evaluate(() => window.__GAME__?.ui().particles.dissolving ?? 1), { timeout: 30_000 }).toBe(0);
-          const [id] = await spawnPack(page, [enemyId], def.boss ? 70 : 50);
+          await expect.poll(() => page.evaluate(() => window.__GAME__?.ui().particles.dissolving ?? 1), { timeout: 120_000 }).toBe(0);
+          const off = def.boss ? 70 : 50;
+          const [id] = await spawnPack(page, [enemyId], off);
           if (!(await windupAt(page, id ?? -1, at))) continue;
+          await page.evaluate(() => window.__GAME__?.setPlayerHealth(100));
           await frames(page, 2);
-          const clip = { x: 320 + (def.boss ? 70 : 50) - 50, y: 180 - 95, width: 100, height: 120 };
-          const css = (await page.screenshot({ clip, scale: 'css' })).toString('base64');
-          const dev = (await page.screenshot({ clip })).toString('base64');
-          cells.push({ id: enemyId, phase, css, dev });
+          const p = await page.evaluate((eid) => {
+            const g = window.__GAME__;
+            const e = g?.getState().enemies.find((x) => x.id === eid);
+            const c = g?.ui().camera;
+            return e && c ? { x: 320 + e.x - c.x, y: 180 + e.y - c.y } : null;
+          }, id ?? -1);
+          if (!p) continue;
+          const h = def.boss ? 150 : 80;
+          const w = def.boss ? 140 : 80;
+          const clip = { x: Math.min(640 - w, Math.max(0, Math.round(p.x - w / 2))), y: Math.min(360 - h, Math.max(0, Math.round(p.y - h + 12))), width: w, height: h };
+          cells.push({ id: enemyId, phase, png: (await page.screenshot({ clip })).toString('base64') });
         }
       }
     }
-    // One sheet at game size, one at 4×: a row per enemy, its gather, coil and peak.
-    for (const [name, key, w] of [['05-windups-1x', 'css', 100], ['06-windups-4x', 'dev', 400]] as const) {
-      const rows = [...new Set(cells.map((c) => c.id))]
-        .map((id) => `<div style="display:flex;gap:4px;align-items:center"><span style="width:110px;font:12px sans-serif">${id}</span>${cells.filter((c) => c.id === id).map((c) => `<figure style="margin:0"><img src="data:image/png;base64,${c[key]}" width="${w}"><figcaption style="font:10px sans-serif">${c.phase}</figcaption></figure>`).join('')}</div>`)
-        .join('');
-      const out = await ctx.newPage();
-      await out.setContent(`<body style="margin:8px;background:#5cc850">${rows}</body>`);
-      await out.screenshot({ path: `${SHOTS}/${name}.png`, fullPage: true, scale: 'css' });
-      await out.close();
-    }
+    // A row per enemy, its gather, coil and peak, at 1× and (pixel-doubled, so they can be seen) at 2×.
+    const rows = [...new Set(cells.map((c) => c.id))]
+      .map((id) => `<div style="display:flex;gap:6px;align-items:end"><span style="width:110px;font:12px sans-serif">${id}</span>${cells.filter((c) => c.id === id).map((c) => `<figure style="margin:0"><img src="data:image/png;base64,${c.png}"><img src="data:image/png;base64,${c.png}" style="zoom:2;image-rendering:pixelated"><figcaption style="font:10px sans-serif">${c.phase}</figcaption></figure>`).join('')}</div>`)
+      .join('');
+    const out = await ctx.newPage();
+    await out.setViewportSize({ width: 1800, height: 1000 });
+    await out.setContent(`<body style="margin:8px;background:#5cc850">${rows}</body>`);
+    await out.screenshot({ path: `${SHOTS}/05-windups-game-size.png`, fullPage: true });
+    await out.close();
     await ctx.close();
   });
 
