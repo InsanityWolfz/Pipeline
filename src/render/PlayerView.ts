@@ -45,6 +45,8 @@ export interface PlayerUi {
   scheme: string;
   trim: Rarity | null;
   squash: number;
+  /** The stride's phase, radians (0 and each π: a contact, the feet furthest apart). */
+  stride: number;
   hood: [number, number];
   drawMs: number;
   /** Whether the sprite carries a tint (only the hit's white flash: armour never tints the body). */
@@ -67,6 +69,7 @@ export class PlayerView {
   private readonly clocks = new PlayerClocks();
   private readonly scheme = activeScheme();
   private anim: PlayerUi['anim'] = 'idle';
+  private stride = 0;
   private marks: WandererMarks = { hood: [0, 0], hem: null };
   private drawMs = 0;
   private lastX = 0;
@@ -173,6 +176,7 @@ export class PlayerView {
       moved,
     });
     this.anim = wandererAnim(clocks);
+    this.stride = clocks.stride;
     return wandererMotion(clocks);
   }
 
@@ -184,6 +188,7 @@ export class PlayerView {
       scheme: this.pose.scheme,
       trim: this.pose.trim,
       squash: this.pose.squash,
+      stride: this.stride,
       hood: this.marks.hood,
       drawMs: this.drawMs,
       tinted: this.sprite.isTinted,

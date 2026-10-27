@@ -82,7 +82,14 @@ async function threePoses(page: Page): Promise<Crop[]> {
   await step(page, 40, '{ aimX: p.x + 300, aimY: p.y - 14 }');
   await cameraSettled(page, 20_000);
   const idle = await crop(page, 'idle');
-  await step(page, 9, '{ moveX: 1, aimX: p.x + 300, aimY: p.y - 14 }');
+  // Running: into a full stride, then on to a contact frame (the feet furthest apart), not a passing one.
+  await step(page, 8, '{ moveX: 1, aimX: p.x + 300, aimY: p.y - 14 }');
+  for (let t = 0; t < 20; t++) {
+    const phase = (await page.evaluate(() => window.__GAME__?.ui().player?.stride)) ?? 0;
+    const fromContact = ((phase % Math.PI) + Math.PI) % Math.PI;
+    if (fromContact < 0.35 || fromContact > Math.PI - 0.35) break;
+    await step(page, 1, '{ moveX: 1, aimX: p.x + 300, aimY: p.y - 14 }');
+  }
   const run = await crop(page, 'running');
   await step(page, 30, '{ aimX: p.x + 300, aimY: p.y - 14 }');
   await cameraSettled(page, 20_000);
@@ -174,6 +181,8 @@ test.describe('review screenshots (075)', () => {
         crops.push(await crop(page, `${label}, ${view}`, 56));
       }
     };
+    // Past the foundry door's fade, so the first crop isn't black.
+    await expect.poll(() => page.evaluate(() => window.__GAME__?.ui().camera.fading), { timeout: 20_000 }).toBe(false);
     await shoot('nothing worn');
     for (const [k, id] of ids.entries()) {
       await page.evaluate((pieceId) => window.__GAME__?.step(1, { equip: { id: pieceId } }), id);
