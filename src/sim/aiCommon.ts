@@ -2,7 +2,7 @@ import { TICK_RATE, VIEW_HEIGHT, VIEW_WIDTH } from '../data/config';
 import { attackOf, type BulwarkDef, type ConductorDef, type EnemyDef, type ForgewrightDef } from '../data/enemies';
 import { defOf } from './champions';
 import { unit } from './direction';
-import { arenaWaits } from './arenaWait';
+import { arenaWaits, inArenaWithPlayer } from './arenaWait';
 import { aggro, type EnemyState } from './enemies';
 import type { SimState } from './state';
 
@@ -10,8 +10,17 @@ import type { SimState } from './state';
 // wind-up → attack → recover cycle. The attack itself lands in each AI's file.
 
 /** True if the enemy's feet are inside the view-sized box centred on the player's feet. */
-export function inAggroBox(e: EnemyState, player: { x: number; y: number }): boolean {
+export function inAggroBox(e: Pick<EnemyState, 'x' | 'y'>, player: { x: number; y: number }): boolean {
   return Math.abs(e.x - player.x) <= VIEW_WIDTH / 2 && Math.abs(e.y - player.y) <= VIEW_HEIGHT / 2;
+}
+
+/**
+ * 073: an enemy starts an attack (any wind-up, a kiln-tender's heal beam too) only while it is on screen: in the
+ * player's room, inside the aggro box. Anything inside a boss arena with the player follows the boss rules and may
+ * start from anywhere in it (073.5). Held, an AI does what it does while its cooldown runs (073.2).
+ */
+export function mayStart(state: Pick<SimState, 'player' | 'roomId'>, e: Pick<EnemyState, 'x' | 'y' | 'roomId'>): boolean {
+  return e.roomId === state.roomId && (inAggroBox(e, state.player) || inArenaWithPlayer(state, e));
 }
 
 /** One tick's walk along (dx, dy), never past the target. */

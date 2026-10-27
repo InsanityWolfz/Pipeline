@@ -1,5 +1,5 @@
 import type { HoundDef } from '../data/emberworksEnemies';
-import { engage, enter, hold, inAggroBox, leash, startWindup, toward } from './aiCommon';
+import { engage, enter, hold, inAggroBox, leash, mayStart, startWindup, toward } from './aiCommon';
 import type { EnemyState } from './enemies';
 import { layPool } from './floodPools';
 import { laneRun } from './laneRun';
@@ -36,7 +36,8 @@ export function houndThink(state: SimState, e: EnemyState, def: HoundDef): [numb
   const dx = p.x - e.x;
   const dy = p.y - e.y;
   if (Math.hypot(dx, dy) > dash.triggerRange || e.roomId !== state.roomId || !clearGround(roomById(e.roomId), e.x, e.y, p.x, p.y)) return toward(dx, dy, def);
-  if (e.cooldown === 0) {
+  // 073: only on screen; held, it stands off as while its cooldown runs.
+  if (e.cooldown === 0 && mayStart(state, e)) {
     startWindup(e, def, dx, dy);
     e.spotX = e.x;
     e.spotY = e.y;
