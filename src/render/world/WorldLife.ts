@@ -19,7 +19,7 @@ import type { WorldLayer } from '../lighting/WorldLayer';
 import { moodAt } from '../lighting/mood';
 import type { Occluders } from '../occluders';
 import { showFrame } from '../vector/textures';
-import { DecorView } from './DecorView';
+import { DECOR_BUCKET, DecorView } from './DecorView';
 import { beadsInView } from './leyFlow';
 import { poolsInView, RippleModel } from './ripples';
 import { SwayStepper } from './sway';
@@ -160,14 +160,16 @@ export class WorldLife {
     this.shownWeather = NO_WEATHER;
   }
 
-  /** Shows the plants of the chunks the view (and a margin) touches, hides those it left: on a change only. */
+  /** The chunks the view (and a margin) touches, for its set pieces; and the plants' squares near it, shown (on a change only). */
   private showChunks(view: { x: number; y: number; width: number; height: number }): void {
     const m = SWAY.margin;
     const now = new Set<string>();
     for (let cy = Math.floor((view.y - m) / C); cy <= Math.floor((view.y + view.height + m) / C); cy++) for (let cx = Math.floor((view.x - m) / C); cx <= Math.floor((view.x + view.width + m) / C); cx++) now.add(`${cx},${cy}`);
-    for (const k of this.inView) if (!now.has(k)) this.decor.show(k, false);
-    for (const k of now) if (!this.inView.has(k) || this.decor.chunks.get(k)?.shown === false) this.decor.show(k, true);
     this.inView = now;
+    const B = DECOR_BUCKET;
+    const squares = new Set<string>();
+    for (let by = Math.floor((view.y - m) / B); by <= Math.floor((view.y + view.height + m) / B); by++) for (let bx = Math.floor((view.x - m) / B); bx <= Math.floor((view.x + view.width + m) / B); bx++) squares.add(`${bx},${by}`);
+    this.decor.showBuckets(squares);
   }
 
   /** Set pieces in view: their loops (held on the first frame on Low or with the world off) and their halos breathing. */
@@ -230,7 +232,7 @@ export class WorldLife {
     this.shownWorld = {
       off: this.off,
       quality,
-      chunks: [...this.decor.chunks.entries()].map(([key, c]) => ({ key, plants: c.plants, vines: c.vines.length, trees: c.trees, variants: c.variants, setPieces: c.pieces.map((p) => p.def.id), shown: c.layer.visible })),
+      chunks: [...this.decor.chunks.entries()].map(([key, c]) => ({ key, plants: c.plants, vines: c.vines.length, trees: c.trees, variants: c.variants, setPieces: c.pieces.map((p) => p.def.id), shown: this.decor.chunkShown(c) })),
       swayUpdated: step.updated,
       swayChunks: step.chunks,
       swaySample: step.sample,

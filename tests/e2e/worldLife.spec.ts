@@ -146,6 +146,10 @@ test('the same seed and commands give the same game on Low, on High and with the
     const state = await page.evaluate(async () => {
       const g = window.__GAME__;
       if (!g) throw new Error('no game');
+      // The real-time loop ran the sim while the page booted: take the clock, then start the commands at one fixed tick.
+      const at = g.step(0).tick;
+      if (at > 900) throw new Error(`booted too slowly: tick ${at}`);
+      g.step(900 - at);
       for (let t = 0; t < 240; t++) {
         g.step(1, { moveX: t < 120 ? 1 : -1, moveY: t % 60 < 30 ? 1 : 0, fire: t % 20 < 10, aimX: 3000, aimY: 3000 });
         if (t % 8 === 0) await new Promise((r) => requestAnimationFrame(r));

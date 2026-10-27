@@ -68,7 +68,8 @@ async function holdFire(page: Page, dx: number, dy: number): Promise<void> {
 async function interleave(page: Page, looks: readonly Look[], rounds: number, ms: number, refill: () => Promise<void>): Promise<Record<string, { mean: number; p95: number; ticksPerSecond: number }>> {
   const all: Window[] = [];
   for (let r = 0; r < rounds; r++) {
-    for (const l of looks) {
+    // Each round in the other order, so a slow drift on a shared machine doesn't favour the look measured first.
+    for (const l of r % 2 === 0 ? looks : [...looks].reverse()) {
       await refill();
       all.push(await measure(page, l, ms));
     }
@@ -103,7 +104,7 @@ test.describe('world life probe (077)', () => {
     await openWorld(page);
     await toRegion(page, 'stormcrown');
     await holdFire(page, 140, 0);
-    const ab = await interleave(page, ['off', 'low'], 6, 2500, keepPack(page, STORM_PACK));
+    const ab = await interleave(page, ['off', 'low'], 8, 2500, keepPack(page, STORM_PACK));
     const tiers = await interleave(page, ['low', 'medium', 'high'], 3, 2500, keepPack(page, STORM_PACK));
     await page.mouse.up({ button: 'right' });
     const report = { ab, tiers, frameRatio: (ab.low?.mean ?? 0) / (ab.off?.mean ?? 1), tickRatio: (ab.low?.ticksPerSecond ?? 0) / (ab.off?.ticksPerSecond ?? 1) };
@@ -118,7 +119,7 @@ test.describe('world life probe (077)', () => {
     await openWorld(page);
     await toSetPiece(page, 'fallen-colossus');
     await bannersGone(page);
-    const ab = await interleave(page, ['off', 'low'], 6, 2500, async () => undefined);
+    const ab = await interleave(page, ['off', 'low'], 8, 2500, async () => undefined);
     const tiers = await interleave(page, ['low', 'medium', 'high'], 3, 2500, async () => undefined);
     const report = { ab, tiers, frameRatio: (ab.low?.mean ?? 0) / (ab.off?.mean ?? 1), tickRatio: (ab.low?.ticksPerSecond ?? 0) / (ab.off?.ticksPerSecond ?? 1) };
     console.log('grove', JSON.stringify(report));

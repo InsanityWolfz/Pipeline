@@ -31,15 +31,18 @@ export interface PieceObjects {
 
 /** A built chunk's detail. */
 export interface ChunkDetail {
-  layer: GameObjects.Layer;
+  /** Its plants' layers, one per square of DECOR_BUCKET px (keys `bx,by`), so only the squares near the view draw. */
+  buckets: string[];
   plants: number;
   vines: GameObjects.Image[];
   pieces: PieceObjects[];
   trees: number;
   /** Solid tiles drawn as a ruin variant. */
   variants: number;
-  shown: boolean;
 }
+
+/** Plants are drawn in layers of squares this many px across (a chunk holds 16): only those near the view are shown. */
+export const DECOR_BUCKET = 160;
 
 /** A hash's share 0..1 and a period in a range, for a swaying thing's own beat. */
 const beat = (h: number, range: readonly [number, number]): number => range[0] + ((h >>> 3) % 1000) / 1000 * (range[1] - range[0]);
@@ -57,6 +60,9 @@ export class DecorView {
   /** `?world=off` / the hook: plants and vines aren't made, and existing ones hide. */
   off = false;
   private roomShown = false;
+  /** The plants' layers by square, and the squares shown now. */
+  private readonly layers = new Map<string, GameObjects.Layer>();
+  private visible = new Set<string>();
 
   constructor(scene: Scene, sway: SwayStepper, size: number, world?: WorldLayer, occluders?: Occluders) {
     this.scene = scene;
@@ -70,11 +76,15 @@ export class DecorView {
   build(room: Room, cx: number, cy: number): void {
     const key = `${cx},${cy}`;
     if (this.chunks.has(key)) return;
-    const layer = this.scene.add.layer().setDepth(DEPTHS.decor).setVisible(false);
+    const bucketKeys = new Set<string>();
     // With the world off (the probe's A/B), no plants or vines are made.
     const { plants, vines } = this.off ? { plants: [], vines: [] } : chunkDecor(room, cx, cy, this.size);
     for (const p of plants) {
       const image = addVector(this.scene, p.x, p.y, p.frame).setDepth(DEPTHS.decor).setFlipX(p.flip);
+      const b = `${Math.floor(p.x / DECOR_BUCKET)},${Math.floor(p.y / DECOR_BUCKET)}`;
+      let layer = this.layers.get(b);
+      if (!layer) this.layers.set(b, (layer = this.scene.add.layer().setDepth(DEPTHS.decor).setVisible(false)));
+      bucketKeys.add(b);
       layer.add(image);
       this.world?.addFlat(image);
       this.sway.add(key, { target: image, x: p.x, y: p.y, kind: p.sway, period: beat(Math.floor(p.phase * 997), SWAY.periodMs[p.sway]), phase: p.phase });
@@ -90,7 +100,7 @@ export class DecorView {
       const a = setPieceAnchor(p, T);
       return chunkOf(a.x, a.y - 1, this.size) === key;
     }).map((p) => this.piece(key, p));
-    this.chunks.set(key, { layer, plants: plants.length, vines: vineImages, pieces, trees: 0, variants: 0, shown: false });
+    this.chunks.set(key, { buckets: [...bucketKeys], plants: plants.length, vines: vineImages, pieces, trees: 0, variants: 0 });
   }
 
   /** A solid tile of a built chunk drawn as a ruin variant (for the test hook). */
@@ -138,29 +148,41 @@ export class DecorView {
     return { def, base, loop, sway, halos };
   }
 
-  /** Shows or hides a built chunk's plants as it comes into or leaves the view (on a change only; never while off). */
-  show(key: string, inView: boolean): void {
-    const c = this.chunks.get(key);
-    if (!c) return;
-    c.shown = inView;
-    c.layer.setVisible(inView && this.roomShown && !this.off);
+  /** Shows the plants' squares in `keys` (those near the view) and hides those that left it: the changes only. */
+  showBuckets(keys: ReadonlySet<string>): void {
+    for (const k of this.visible) if (!keys.has(k)) this.layers.get(k)?.setVisible(false);
+    const on = this.roomShown && !this.off;
+    for (const k of keys) {
+      const layer = this.layers.get(k);
+      if (layer && layer.visible !== on) layer.setVisible(on);
+    }
+    this.visible = new Set(keys);
   }
 
   /** The overworld shown or not (a room change): its set pieces and vines with it, as its standing sprites. */
   setRoomShown(on: boolean): void {
     this.roomShown = on;
-    for (const [key, c] of this.chunks) {
-      this.show(key, c.shown);
+    this.showBuckets(this.visible);
+    for (const c of this.chunks.values()) {
       for (const v of c.vines) v.setVisible(on && !this.off);
       for (const p of c.pieces) for (const o of [p.base, p.loop, p.sway, ...p.halos.map((h) => h.image)]) o?.setVisible(on);
     }
+  }
+
+  /** Whether any of a chunk's plant squares shows now. */
+  chunkShown(c: ChunkDetail): boolean {
+    return c.buckets.some((b) => this.layers.get(b)?.visible === true);
   }
 
   /** Destroys a dropped chunk's detail and forgets its swaying objects. */
   drop(key: string): void {
     const c = this.chunks.get(key);
     if (!c) return;
-    c.layer.destroy(true);
+    for (const b of c.buckets) {
+      this.layers.get(b)?.destroy(true);
+      this.layers.delete(b);
+      this.visible.delete(b);
+    }
     for (const v of c.vines) v.destroy();
     for (const p of c.pieces) for (const o of [p.base, p.loop, p.sway, ...p.halos.map((h) => h.image)]) o?.destroy();
     this.chunks.delete(key);
