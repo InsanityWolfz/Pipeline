@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { LIGHT_CATCH } from '../../src/data/lights';
-import { catchAt, falloff } from '../../src/render/lighting/lightCatch';
+import { catchAt, falloff, lightsFor } from '../../src/render/lighting/lightCatch';
 import { hexToRgb, paletteHex } from '../../src/data/palette';
 
 const colorOf = (id: string): number => {
@@ -39,5 +39,14 @@ describe('the light catch (074)', () => {
     expect(two?.color).toBe(colorOf('cyan'));
     expect(three?.color).toBe(colorOf('cyan'));
     expect(three?.alpha).toBeCloseTo(two?.alpha ?? 0, 5);
+  });
+});
+
+describe('whose lights catch on whom (074 review)', () => {
+  it('leaves the wanderer’s own face glow out of the wanderer’s catch, and keeps it for everyone else', () => {
+    const lights = [{ ...light(0), source: 'face' }, { ...light(10, 'cinder'), source: 'fire' }];
+    expect(lightsFor('player', lights).map((l) => l.source)).toEqual(['fire']);
+    expect(lightsFor('enemy', lights).map((l) => l.source)).toEqual(['face', 'fire']);
+    expect(lightsFor('item', lights)).toHaveLength(2);
   });
 });

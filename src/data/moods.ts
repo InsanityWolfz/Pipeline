@@ -79,9 +79,10 @@ export const MOOD_EDGES: readonly { readonly radius: number; readonly inner: Rin
 
 /**
  * Lightning's flash (Stormcrown): a rod struck or the Conductor's strikes landing lift the ambient toward `color` at
- * `darkness` for `holdMs`, then it eases back over `easeMs`. With Flashes off (042.10) there is none.
+ * `darkness` for `holdMs`, then it eases back over `easeMs`. With Flashes off (042.10) there is none. Tinted props and
+ * ground take the flash in `steps` steps (so the props' tint is set again a few times a strike, not every frame).
  */
-export const LIGHTNING_FLASH = { color: 'storm-pale', darkness: 0.3, holdMs: 120, easeMs: 400 } as const;
+export const LIGHTNING_FLASH = { color: 'storm-pale', darkness: 0.3, holdMs: 120, easeMs: 400, steps: 4 } as const;
 
 /**
  * The fog (074): a tileable texture `size` px square of soft wisps (two octaves of value noise on `cells` lattices,

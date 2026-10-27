@@ -1,6 +1,6 @@
 import { BlendModes, type GameObjects, type Scene } from 'phaser';
 import type { Quality } from '../../data/settings';
-import { catchAt, type PlacedLight } from './lightCatch';
+import { catchAt, lightsFor, type PlacedLight } from './lightCatch';
 
 // 074: the light catch. The readability layer (enemies, the player, ground items) is never darkened by a mood; lights
 // reach it only as this: an additive copy of its frame in the light's colour, at most 0.35 alpha, just in front of it.
@@ -25,6 +25,7 @@ export class CatchView {
   private readonly pool: GameObjects.Image[] = [];
   private used = 0;
   private lights: readonly PlacedLight[] = [];
+  private playerLights: readonly PlacedLight[] = [];
   private quality: Quality = 'low';
   private view: View = { x: 0, y: 0, width: 0, height: 0 };
   shown: CatchShown[] = [];
@@ -36,6 +37,7 @@ export class CatchView {
   /** Starts a frame's catches from the lights placed now. */
   begin(lights: readonly PlacedLight[], quality: Quality, view: View): void {
     this.lights = lights;
+    this.playerLights = lightsFor('player', lights);
     this.quality = quality;
     this.view = view;
     this.used = 0;
@@ -47,7 +49,7 @@ export class CatchView {
     if (this.lights.length === 0 || !sprite.visible || sprite.alpha <= 0) return;
     const v = this.view;
     if (x < v.x - PAD || x > v.x + v.width + PAD || y < v.y - PAD || y > v.y + v.height + PAD) return;
-    const c = catchAt(x, y, this.lights, this.quality);
+    const c = catchAt(x, y, kind === 'player' ? this.playerLights : this.lights, this.quality);
     if (!c) return;
     let copy = this.pool[this.used];
     if (!copy) {

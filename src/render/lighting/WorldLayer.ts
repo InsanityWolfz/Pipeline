@@ -26,6 +26,8 @@ export class WorldLayer {
   /** The overworld's ground chunks, lit only where a light reaches (`lightChunks`). */
   private readonly chunks = new Set<GameObjects.Image>();
   private chunksLit = 0;
+  /** The tint the chunks no light reaches carry now (the ambient, a lightning flash included), for the test hook. */
+  groundTint: number | null = null;
   private look: WorldLook = NO_LOOK;
   /** How many times the look was set over the registry (for tests: it changes only on a change). */
   applied = 0;
@@ -49,12 +51,13 @@ export class WorldLayer {
    */
   lightChunks(lights: readonly { x: number; y: number; radius: number }[], tint: number | null, view: { x: number; y: number; width: number; height: number }): void {
     let lit = 0;
+    this.groundTint = tint;
     for (const c of this.chunks) {
       // Off screen, it isn't drawn: it keeps its last look until it comes into view.
       if (c.x > view.x + view.width || c.x + c.displayWidth < view.x || c.y > view.y + view.height || c.y + c.displayHeight < view.y) continue;
       const reached = this.look.litGround && lights.some((l) => l.x + l.radius > c.x && l.x - l.radius < c.x + c.displayWidth && l.y + l.radius > c.y && l.y - l.radius < c.y + c.displayHeight);
       if (reached) lit += 1;
-      paint(c, reached, this.look.litGround ? tint : this.look.tint);
+      paint(c, reached, tint);
     }
     this.chunksLit = lit;
   }

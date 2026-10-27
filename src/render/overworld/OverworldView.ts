@@ -29,6 +29,9 @@ import type { WorldLayer } from '../lighting/WorldLayer';
 const T = TILE_SIZE;
 
 /** 074: `?blend=off` (dev only) bakes the ground without its blending, to measure what blending costs a chunk. */
+/** 074: how many chunk bake times are kept for the probe. */
+const BAKE_KEPT = 64;
+
 const BLEND = !(import.meta.env.DEV && typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('blend') === 'off');
 
 const { safe: SAFE } = SITE_LOOK;
@@ -48,7 +51,7 @@ export class OverworldView {
   private room: Room | null = null;
   private shown = false;
   private claims = '';
-  /** 074: each chunk's ground bake time, ms, for the probe. */
+  /** 074: the last BAKE_KEPT chunks' ground bake times, ms, for the probe. */
   readonly bakeMs: number[] = [];
 
   private readonly occluders: Occluders | undefined;
@@ -153,6 +156,7 @@ export class OverworldView {
       const started = performance.now();
       drawGround(c, room, x0, y0, w, h, scale, BLEND);
       this.bakeMs.push(performance.now() - started);
+      if (this.bakeMs.length > BAKE_KEPT) this.bakeMs.shift();
       tex.refresh();
     }
     const objects: GameObjects.Image[] = this.groundTiles(key, x0, y0, w, h, scale);

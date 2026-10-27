@@ -44,7 +44,7 @@ const PAD = 96;
 const near = (v: View, x: number, y: number, pad = PAD): boolean => x >= v.x - pad && x <= v.x + v.width + pad && y >= v.y - pad && y <= v.y + v.height + pad;
 
 /** Today's glow breathing (014), 0..1, for a light's intensity. */
-const breathe = (time: number, i: number): number => (((Math.sin((time / AMBIENT.glowBreatheMs) * Math.PI * 2) + 1) / 2 + i * AMBIENT.glowStagger) % 1);
+const breathe = (time: number, i: number): number => (Math.sin((time / AMBIENT.glowBreatheMs + i * AMBIENT.glowStagger) * Math.PI * 2) + 1) / 2;
 
 /** A fire's ±flicker (two waves, so it doesn't pulse evenly), within ±`flicker`. */
 const flicker = (time: number, seed: number): number => 1 + S.fire.flicker * (0.6 * Math.sin((time / 1000) * S.fire.flickerHz * Math.PI * 2 + seed) + 0.4 * Math.sin((time / 1000) * S.fire.flickerHz * 2.3 * Math.PI * 2 + seed * 1.7));
