@@ -90,37 +90,3 @@ export interface EnemyRigDef {
    */
   readonly tells?: Readonly<Partial<Record<EnemyPoseName, { readonly part: string | Readonly<Record<'side' | 'down' | 'up', string>>; readonly at: Readonly<Record<'side' | 'down' | 'up', readonly [number, number]>> }>>>;
 }
-
-/**
- * 076: a strip from a wind-up drawn before the art pass, its pose standing for all three phases (slice B's rigs until
- * their redraw): gather and peak repeat the first and last coil frames.
- */
-export function legacyStrip(coil: readonly EnemyPose[]): EnemyPose[] {
-  const first = coil[0] ?? {};
-  return [first, ...coil, coil[coil.length - 1] ?? first];
-}
-
-/** 076: a stagger from a hit pose drawn before the art pass: pushed further back, then the hit itself. */
-export function legacyStagger(hit: EnemyPose): EnemyPose[] {
-  return [{ ...hit, lean: (hit.lean ?? 0) * 1.8 - 0.1, bob: (hit.bob ?? 0) + 1, squash: 0.06 }, hit];
-}
-
-
-/** The bosses' attack strips besides `windup` (076). */
-const STRIP_EXTRAS: readonly EnemyPoseName[] = ['lob', 'brace', 'spray', 'flood', 'call', 'chain'];
-
-/**
- * 076: a rig drawn before the art pass, given the pass's frames from its own poses (slice B's rigs until their
- * redraw): its wind-ups as strips, a stagger from its hit, and a struck death thrown back off its hit.
- */
-export function legacyRig(rig: EnemyRigDef): EnemyRigDef {
-  const poses: Partial<Record<EnemyPoseName, readonly EnemyPose[]>> = { ...rig.poses };
-  for (const name of ['windup', ...STRIP_EXTRAS] as const) {
-    const p = rig.poses[name];
-    if (p) poses[name] = legacyStrip(p);
-  }
-  const hit = rig.poses.hit?.[0] ?? {};
-  poses.stagger = legacyStagger(hit);
-  poses.death = [{ ...hit, lean: (hit.lean ?? 0) - 0.3, squash: -0.1, glow: 0.4 }];
-  return { ...rig, poses };
-}

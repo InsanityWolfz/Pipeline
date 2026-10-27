@@ -13,14 +13,12 @@ import { posedPoint } from '../../src/render/vector/enemyPose';
 const VIEWS = ['side', 'down', 'up'] as const;
 const MIN = 4;
 const BOSS_MIN = 6;
-/** Rigs redrawn by 076 so far, which carry their tells. The Burrower's wind-up is underground (its ripple's). */
-const REDRAWN = ['husk', 'wisp', 'warden', 'charger', 'burrower', 'shardback', 'sniper', 'bulwark', 'cinder-mote', 'bellows-hound', 'slag-golem', 'slag-whelp', 'kiln-tender', 'forgewright'];
-/** Its wind-up is spent underground: the ripple's phases are its tell. */
+/** The Burrower's wind-up is spent underground: its ripple's phases are its tell (hollowsEnemyArt.ts). */
 const UNDERGROUND = ['burrower'];
 const bossRig = (id: string): boolean => Object.values(ENEMIES).some((d) => d.anims === id && d.boss);
 
 describe('wind-up tells (076)', () => {
-  for (const rig of ENEMY_RIGS.filter((r) => REDRAWN.includes(r.id) && !UNDERGROUND.includes(r.id))) {
+  for (const rig of ENEMY_RIGS.filter((r) => !UNDERGROUND.includes(r.id))) {
     it(`${rig.id}: coil and peak move the attack part clear of idle in every view`, () => {
       const idle = rig.poses.idle?.[0] ?? {};
       const strips = WINDUP_STRIPS.filter((p) => rig.poses[p]);
@@ -47,8 +45,8 @@ describe('wind-up tells (076)', () => {
 });
 
 describe('frame boxes (076)', () => {
-  it('hold every pose of every redrawn rig, in every view', () => {
-    for (const rig of ENEMY_RIGS.filter((r) => REDRAWN.includes(r.id))) {
+  it('hold every pose of every rig, in every view', () => {
+    for (const rig of ENEMY_RIGS) {
       const [w, h] = rig.box.size;
       const [ax, ay] = rig.box.anchor;
       for (const [name, poses] of Object.entries(rig.poses)) {

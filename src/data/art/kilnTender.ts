@@ -1,6 +1,6 @@
 import type { EnemyPart, EnemyRigDef } from './enemyRig';
 import { BRASS, cinderSeam, litRect, rimOf, rivets, soot } from './enemyLook';
-import { ellipse, line, path, rect, solid } from './types';
+import { ellipse, line, path, rect } from './types';
 
 // The kiln-tender (061, draft for Shaun's review): a small domed kiln of the old builders on three spindly iron legs,
 // fired-clay brick banded in brass, its firebox mouth glowing, a ley-cyan rune on its band (the builders' work), and a
