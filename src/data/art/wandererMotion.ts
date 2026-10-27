@@ -22,8 +22,14 @@ export const WANDERER_MOTION = {
     /** The stride eases in over this many frames as a move starts. */
     startFrames: 5,
   },
-  /** The cape trails to `run` radians at full speed, plus a flap; its tails swing `tail` of that a quarter cycle behind; the hood's tail `hood`. */
-  cape: { run: 0.35, flap: 0.07, tail: 0.6, hood: 0.7 },
+  /**
+   * The cape trails to `run` radians at full speed, plus a flap; its tails swing `tail` of the flap a quarter cycle
+   * behind and `tailTrail` of the trail; the hood's tail `hood` of the flap and `hoodTrail` of the trail. Strafing, the
+   * cape trails `strafeTrail` as far and flaps in the shot's wind at `wind` radians a ms.
+   */
+  cape: { run: 0.35, flap: 0.07, tail: 0.6, hood: 0.7, tailTrail: 0.18, hoodTrail: 0.5, strafeTrail: 0.4, wind: 0.02 },
+  /** The skirt's flaps swing `share` of the angle to their foot, over `reach` px down from the hip. */
+  skirt: { share: 0.5, reach: 20 },
   /** The tank rides this far up and down a quarter of the bob's cycle behind the body, squashing as it lands. */
   tank: { bob: 1.2, squash: 0.08 },
   /** Moving while firing: a braced strafe at this share of the stride and bob, stepping twice as often so the feet stay planted. */
@@ -66,15 +72,29 @@ export const WANDERER_MOTION = {
     /** Side on, the body curls this far forward over the tucked legs, and the somersault turns about this height above the feet. */
     curl: 0.9,
     centre: 17,
+    /** The landing's squash eases out over this many frames. */
+    landRecover: 1.5,
+    /** Tucked, the feet pull up this high, in under the hips (`inward` toward the centre, `forward` along the roll). */
+    feet: { lift: 8, inward: 2, forward: 2 },
+    /** Tucked side on, the tube turns to point this way (radians) and slides this far back into the chest. */
+    tubeAim: -1.6,
+    tubeSlide: 7,
+    /** The cape and hood tail through the somersault (`tail` at its height), and wrapping round the tumble (`sway` and `tail` per radian of wobble). */
+    somersault: { cape: 0.15, tail: 0.5, hood: 0.6 },
+    tumbleCape: { cape: 0.5, sway: -1.4, tail: 1.2 },
   },
   hit: {
-    /** The first frame snaps back this far (away from the aim) and squashes, then recovers with an overshoot over `frames`. */
-    frames: 8,
+    /**
+     * The first frame snaps back this far (away from the aim) and squashes, then recovers with an overshoot over the
+     * sim's hit pose ticks (PLAYER_HIT_FX.poseTicks), its wave's half period `swing` of them.
+     */
     lean: 0.35,
+    swing: 0.75,
     squash: 0.12,
     push: -2,
-    /** The cape and hood tail flick forward this far. */
+    /** The cape and hood tail flick forward this far (the hood's tail `hoodFlick` times as far). */
     flick: 0.45,
+    hoodFlick: 1.4,
     /** The face glow dips to this for this many frames. */
     glow: 0.4,
     glowFrames: 4,
@@ -92,7 +112,19 @@ export const WANDERER_MOTION = {
     kneelLean: -0.15,
     land: 0.15,
     settleFrames: 6,
-    /** The fall turns about the kneeling hip; the dropped tube lands this far in front of the feet. */
+    /** The landing's bounce: its squash's cosine runs this fast through the settle. */
+    bounce: 1.4,
+    /** Kneeling: the back foot behind (its toe tilted down), the front foot planted ahead. */
+    kneelFeet: { far: { x: -7, y: 0, tilt: -0.6 }, near: { x: 6, y: 0, tilt: 0 } },
+    /** Lying: the feet out from the hip, the legs this share of straight. */
+    lieFeet: { far: 0.5, near: 2, straight: 0.98 },
+    /** The glow dims by this share by the fall, then gutters, `low` on the second half of every `period` frames. */
+    glowDim: 0.35,
+    gutter: { period: 4, low: 0.25 },
+    /** The cape: blown forward by the stagger, back by the fall; its tails and the hood's tail by the fall. */
+    cape: { stagger: 0.25, fall: -0.2, tail: -0.3, hood: -0.4 },
+    /** The fall turns about the kneeling hip; the tube drops `after` frames into the fall, over `frames`, to lie this far in front of the feet. */
+    tubeDrop: { after: 4, frames: 8 },
     tubeAt: [2, 5],
     tubeAngle: 0.15,
   },
@@ -107,4 +139,9 @@ export const WANDERER_MOTION = {
   },
   /** The punch and the tube jab (023): a stretch on the thrust. */
   jabStretch: 0.06,
+  /** The bubble rises this share of the flow's travel. */
+  bubbleRise: 0.3,
+  /** The clocks count at most this many ticks at once (a long stall), and a frame's move feeds the stride at most this far, world px (a door or a respawn). */
+  maxTicks: 10,
+  maxStep: 20,
 } as const;

@@ -95,6 +95,6 @@ export function sideView(L: WandererLook): WandererViewDef {
     hose: { from: [-7.8, -6.6], clip: [-1.4, -2.4], sag: [1, 5] },
     window: { lit: 'window-lit', dormant: 'window-dormant', bubble: rect(-12.2, -16.8, 4, 2.2, 1, flat('cyan-glow')), rise: 6.4 },
     glow: faceGlow(6.2, -29.8, 4.4, 5.8),
-    feet: 4,
+    sleeves: { near: C.dark, far: C.dark },
   };
 }

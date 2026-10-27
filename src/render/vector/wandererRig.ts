@@ -80,9 +80,10 @@ export function drawWanderer(c: CanvasRenderingContext2D, pose: WandererPose, px
   const tankParts = new Set(def.tankParts);
 
   // The tube, rigid in the feet's frame: held at the hip (tucked in to the chest for a roll), or lying where it dropped.
-  const tuckAim = pose.view === 'side' ? -1.6 : pose.aim;
+  const RL = WANDERER_MOTION.roll;
+  const tuckAim = pose.view === 'side' ? RL.tubeAim : pose.aim;
   const aim = pose.aim + (tuckAim - pose.aim) * pose.tuck;
-  const slide = pose.kick - pose.jab * WANDERER.rig.jab.thrust + 7 * pose.tuck;
+  const slide = pose.kick - pose.jab * WANDERER.rig.jab.thrust + RL.tubeSlide * pose.tuck;
   const heldAt = apply(torso, [def.gunPivot[0] + Math.cos(aim) * -slide, def.gunPivot[1] + Math.sin(aim) * -slide]);
   const heldAngle = angleOf(torso) + aim;
   const K = WANDERER_MOTION.ko;
@@ -135,7 +136,7 @@ export function drawWanderer(c: CanvasRenderingContext2D, pose: WandererPose, px
           const reach = WANDERER.rig.jab.fist;
           hand = [hand[0] + (shoulder[0] + Math.cos(pose.aim) * reach - hand[0]) * pose.jab, hand[1] + (shoulder[1] + Math.sin(pose.aim) * reach - hand[1]) * pose.jab];
         }
-        inFrame(torso, () => drawArm(c, pose.view, shoulder, hand, near || def.matchedArms === true, o));
+        inFrame(torso, () => drawArm(c, pose.view, shoulder, hand, near || def.matchedArms === true, near ? def.sleeves.near : def.sleeves.far, o));
         break;
       }
       case '@window':
@@ -149,7 +150,7 @@ export function drawWanderer(c: CanvasRenderingContext2D, pose: WandererPose, px
       case '@bubble':
         if (pose.hasTube && def.window && lit) {
           const w = def.window;
-          inFrame(mul(tank, translate(0, -(pose.flow * 0.3) % w.rise)), () => drawShape(c, w.bubble, o));
+          inFrame(mul(tank, translate(0, -(pose.flow * WANDERER_MOTION.bubbleRise) % w.rise)), () => drawShape(c, w.bubble, o));
         }
         break;
       case '@glow':

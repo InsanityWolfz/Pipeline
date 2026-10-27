@@ -4,7 +4,6 @@ import { DAYLIGHT_PALETTE } from '../../src/data/palette';
 import { inksOf, type LimbStyle, type Shape } from '../../src/data/art/types';
 import { TUBE_PARTS, WANDERER, WANDERER_SCHEME, WANDERER_SCHEMES, WANDERER_TRIM, WANDERER_TRIM_FX, wandererViews, type WandererSchemeId } from '../../src/data/art/wanderer';
 import { WANDERER_MOTION } from '../../src/data/art/wandererMotion';
-import { PLAYER_HIT_FX } from '../../src/data/assets';
 import { DYING_TICKS, ROLL_TICKS } from '../../src/data/player';
 
 // 075: the arcane ranger's data: schemes, trim and motion numbers, every colour in the palette.
@@ -72,7 +71,7 @@ describe('the rarity trim (075)', () => {
 
 describe('the arcane ranger\'s colours (075)', () => {
   it('come only from the palette, in every scheme and trim', () => {
-    const fixed: Shape[] = [...Object.values(WANDERER.boot), WANDERER.hand, WANDERER.rivet, ...TUBE_PARTS.flash.frames.flat(), ...TUBE_PARTS.housing];
+    const fixed: Shape[] = [...Object.values(WANDERER.boot), WANDERER.hand, WANDERER.rivet, WANDERER.shoulderCap, ...TUBE_PARTS.flash.frames.flat(), ...TUBE_PARTS.housing];
     const used = [
       ...SCHEMES.flatMap((s) =>
         TRIMS.flatMap((t) =>
@@ -100,10 +99,20 @@ describe('the arcane ranger\'s colours (075)', () => {
   });
 });
 
+describe('the sleeves (075.2)', () => {
+  it('are the cape\'s dark tone in every scheme, not a pale bar, with a bone cap at each shoulder', () => {
+    for (const s of SCHEMES)
+      for (const [name, v] of Object.entries(wandererViews(s, null))) {
+        expect(v.sleeves, `${s}/${name}`).toEqual({ near: WANDERER_SCHEMES[s].cloth.dark, far: WANDERER_SCHEMES[s].cloth.dark });
+        expect(v.sleeves.near).not.toBe('robe');
+      }
+    expect(inksOf(WANDERER.shoulderCap)[0]).toBe('robe');
+  });
+});
+
 describe('the wanderer motion numbers (075)', () => {
   it('match the sim\'s own timings and the spec\'s starting values', () => {
     const M = WANDERER_MOTION;
-    expect(M.hit.frames).toBe(PLAYER_HIT_FX.poseTicks);
     expect(M.roll.turnEnd).toBeLessThan(ROLL_TICKS);
     expect(M.ko.out).toBeLessThan(DYING_TICKS);
     expect(M.ko.flat).toBe(36);

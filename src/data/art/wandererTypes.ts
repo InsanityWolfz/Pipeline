@@ -65,8 +65,8 @@ export interface WandererViewDef {
   readonly window?: { readonly lit: string; readonly dormant: string; readonly bubble: Shape; readonly rise: number };
   /** The face glow, or none (seen from behind). */
   readonly glow?: Shape;
-  /** Feet sit this far either side of the centre at rest; side views stride along x, the others lift in turn. */
-  readonly feet: number;
+  /** 075.2: the upper arms' sleeves, near and far: the cape's dark tone, so the near arm doesn't read as a pale bar. */
+  readonly sleeves: { readonly near: string; readonly far: string };
   /** 050 (A.1): both arms alike, the far one mirrored, so facing forward they match. */
   readonly matchedArms?: boolean;
 }

@@ -60,7 +60,7 @@ export class PlayerClocks {
     const heavy = i.hasTube && tube.firing;
     const moving = !rolling && Math.hypot(p.vx, p.vy) >= IDLE_SPEED;
     const fresh = tick !== this.lastTick;
-    const ticks = this.lastTick < 0 ? 1 : Math.max(0, Math.min(10, tick - this.lastTick));
+    const ticks = this.lastTick < 0 ? 1 : Math.max(0, Math.min(M.maxTicks, tick - this.lastTick));
     this.lastTick = tick;
     if (moving && this.movingSince === null) this.movingSince = tick;
     if (!moving && this.movingSince !== null) {
@@ -82,7 +82,7 @@ export class PlayerClocks {
     }
     // Side on, walking against the facing strides backward.
     const back = i.facing === 'left' ? p.vx > 0 : i.facing === 'right' ? p.vx < 0 : false;
-    if (moving) this.stride += Math.min(i.moved, 20) * strideRate(heavy) * (back ? -1 : 1);
+    if (moving) this.stride += Math.min(i.moved, M.maxStep) * strideRate(heavy) * (back ? -1 : 1);
     this.flow += i.dtMs * (heavy ? FEEL.flow.firing : FEEL.flow.idle);
     const view: WandererView = i.facing === 'up' || i.facing === 'down' ? i.facing : 'side';
     return {

@@ -1,5 +1,6 @@
 import type { WandererView } from '../../data/art/wanderer';
 import { WANDERER, WANDERER_FEEL } from '../../data/art/wanderer';
+import { ROLL_TICKS } from '../../data/player';
 import { WANDERER_MOTION } from '../../data/art/wandererMotion';
 import type { WandererPose } from './wandererPose';
 
@@ -12,6 +13,8 @@ const TAU = Math.PI * 2;
 
 export type Overlay = Partial<WandererPose>;
 
+type Foot = { readonly x: number; readonly y: number; readonly tilt: number };
+
 const clamp01 = (v: number): number => Math.max(0, Math.min(1, v));
 const smooth = (v: number): number => {
   const t = clamp01(v);
@@ -19,22 +22,24 @@ const smooth = (v: number): number => {
 };
 
 /**
- * The roll at its tick `r` (1..18): frames 1–2 tuck, 3–15 turn, 16–18 land and stretch back out. Side on it's a
+ * The roll at its tick `r` (1..ROLL_TICKS): frames 1–2 tuck, 3–15 turn, the rest land and stretch back out. Side on it's a
  * full forward somersault about the tucked body's centre; facing down or up a tucked tumble, wobbling, the cape
  * wrapping round.
  */
 export function rollPose(r: number, view: WandererView, base: WandererPose): Overlay {
   const RL = M.roll;
-  const tuck = r <= RL.tuckEnd ? r / RL.tuckEnd : r <= RL.turnEnd ? 1 : clamp01((18 - r) / 3);
+  const tuck = r <= RL.tuckEnd ? r / RL.tuckEnd : r <= RL.turnEnd ? 1 : clamp01((ROLL_TICKS - r) / (ROLL_TICKS - RL.turnEnd));
   const turning = clamp01((r - RL.tuckEnd - 1) / (RL.turnEnd - RL.tuckEnd - 1));
   const landing = r > RL.turnEnd ? r - RL.turnEnd : 0;
-  const squash = landing > 0 ? RL.land * (1 - (landing - 1) / 1.5) : r <= RL.tuckEnd ? RL.tuck * tuck : view === 'side' ? RL.tuck : RL.tumble;
+  const squash = landing > 0 ? RL.land * (1 - (landing - 1) / RL.landRecover) : r <= RL.tuckEnd ? RL.tuck * tuck : view === 'side' ? RL.tuck : RL.tumble;
   // The feet pull up under the hips as it tucks.
-  const pulled = (x: number) => ({ x: x * (1 - tuck) + (Math.sign(x || 1) * 2 + 2) * tuck, y: -8 * tuck, tilt: 0 });
+  const F = RL.feet;
+  const pulled = (x: number) => ({ x: x * (1 - tuck) + (Math.sign(x || 1) * F.inward + F.forward) * tuck, y: -F.lift * tuck, tilt: 0 });
   const feet = { far: pulled(base.feet.far.x), near: pulled(base.feet.near.x) };
   const common: Overlay = { tuck, crouch: RL.crouch * tuck, squash, feet, kick: 0, flash: null, shimmer: base.shimmer, jab: 0 };
   if (view === 'side') {
-    return { ...common, lean: RL.curl * tuck, turn: TAU * turning, turnAt: RL.centre, cape: { trail: 0.15 * tuck, sway: 0, tail: 0.5 * Math.sin(Math.PI * turning) }, hoodTail: 0.6 * tuck };
+    const SO = RL.somersault;
+    return { ...common, lean: RL.curl * tuck, turn: TAU * turning, turnAt: RL.centre, cape: { trail: SO.cape * tuck, sway: 0, tail: SO.tail * Math.sin(Math.PI * turning) }, hoodTail: SO.hood * tuck };
   }
   const wobble = RL.wobble * Math.sin(TAU * turning) * tuck;
   return {
@@ -42,7 +47,7 @@ export function rollPose(r: number, view: WandererView, base: WandererPose): Ove
     lean: 0,
     turn: wobble,
     turnAt: RL.centre,
-    cape: { trail: 0.5 * tuck, sway: -wobble * 1.4, tail: wobble * 1.2 },
+    cape: { trail: RL.tumbleCape.cape * tuck, sway: RL.tumbleCape.sway * wobble, tail: RL.tumbleCape.tail * wobble },
     hoodTail: wobble,
   };
 }
@@ -59,21 +64,22 @@ export function koPose(k: number, base: WandererPose): Overlay {
   const fallT = clamp01((k - K.kneel) / (K.flat - K.kneel));
   const fall = fallT * fallT;
   const sinceFlat = k - K.flat;
-  const land = sinceFlat >= 0 && sinceFlat < K.settleFrames ? K.land * Math.cos((Math.PI / 2) * (sinceFlat / K.settleFrames) * 1.4) * (1 - sinceFlat / K.settleFrames) : 0;
+  const land = sinceFlat >= 0 && sinceFlat < K.settleFrames ? K.land * Math.cos((Math.PI / 2) * (sinceFlat / K.settleFrames) * K.bounce) * (1 - sinceFlat / K.settleFrames) : 0;
   const lean = (K.lean * stagger + (K.kneelLean - K.lean) * kneel) * (1 - fall);
   const crouch = K.kneelCrouch * kneel;
   const hipY = WANDERER.hipHeight - crouch;
   // Kneeling: the front foot planted ahead, the back knee down behind; falling, the legs straighten out from the hip.
-  const kneelFeet = { far: { x: -7, y: 0, tilt: -0.6 }, near: { x: 6, y: 0, tilt: 0 } };
-  const reach = -hipY + (R.thigh + R.shin) * 0.98 - R.ankle;
-  const lying = { far: { x: 0.5, y: reach, tilt: 0 }, near: { x: 2, y: reach, tilt: 0 } };
-  const mix = (a: { x: number; y: number; tilt: number }, b: { x: number; y: number; tilt: number }, f: number, start: { x: number; y: number; tilt: number }) => {
+  const kneelFeet = K.kneelFeet;
+  const reach = -hipY + (R.thigh + R.shin) * K.lieFeet.straight - R.ankle;
+  const lying = { far: { x: K.lieFeet.far, y: reach, tilt: 0 }, near: { x: K.lieFeet.near, y: reach, tilt: 0 } };
+  const mix = (a: Foot, b: Foot, f: number, start: Foot) => {
     const ax = start.x + (a.x - start.x) * kneel;
     const ay = start.y + (a.y - start.y) * kneel;
     return { x: ax + (b.x - ax) * f, y: ay + (b.y - ay) * f, tilt: a.tilt * (1 - f) };
   };
-  let glow = base.glow * (1 - 0.35 * clamp01(k / K.flat));
-  if (k >= K.flat) glow = k >= K.out ? 0 : WANDERER_FEEL.glow.rest * (1 - (k - K.flat) / (K.out - K.flat)) * (k % 4 < 2 ? 1 : 0.25);
+  let glow = base.glow * (1 - K.glowDim * clamp01(k / K.flat));
+  const G = K.gutter;
+  if (k >= K.flat) glow = k >= K.out ? 0 : WANDERER_FEEL.glow.rest * (1 - (k - K.flat) / (K.out - K.flat)) * (k % G.period < G.period / 2 ? 1 : G.low);
   return {
     view: 'side',
     lean,
@@ -87,9 +93,9 @@ export function koPose(k: number, base: WandererPose): Overlay {
     // Turned side on from facing down or up, the tube comes level first.
     aim: (base.view === 'side' ? base.aim : 0) + K.dip * stagger,
     kick: 0,
-    cape: { trail: -0.2 * fall + 0.25 * stagger, sway: 0, tail: -0.3 * fall },
-    hoodTail: -0.4 * fall,
-    tubeDrop: smooth((k - K.kneel - 4) / 8),
+    cape: { trail: K.cape.fall * fall + K.cape.stagger * stagger, sway: 0, tail: K.cape.tail * fall },
+    hoodTail: K.cape.hood * fall,
+    tubeDrop: smooth((k - K.kneel - K.tubeDrop.after) / K.tubeDrop.frames),
     flash: null,
     pulses: [],
     jab: 0,

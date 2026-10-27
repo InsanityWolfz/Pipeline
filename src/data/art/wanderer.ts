@@ -45,8 +45,9 @@ export const WANDERER = {
     /** The boot's shaft runs this far up the shin from the ankle; its folded cuff is this long. */
     bootShaft: 5.2,
     cuff: 1.5,
-    /** 075: the arms' two segments, shoulder to elbow and elbow to wrist. */
+    /** 075: the arms' two segments, shoulder to elbow and elbow to wrist, and the sleeves' widths (near, far). */
     upperArm: 8,
+    sleeveWidth: { near: 4, far: 3.8 },
     forearm: 8.4,
     /** Empty-handed, the hands hang this far from the shoulders. */
     restHand: { far: [-1, 13], near: [1, 14] },
@@ -62,8 +63,6 @@ export const WANDERER = {
     legNear: { width: 4.6, color: 'iron-dark', outline: true },
     /** The wrap below the knee. */
     wrap: { width: 4.9, color: 'leather', outline: false },
-    sleeveFar: { width: 3.8, color: 'bone-dark', outline: true },
-    sleeveNear: { width: 4, color: 'robe', outline: true },
     bracerFar: { width: 4.2, color: 'leather-dark', outline: true },
     bracerNear: { width: 4.4, color: 'leather', outline: true },
     /** The bracer's etched line. */
@@ -84,6 +83,8 @@ export const WANDERER = {
   /** A fingerless glove, and the bracer's brass rivet. */
   hand: ellipse(0, 0, 2.3, 2.3, { fill: 'leather-dark', outline: true }),
   rivet: ellipse(0, 0, 0.8, 0.8, { fill: 'brass' }),
+  /** 075.2: the bone (`robe`) undersleeve showing at the top of each shoulder, over the cape-dark sleeve. */
+  shoulderCap: ellipse(0, -0.4, 1.8, 1.5, { fill: 'robe', outline: true }),
 } as const;
 
 /**

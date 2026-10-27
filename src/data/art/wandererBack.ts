@@ -72,6 +72,6 @@ export function backView(L: WandererLook): WandererViewDef {
     gunPivot: [6, -12],
     hose: { from: [3.4, -5], clip: [9.4, -3], sag: [3, 2] },
     window: { lit: 'window-lit', dormant: 'window-dormant', bubble: rect(-1.6, -14.6, 4, 2.2, 1, flat('cyan-glow')), rise: 4.6 },
-    feet: 4,
+    sleeves: { near: C.dark, far: C.dark },
   };
 }

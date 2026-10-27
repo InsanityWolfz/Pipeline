@@ -68,12 +68,12 @@ export function drawLeg(c: CanvasRenderingContext2D, view: WandererView, hip: Pt
   limb(c, [wrapFrom[0], wrapFrom[1], wrapTo[0], wrapTo[1]], L.wrap, o);
 }
 
-/** An arm from the shoulder to the hand: the bone sleeve to the elbow, the bracer with its etched line and rivet, the glove. */
-export function drawArm(c: CanvasRenderingContext2D, view: WandererView, shoulder: Pt, hand: Pt, near: boolean, o: DrawOpts): void {
+/** An arm from the shoulder to the hand: the sleeve (`sleeve`, a palette id) to the elbow with the bone undersleeve at the shoulder, the bracer with its etched line and rivet, the glove. */
+export function drawArm(c: CanvasRenderingContext2D, view: WandererView, shoulder: Pt, hand: Pt, near: boolean, sleeve: string, o: DrawOpts): void {
   const out = Math.sign(shoulder[0]) || 1;
   const elbow = bend(shoulder, hand, R.upperArm, R.forearm, (p) => (view === 'side' ? p[1] - p[0] * 0.6 : view === 'down' ? p[1] + out * p[0] * 0.8 : p[1] - out * p[0] * 0.4));
   const bracer = near ? L.bracerNear : L.bracerFar;
-  limb(c, [shoulder[0], shoulder[1], elbow[0], elbow[1]], near ? L.sleeveNear : L.sleeveFar, o);
+  limb(c, [shoulder[0], shoulder[1], elbow[0], elbow[1]], { width: near ? R.sleeveWidth.near : R.sleeveWidth.far, color: sleeve, outline: true }, o);
   limb(c, [elbow[0], elbow[1], hand[0], hand[1]], bracer, o);
   // The etched line down the bracer, and a brass rivet by the elbow.
   const fx = hand[0] - elbow[0];
@@ -84,6 +84,7 @@ export function drawArm(c: CanvasRenderingContext2D, view: WandererView, shoulde
   const e1 = along(Math.max(1.7, fl - 2.2));
   limb(c, [e0[0], e0[1] - 0.4, e1[0], e1[1] - 0.4], L.etch, o);
   at(c, along(1), WANDERER.rivet, o);
+  at(c, shoulder, WANDERER.shoulderCap, o);
   at(c, hand, WANDERER.hand, o);
 }
 

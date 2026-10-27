@@ -2,7 +2,9 @@ import { describe, expect, it } from 'vitest';
 import { WANDERER } from '../../src/data/art/wanderer';
 import { WANDERER_MOTION as M } from '../../src/data/art/wandererMotion';
 import { SHAKE_ON } from '../../src/data/juice';
-import { HALF_STEP } from '../../src/render/vector/wandererGait';
+import { PLAYER_HIT_FX } from '../../src/data/assets';
+import { ROLL_TICKS } from '../../src/data/player';
+import { HALF_STEP, legAt } from '../../src/render/vector/wandererGait';
 import { braceDip, nextSpinRate, recoil, STILL, strideRate, wandererAnim, wandererMotion, type WandererClocks } from '../../src/render/vector/wandererMotion';
 
 // 075: the wanderer's motion is a pure function of clocks, sampled at fixed times here as the contact sheet does.
@@ -141,13 +143,15 @@ describe('firing (075)', () => {
 
 describe('the roll, the hit and the KO (075)', () => {
   it('somersaults side on through a full circle, and tumbles facing down or up', () => {
-    const turns = Array.from({ length: 18 }, (_, i) => at({ roll: i + 1 }).turn);
+    const turns = Array.from({ length: ROLL_TICKS }, (_, i) => at({ roll: i + 1 }).turn);
+    // Untucked again by the roll's last tick, whatever ROLL_TICKS is.
+    expect(at({ roll: ROLL_TICKS }).tuck).toBe(0);
     expect(turns[0]).toBe(0);
     expect(Math.max(...turns)).toBeCloseTo(TAU, 5);
     for (let i = 3; i < 15; i++) expect(turns[i] ?? 0).toBeGreaterThan(turns[i - 1] ?? 0);
     expect(at({ roll: 1 }).squash).toBeGreaterThan(0.05);
     expect(at({ roll: 16 }).squash).toBeCloseTo(M.roll.land, 5);
-    const tumble = Array.from({ length: 18 }, (_, i) => at({ view: 'down', roll: i + 1 }).turn);
+    const tumble = Array.from({ length: ROLL_TICKS }, (_, i) => at({ view: 'down', roll: i + 1 }).turn);
     expect(Math.max(...tumble.map(Math.abs))).toBeLessThanOrEqual(M.roll.wobble + 1e-9);
     expect(Math.max(...tumble.map(Math.abs))).toBeGreaterThan(0.2);
     expect(at({ view: 'up', roll: 8 }).squash).toBeCloseTo(M.roll.tumble, 5);
@@ -163,8 +167,9 @@ describe('the roll, the hit and the KO (075)', () => {
     expect(hit(4).glow).toBeGreaterThan(M.hit.glow);
     // An overshoot the other way on the way back.
     expect(Math.max(...[3, 4, 5, 6, 7].map((h) => hit(h).lean))).toBeGreaterThan(rest.lean);
-    expect(hit(8).lean).toBeCloseTo(rest.lean, 5);
-    expect(wandererAnim({ ...STILL, hit: 8 })).toBe('idle');
+    expect(hit(PLAYER_HIT_FX.poseTicks).lean).toBeCloseTo(rest.lean, 5);
+    expect(wandererAnim({ ...STILL, hit: PLAYER_HIT_FX.poseTicks })).toBe('idle');
+    expect(wandererAnim({ ...STILL, hit: PLAYER_HIT_FX.poseTicks - 1 })).toBe('hit');
   });
 
   it('lies the KO flat by frame 36, side on from any view, and puts the glow out', () => {
@@ -193,12 +198,15 @@ describe('idle life (075)', () => {
     expect(Math.min(...sway)).toBeCloseTo(-M.idle.sway, 2);
   });
 
-  it('keeps the area under a squash, with the feet planted', () => {
-    const s = running(0.3);
-    expect((1 + s.squash) * (1 - s.squash)).toBeGreaterThan(0.99);
-    // The feet are set down where, once squashed about the feet, they land on the cycle's own places.
-    const unsquashed = wandererMotion({ ...STILL, view: 'side', aim: 0, moving: 30, speed: 1, stride: 0.3 });
-    expect(unsquashed.feet.near.x * (1 + unsquashed.squash)).toBeCloseTo(s.feet.near.x * (1 + s.squash), 5);
+  it('keeps the area under a squash, with the feet planted where the stride puts them', () => {
+    // A stance frame with a real squash: once squashed about the feet, each foot lands on the stride's own place.
+    for (const ph of [0.2, 0.4, 0.6, 2.9]) {
+      const s = running(ph);
+      expect(Math.abs(s.squash), `phase ${ph}`).toBeGreaterThan(0.005);
+      expect((1 + s.squash) * (1 - s.squash)).toBeGreaterThan(0.99);
+      expect(s.feet.near.x * (1 + s.squash), `phase ${ph}`).toBeCloseTo(legAt(ph, HALF_STEP).x, 5);
+      expect(s.feet.far.x * (1 + s.squash), `phase ${ph}`).toBeCloseTo(legAt(ph + Math.PI, HALF_STEP).x, 5);
+    }
   });
 
   it('never shakes the camera', () => {

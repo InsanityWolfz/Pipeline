@@ -79,7 +79,7 @@ export function frontView(L: WandererLook): WandererViewDef {
     gunPivot: [5.5, -6],
     hose: { from: [10.4, -10], clip: [9, -3.2], sag: [2.5, 1] },
     glow: faceGlow(0, -29.2, 5.6, 6.4),
-    feet: 4,
+    sleeves: { near: C.dark, far: C.dark },
     matchedArms: true,
   };
 }

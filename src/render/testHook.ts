@@ -181,7 +181,7 @@ export interface UiState {
   objectiveTick: number;
   /** The centre of the world camera's view, world px (023: screenshots wait for it to settle on the player), and the player's sprite point it follows (042: locked to it). */
   /** 069: `zoom` is the world's zoom over the view (1, or build mode's 0.75 zoomed out). */
-  camera: { x: number; y: number; player: { x: number; y: number }; fading: boolean; zoom: number };
+  camera: { x: number; y: number; player: { x: number; y: number }; fading: boolean; zoom: number; shaking: boolean };
   /** 065: the slow's wind curls are drawn round the player. */
   slowSwirl: boolean;
   /** 075: the wanderer drawn: view, animation, scheme, trim, squash, hood, draw time and tint. Null before the scene. */

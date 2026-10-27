@@ -1,5 +1,6 @@
 import type { Rarity } from '../../data/gear';
-import { WANDERER, WANDERER_FEEL, WANDERER_TRIM, WANDERER_TRIM_FX, type WandererSchemeId, type WandererView } from '../../data/art/wanderer';
+import { TUBE_PARTS, WANDERER, WANDERER_FEEL, WANDERER_TRIM, WANDERER_TRIM_FX, type WandererSchemeId, type WandererView } from '../../data/art/wanderer';
+import { PLAYER_HIT_FX } from '../../data/assets';
 import { WANDERER_MOTION } from '../../data/art/wandererMotion';
 import { gaitAt } from './wandererGait';
 import { koPose, rollPose, type Overlay } from './wandererActs';
@@ -13,6 +14,8 @@ import type { WandererPose } from './wandererPose';
 const M = WANDERER_MOTION;
 const R = WANDERER.rig;
 const TAU = Math.PI * 2;
+/** The hit's pose lasts the sim's own hit pose ticks. */
+const HIT_FRAMES = PLAYER_HIT_FX.poseTicks;
 
 export interface WandererClocks {
   view: WandererView;
@@ -120,13 +123,13 @@ export function recoil(t: number | undefined): { kick: number; squash: number } 
 }
 
 /** The hit's strength `h` frames in: 1 on its first frame, overshooting the other way and back to 0 by its last. */
-export const hitWave = (h: number): number => (h >= M.hit.frames ? 0 : Math.cos((Math.PI * h) / (M.hit.frames * 0.75)) * (1 - h / M.hit.frames));
+export const hitWave = (h: number): number => (h >= HIT_FRAMES ? 0 : Math.cos((Math.PI * h) / (HIT_FRAMES * M.hit.swing)) * (1 - h / HIT_FRAMES));
 
 /** What the wanderer is doing, for `ui().player`. */
 export function wandererAnim(c: WandererClocks): 'ko' | 'roll' | 'hit' | 'jab' | 'fire' | 'strafe' | 'run' | 'idle' {
   if (c.ko !== null) return 'ko';
   if (c.roll !== null) return 'roll';
-  if (c.hit !== null && c.hit < M.hit.frames) return 'hit';
+  if (c.hit !== null && c.hit < HIT_FRAMES) return 'hit';
   if (c.jab > 0) return 'jab';
   if (c.firing !== null) return c.moving !== null ? 'strafe' : 'fire';
   return c.moving !== null ? 'run' : 'idle';
@@ -146,9 +149,10 @@ export function wandererMotion(c: WandererClocks): WandererPose {
   const settle = c.stopped !== null && c.stopped < M.stop.frames ? M.stop.squash * Math.sin((Math.PI * (c.stopped + 1)) / M.stop.frames) : 0;
   const speed = Math.min(1, c.speed) * step;
   const flapAmp = strafing ? M.strafe.flap : M.cape.flap * speed + M.idle.sway * still;
-  const flap = flapAmp * Math.sin(2 * c.stride + (strafing ? c.ms * 0.02 : 0));
-  const flapTail = flapAmp * Math.sin(2 * c.stride - Math.PI / 2 + (strafing ? c.ms * 0.02 : 0));
-  const trail = M.cape.run * speed * (strafing ? 0.4 : 1);
+  const wind = strafing ? c.ms * M.cape.wind : 0;
+  const flap = flapAmp * Math.sin(2 * c.stride + wind);
+  const flapTail = flapAmp * Math.sin(2 * c.stride - Math.PI / 2 + wind);
+  const trail = M.cape.run * speed * (strafing ? M.cape.strafeTrail : 1);
   const lean = c.view === 'side' && !strafing ? M.run.lean * speed : 0;
   const glowRest = WANDERER_FEEL.glow.rest + WANDERER_FEEL.glow.pulse * Math.sin(c.ms * WANDERER_FEEL.glow.speed);
   const trimDef = WANDERER_TRIM[c.trim ?? 'none'];
@@ -171,13 +175,14 @@ export function wandererMotion(c: WandererClocks): WandererPose {
     drop: 0,
     feet: gait.feet,
     kick: M.recoil.kick * shot.kick,
-    cape: { trail, sway: sway * still + flap, tail: swayTail * still + flapTail + trail * M.cape.tail * 0.3 },
-    hoodTail: (swayTail * still + flapTail) * M.cape.hood + trail * 0.5,
-    skirt: { front: 0.5 * Math.atan2(gait.feet.near.x, 20) * (c.view === 'side' ? 1 : 0), back: 0.5 * Math.atan2(gait.feet.far.x, 20) * (c.view === 'side' ? 1 : 0) },
+    cape: { trail, sway: sway * still + flap, tail: swayTail * still + flapTail + trail * M.cape.tailTrail },
+    hoodTail: (swayTail * still + flapTail) * M.cape.hood + trail * M.cape.hoodTrail,
+    // Side on, each skirt flap swings with its thigh.
+    skirt: c.view === 'side' ? { front: M.skirt.share * Math.atan2(gait.feet.near.x, M.skirt.reach), back: M.skirt.share * Math.atan2(gait.feet.far.x, M.skirt.reach) } : { front: 0, back: 0 },
     tank: gait.tank,
     flow: c.flow,
     spin: c.spin,
-    flash: c.shots[0] !== undefined && c.shots[0] < M.flashFrames ? { frame: c.shots[0], angle: (c.shotCount % 2) * Math.PI / 8 + (c.shots[0] === 1 ? Math.PI / 4 : 0) } : null,
+    flash: c.shots[0] !== undefined && c.shots[0] < M.flashFrames ? { frame: c.shots[0], angle: (c.shotCount % 2) * TUBE_PARTS.flash.alternate + (c.shots[0] === 1 ? TUBE_PARTS.flash.turn : 0) } : null,
     pulses: c.shots.filter((t) => t < M.pulseFrames).map((t) => t / M.pulseFrames),
     windowFlare: Math.max(0, ...c.shots.map((t) => 1 - t / M.windowFlareFrames)),
     glow: c.shots[0] !== undefined && c.shots[0] < M.glowFlareFrames ? WANDERER_FEEL.glow.shot : glowRest,
@@ -189,7 +194,7 @@ export function wandererMotion(c: WandererClocks): WandererPose {
     tuck: 0,
     tubeDrop: 0,
   };
-  if (c.hit !== null && c.hit < M.hit.frames) pose = applyHit(pose, c.hit);
+  if (c.hit !== null && c.hit < HIT_FRAMES) pose = applyHit(pose, c.hit);
   const overlay: Overlay | null = c.ko !== null ? koPose(c.ko, pose) : c.roll !== null ? rollPose(c.roll, c.view, pose) : null;
   const out = overlay ? { ...pose, ...overlay } : pose;
   // The squash scales about the feet: set the feet down where they'd land unsquashed, so they stay planted.
@@ -198,7 +203,7 @@ export function wandererMotion(c: WandererClocks): WandererPose {
   return { ...out, feet: { far: plant(out.feet.far), near: plant(out.feet.near) } };
 }
 
-/** The hit (the first 8 ticks of hit invulnerability): snapped back and squashed on its first frame, the cape and hood tail flicked forward. */
+/** The hit (the first PLAYER_HIT_FX.poseTicks ticks of hit invulnerability): snapped back and squashed on its first frame, the cape and hood tail flicked forward. */
 function applyHit(p: WandererPose, h: number): WandererPose {
   const w = hitWave(h);
   const H = M.hit;
@@ -210,7 +215,7 @@ function applyHit(p: WandererPose, h: number): WandererPose {
     squash: p.squash + H.squash * Math.max(0, w),
     push: p.push + H.push * w,
     cape: { ...p.cape, trail: p.cape.trail - H.flick * w, tail: p.cape.tail - H.flick * w },
-    hoodTail: p.hoodTail - H.flick * 1.4 * w,
+    hoodTail: p.hoodTail - H.flick * H.hoodFlick * w,
     glow: h < H.glowFrames ? H.glow : p.glow,
   };
 }

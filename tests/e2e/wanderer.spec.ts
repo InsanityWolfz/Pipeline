@@ -5,6 +5,8 @@ import { hexToRgb, paletteHex } from '../../src/data/palette';
 import { RELICS } from '../../src/data/relics';
 import type { SimSummary } from '../../src/sim/summary';
 import { boot, cameraSettled, watchErrors } from './helpers';
+import { PLAYER_HIT_FX } from '../../src/data/assets';
+import { ROLL_TICKS } from '../../src/data/player';
 
 // 075: the arcane ranger in the game: what ui().player reports, the rarity trim from the sim's worn rarity (and no
 // weight tint), the standing height, the hit and KO at game size, a camera that never shakes, and a sim untouched by
@@ -138,17 +140,25 @@ test('stands 40–44 world px tall side on and from the front', async ({ page })
   }
 });
 
-test('at game size the hit moves the hood 3 px or more and the KO ends lying down; the camera never shakes', async ({ page }) => {
+test('at game size the hit moves the hood 3 px or more and the KO ends lying down; the camera never shakes through firing, a roll, a hit or the KO', async ({ page }) => {
   test.setTimeout(120_000);
   const errors = watchErrors(page);
   await boot(page, '?start=field&attuned');
   await aimAt(page, 200, -14, 30);
   await cameraSettled(page);
   const cam = async () => {
-    const c = (await page.evaluate(() => window.__GAME__?.ui().camera)) ?? { x: 0, y: 0, player: { x: 0, y: 0 } };
-    return { x: c.x - c.player.x, y: c.y - c.player.y, at: [c.x, c.y] };
+    const c = (await page.evaluate(() => window.__GAME__?.ui().camera)) ?? { x: 0, y: 0, player: { x: 0, y: 0 }, shaking: true };
+    return { x: c.x - c.player.x, y: c.y - c.player.y, at: [c.x, c.y], shaking: c.shaking };
   };
   const rest = await cam();
+  expect(rest.shaking).toBe(false);
+  /** The camera, locked on the player (042), keeps its offset from them (within a rounded pixel) and never shakes. */
+  const steady = async () => {
+    const now = await cam();
+    expect(now.shaking).toBe(false);
+    expect(Math.abs(now.x - rest.x)).toBeLessThanOrEqual(1);
+    expect(Math.abs(now.y - rest.y)).toBeLessThanOrEqual(1);
+  };
   const idleHood = (await player(page))?.hood ?? [0, 0];
 
   // Firing in place: the camera holds still.
@@ -166,6 +176,16 @@ test('at game size the hit moves the hood 3 px or more and the KO ends lying dow
     });
     await drawn(page);
     expect((await cam()).at).toEqual(rest.at);
+    await steady();
+  }
+
+  // A roll: every frame of it, the camera keeps its place on the player.
+  await page.evaluate(() => window.__GAME__?.step(1, { dodge: true, moveX: 1 }));
+  for (let t = 1; t < ROLL_TICKS + 4; t++) {
+    await drawn(page);
+    if (t < ROLL_TICKS) expect((await player(page))?.anim).toBe('roll');
+    await steady();
+    await page.evaluate(() => window.__GAME__?.step(1, { moveX: 1 }));
   }
 
   // A hit: a Husk beside the player swings until it lands.
@@ -186,6 +206,12 @@ test('at game size the hit moves the hood 3 px or more and the KO ends lying dow
   expect(hitPose?.anim).toBe('hit');
   const hood = hitPose?.hood ?? [0, 0];
   expect(Math.hypot(hood[0] - idleHood[0], hood[1] - idleHood[1])).toBeGreaterThanOrEqual(3);
+  // Through the hit's pose and its knockback, the camera keeps its place on the player.
+  for (let t = 0; t < PLAYER_HIT_FX.poseTicks + 2; t++) {
+    await steady();
+    await page.evaluate(() => window.__GAME__?.step(1));
+    await drawn(page);
+  }
 
   // The KO: flat on its last frame, at least 1.4 times as wide as tall; the camera holds on the fallen wanderer.
   await page.evaluate(() => {
@@ -205,6 +231,7 @@ test('at game size the hit moves the hood 3 px or more and the KO ends lying dow
   expect(b).not.toBeNull();
   expect((b?.w ?? 0) / (b?.h ?? 1)).toBeGreaterThanOrEqual(1.4);
   expect((await cam()).at).toEqual(koStart.at);
+  await steady();
   expect(errors).toEqual([]);
 });
 
