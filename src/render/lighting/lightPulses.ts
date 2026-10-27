@@ -34,7 +34,8 @@ export class LightPulses {
     this.sinceShot += deltaMs;
     this.sinceStrike += deltaMs;
     for (const p of this.pulses) p.age += deltaMs;
-    this.pulses = this.pulses.filter((p) => p.age < p.ms);
+    // With Flashes off no flash of light shows, a pulse already lit included.
+    this.pulses = flashes ? this.pulses.filter((p) => p.age < p.ms) : [];
     for (const v of ev.vents) this.venting.set(v.id, { x: v.x, y: v.y });
     for (const v of ev.ventEnds) this.venting.delete(v.id);
     if (!here) return;

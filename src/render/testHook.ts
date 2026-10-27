@@ -61,8 +61,8 @@ export interface GameTestHook {
   drop(itemId: string, x: number, y: number): SimSummary;
   /** Scales the speed of every tween (1 is normal), so a screenshot can catch a short effect mid-way. */
   tweenSpeed(scale: number): void;
-  /** 074: sets the Graphics quality, as the Settings row does (stored, applied live). */
-  setQuality(quality: Quality): void;
+  /** 074: sets the Graphics quality and Flashes, as their Settings rows do (stored, applied live). */
+  setLook(look: { quality?: Quality; flashes?: boolean }): void;
   /** 074: skips every mood, light and fog (as `?mood=off` does), for the frame-time A/B in one page. */
   lightingOff(off: boolean): void;
   /** The player's room as rows of tiles a player can stand on ('.') or not ('#'), solid things included: for test helpers that find paths. */

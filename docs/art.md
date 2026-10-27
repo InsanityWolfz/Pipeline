@@ -6,13 +6,34 @@ Since 016 the game is drawn in **clean vector art**, chosen by Shaun from a thre
 
 ## Style
 - **View:** three-quarter top-down. You see the tops and fronts of things. Pure art convention, no 3D.
-- **Look:** smooth shapes with one shared ink outline, soft gradients and glows, sharp at any screen size. Bright daylight colours, like RuneScape 3 or Realm of the Mad God. The environment in the style test is the target.
+- **Look:** smooth shapes with one shared ink outline, soft gradients and glows, sharp at any screen size. Since the art pass (074–081, Shaun, 2026-10-27) it is clean vector **pushed further**: soft gradients lit from the top left, a rim light on lit edges, glows and shadows; no pixel art and no painted textures. The "Vector, pushed further" and "Ley-lit" cards of `docs/art/style-test-2.html` are the target.
+- **Mood per region (074):** Region 1 is sunny and bright (Realm of the Mad God), Stonefall Hollows dusky, the Emberworks orange through smoke, the Stormcrown dark, lit by ley lines and lightning (Hollow Knight). See "Light and region moods" below.
 - **Light:** from the top left. Top and left edges are lit; bottom and right edges and cast shadows are darker.
 - **Scale:** 32-pixel tiles in world px. The wanderer is about 42 px tall; a Husk about 38 and the Warden about 60.
 - **Resolution:** the camera shows 640×360 world px at a whole-number zoom, but the canvas draws at the device's real resolution. Vector frames are drawn into textures at boot at that scale (up to 4 texels per world px), and text renders at it too.
 - **Outline:** characters, enemies, projectile bodies and props get the `ink` outline (`OUTLINE_WIDTH`, 0.75 world px). Glows, particles and shading inside a shape don't.
 - **Accent:** ley-line cyan marks magic: the tube, the hose, the tank window, the wanderer's face glow, ley bolts and runes. Wisps are violet and fire is ember, so neither reads as ley.
 - **Theme rule:** lost magical civilization. Rune-carved stone, glowing ley lines, brass and crystal. Nothing modern.
+
+## Light and region moods (074)
+Render only: lights and moods never feed the sim, and the sim never imports them.
+- **Two layers.** The **world layer** (the ground, trees, rocks, ruins, region props, nodes, landmark dressing, pylons and fixtures) takes the region's mood and is lit by lights. Views register those objects with `WorldLayer` (`src/render/lighting/`) as they make them. The **readability layer** is never darkened: enemies, bosses and their parts, every telegraph and wind-up, rounds, ground items, the player, health bars, name tags, prompts, waypoints, damage numbers, the HUD and menus draw at full daylight colour in every region. Lights reach it only as the **light catch**: an additive copy of its frame in the light's colour, at most 0.35 alpha, from the two nearest lights at its feet.
+- **Moods** (`src/data/moods.ts`, `REGION_MOODS` by danger ring): an ambient (a palette colour and a darkness: 0 white light, 1 the colour), a screen wash (at most 0.06 alpha, under the HUD), a ground fog (colour, alpha and drift) and a light scale (daylight drowns lights, the dark lets them read). Region 1's rings share the sunny mood. The mood follows the camera's centre and blends over 4 tiles each side of a region's edge (48, 79 and 110 tiles out). The sandbox is sunny; the foundry keeps its own warm tint until 079.
+- **Lights** (`src/data/lights.ts`): the wanderer's face glow (flaring on each shot), the muzzle flash, blasts, the Conductor's and the Forgewright's attacks, lightning on a storm rod, fires (flaring vents, burning ground, braziers), ley glows (crystals, veins, pylons, springs) and ley lines; rounds in flight on High. Ley is cyan, fire ember, lightning storm violet; nothing else glows. Render picks them by priority, then by distance from the camera's centre, up to the tier's budget, and places them with Phaser 4's lights (`setLighting`). A light sits at a height of `LIGHT_Z` × its radius, so it pools softly. Lightning in the Stormcrown also flashes the ambient toward `storm-pale` for a moment.
+- **Glow halos** (014's additive glow images) stay on every tier as the visible halo; the light adds the ground brightening round it.
+- **Flashes off** (042.10): no event places a flash of light (the muzzle flash, blasts, lightning, the face glow's flare) and there is no ambient flash; fires flicker within ±15%.
+- **Graphics quality** (Settings, stored in `pipeline.settings`, default Medium; the Canvas renderer runs as Low):
+
+| | Low | Medium | High |
+| --- | --- | --- | --- |
+| World layer | the ambient as a multiply tint | ground lit, props tinted | ground and props lit |
+| Lights in view | none | up to 8 | up to 16 |
+| Rounds in flight lit | no | no | yes |
+| Light catch | no | yes | yes |
+| Fog | off | one layer | two layers drifting apart |
+| Lightning's ambient flash | no | yes | yes |
+
+- **The ground's blending** (`GROUND_BLEND` in `src/data/art/ground.ts`, baked into the chunks): Region 1's edge with the Hollows follows the true circle as a ragged band of rounded blobs; slag and ash meet in ragged blobs too; broad soft patches 4–8 tiles across in each region's own colours; cracks with a lit lower-right lip on stone, paving, ash and slate (none on Region 1's grass); worn roads with a darker trodden centre, the ground creeping in at their edges and pebbles. It is flat paint: no collision, nothing standing, and paths and ley lines are painted over it.
 
 ## The wanderer
 The player is a hooded wanderer of the lost civilization:

@@ -71,7 +71,7 @@ export function installTestHook(flow: FlowScene): void {
     tweenSpeed: (scale) => {
       live().tweens.timeScale = scale;
     },
-    setQuality: (quality) => updateSettings({ quality }),
+    setLook: (look) => updateSettings(look),
     lightingOff: (off) => {
       const l = live().lighting;
       if (l) l.off = off;

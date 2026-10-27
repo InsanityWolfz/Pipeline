@@ -9,13 +9,13 @@ import { worldTileHash } from '../../src/render/roomTiles';
 // 074: the ground's blending, baked per tile from its fixed hash: the same tile always gets the same edge and crack;
 // cracks only on stone, paving, ash and slate.
 
-const floor = () => TILE.floor;
+const floor = (): string => TILE.floor;
 const noPlateau = () => false;
 
 describe('ground blending (074)', () => {
   it('reads each region’s ground by distance, and slag and chasms as their own', () => {
     const at = (b: number, r: number) => polar(b, r);
-    const cls = (t: { tx: number; ty: number }, s = floor) => groundClass(t.tx, t.ty, s, noPlateau);
+    const cls = (t: { tx: number; ty: number }, s: () => string = floor) => groundClass(t.tx, t.ty, s, noPlateau);
     expect(cls(at(90, 20))).toBe('grass');
     expect(cls(at(90, 60))).toBe('hollows');
     expect(cls(at(90, 95))).toBe('ember');
