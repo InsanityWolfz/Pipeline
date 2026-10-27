@@ -75,4 +75,24 @@ describe('anything inside a boss arena follows the boss rules (073.5)', () => {
       return e.mode === 'lob';
     }, 1200);
   });
+
+  it('an add held off screen past the 1 s leash grace stays in the fight and still attacks (aggro by the boss rules)', () => {
+    const { s, e } = inForum('charger', ADDS_GROUP);
+    // Its cooldown runs two seconds: it stands off screen in reach, past its 60-tick grace.
+    e.cooldown = 120;
+    for (let t = 0; t < 119; t++) {
+      run(s, 1);
+      expect(e.mode).toBe('chase');
+    }
+    runUntil(s, () => e.mode === 'windup', 3);
+  });
+
+  it('an enemy posted in the arena wakes as the player comes inside, off screen too (aggro by the boss rules)', () => {
+    const { s, e } = inForum('wisp', 'forum-post');
+    e.mode = 'idle';
+    expect(inAggroBox(e, s.player)).toBe(false);
+    run(s, 1);
+    expect(e.mode).not.toBe('idle');
+    expect(e.mode).not.toBe('return');
+  });
 });

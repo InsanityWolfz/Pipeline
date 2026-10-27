@@ -82,6 +82,21 @@ describe('a wind-up started on screen completes off screen (073.4)', () => {
     expect(s.orbs.length).toBe(1);
   });
 
+  it.each([
+    ['charger', 'charges'],
+    ['bellows-hound', 'dashes'],
+    ['thunderhawk', 'dives'],
+  ] as const)('a %s whose target steps off screen mid-wind-up still sets off down its lane', (id, event) => {
+    const s = arena();
+    const e = stage(s, id, 0, 150);
+    run(s, 1);
+    expect(e.mode).toBe('windup');
+    movePlayer(s, PLAYER_AT.x, PLAYER_AT.y - 100);
+    expect(inAggroBox(e, s.player)).toBe(false);
+    runUntil(s, (x) => x.events[event].length > 0, 90);
+    expect(e.mode).toBe('swipe');
+  });
+
   it('a storm sentinel that leaves the screen mid-call still strikes', () => {
     const s = arena();
     const e = stage(s, 'storm-sentinel', 0, 170);
@@ -117,5 +132,20 @@ describe('shots in flight keep flying when their shooter goes off screen (073)',
     const s = arena();
     const e = stage(s, 'sniper', 0, 150);
     flyOn(s, e, 200);
+  });
+
+  it('a bellows hound’s burning trail keeps burning with the hound off screen', () => {
+    const s = arena();
+    const e = stage(s, 'bellows-hound', 0, 150);
+    runUntil(s, () => e.mode === 'recover', 120);
+    const pool = s.floodPools.find((p) => p.ownerId === e.id);
+    if (!pool) throw new Error('no trail');
+    e.x = PLAYER_AT.x;
+    e.y = PLAYER_AT.y + 400;
+    e.frozen = 100_000;
+    movePlayer(s, (pool.x0 + pool.x1) / 2, (pool.y0 + pool.y1) / 2);
+    expect(inAggroBox(e, s.player)).toBe(false);
+    s.player.health = MAX_HEALTH;
+    runUntil(s, (x) => x.player.health < MAX_HEALTH, 130);
   });
 });

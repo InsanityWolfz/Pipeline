@@ -125,12 +125,15 @@ export function engage(state: SimState, e: EnemyState, sees: boolean): [number, 
     e.mode = 'return';
     e.modeTicks = 0;
   }
+  // 073.5 (Shaun: "the boss rules apply to its attack and aggro"): inside a boss arena with the player, it wakes and
+  // stays in the fight as the Bulwark does, on screen or not.
+  const inArena = here && inArenaWithPlayer(state, e);
   if (e.mode === 'idle' || e.mode === 'return') {
     // Anything on screen wakes, however many (Shaun, 017: a player who rounds up a crowd gets the crowd).
-    if (!here || !sees || waits) return e.mode === 'return' ? walkHome(e, defOf(e)) : [0, 0];
+    if (!here || !(sees || inArena) || waits) return e.mode === 'return' ? walkHome(e, defOf(e)) : [0, 0];
     aggro(e);
   }
-  e.offScreenTicks = here && inAggroBox(e, state.player) ? 0 : e.offScreenTicks + 1;
+  e.offScreenTicks = here && (inAggroBox(e, state.player) || inArena) ? 0 : e.offScreenTicks + 1;
   return null;
 }
 

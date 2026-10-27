@@ -168,7 +168,8 @@ test('the guided tutorial plays from leaving the foundry to its end', async ({ p
 
   // 24. Into the Bulwark's arena by its door; it falls through the hook, and its core is picked up. 060: the way to the
   // door can pass a Hollows pack (the roads up into the Emberworks moved where packs stand), so it's felled at the door too.
-  // 073: and halfway, where the way bends east past the Old Grove's packs (a walker mobbed there can't get through).
+  // And halfway, where the way bends east past the Old Grove: where packs respawn drifts with the seeded RNG (on 073's
+  // branch two stood there and mobbed the walker), so it's felled there too.
   await trek(page, [WAY_TO_FORUM, [HOLLOWS.arena.door.leaveTo.tx, HOLLOWS.arena.door.leaveTo.ty]]);
   await fell(page, []);
   await enterArena(page, HOLLOWS.arena);
