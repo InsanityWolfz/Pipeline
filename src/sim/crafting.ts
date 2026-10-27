@@ -4,7 +4,7 @@ import type { SimState } from './state';
 import { craftTagged, taggedAffordable, taggedHeld, taggedKnown, type TaggedStores } from './stages';
 import { count } from './inventory';
 import { knownRecipe } from './tutorial';
-import { hasInputs, make } from './make';
+import { batchesHeld, hasInputs, make } from './make';
 
 // Hand crafting: instant, from the inventory. Render calls this between ticks (the menu doesn't pause the world), so
 // it's an action on the state, not part of a step. 047: a tagged round (frost arrows and the rest) is a recipe of the
@@ -23,6 +23,28 @@ export function craft(state: SimState, recipeId: string): boolean {
   }
   if (RECIPES[recipeId]) make(state, recipeDef(recipeId));
   else craftTagged(state, recipeId);
+  return true;
+}
+
+/**
+ * 070: how many batches a craft max (Shift-click) makes: as many as the carried inventory affords (a tagged round's row
+ * never draws on the intake's entrances for it); one if only the entrances make it affordable; 0 if it can't craft.
+ */
+export function maxBatches(state: CraftStores, recipeId: string): number {
+  if (!canCraft(state, recipeId)) return 0;
+  const recipe = RECIPES[recipeId] ?? stageRow(recipeId)?.recipe;
+  return recipe ? Math.max(1, batchesHeld(state.inventory, recipe)) : 0;
+}
+
+/** 070: crafts as many batches as `maxBatches` says, as one craft (one event). Returns false, changing nothing but the events, if it can't. */
+export function craftMax(state: SimState, recipeId: string): boolean {
+  const batches = maxBatches(state, recipeId);
+  if (batches === 0) {
+    state.events.craftFails.push({ recipeId });
+    return false;
+  }
+  if (RECIPES[recipeId]) make(state, recipeDef(recipeId), batches, true);
+  else craftTagged(state, recipeId, batches, true);
   return true;
 }
 

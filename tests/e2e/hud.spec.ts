@@ -87,7 +87,7 @@ test('the carried bar holds the arrows, and before attuning the intake bar shows
   expect(carried.tubeSlot.icons).toEqual([SPRITES.iconArrow]);
   expect(carried.hotbar.shown).toBe(true);
   expect(carried.hotbar.selected).toBe(0);
-  expect(carried.hotbar.slots[0]).toEqual({ itemId: 'arrow', count: arrows, empty: false });
+  expect(carried.hotbar.slots[0]).toEqual({ itemId: 'arrow', count: arrows, empty: false, greyed: false });
   expectLayout(carried);
 
   // Key 2 selects the second slot: the highlight moves to the second cell.
@@ -99,7 +99,7 @@ test('the carried bar holds the arrows, and before attuning the intake bar shows
   const spent = await spendArrows(page);
   expect(spent.inventory.arrow ?? 0).toBe(0);
   expect(spent.hotbar.slots[0]).toBe('arrow');
-  await expect.poll(async () => (await page.evaluate(() => window.__GAME__?.ui().hud))?.hotbar.slots[0]).toEqual({ itemId: 'arrow', count: 0, empty: true });
+  await expect.poll(async () => (await page.evaluate(() => window.__GAME__?.ui().hud))?.hotbar.slots[0]).toEqual({ itemId: 'arrow', count: 0, empty: true, greyed: true });
   const fist = await hudShowing(page, [HUD_LAYOUT.tubeSlot.melee]);
   expect(fist.hotbar.shown).toBe(true);
   expectLayout(fist);

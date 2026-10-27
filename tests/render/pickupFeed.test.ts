@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { PICKUP_FEED } from '../../src/data/hudPanels';
-import { addPickup, ageFeed, lineAlpha, type FeedLine } from '../../src/render/pickupFeedModel';
+import { recipeDef } from '../../src/data/recipes';
+import { addPickup, ageFeed, craftFeed, lineAlpha, type FeedLine } from '../../src/render/pickupFeedModel';
 
 // The pickup feed (031), pure: repeats merge into one line, newest on top, at most
 // maxLines, each holding holdMs after its last repeat then fading over fadeMs.
@@ -51,5 +52,19 @@ describe('the pickup feed', () => {
     lines = addPickup(lines, 'wood');
     expect(shown(lines)).toEqual([['wood', 2]]);
     expect(lineAlpha(lines[0] as FeedLine)).toBe(1);
+  });
+});
+
+describe('a craft max in the feed (070)', () => {
+  it('a craft max is one line with everything it made; a plain craft has none', () => {
+    const made = craftFeed([{ recipeId: 'arrow', batches: 4 }, { recipeId: 'shaft' }]);
+    expect(made).toEqual([{ itemId: 'arrow', count: 4 * recipeDef('arrow').output.count }]);
+    let lines: FeedLine[] = [];
+    for (const m of made) lines = addPickup(lines, m.itemId, m.count);
+    expect(shown(lines)).toEqual([['arrow', 32]]);
+  });
+
+  it('a craft max of one batch still has its line', () => {
+    expect(craftFeed([{ recipeId: 'arrow', batches: 1 }])).toEqual([{ itemId: 'arrow', count: recipeDef('arrow').output.count }]);
   });
 });

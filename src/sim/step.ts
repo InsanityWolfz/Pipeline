@@ -110,7 +110,8 @@ export function stepSim(state: SimState, input: Command = NO_COMMAND): void {
   if (cmd.respec) respec(state);
   // 044: the sandbox's panel, pens and bottomless entrances, before anything fires.
   stepSandbox(state, cmd);
-  stepHarvest(state, state.building ? { ...used, interact: false } : used);
+  // 070: nor a held E's chain.
+  stepHarvest(state, state.building ? { ...used, interact: false, interactHeld: false } : used);
   // Shots fired this tick stay at the muzzle until next tick's step.
   // Shards (029) set off this tick join the flight after it, so they first move next tick.
   const shards: ArrowState[] = [];

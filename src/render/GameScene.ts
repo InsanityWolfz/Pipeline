@@ -4,7 +4,7 @@ import { BUILD_BAR } from '../data/pieces';
 import { SOUNDS } from '../data/sounds';
 import { FOUNDRY_ROOM } from '../data/rooms';
 import { advanceClock, createClock } from '../sim/clock';
-import { craft } from '../sim/crafting';
+import { craft, craftMax } from '../sim/crafting';
 import { clearEvents, createEvents, type SimEvents } from '../sim/events';
 import type { Command } from '../sim/input';
 import { roomById, type SimState } from '../sim/state';
@@ -46,6 +46,8 @@ import { TunnelView } from './TunnelView';
 import { drawPointerUi } from './pointerUi';
 import { RoomFollow } from './roomFollow';
 import { BlueprintUi } from './BlueprintUi';
+import { Occluders } from './occluders';
+import { SilhouetteView } from './SilhouetteView';
 
 const FIRST_PIECE = BUILD_BAR[0] ?? '';
 
@@ -87,6 +89,8 @@ export class GameScene extends Scene {
   cursorView?: CursorView;
   /** 040: hover tips (Shift for the breakdown) and the glossary; the test hook measures its summaries. */
   legibility?: Legibility;
+  /** 070: the player's silhouette behind props. */
+  silhouette?: SilhouetteView;
   /** 044: the Sandbox panel (056, 057: the sandbox's controls, pop-outs there, and only there). */
   sandboxPanel?: SandboxPanel;
   /** The room on screen. It lags the player's room through a door's fade (roomFollow.ts). */
@@ -129,12 +133,15 @@ export class GameScene extends Scene {
     bakeVectors(this, this.fit.scale);
     this.sceneCameras = new SceneCameras(this, this.fit);
     this.events.on(MENU_HOVER_EVENT, () => this.feel?.sound.play(SOUNDS.menuHover));
-    this.roomViews = new RoomViews(this);
-    this.foundryView = new FoundryView(this);
-    this.nodeView = new NodeView(this);
+    // 070: the props that can hide the player, for its silhouette.
+    const occluders = new Occluders();
+    this.roomViews = new RoomViews(this, occluders);
+    this.foundryView = new FoundryView(this, occluders);
+    this.nodeView = new NodeView(this, occluders);
     this.groundItemView = new GroundItemView(this);
     this.enemyView = new EnemyView(this);
     this.playerView = new PlayerView(this);
+    this.silhouette = new SilhouetteView(this, occluders);
     this.effects = new EffectsView(this, this.playerView.sprite, (atDark, ms, rgb) => this.sceneCameras?.fadeThrough(atDark, ms, rgb));
     this.arrowView = new ArrowView(this);
     this.bombView = new BombView(this);
@@ -143,11 +150,11 @@ export class GameScene extends Scene {
     this.blueprintUi = new BlueprintUi(this);
     this.tunnelView = new TunnelView(this);
     this.hover = new HoverView(this);
-    this.site = new SiteView(this);
+    this.site = new SiteView(this, occluders);
     this.siteMenus = new SiteMenus(this);
     this.wake = new WakeView(this);
     this.tutorial = new TutorialUi(this);
-    this.menu = new CraftMenuView(this, (recipeId) => this.craft(recipeId));
+    this.menu = new CraftMenuView(this, (recipeId, max) => this.craft(recipeId, max));
     this.pause = new PauseMenuView(this);
     this.sandboxPanel = new SandboxPanel(this);
     this.legibility = new Legibility(this, [this.hud, this.siteMenus, this.buildView]);
@@ -212,10 +219,13 @@ export class GameScene extends Scene {
     return gameUi(this);
   }
 
-  /** Crafts once, between ticks. The test hook crafts through here too. Crafting has no drawn effects. */
-  craft(recipeId: string): void {
+  /** Crafts once (070: `max`, as many as it can, as one craft and one sound), between ticks. The test hook crafts through here too. */
+  craft(recipeId: string, max = false): void {
     const before = this.sim.events.crafts.length;
-    craft(this.sim, recipeId);
+    if (max) craftMax(this.sim, recipeId);
+    else craft(this.sim, recipeId);
+    // The next tick clears the sim's events, so the draw keeps this craft's (070: a craft max's feed line).
+    this.pending.crafts.push(...this.sim.events.crafts.slice(before));
     this.feel?.sound.play(this.sim.events.crafts.length > before ? SOUNDS.craft : SOUNDS.menuClick);
   }
 
@@ -266,6 +276,7 @@ export class GameScene extends Scene {
     this.enemyView?.update(inRoom(sim.enemies, shown), sim);
     // Through a door's fade the player is already in the next room; hide them until it shows.
     this.playerView?.update(sim.player, sim.tube, sim.link, bodyLook(sim), sim.hasTube, shown === sim.roomId);
+    if (this.playerView) this.silhouette?.update(this.playerView.sprite, shown === sim.roomId && sim.player.dying === 0);
     this.arrowView?.update(inRoom(sim.arrows, shown));
     this.bombView?.update(inRoom(sim.bombs, shown));
     this.site?.update(sim, shown);

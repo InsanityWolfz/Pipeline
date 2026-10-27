@@ -2,7 +2,6 @@ import type { GameObjects, Scene } from 'phaser';
 import { DEPTHS, SPRITES } from '../data/assets';
 import { AMMO } from '../data/ammo';
 import { HUD_LAYOUT } from '../data/hudLayout';
-import { itemDef } from '../data/items';
 import { count, type Inventory } from '../sim/inventory';
 import type { HotbarState } from '../sim/hotbar';
 import { hotbarBox, hotbarCells, type ScreenBox } from './bottomHud';
@@ -10,6 +9,7 @@ import { TextLine } from './textLine';
 import { inBox } from './tipPlace';
 import type { TipHit } from './tipTypes';
 import { addVector, showFrame } from './vector/textures';
+import { carriedSlotLook } from './carriedSlot';
 
 interface Cell {
   x: number;
@@ -17,15 +17,15 @@ interface Cell {
   count: TextLine;
 }
 
-/** The carried bar as drawn (047), for `ui().hud`: each slot's kind and count, and whether it shows as empty. */
+/** The carried bar as drawn (047), for `ui().hud`: each slot's kind and count, whether it's empty, and (070) whether its round shows greyed. */
 export interface CarriedBarShown {
-  slots: { itemId: string | null; count: number; empty: boolean }[];
+  slots: { itemId: string | null; count: number; empty: boolean; greyed: boolean }[];
 }
 
 // The carried bar (047, note 11): five slots along the bottom (keys 1–5), each with its key
 // number, its kind's icon and how many are carried, the selected one highlighted; right
-// click uses the selected item. A slot whose items ran out keeps its kind but shows empty
-// (047.3). Hidden before the tube and while building (the build bar takes its place).
+// click uses the selected item. A slot whose items ran out keeps its kind (047.3) and (070) its
+// icon, greyed, with "0". Hidden before the tube and while building (the build bar takes its place).
 export class HotbarView {
   private readonly cells: Cell[];
   private readonly highlight: GameObjects.Image;
@@ -92,7 +92,12 @@ export class HotbarView {
 
   update(hotbar: HotbarState, inventory: Inventory): void {
     this.slots = [...hotbar.slots];
-    this.drawn = { slots: hotbar.slots.map((itemId) => ({ itemId, count: itemId ? count(inventory, itemId) : 0, empty: itemId === null || count(inventory, itemId) === 0 })) };
+    this.drawn = {
+      slots: hotbar.slots.map((itemId) => {
+        const n = itemId ? count(inventory, itemId) : 0;
+        return { itemId, count: n, empty: itemId === null || n === 0, greyed: carriedSlotLook(itemId, n).greyed };
+      }),
+    };
     const cell = this.cells[hotbar.selected];
     if (cell) this.highlight.setX(cell.x);
     this.selectedIndex = hotbar.selected;
@@ -102,13 +107,14 @@ export class HotbarView {
   private draw(): void {
     for (const [i, c] of this.cells.entries()) {
       const slot = this.drawn.slots[i];
-      // An empty slot (no kind, or none carried, 047.3) shows nothing but its key.
-      const show = this.shown && slot !== undefined && !slot.empty && slot.itemId !== null;
+      // A slot with no kind shows nothing but its key; one whose rounds ran out (047.3) its icon greyed, with "0" (070).
+      const look = carriedSlotLook(slot?.itemId ?? null, slot?.count ?? 0);
+      const show = this.shown && look.icon !== null;
       c.icon.setVisible(show);
       c.count.setVisible(show);
-      if (!show || !slot?.itemId) continue;
-      showFrame(c.icon, itemDef(slot.itemId).icon).setOrigin(0);
-      c.count.set(String(slot.count));
+      if (!show || look.icon === null) continue;
+      showFrame(c.icon, look.icon).setOrigin(0).setAlpha(look.alpha);
+      c.count.set(look.count ?? '').setAlpha(look.alpha);
     }
   }
 }

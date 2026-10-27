@@ -38,6 +38,11 @@ export interface NodeDef {
   feetBox: { w: number; h: number };
   /** 060: it opens and shuts, and is gathered only while open. */
   cycle?: NodeCycle;
+  /**
+   * 070: a tree's canopy also puts it in reach: the player's feet point within `w / 2` px either side of the node's
+   * centre and up to `up` px above it (standing behind the trunk, under the leaves), px.
+   */
+  canopy?: { w: number; up: number };
 }
 
 /**
@@ -59,7 +64,9 @@ const node = (id: string, name: string, itemId: string, placement: Placement, fe
 });
 
 export const NODES: Readonly<Record<string, NodeDef>> = {
-  tree: node('tree', 'Tree', 'wood', 'grove', { w: 16, h: 10 }),
+  // 070: its canopy (src/data/art/nodes.ts: leaves about 48 px across, from 16 to 58 px over its base) reaches
+  // over the tile behind its trunk.
+  tree: { ...node('tree', 'Tree', 'wood', 'grove', { w: 16, h: 10 }), canopy: { w: 48, up: 44 } },
   rubble: node('rubble', 'Boulder', 'stone', 'rock-field', { w: 22, h: 10 }),
   reeds: node('reeds', 'Reeds', 'fiber', 'pond-edge', { w: 18, h: 8 }),
   'ley-vein': node('ley-vein', 'Ley vein', 'ley-crystal', 'ley-line', { w: 20, h: 10 }),

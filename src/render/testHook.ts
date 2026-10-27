@@ -48,8 +48,8 @@ export interface GameTestHook {
    * select and assign (047), build toggle, place, pick-up, deposit, withdraw (each with its amount, 022), sortInventory (047), pylon, travel, takeStash, identify, equip, restore (033), summon, takeTalent and respec (037) apply on the first tick only. Without an aim it keeps the player's last aim, as a still mouse would.
    */
   step(frames: number, command?: Partial<Command>): SimSummary;
-  /** Crafts a recipe once between ticks, as clicking its menu row does. */
-  craft(recipeId: string): SimSummary;
+  /** Crafts a recipe once between ticks, as clicking its menu row does (070: `max`, as a Shift-click does). */
+  craft(recipeId: string, max?: boolean): SimSummary;
   /** Hands the ticks back to the game loop after step() took them (050: a test of what a live key press reaches the sim). */
   resume(): void;
   ui(): UiState;
@@ -181,6 +181,8 @@ export interface UiState {
   camera: { x: number; y: number; player: { x: number; y: number }; fading: boolean; zoom: number };
   /** 065: the slow's wind curls are drawn round the player. */
   slowSwirl: boolean;
+  /** 070: the player shows as a silhouette (a ruin block, tree, the bench or a machine in front hides them). */
+  silhouette: boolean;
   /** The bottom HUD as drawn (025), view px: the hotbar row (and whether it shows) and the tube slot with each unit's icon frame and text. */
   hud: BottomHudState | null;
   /** The crafting menu as drawn (026): each recipe row's item names and counts with their boxes, and the group headers. */
