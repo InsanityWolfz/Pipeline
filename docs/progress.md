@@ -2,6 +2,19 @@
 
 Newest entry first. Entries before 050 are in docs/progress-archive.md.
 
+## 2026-10-28: 078 Ammo visuals and particles
+**Changed:** on `claude/078-ammo-visuals` (InsanityWolfz/Pipeline#96, stacked on 074–077), art pass 5 of 8 (plan docs/plans/078-ammo-visuals.md):
+- every ammo family, element and tier has its own trail and impact as data rows: arrows streak and splinter, ley bolts trail a ribbon and splash light, bombs trail fuse smoke with a glint and blast with smoke, debris, a shock ring and a scorch; frost, fire, lightning, homing, Split, Cluster and the four tiers each read (stormsteel violet in flight);
+- one particle ledger (`src/render/particleBudget.ts`) shared by death motes, weather and effects, 150/300/500 on Low/Medium/High; a tier change frees the oldest effects at once;
+- trails start at the drawn muzzle; player effects never draw over enemy telegraphs.
+
+No sim change; `SAVE_VERSION` unchanged. Reviewed, with a motion check: blocking findings fixed (no fuse glint; a tier change left effects over the new share; hollow tests; strips on the wrong clock), and the 014 blast flash dimmed so the blast reads. `npm run check` 2929 tests; CI green. Raised for Shaun: 078.1–078.14.
+
+**Next:** Shaun's playtest; "merge 96" after 91–94.
+
+**Notes:**
+- The foundry-entry tests (foundryFlow, spread, guidance) now wait by drawn frames (`frameSettled`), not a 5 s timer: under load the door's fade outlasted the timer on main's code too.
+
 ## 2026-10-28: 077 World detail, landmarks and weather
 **Changed:** on `claude/077-world-and-weather` (InsanityWolfz/Pipeline#94, stacked on 074), art pass 4 of 8, from Shaun's art interview (plan docs/plans/077-world-and-weather.md):
 - moderate world detail: flowers, rubble, plants and ruin bits per region, placed by a deterministic hash per tile, with paths and fight space kept clear;
