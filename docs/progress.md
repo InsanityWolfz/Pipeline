@@ -50,6 +50,21 @@ Newest entry first. Entries before 050 are in docs/progress-archive.md.
 - After Shaun's first look (2026-10-28: "the walking animation is abysmal"): the walk ran at 12.2 steps a second with a 1 px hop and squash on every step; now 3.75 steps a second, a 0.4 px bob, strafing no faster, guarded by tests; a rule in .claude/rules/render.md and the reviewer's checklist now has motion judged in motion.
 - Shots spawn 12 px from the feet box's centre, while the drawn muzzle sits about 26 px forward and 19 px up; older than 075, more visible with the flash (075.10).
 
+## 2026-10-27: 073 Enemies only attack on screen
+**Changed:** on `claude/073-offscreen-attacks` (InsanityWolfz/Pipeline#90), from Shaun's call on 071 ("anything off the screen should de aggro") and his interview (docs/brainstorm/2026-10-27-offscreen-attacks.md; plan docs/plans/073-offscreen-attacks.md):
+- no enemy starts an attack (a wind-up, a shot, a charge, a heal beam) while off screen; held, it acts as if its cooldown weren't ready, and walks home after the 1 s leash grace as before;
+- ranges are kept; a wind-up seen starting and shots in flight still land; trails and pools keep burning;
+- inside a boss arena, everything follows the boss rules (Shaun, on approval): it wakes once the player is inside and never leashes there, adds included;
+- one shared rule, `mayStart` in `aiCommon.ts`, used by every enemy kind.
+
+`SAVE_VERSION` stays 22. Reviewed: one blocking finding fixed (only the attack half of the arena rule was built, so arena enemies gave up after 1 s off screen), plus tests for wind-ups finishing off screen and trails burning. `npm run check` 2659 tests; CI green. Raised for Shaun: 073.7–073.14; 073.12–073.14 need his call. 071 closed unmerged.
+
+**Next:** "merge 90". Shaun OK'd 073.12–073.14 on 2026-10-28.
+
+**Notes:**
+- `npm run measure`: pack fights and the Bulwark match main (the ring 3 stone mean 15.3 s against 15.6 s); there's no Warden measure.
+- tutorialFrost.spec.ts's long walk now also clears enemies midway: pack respawn spots drift with the seeded RNG once fights go differently.
+
 ## 2026-10-26: 070 Handling and clarity
 **Changed:** on `claude/070-handling-clarity` (InsanityWolfz/Pipeline#84), from the agent-playtest proposals Shaun picked (plan docs/plans/070-handling-clarity.md, six slices):
 - hold E to harvest: channels chain while E is held and the player stays in reach; release, a knockback or build mode ends the chain;

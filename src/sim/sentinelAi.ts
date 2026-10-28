@@ -1,5 +1,5 @@
 import type { SentinelDef } from '../data/stormcrownEnemies';
-import { engage, inAggroBox, keepDistance, leash, startWindup, stepAttack } from './aiCommon';
+import { engage, inAggroBox, keepDistance, leash, mayStart, startWindup, stepAttack } from './aiCommon';
 import type { EnemyState } from './enemies';
 import { clearShot } from './sightLine';
 import { roomById, type SimState } from './state';
@@ -33,10 +33,10 @@ export function sentinelThink(state: SimState, e: EnemyState, def: SentinelDef):
   return keepDistance(def, def.keep, dx, dy);
 }
 
-/** Its cooldown ready, the player in its room within range along a clear line, and none of its circles still waiting. */
+/** Its cooldown ready, on screen (073), the player within range along a clear line, and none of its circles still waiting. */
 function canCall(state: SimState, e: EnemyState, def: SentinelDef): boolean {
   const p = state.player;
-  if (e.cooldown > 0 || e.roomId !== state.roomId || Math.hypot(p.x - e.x, p.y - e.y) > def.strike.range) return false;
+  if (e.cooldown > 0 || !mayStart(state, e) || Math.hypot(p.x - e.x, p.y - e.y) > def.strike.range) return false;
   if (state.strikes.some((s) => s.ownerId === e.id)) return false;
   return clearShot(roomById(e.roomId), e.x, e.y, p.x, p.y);
 }

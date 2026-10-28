@@ -314,6 +314,9 @@ Each plan's build notes hold the detail; these are the lasting technical choices
   - Render-side checks that read pixels (the silhouette) cache on everything that can change the answer, including each prop's current frame, and look only at a spatial bucket round the player, never every prop each frame.
   - A craft max always carries `batches` on its one craft event (even for one batch); a plain click carries none, so the feed tells them apart.
 
+- **073 enemies only attack on screen:**
+  - Whether an enemy may start an attack is one shared sim rule (`mayStart`, `aiCommon.ts`), checked beside the cooldown, so a new enemy kind inherits it; "on screen" is the same feet-in-view box that waking uses.
+  - Boss arenas override it: anything standing in an arena with the player follows the boss's wake and leash rules (`inArenaWithPlayer`, `arenaWait.ts`).
 - **074 light and region moods:**
   - Lighting is render-only and never feeds the sim: region and ring moods, light sources and quality tiers are data (`src/data`), drawn by a lighting layer in render.
   - Characters sit in a never-darkened layer and take only a light's catch, so enemies and telegraphs stay readable in every mood.

@@ -1,6 +1,6 @@
 import { TICK_RATE } from '../data/config';
 import type { HawkDef } from '../data/stormcrownEnemies';
-import { engage, enter, hold, inAggroBox, leash, startWindup } from './aiCommon';
+import { engage, enter, hold, inAggroBox, leash, mayStart, startWindup } from './aiCommon';
 import type { EnemyState } from './enemies';
 import { barredFrom, walledFrom } from './flight';
 import { laneRun, laneStrike } from './laneRun';
@@ -64,7 +64,8 @@ export function hawkThink(state: SimState, e: EnemyState, def: HawkDef): [number
   }
   const dx = p.x - e.x;
   const dy = p.y - e.y;
-  if (e.cooldown === 0 && e.roomId === state.roomId && Math.hypot(dx, dy) <= dive.distance && !walledFrom(state, e)) {
+  // 073: only on screen; held, it circles as while its cooldown runs.
+  if (e.cooldown === 0 && mayStart(state, e) && Math.hypot(dx, dy) <= dive.distance && !walledFrom(state, e)) {
     startWindup(e, def, dx, dy);
     e.spotX = e.x;
     e.spotY = e.y;

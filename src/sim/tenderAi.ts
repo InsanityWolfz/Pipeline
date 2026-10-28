@@ -1,7 +1,7 @@
 import { TICK_RATE } from '../data/config';
 import type { TenderDef } from '../data/emberworksEnemies';
 import { enemyDef } from '../data/enemies';
-import { engage, enter, hold, inAggroBox, keepDistance, leash, startWindup } from './aiCommon';
+import { engage, enter, hold, inAggroBox, keepDistance, leash, mayStart, startWindup } from './aiCommon';
 import { defOf } from './champions';
 import { targetable, type EnemyState } from './enemies';
 import { clearShot } from './sightLine';
@@ -47,7 +47,8 @@ export function tenderThink(state: SimState, e: EnemyState, def: TenderDef): [nu
   }
   const home = leash(e, def);
   if (home) return home;
-  const target = e.cooldown === 0 && e.roomId === state.roomId ? pickTarget(state, e, def) : null;
+  // 073.1: its beam starts only on screen, like any wind-up.
+  const target = e.cooldown === 0 && mayStart(state, e) ? pickTarget(state, e, def) : null;
   if (target) {
     startWindup(e, def, target.x - e.x, target.y - e.y);
     e.beamTarget = target.id;

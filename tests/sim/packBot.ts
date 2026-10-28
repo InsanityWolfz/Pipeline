@@ -7,6 +7,7 @@ import { createEnemy, targetable, type EnemyState } from '../../src/sim/enemies'
 import { nextInt } from '../../src/sim/rng';
 import { angleDiff } from '../../src/sim/shield';
 import { rotate, volleyRounds } from '../../src/sim/volley';
+import type { Command } from '../../src/sim/input';
 import type { SimState } from '../../src/sim/state';
 import { clearShot } from '../../src/sim/sightLine';
 import { tileCentre } from '../../src/sim/tiles';
@@ -114,11 +115,14 @@ export interface PackFight {
   taken: number;
 }
 
+/** One tick of a pack fight with the bot's command (073's sweep watches each tick through it). */
+export type PackStep = (s: SimState, c: Partial<Command>) => void;
+
 /**
  * Kites and shoots a pack until it's dead, the player KO'd, or `limit` ticks pass. `keep` is the distance it keeps from
  * the nearest member, px. The pack is every enemy in its group (061: a golem's whelps join it as it splits).
  */
-export function fightPack(s: SimState, placed: readonly EnemyState[], home: { x: number; y: number }, limit: number, keep = 150): PackFight {
+export function fightPack(s: SimState, placed: readonly EnemyState[], home: { x: number; y: number }, limit: number, keep = 150, step: PackStep = (x, c) => run(x, 1, c)): PackFight {
   let first = 0;
   let taken = 0;
   const group = placed[0]?.group;
@@ -131,7 +135,7 @@ export function fightPack(s: SimState, placed: readonly EnemyState[], home: { x:
     const target = targetOf(s, pack);
     const goal = goalOf(s, near, target, home, keep);
     const cmd = steer(s, goal, CAREFUL).cmd;
-    run(s, 1, target ? { ...cmd, fire: true, ...aimAt(s, target) } : cmd);
+    step(s, target ? { ...cmd, fire: true, ...aimAt(s, target) } : cmd);
     if (first === 0 && s.events.shots.length > 0) first = t;
     taken += takenThisTick(s);
     if (!s.enemies.some((e) => e.group === group)) return { cleared: true, ko: false, ticks: t - first, taken };

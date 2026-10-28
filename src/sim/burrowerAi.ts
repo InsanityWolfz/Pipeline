@@ -1,6 +1,6 @@
 import { TICK_RATE } from '../data/config';
 import type { BurrowerDef } from '../data/hollowsEnemies';
-import { engage, enter, hold, inAggroBox, leash, startWindup } from './aiCommon';
+import { engage, enter, hold, inAggroBox, leash, mayStart, startWindup } from './aiCommon';
 import { unit } from './direction';
 import type { EnemyState } from './enemies';
 import { damagePlayer } from './health';
@@ -58,8 +58,8 @@ export function burrowThink(state: SimState, e: EnemyState, def: BurrowerDef): [
   const dy = p.y - e.y;
   const dist = Math.hypot(dx, dy);
   const due = dist <= burrow.lockRange || e.modeTicks >= burrow.maxTunnelTicks;
-  // Never under a player standing in a safe zone (017): it waits at the edge.
-  if (due && e.cooldown === 0 && e.roomId === state.roomId && !inSafeZone(state, e.roomId, p.x, p.y)) {
+  // Never under a player standing in a safe zone (017): it waits at the edge. Off screen it tunnels on (073).
+  if (due && e.cooldown === 0 && mayStart(state, e) && !inSafeZone(state, e.roomId, p.x, p.y)) {
     // It stops and locks the spot where it is: under the player's feet when it caught them, short of them behind a wall.
     startWindup(e, def, dx, dy);
     e.spotX = e.x;

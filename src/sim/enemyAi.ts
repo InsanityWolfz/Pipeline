@@ -29,7 +29,7 @@ import { keepOut } from './population';
 import { slamThink } from './slammerAi';
 import { holdStunned, stunHolds } from './stun';
 import type { SimState } from './state';
-import { engage, inAggroBox, inArc, leash, startWindup, stepAttack, toward } from './aiCommon';
+import { engage, inAggroBox, inArc, leash, mayStart, startWindup, stepAttack, toward } from './aiCommon';
 
 
 // Enemy behaviour, RotMG style: aggro when on screen (or in range) or hit, chase
@@ -140,7 +140,7 @@ function think(state: SimState, e: EnemyState, def: MeleeDef): [number, number] 
   const dx = state.player.x - e.x;
   const dy = state.player.y - e.y;
   if (Math.hypot(dx, dy) > def.swipe.triggerRange) return toward(dx, dy, def);
-  if (e.cooldown === 0) startWindup(e, def, dx, dy);
+  if (e.cooldown === 0 && mayStart(state, e)) startWindup(e, def, dx, dy);
   // In range: stand and swing, or wait out the cooldown.
   return [0, 0];
 }

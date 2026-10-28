@@ -1,5 +1,5 @@
 import type { SniperDef } from '../data/hollowsEnemies';
-import { engage, inAggroBox, leash, startWindup, stepAttack, toward } from './aiCommon';
+import { engage, inAggroBox, leash, mayStart, startWindup, stepAttack, toward } from './aiCommon';
 import { coverSpot, peekSpot, type Spot } from './cover';
 import type { EnemyState } from './enemies';
 import { castOrb } from './orbs';
@@ -48,7 +48,8 @@ export function snipeThink(state: SimState, e: EnemyState, def: SniperDef): [num
     const away = coverSpot(state, e, def, dist);
     return away ? walkTo(e, def, away) : toward(-dx, -dy, def);
   }
-  if (e.cooldown === 0) {
+  // 073.6: engaged off screen, it holds its shot (keeping to cover or its distance) until it is on screen.
+  if (e.cooldown === 0 && mayStart(state, e)) {
     if (clearShot(room, e.x, e.y, p.x, p.y)) {
       startWindup(e, def, dx, dy);
       return [0, 0];
