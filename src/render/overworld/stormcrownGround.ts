@@ -5,6 +5,7 @@ import { inStormcrown, STORMCROWN } from '../../data/stormcrown';
 import { STORMCROWN_GROUND } from '../../data/stormcrownAssets';
 import { fromCentre } from '../../data/worldShape';
 import { inkCss } from '../vector/draw';
+import { softPool } from './groundBlend';
 import { LANDMARK_LIST } from '../../data/landmarks';
 import { CROWN_SPIRE } from '../../data/stormcrownSites';
 import type { TileRect } from '../../data/tiles';
@@ -117,7 +118,8 @@ export function paintStormcrown(
         c.closePath();
       });
     }
-    if (hash % G.glowEvery === 2) fill(c, G.glow, G.glowAlpha, () => c.ellipse(x + 16, y + 16, 14, 8, 0, 0, Math.PI * 2));
+    // 074: the glow pooling fades out at its edge (a hard-edged pool read as a dot under the dark mood).
+    if (hash % G.glowEvery === 2) softPool(c, x + 16, y + 16, 14, 8, G.glow, G.glowAlpha);
     if (hash % G.crackEvery === 1) line(c, [x + 3, y + 10 + (hash % 9), x + 15, y + 13, x + 26 + (hash % 5), y + 11], 0.8, G.crack, 0.5);
     // Grit along the wind: short pale streaks, slanting the same way everywhere.
     if (hash % G.streakEvery === 0) {

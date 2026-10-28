@@ -1,4 +1,5 @@
 import { BlendModes, type GameObjects, type Scene } from 'phaser';
+import type { WorldLayer } from './lighting/WorldLayer';
 import { DEPTHS, ENEMY_FX } from '../data/assets';
 import { TILE_SIZE } from '../data/config';
 import { CONDUCTOR_LOOK, CONDUCTOR_SPRITES } from '../data/conductorAssets';
@@ -70,7 +71,8 @@ export class ConductorView {
   private time = 0;
   private shownState: ConductorShown = NO_CONDUCTOR_SHOWN;
 
-  constructor(scene: Scene) {
+  /** `world` (074 review): the altar takes the region's mood and lights. */
+  constructor(scene: Scene, world?: WorldLayer) {
     this.scene = scene;
     this.rods = CROWN_SPIRE.sockets.map((p) => addVector(scene, p.x, p.y, CONDUCTOR_SPRITES.rod.standing).setDepth(p.y).setVisible(false));
     this.bars = scene.add.graphics().setDepth(DEPTHS.worldUi - 1);
@@ -78,6 +80,7 @@ export class ConductorView {
     this.light = scene.add.graphics().setDepth(DEPTHS.motes).setBlendMode(BlendModes.ADD);
     const a = CROWN_SPIRE.altar;
     this.altar = addVector(scene, (a.tx + 0.5) * T, (a.ty + 1) * T, HOLLOWS_SPRITES.altar.dim).setDepth((a.ty + 1) * T).setVisible(false);
+    world?.addProp(this.altar);
     this.summon = scene.add.graphics().setDepth(DEPTHS.groundFx).setBlendMode(BlendModes.ADD).setVisible(false);
   }
 

@@ -27,13 +27,14 @@ import { NO_TALENT_FX, TalentFxView } from './TalentFxView';
 import { MineView, NO_MINES_SHOWN } from './MineView';
 import { ArenaDoorView } from './ArenaDoorView';
 import type { Occluders } from './occluders';
+import type { WorldLayer } from './lighting/WorldLayer';
 import type { ScreenBox } from './bottomHud';
 
 /** What the room views report to the test hook's `ui()`. */
-export type RoomUiState = Pick<UiState, 'minimap' | 'foundryMap' | 'supply' | 'intakeCaps' | 'intakeLift' | 'intakeFirePulses' | 'ports' | 'healing' | 'landmarks' | 'research' | 'schematics' | 'hollows' | 'emberworks' | 'stormcrown' | 'lightningArcs' | 'relics' | 'talentFx' | 'mines' | 'overworldChunks' | 'arenaDoors' | 'banners' | 'bannerAlpha'>;
+export type RoomUiState = Pick<UiState, 'minimap' | 'foundryMap' | 'supply' | 'intakeCaps' | 'intakeLift' | 'intakeFirePulses' | 'ports' | 'healing' | 'landmarks' | 'research' | 'schematics' | 'hollows' | 'emberworks' | 'stormcrown' | 'lightningArcs' | 'relics' | 'talentFx' | 'mines' | 'overworldChunks' | 'groundBakeMs' | 'arenaDoors' | 'banners' | 'bannerAlpha'>;
 
 /** The room views' part of `ui()` before the scene has built them. */
-export const NO_ROOM_UI: RoomUiState = { minimap: { shown: false, markers: [], hover: null }, foundryMap: NO_FOUNDRY_MAP, supply: { started: 0, inFlight: [] }, intakeCaps: 0, intakeLift: null, intakeFirePulses: [], ports: [], healing: NO_HEALING_SHOWN, landmarks: NO_LANDMARKS_SHOWN, research: NO_RESEARCH_SHOWN, schematics: NO_SCHEMATICS_SHOWN, hollows: NO_HOLLOWS_SHOWN, emberworks: NO_EMBERWORKS_SHOWN, stormcrown: NO_STORMCROWN_SHOWN, lightningArcs: 0, relics: NO_RELICS_SHOWN, talentFx: NO_TALENT_FX, mines: NO_MINES_SHOWN, overworldChunks: [], arenaDoors: [], banners: [], bannerAlpha: 0 };
+export const NO_ROOM_UI: RoomUiState = { minimap: { shown: false, markers: [], hover: null }, foundryMap: NO_FOUNDRY_MAP, supply: { started: 0, inFlight: [] }, intakeCaps: 0, intakeLift: null, intakeFirePulses: [], ports: [], healing: NO_HEALING_SHOWN, landmarks: NO_LANDMARKS_SHOWN, research: NO_RESEARCH_SHOWN, schematics: NO_SCHEMATICS_SHOWN, hollows: NO_HOLLOWS_SHOWN, emberworks: NO_EMBERWORKS_SHOWN, stormcrown: NO_STORMCROWN_SHOWN, lightningArcs: 0, relics: NO_RELICS_SHOWN, talentFx: NO_TALENT_FX, mines: NO_MINES_SHOWN, overworldChunks: [], groundBakeMs: [], arenaDoors: [], banners: [], bannerAlpha: 0 };
 
 // The ground on screen: a tiled room (the foundry) or the overworld's terrain
 // with its landmarks (017), plus the corner minimap while outside, and the
@@ -67,11 +68,11 @@ export class RoomViews {
   private readonly mines: MineView;
   private readonly arenaDoors: ArenaDoorView;
 
-  /** `occluders` (070) takes the ruin blocks and grove trees that hide the player. */
-  constructor(scene: Scene, occluders?: Occluders) {
+  /** `occluders` (070) takes the ruin blocks and grove trees that hide the player; `world` (074) the ground and props a region's mood and lights reach. */
+  constructor(scene: Scene, occluders?: Occluders, world?: WorldLayer) {
     this.scene = scene;
-    this.tiles = new RoomView(scene, occluders);
-    this.overworld = new OverworldView(scene, occluders);
+    this.tiles = new RoomView(scene, occluders, world);
+    this.overworld = new OverworldView(scene, occluders, world);
     this.minimap = new MinimapView(scene, roomById(OVERWORLD.id));
     this.foundryMap = new FoundryMapView(scene);
     this.supply = new SupplyView(scene);
@@ -80,17 +81,17 @@ export class RoomViews {
     this.healing = new HealingView(scene);
     this.banner = new Banner(scene);
     this.unlocks = new UnlockBanner(this.banner);
-    this.landmarks = new LandmarkView(scene, this.banner);
+    this.landmarks = new LandmarkView(scene, this.banner, world);
     this.research = new ResearchView(scene);
     this.schematics = new SchematicView(scene, this.banner);
-    this.hollows = new HollowsView(scene);
-    this.emberworks = new EmberworksView(scene);
-    this.stormcrown = new StormcrownView(scene);
+    this.hollows = new HollowsView(scene, world);
+    this.emberworks = new EmberworksView(scene, world);
+    this.stormcrown = new StormcrownView(scene, world);
     this.arcs = new ArcView(scene);
     this.relics = new RelicView(scene);
     this.talentFx = new TalentFxView(scene);
     this.mines = new MineView(scene);
-    this.arenaDoors = new ArenaDoorView(scene);
+    this.arenaDoors = new ArenaDoorView(scene, world);
   }
 
   /** The pointer, view px: 051's minimap names the icon under it. */
@@ -151,6 +152,7 @@ export class RoomViews {
       foundryMap: this.foundryMap.shown,
       supply: { started: this.supply.started, inFlight: this.supply.inFlight },
       overworldChunks: this.overworld.builtChunks,
+      groundBakeMs: this.overworld.bakeMs,
       intakeCaps: this.intake.capsShown,
       intakeLift: this.intake.liftShown,
       intakeFirePulses: this.intake.firePulsesShown,
