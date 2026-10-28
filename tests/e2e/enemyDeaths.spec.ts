@@ -173,9 +173,9 @@ test("the motes rise in each family's colours", async ({ page }) => {
     const ground = await colourCounts(page);
     await page.evaluate(() => window.__GAME__?.tweenSpeed(0.15));
     await spawnAndKill(page, [one[fam.id]], [[70, -10]]);
-    // Wait until two waves are out, then read the motes' colours, and count pixels of each family's colours round the
-    // death beyond what the box showed before.
-    await expect.poll(() => page.evaluate(() => window.__GAME__?.ui().particles.deathMotes ?? 0), { timeout: 10_000 }).toBeGreaterThan(4);
+    // Wait until two waves are out (on the slowed clock a runner drawing a few frames a second takes a while), then read
+    // the motes' colours, and count pixels of each family's colours round the death beyond what the box showed before.
+    await expect.poll(() => page.evaluate(() => window.__GAME__?.ui().particles.deathMotes ?? 0), { timeout: 60_000 }).toBeGreaterThan(4);
     const colors = (await page.evaluate(() => window.__GAME__?.ui().particles.moteColors)) ?? {};
     const counts = (await colourCounts(page)).map((n, i) => Math.max(0, n - (ground[i] ?? 0)));
     await page.evaluate(() => window.__GAME__?.tweenSpeed(1));
