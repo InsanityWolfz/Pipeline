@@ -13,6 +13,7 @@ import { summarize } from '../../src/sim/summary';
 import { tileCentre } from '../../src/sim/tiles';
 import { lines } from './builds';
 import { die, movePlayer, run, volleyAt } from './fight';
+import { runIntro } from './introKit';
 import { FORGE, hall, HALL_START, topUp } from './hall';
 
 // The Forgewright (060): a plated smith construct in the Anvil Hall. Its plating blocks every hit on its body until
@@ -68,6 +69,7 @@ describe('waking and leaving', () => {
     run(s, 30);
     expect(f.mode).toBe('idle');
     movePlayer(s, HALL_START.x, HALL_START.y + 160);
+    runIntro(s);
     run(s, 1);
     expect(f.mode).toBe('chase');
     expect(summarize(s).bosses).toEqual([expect.objectContaining({ enemyId: 'forgewright', engaged: true, plated: true, heat: expect.any(Number), bellows: [{ health: 300, patch: 0 }, { health: 300, patch: 0 }] })]);

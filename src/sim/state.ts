@@ -108,6 +108,8 @@ export interface SimState {
   strikes: Strike[];
   /** Rooms claimed at their pylon (009). Kept through a KO. */
   claims: string[];
+  /** 072: the return stones woken, by id, in the order woken. Kept through a KO. */
+  returnStones: string[];
   /** The claim in progress, if any. */
   claimHold: ClaimHold | null;
   /** Landmark ids seen at least once (032), in the order found. Kept through a KO. */
@@ -226,6 +228,7 @@ export function createSim(seed: number, options: SimOptions = {}): SimState {
     floodPools: [],
     strikes: [],
     claims: [],
+    returnStones: [...(start.returnStones ?? [])],
     claimHold: null,
     discovered: [],
     fog: createFog(),

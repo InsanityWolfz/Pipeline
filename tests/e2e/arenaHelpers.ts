@@ -1,5 +1,6 @@
 import type { Page } from '@playwright/test';
 import { ARENAS } from '../../src/data/arenas';
+import { BOSS_INTRO } from '../../src/data/bossIntro';
 import type {} from './helpers';
 
 // 055: in and out of the boss arenas by their doors, as a player does (E at the door). In-page helpers added to
@@ -7,8 +8,12 @@ import type {} from './helpers';
 
 declare module './helpers' {
   interface Helpers {
-    /** Into a boss arena by its door: walks to the floor just outside the door's middle and presses E. Does nothing if already inside; fails if the door didn't open. */
-    enterArena(id: string): void;
+    /**
+     * Into a boss arena by its door: walks to the floor just outside the door's middle and presses E. Does nothing if
+     * already inside; fails if the door didn't open. 080: then steps the boss's intro out to its last tick, so the next
+     * tick is its wake as before (`keepIntro` leaves it to play).
+     */
+    enterArena(id: string, keepIntro?: boolean): void;
     /** Out of a boss arena by its door: walks to the floor just inside the door's middle and presses E. Does nothing outside it. */
     leaveArena(id: string): void;
   }
@@ -17,6 +22,8 @@ declare module './helpers' {
 /** What the in-page helpers need from each arena's data (they can't import it). */
 interface ArenaDoorSpots {
   id: string;
+  /** Its boss's enemy id (080: its intro is stepped out after going in). */
+  boss: string;
   /** Outside: the tile E leaving puts the player on (`leaveTo`), walked to first. */
   out: { tx: number; ty: number };
   /** The floor tile just outside the door's middle, in E's reach. */
@@ -25,7 +32,7 @@ interface ArenaDoorSpots {
   in: { tx: number; ty: number };
 }
 
-function installArenaDoors(arenas: ArenaDoorSpots[]): void {
+function installArenaDoors({ arenas, intro }: { arenas: ArenaDoorSpots[]; intro: { fullTicks: number; shortTicks: number } }): void {
   const h = window.__helpers;
   const g = () => {
     const game = window.__GAME__;
@@ -39,12 +46,18 @@ function installArenaDoors(arenas: ArenaDoorSpots[]): void {
     return a;
   };
   const inside = (id: string) => g().getState().arenas.find((x) => x.id === id)?.inside ?? false;
-  h.enterArena = (id) => {
+  h.enterArena = (id, keepIntro) => {
     const a = find(id);
     if (inside(id)) return;
     h.walkTo((a.out.tx + 0.5) * 32, (a.out.ty + 0.5) * 32);
     h.walkTo((a.by.tx + 0.5) * 32, (a.by.ty + 0.5) * 32);
     if (g().step(1, { interact: true }).events.arenaEnters.length === 0) throw new Error(`the door of ${id} did not open`);
+    if (keepIntro) return;
+    // 080: an idle boss inside starts its intro on the next tick; it is stepped out to its last tick.
+    const s = g().getState();
+    if (!s.enemies.some((e) => e.enemyId === a.boss && e.room === s.room && e.mode === 'idle' && e.health > 0)) return;
+    const started = g().step(1).events.bossIntros[0];
+    if (started) g().step((started.short ? intro.shortTicks : intro.fullTicks) - 1);
   };
   h.leaveArena = (id) => {
     const a = find(id);
@@ -59,12 +72,12 @@ export async function installArenaHelpers(page: Page): Promise<void> {
   const spots = ARENAS.map((a) => {
     const mid = a.door.tiles[Math.floor(a.door.tiles.length / 2)] ?? a.door.leaveTo;
     const side = Math.sign(a.door.leaveTo.ty - mid.ty);
-    return { id: a.id, out: a.door.leaveTo, by: { tx: mid.tx, ty: mid.ty + side }, in: { tx: mid.tx, ty: mid.ty - side } };
+    return { id: a.id, boss: a.boss, out: a.door.leaveTo, by: { tx: mid.tx, ty: mid.ty + side }, in: { tx: mid.tx, ty: mid.ty - side } };
   });
-  await page.addInitScript(installArenaDoors, spots);
+  await page.addInitScript(installArenaDoors, { arenas: spots, intro: { fullTicks: BOSS_INTRO.fullTicks, shortTicks: BOSS_INTRO.shortTicks } });
 }
 
 /** Into a boss arena by E at its door (the in-page `enterArena`). */
-export async function enterArena(page: Page, arena: { id: string }): Promise<void> {
-  await page.evaluate((id) => window.__helpers?.enterArena(id), arena.id);
+export async function enterArena(page: Page, arena: { id: string }, keepIntro = false): Promise<void> {
+  await page.evaluate(([id, keep]) => window.__helpers?.enterArena(id, keep), [arena.id, keepIntro] as const);
 }

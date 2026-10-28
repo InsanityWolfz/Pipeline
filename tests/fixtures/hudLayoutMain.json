@@ -1,0 +1,768 @@
+{
+ "hudLayout": {
+  "HARVEST_BAR": {
+   "w": 20,
+   "h": 3,
+   "gap": 2,
+   "border": 1,
+   "color": "cyan",
+   "back": "ink"
+  },
+  "ITEM_ICON_SIZE": 16,
+  "HUD_LAYOUT": {
+   "margin": 6,
+   "gap": 4,
+   "activeScale": 1,
+   "cell": {
+    "w": 24,
+    "h": 28,
+    "step": 26,
+    "key": {
+     "x": 3,
+     "y": 3
+    },
+    "icon": {
+     "x": 6,
+     "y": 3
+    },
+    "count": {
+     "x": 4,
+     "y": 20
+    }
+   },
+   "tubeSlot": {
+    "w": 28,
+    "h": 28,
+    "iconY": 3,
+    "countY": 20,
+    "wellInset": 2,
+    "labelPad": 2,
+    "melee": "Melee",
+    "tubeEmpty": "Tube empty · {key} fires carried",
+    "mouseKey": "RMB",
+    "wide": {
+     "ring": "cyan",
+     "ringAlpha": 0.85,
+     "ringWidth": 1.2,
+     "wellTop": "ink",
+     "wellBottom": "carve-dark"
+    }
+   }
+  },
+  "CARRIED_EMPTY": {
+   "alpha": 0.35
+  },
+  "CRAFT_MENU_LAYOUT": {
+   "width": 466,
+   "height": 243,
+   "tabsAt": {
+    "x": 6,
+    "y": 6
+   },
+   "tab": {
+    "w": 74,
+    "h": 22,
+    "gap": 2,
+    "icon": {
+     "x": 3,
+     "y": 3
+    },
+    "name": {
+     "x": 22,
+     "y": 8
+    }
+   },
+   "tabOpen": "brass",
+   "tabStripe": {
+    "w": 2,
+    "inset": 2
+   },
+   "tabClosedAlpha": 0.7,
+   "rowsAt": {
+    "x": 86,
+    "y": 6
+   },
+   "tierColumnX": 190,
+   "rowWidth": 184,
+   "rowHeight": 28,
+   "rowGap": 1,
+   "iconSize": 16,
+   "iconY": 2,
+   "labelY": 20,
+   "input": {
+    "x": 2,
+    "step": 40,
+    "textX": 17,
+    "textY": 7
+   },
+   "arrow": {
+    "x": 122,
+    "y": 8
+   },
+   "output": {
+    "x": 134,
+    "textX": 18,
+    "madeY": 3,
+    "ownedY": 11
+   },
+   "nameGap": 2,
+   "greyAlpha": 0.35,
+   "greyTextAlpha": 0.8,
+   "missing": "rust-light",
+   "title": {
+    "text": "Crafting",
+    "w": 128,
+    "h": 22,
+    "gap": 4,
+    "titleY": 4
+   }
+  },
+  "BUILD_BAR_LAYOUT": {
+   "bottom": 6,
+   "cellStep": 24,
+   "cellWidth": 24,
+   "cellHeight": 28,
+   "icon": {
+    "x": 4,
+    "y": 6
+   },
+   "groupGap": 3,
+   "divider": {
+    "color": "brass",
+    "alpha": 0.7,
+    "width": 1,
+    "inset": 2
+   },
+   "label": {
+    "h": 9,
+    "gap": 2
+   }
+  },
+  "BUILD_PULSE": {
+   "out": 3,
+   "inset": 4,
+   "w": 32,
+   "h": 36,
+   "periodMs": 1100,
+   "min": 0.2,
+   "max": 1
+  },
+  "GHOST": {
+   "okTint": "cyan",
+   "badTint": "rust",
+   "alpha": 0.6
+  },
+  "PICKER_LAYOUT": {
+   "pad": 4,
+   "rowWidth": 184,
+   "rowHeight": 20,
+   "rowGap": 1,
+   "icon": {
+    "x": 4,
+    "y": 2
+   },
+   "count": {
+    "x": 24,
+    "y": 8
+   },
+   "takeShift": 20
+  },
+  "READOUT_LAYOUT": {
+   "pad": 3,
+   "lineHeight": 17,
+   "width": 44,
+   "count": {
+    "x": 19,
+    "y": 6
+   },
+   "gap": 4
+  },
+  "MENU_MAX_ROWS": 10,
+  "MENU_COLUMN_GAP": 8,
+  "ARMOR_TINTS": {
+   "light": "leaf-light",
+   "heavy": "rock",
+   "feather": "leaf-light"
+  },
+  "HOVER_NAME": {
+   "enemy": {
+    "w": 24,
+    "h": 34,
+    "rise": 40
+   },
+   "node": {
+    "w": 24,
+    "h": 34,
+    "rise": 40
+   },
+   "item": {
+    "w": 12,
+    "h": 12,
+    "rise": 14
+   },
+   "below": 0.25,
+   "tile": {
+    "rise": 40
+   },
+   "leyLine": 8,
+   "leyLineRise": 14,
+   "descriptionGap": 2,
+   "gap": 4,
+   "pad": 2,
+   "alpha": 0.85,
+   "style": "label",
+   "promptClear": 68,
+   "playerBox": {
+    "w": 24,
+    "h": 44
+   },
+   "promptCap": {
+    "w": 12,
+    "h": 11
+   }
+  },
+  "WORLD_NAMES": {
+   "pylon": "Ley pylon",
+   "tubeStone": "Tube stone",
+   "dormantTube": "Dormant tube",
+   "crystal": "Ley crystal",
+   "leyLine": "Ley line",
+   "intake": "Foundry intake",
+   "altar": "Altar"
+  },
+  "PAUSE_MENU": {
+   "title": "Paused",
+   "note": "Esc to resume",
+   "card": {
+    "w": 128,
+    "h": 30,
+    "gap": 6,
+    "titleY": 4,
+    "noteY": 19
+   },
+   "dim": {
+    "color": "ink",
+    "alpha": 0.5
+   },
+   "rowGap": 4,
+   "label": {
+    "x": 10,
+    "y": 6
+   },
+   "rows": {
+    "resume": "Resume",
+    "settings": "Settings",
+    "quit": "Quit to title"
+   }
+  },
+  "GUIDED_LOOK": {
+   "outline": {
+    "color": "cyan",
+    "alpha": 0.35,
+    "width": 1
+   },
+   "next": {
+    "color": "cyan-glow",
+    "alpha": 0.95,
+    "width": 2
+   },
+   "bodyAlpha": 0.4,
+   "inset": 2,
+   "barArrowLift": 4,
+   "lockedAlpha": 0.3,
+   "lockTipGap": 4,
+   "hintMs": 1600,
+   "hintRise": 14,
+   "benchArrowGap": 2,
+   "removeLabelRise": 8
+  }
+ },
+ "hudPanels": {
+  "HUD_HEALTH_LAYOUT": {
+   "frame": {
+    "w": 152,
+    "h": 20
+   },
+   "fill": {
+    "x": 4,
+    "y": 4,
+    "w": 144,
+    "h": 12
+   },
+   "textY": 7,
+   "fillColor": "danger",
+   "lowColor": "hit-red",
+   "chunkColor": "snow",
+   "shield": {
+    "gap": 4,
+    "w": 14,
+    "h": 16,
+    "valueGap": 2,
+    "valueW": 12,
+    "valueY": 6
+   },
+   "dimAlpha": 0.4,
+   "xp": {
+    "gap": 2,
+    "h": 6,
+    "bar": {
+     "x": 4,
+     "y": 1,
+     "w": 144,
+     "h": 3
+    },
+    "back": "ink",
+    "backAlpha": 0.7,
+    "fill": "cyan",
+    "tickColor": "snow",
+    "textY": 0,
+    "pipGap": 2,
+    "pipY": 3,
+    "pipHalf": 3
+   }
+  },
+  "HEALTH_BLOCK_WIDTH": 184,
+  "HEALTH_BLOCK_HEIGHT": 28,
+  "HP_BAR": {
+   "lowFraction": 0.25,
+   "pulseMs": 900,
+   "pulseScale": 0.025,
+   "pulseBrighten": 0.35,
+   "edge": {
+    "color": "hit-red",
+    "alpha": 0.6,
+    "inner": 0.4,
+    "floor": 0.6
+   },
+   "chunkHoldMs": 400,
+   "chunkDrainMs": 300,
+   "riseMs": 220,
+   "riseSnap": 0.05,
+   "glow": {
+    "color": "cyan",
+    "pad": 8,
+    "fadeMs": 200,
+    "rings": [
+     {
+      "out": 1,
+      "width": 2,
+      "alpha": 0.5,
+      "blur": 4
+     },
+     {
+      "out": 0.5,
+      "width": 1.2,
+      "alpha": 0.95,
+      "blur": 3
+     }
+    ],
+    "reach": 6
+   }
+  },
+  "INVENTORY_GROUPS": [
+   {
+    "id": "raw",
+    "label": "Raw"
+   },
+   {
+    "id": "parts",
+    "label": "Parts"
+   },
+   {
+    "id": "ammo",
+    "label": "Ammo"
+   },
+   {
+    "id": "gear",
+    "label": "Gear"
+   },
+   {
+    "id": "cores",
+    "label": "Cores"
+   }
+  ],
+  "INVENTORY_GRID": {
+   "title": {
+    "text": "Inventory",
+    "w": 128,
+    "h": 22,
+    "gap": 4,
+    "titleY": 4
+   },
+   "cols": 8,
+   "rows": 5,
+   "cell": {
+    "w": 24,
+    "h": 28,
+    "stepX": 26,
+    "stepY": 30,
+    "icon": {
+     "x": 4,
+     "y": 3
+    },
+    "count": {
+     "x": 2,
+     "y": 20
+    },
+    "warn": {
+     "x": 16,
+     "y": 19,
+     "w": 8,
+     "h": 8
+    }
+   },
+   "pad": 6,
+   "toolbar": {
+    "h": 13,
+    "gap": 2
+   },
+   "sort": {
+    "text": "Sort",
+    "w": 30,
+    "h": 13,
+    "textY": 3
+   },
+   "scroll": {
+    "w": 3,
+    "gap": 4,
+    "track": "ink",
+    "thumb": "brass",
+    "trackAlpha": 0.5,
+    "minThumb": 4
+   },
+   "container": {
+    "headerH": 10,
+    "nameY": 1,
+    "cols": 8,
+    "gap": 4
+   },
+   "stash": {
+    "title": "Stash",
+    "invName": "Inventory",
+    "rows": 3,
+    "invRows": 4,
+    "gap": 4
+   },
+   "footer": {
+    "gap": 3,
+    "lineHeight": 9,
+    "text": [
+     "Marked: lost if you die before reaching",
+     "the foundry or a claimed pylon."
+    ]
+   },
+   "aboveHud": 4,
+   "colors": {
+    "safe": "cyan",
+    "risk": "rust-light",
+    "dim": "rock-pale"
+   },
+   "dimAlpha": 0.7,
+   "text": {
+    "worn": "worn",
+    "armor": "armor",
+    "sep": " · "
+   }
+  },
+  "SCHEMATICS_LABEL": "Schematics",
+  "FOOTER_LINES": 3,
+  "PICKUP_FEED": {
+   "x": 6,
+   "y": 6,
+   "lineStep": 18,
+   "width": 140,
+   "icon": {
+    "x": 0,
+    "y": 0
+   },
+   "text": {
+    "x": 19,
+    "y": 5
+   },
+   "pad": 2,
+   "back": {
+    "y": -1,
+    "h": 16
+   },
+   "alpha": 0.75,
+   "holdMs": 2500,
+   "fadeMs": 400,
+   "maxLines": 5
+  }
+ },
+ "flowLayout": {
+  "MENU_ROW_W": 184,
+  "MENU_ROW_H": 20,
+  "FLOW_ROWS": {
+   "gap": 4,
+   "subH": 11,
+   "label": {
+    "x": 10,
+    "y": 6
+   },
+   "sub": {
+    "x": 10,
+    "y": 2
+   },
+   "value": {
+    "right": 176,
+    "y": 6
+   },
+   "stepper": {
+    "down": 128,
+    "up": 170,
+    "hit": 12
+   },
+   "greyAlpha": 0.45
+  },
+  "FLOW_DIM": {
+   "color": "ink",
+   "alpha": 0.55
+  },
+  "FLOW_TABLET": {
+   "pad": 10,
+   "titleH": 22,
+   "titleY": 6,
+   "noteH": 11
+  },
+  "NOTICE": {
+   "x": 8,
+   "y": 104,
+   "pad": 3,
+   "h": 14,
+   "textY": 4,
+   "alpha": 0.85,
+   "holdMs": 4000,
+   "fadeMs": 400
+  },
+  "SETTINGS_PANEL": {
+   "y": 14,
+   "titleH": 24,
+   "titleY": 7,
+   "pad": 8
+  },
+  "BINDINGS_PANEL": {
+   "y": 22,
+   "columnGap": 16,
+   "perColumn": 13,
+   "titleH": 34,
+   "titleY": 6,
+   "noteY": 21,
+   "pad": 8
+  },
+  "NOTE_PANEL": {
+   "w": 360,
+   "x": 140,
+   "y": 40,
+   "pad": 10,
+   "titleY": 8,
+   "countY": 10,
+   "box": {
+    "y": 28,
+    "h": 150,
+    "padding": 3,
+    "zIndex": 10
+   },
+   "buttonsGap": 8,
+   "fontPx": 8,
+   "lineHeight": 10
+  }
+ },
+ "minimap": {
+  "scale": 0.34,
+  "margin": 6,
+  "frame": {
+   "width": 2
+  },
+  "terrain": {
+   ".": "grass-bright",
+   ",": "dirt",
+   ":": "grass-bright",
+   "~": "grass-bright",
+   "T": "grass-bright",
+   "R": "grass-bright",
+   "B": "grass-bright",
+   "#": "rock-dark",
+   "D": "gold-trim",
+   "G": "brass",
+   "C": "hollow-dark",
+   "P": "hollow-pale",
+   "F": "hollow",
+   "A": "hollow-light",
+   "=": "hollow-pale"
+  },
+  "hollowsTerrain": {
+   ".": "hollow-light",
+   ":": "hollow-light",
+   "~": "hollow-light",
+   "R": "hollow-light",
+   "T": "hollow-light",
+   "B": "hollow-light"
+  },
+  "emberworksTerrain": {
+   ".": "ash-light",
+   ":": "ash-light",
+   "~": "ash-light",
+   "R": "ash-light",
+   "T": "ash-light",
+   "B": "ash-light",
+   "=": "ash-pale",
+   "C": "ash-dark",
+   "K": "rust",
+   "H": "ash-dark",
+   "^": "ash-pale",
+   "%": "cinder",
+   "+": "carve-light"
+  },
+  "stormcrownTerrain": {
+   ".": "storm-light",
+   ":": "storm-light",
+   "~": "storm-light",
+   "R": "storm-light",
+   "T": "storm-light",
+   "B": "storm-light",
+   "C": "storm-dark",
+   "I": "iron-dark",
+   "Y": "storm-pale",
+   "V": "ink",
+   "^": "ash-pale",
+   "+": "carve-light"
+  },
+  "fog": "hood-dark",
+  "markers": {
+   "player": {
+    "color": "snow",
+    "r": 2
+   },
+   "claimed": {
+    "color": "cyan",
+    "r": 3
+   },
+   "schematic": {
+    "color": "cyan-glow",
+    "r": 2
+   }
+  },
+  "icons": {
+   "entrance": "foundry",
+   "shrine": "pylon",
+   "arena": "arena"
+  },
+  "ping": {
+   "ms": 1100,
+   "reach": 6,
+   "color": "cyan-glow",
+   "width": 1
+  },
+  "landmarkScale": 0.6,
+  "hover": {
+   "reach": 5,
+   "gap": 4,
+   "pad": 3
+  },
+  "names": {
+   "entrance": "Foundry",
+   "shrine": "Shrine"
+  }
+ },
+ "bossBar": {
+  "w": 240,
+  "h": 6,
+  "top": 16,
+  "border": 1,
+  "fill": "danger",
+  "back": "ink",
+  "frame": "brass",
+  "nameGap": 2
+ },
+ "foundryMap": {
+  "scale": 4,
+  "margin": 6,
+  "frame": {
+   "width": 2
+  },
+  "floor": "flag-dark",
+  "wall": "mortar",
+  "door": "gold-trim",
+  "line": {
+   "color": "cyan",
+   "width": 1.2
+  },
+  "dots": {
+   "machine": {
+    "color": "brass-light",
+    "r": 1.8
+   },
+   "hopper": {
+    "color": "rock-light",
+    "r": 1.3
+   },
+   "crate": {
+    "color": "wood-light",
+    "r": 1.3
+   }
+  },
+  "player": {
+   "color": "snow",
+   "r": 1.6
+  },
+  "entrance": {
+   "color": "cyan-glow",
+   "r": 1.2
+  },
+  "rim": 0.6,
+  "iconScale": 0.7,
+  "portScale": 0.4
+ },
+ "textSizes": {
+  "body": {
+   "font": "body",
+   "size": 8,
+   "weight": 600,
+   "lineHeight": 9,
+   "strokeWidth": 0
+  },
+  "count": {
+   "font": "body",
+   "size": 7,
+   "weight": 700,
+   "lineHeight": 8,
+   "strokeWidth": 1.6
+  },
+  "label": {
+   "font": "body",
+   "size": 6,
+   "weight": 700,
+   "lineHeight": 7,
+   "strokeWidth": 1.2
+  },
+  "display": {
+   "font": "display",
+   "size": 8,
+   "weight": 700,
+   "lineHeight": 9,
+   "strokeWidth": 0
+  },
+  "title": {
+   "font": "display",
+   "size": 14,
+   "weight": 700,
+   "lineHeight": 16,
+   "strokeWidth": 2.4
+  },
+  "float": {
+   "font": "body",
+   "size": 8,
+   "weight": 800,
+   "lineHeight": 9,
+   "strokeWidth": 2
+  },
+  "chip": {
+   "font": "body",
+   "size": 7,
+   "weight": 700,
+   "lineHeight": 8,
+   "strokeWidth": 1.2
+  }
+ }
+}

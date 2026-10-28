@@ -24,6 +24,9 @@ function star(r: number, inner: number, points: number, turn: number): string {
   return `M ${pts[0]} ${pts.slice(1).map((p) => `L ${p}`).join(' ')} Z`;
 }
 
+/** A gradient lit from the top left: `light` at (x0, y0) to `dark` at (x1, y1). */
+const lit = (light: string, dark: string, x0: number, y0: number, x1: number, y1: number) => ({ linear: [x0, y0, x1, y1] as const, stops: [{ at: 0, color: light }, { at: 1, color: dark }] });
+
 const flameFill = (r: number) => ({
   radial: [0, r * 0.3, r] as const,
   stops: [
@@ -48,20 +51,21 @@ const DORMANT_TUBE: readonly Shape[] = [
 ];
 
 export const VECTOR_SPRITES: readonly VectorSprite[] = [
+  // 078: the pushed look: soft gradients lit from the top left, a rim on the lit edges, the ink outline. The trails
+  // (AMMO_FX) replace the lines once baked behind the arrow and the ley bolt.
   sprite('arrow', [24, 8], [14, 4], [
     [
-      line([-13, 0, -6, 0], 1.6, { id: 'cyan', alpha: 0.55 }),
-      line([-8, 0, 4, 0], 1.4, 'wood-light', true),
-      path('M -8 0 L -10.5 -2.2 L -6 0 L -10.5 2.2 Z', flat('rust-light')),
-      path('M 7 0 L 3 -2.4 L 3 2.4 Z', solid('rock-pale')),
+      path('M -8 0 L -11 -2.6 L -6.4 -0.5 Z', { fill: lit('rust-light', 'rust', -11, -2.6, -6.4, 0) }),
+      path('M -8 0 L -11 2.6 L -6.4 0.5 Z', { fill: lit('rust', 'rust-dark', -11, 0, -6.4, 2.6) }),
+      rect(-8.6, -0.7, 12.4, 1.4, 0.7, { fill: lit('wood-light', 'wood', 0, -0.7, 0, 0.7), outline: true }),
+      path('M 7.4 0 L 2.6 -2.6 L 3.7 0 L 2.6 2.6 Z', { fill: lit('rock-pale', 'rock', 2.6, -2.6, 7.4, 2.6), outline: true, rim: { color: 'snow', width: 0.6, offset: 0.5 } }),
     ],
   ]),
   shadow('arrow-shadow', 5, 1.3),
   sprite('bomb', [14, 16], [7, 9], [
     [
-      ellipse(0, 0, 4.4, 4.4, { fill: { radial: [-1, -1, 5], stops: [{ at: 0, color: 'rock-dark' }, { at: 1, color: 'ink' }] }, outline: true }),
-      rect(-4.3, -1, 8.6, 2, 1, flat('cinder')),
-      ellipse(-1.6, -1.8, 1.2, 0.8, flat('rock-light')),
+      ellipse(0, 0, 4.4, 4.4, { fill: { radial: [-1.6, -1.6, 6], stops: [{ at: 0, color: 'rock' }, { at: 0.75, color: 'rock-dark' }] }, outline: true, rim: { color: 'rock-pale', width: 0.8, offset: 0.7 } }),
+      rect(-4.3, -1, 8.6, 2, 1, { fill: lit('cinder-light', 'cinder', 0, -1, 0, 1) }),
       line([1.6, -3.6, 3, -5.8], 1, 'wood', true),
       ellipse(3.1, -6.2, 1.2, 1.2, { fill: 'cinder-light', glow: { color: 'cinder', blur: 3 } }),
     ],
@@ -69,8 +73,8 @@ export const VECTOR_SPRITES: readonly VectorSprite[] = [
   shadow('bomb-shadow', 4, 1.4),
   sprite('ley-bolt', [22, 8], [12, 4], [
     [
-      { ...line([-10, 0, -1, 0], 2.6, { id: 'cyan', alpha: 0.5 }), glow: { color: 'cyan', blur: 4 } },
-      path('M 6 0 L 0 -2.8 L -2.4 0 L 0 2.8 Z', { fill: 'cyan-glow', outline: true, glow: { color: 'cyan', blur: 5 } }),
+      path('M 6 0 L 0 -2.8 L -2.4 0 L 0 2.8 Z', { fill: { radial: [0.6, -0.6, 4.5], stops: [{ at: 0, color: 'cyan-glow' }, { at: 1, color: 'cyan' }] }, outline: true, glow: { color: 'cyan', blur: 5 }, rim: { color: 'snow', width: 0.6, offset: 0.5 } }),
+      ellipse(1.2, -0.4, 1, 0.5, flat('snow')),
     ],
   ]),
   shadow('ley-bolt-shadow', 5, 1.3),

@@ -7,6 +7,7 @@ import { paletteHex } from '../../data/palette';
 import { NOTES, NOTE_TEXT } from '../../data/save';
 import { colorOf } from '../color';
 import { drawTablet } from '../tablet';
+import { MenuMotion } from '../MenuMotion';
 import { TextLine } from '../textLine';
 import { MenuColumn, type MenuRowShown } from './MenuColumn';
 
@@ -31,6 +32,8 @@ export class NoteView {
   private open = false;
   private onSave: (text: string) => void = () => undefined;
   private onCancel: () => void = () => undefined;
+  /** 081: the open's fade and rise (the typing box, a page element, shows at once). */
+  private readonly motion: MenuMotion;
 
   constructor(scene: Scene, depth: number = DEPTHS.flowNote) {
     this.scene = scene;
@@ -43,6 +46,8 @@ export class NoteView {
     this.title = new TextLine(scene, P.x + P.pad, P.y + P.titleY, depth + 3, false, 'display').set(NOTE_TEXT.title);
     this.count = new TextLine(scene, 0, P.y + P.countY, depth + 3, false, 'body');
     this.menu = new MenuColumn(scene, 0, 0, FLOW_ROWS, depth + 2);
+    this.motion = new MenuMotion(scene, 'note', depth).adopt([this.dim, this.panel, this.title, this.count]);
+    this.menu.moveWith(this.motion);
     this.menu.set(
       [
         { id: 'saveNote', label: NOTE_TEXT.save },
@@ -108,6 +113,8 @@ export class NoteView {
   }
 
   private setOpen(open: boolean): void {
+    if (open && !this.open) this.motion.show();
+    if (!open) this.motion.hide();
     this.open = open;
     for (const o of [this.dim, this.panel]) o.setVisible(open);
     this.title.setVisible(open);

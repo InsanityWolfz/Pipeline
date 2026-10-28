@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { SPRITES } from '../../src/data/assets';
 import { BOMB_SPHERE, ICON_BOMB, ITEM_SPRITES_VECTOR } from '../../src/data/art/items';
+import { ICON_CASING } from '../../src/data/art/casing';
 import { inksOf } from '../../src/data/art/types';
 import { HUD_SPRITES_VECTOR } from '../../src/data/art/hud';
 import { VIEW_HEIGHT, VIEW_WIDTH } from '../../src/data/config';
@@ -187,12 +188,14 @@ describe('the pickup feed data (031)', () => {
   });
 });
 
-describe('the casing icon (031)', () => {
+describe('the casing icon (031; 081)', () => {
   const shapesOf = (key: string) => ITEM_SPRITES_VECTOR.find((s) => s.key === key)?.frames[0] ?? [];
 
-  it('is the bomb sphere alone: no fuse, no spark, no cinder band', () => {
+  it('is an open shell, not the bomb sphere: no fuse, no spark, no cinder band', () => {
     const casing = shapesOf(SPRITES.itemCasing);
-    expect(casing).toEqual(BOMB_SPHERE);
+    // 081: the bomb's sphere read as a bomb at real size; the casing is now an open shell (art.md's 005 rule).
+    expect(casing).toEqual(ICON_CASING);
+    for (const s of BOMB_SPHERE) expect(casing).not.toContainEqual(s);
     const inks = casing.flatMap(inksOf);
     for (const banned of ['cinder', 'cinder-light', 'wood', 'cyan', 'rock-pale']) expect(inks).not.toContain(banned);
   });

@@ -19,6 +19,10 @@ import { stormcrownFrame } from '../stormcrownTiles';
 import { isPlateau } from './plateau';
 import { pieceFrame } from '../../sim/tileLook';
 import type { Occluders } from '../occluders';
+import type { WorldLayer } from '../lighting/WorldLayer';
+import type { WorldLife } from '../world/WorldLife';
+import { setPieceOnTile } from '../world/decorPlace';
+import { variantFrame } from '../world/variants';
 
 // Draws the overworld (017): its ground baked into chunk textures, then every tree, rock, ruin and the foundry's ruin
 // as vector sprites sorted by their feet (067: the shrine's barrier dome is gone, its door open from the start); and
@@ -26,6 +30,12 @@ import type { Occluders } from '../occluders';
 // (its ground and its standing sprites) is built as the camera nears it and dropped once it's far behind.
 
 const T = TILE_SIZE;
+
+/** 074: `?blend=off` (dev only) bakes the ground without its blending, to measure what blending costs a chunk. */
+/** 074: how many chunk bake times are kept for the probe. */
+const BAKE_KEPT = 64;
+
+const BLEND = !(import.meta.env.DEV && typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('blend') === 'off');
 
 const { safe: SAFE } = SITE_LOOK;
 
@@ -44,11 +54,25 @@ export class OverworldView {
   private room: Room | null = null;
   private shown = false;
   private claims = '';
+  /** 074: the last BAKE_KEPT chunks' ground bake times, ms, for the probe. */
+  readonly bakeMs: number[] = [];
+  /** 077: the last BAKE_KEPT chunks' whole build times (the bake, the standing sprites and the decor), ms, for the probe. */
+  readonly buildMs: number[] = [];
 
   private readonly occluders: Occluders | undefined;
 
-  /** `occluders` (070): the trees and ruin blocks that can hide the player register there. */
-  constructor(scene: Scene, occluders?: Occluders) {
+  private readonly world: WorldLayer | undefined;
+
+  private readonly life: WorldLife | undefined;
+
+  /**
+   * `occluders` (070): the trees and ruin blocks that can hide the player register there. `world` (074): the ground and
+   * everything standing take the region's mood and lights. `life` (077): each chunk's plants, vines and set pieces, and
+   * the sway of its trees.
+   */
+  constructor(scene: Scene, occluders?: Occluders, world?: WorldLayer, life?: WorldLife) {
+    this.life = life;
+    this.world = world;
     this.scene = scene;
     this.occluders = occluders;
   }
@@ -57,6 +81,7 @@ export class OverworldView {
   show(room: Room | null): void {
     if (room && !this.built) this.build(room);
     this.shown = room !== null;
+    this.life?.setRoom(room);
     for (const c of this.chunks.values()) for (const o of c.objects) o.setVisible(this.shown);
     for (const o of this.safe) o.setVisible(this.shown);
   }
@@ -119,6 +144,7 @@ export class OverworldView {
       const [cx = 0, cy = 0] = id.split(',').map(Number);
       if (cx >= keep.x0 && cx <= keep.x1 && cy >= keep.y0 && cy <= keep.y1) continue;
       for (const o of c.objects) o.destroy();
+      this.life?.decor.drop(id);
       if (this.scene.textures.exists(c.key)) this.scene.textures.remove(c.key);
       this.chunks.delete(id);
     }
@@ -138,26 +164,58 @@ export class OverworldView {
     const h = Math.min(C, height - y0);
     const key = `${OVERWORLD_TEXTURES.ground}-${cx}-${cy}`;
     const tex = this.scene.textures.exists(key) ? null : this.scene.textures.createCanvas(key, Math.ceil(w * scale), Math.ceil(h * scale));
+    const built = performance.now();
     if (tex) {
       const c = tex.context;
       c.setTransform(scale, 0, 0, scale, -x0 * scale, -y0 * scale);
-      drawGround(c, room, x0, y0, w, h, scale);
+      const started = performance.now();
+      drawGround(c, room, x0, y0, w, h, scale, BLEND, !this.life?.off);
+      this.bakeMs.push(performance.now() - started);
+      if (this.bakeMs.length > BAKE_KEPT) this.bakeMs.shift();
       tex.refresh();
     }
-    const objects: GameObjects.Image[] = [this.scene.add.image(x0, y0, key).setOrigin(0).setScale(1 / scale).setDepth(DEPTHS.floor).setVisible(this.shown)];
+    const objects: GameObjects.Image[] = this.groundTiles(key, x0, y0, w, h, scale);
+    // 077: its plants, vines and set pieces first, so its trees can join its sway.
+    this.life?.decor.build(room, cx, cy);
     for (let ty = y0 / T; ty < (y0 + h) / T; ty++) {
       const row = room.rows[ty] ?? '';
       for (let tx = x0 / T; tx < (x0 + w) / T; tx++) {
-        const image = this.standing(room, row[tx] ?? '', tx, ty);
+        const image = this.standing(room, row[tx] ?? '', tx, ty, id);
         if (image) objects.push(image.setVisible(this.shown));
       }
     }
     this.chunks.set(id, { key, objects });
+    this.buildMs.push(performance.now() - built);
+    if (this.buildMs.length > BAKE_KEPT) this.buildMs.shift();
     return true;
   }
 
-  /** A tile's standing sprite, if it has one, at the bottom centre of the tile. */
-  private standing(room: Room, symbol: string, tx: number, ty: number): GameObjects.Image | null {
+  /**
+   * 074: a chunk's ground drawn as squares of `GROUND.lightTile` world px, each a frame of its texture: each frame only
+   * the squares a light reaches are lit (WorldLayer.lightChunks), so the lighting's cost follows the lights, not the screen.
+   */
+  private groundTiles(key: string, x0: number, y0: number, w: number, h: number, scale: number): GameObjects.Image[] {
+    const S = GROUND.lightTile;
+    const texture = this.scene.textures.get(key);
+    const out: GameObjects.Image[] = [];
+    for (let sy = 0; sy < h; sy += S) {
+      for (let sx = 0; sx < w; sx += S) {
+        const name = `${sx},${sy}`;
+        const px = Math.round(sx * scale);
+        const py = Math.round(sy * scale);
+        const pw = Math.min(Math.round((sx + S) * scale), texture.source[0]?.width ?? 0) - px;
+        const ph = Math.min(Math.round((sy + S) * scale), texture.source[0]?.height ?? 0) - py;
+        if (!texture.has(name)) texture.add(name, 0, px, py, pw, ph);
+        const image = this.scene.add.image(x0 + px / scale, y0 + py / scale, key, name).setOrigin(0).setScale(1 / scale).setDepth(DEPTHS.floor).setVisible(this.shown);
+        out.push(this.world?.addChunk(image) ?? image);
+      }
+    }
+    return out;
+  }
+
+  /** A tile's standing sprite, if it has one, at the bottom centre of the tile (077: none under a set piece; a ruin variant on some). */
+  private standing(room: Room, symbol: string, tx: number, ty: number, chunk: string): GameObjects.Image | null {
+    if (setPieceOnTile(tx, ty)) return null;
     const hash = worldTileHash(tx, ty);
     const x = (tx + 0.5) * T;
     const bottom = (ty + 1) * T;
@@ -184,10 +242,13 @@ export class OverworldView {
     // 059: rocks and ruin blocks (a landmark's own, the ruin's columns and stones) by the rule their footprints follow.
     else if (symbol === TILE.rock || symbol === TILE.ruinBlock) frame = pieceFrame(room, tx, ty);
     if (!frame) return null;
-    const image = addVector(this.scene, x + jitter, bottom, frame).setDepth(bottom);
+    const variant = variantFrame(room.rows, frame, tx, ty);
+    if (variant !== frame) this.life?.decor.noteVariant(chunk);
+    const image = addVector(this.scene, x + jitter, bottom, variant).setDepth(bottom);
     if (symbol === TILE.tree && (hash >>> 16) % 2 === 0) image.setFlipX(true);
     if (symbol === TILE.tree || symbol === TILE.ruinBlock) this.occluders?.add(image);
-    return image;
+    if (symbol === TILE.tree) this.life?.decor.addTree(chunk, image, hash);
+    return this.world?.addProp(image) ?? image;
   }
 
   /** Each claimed pylon's safe ground (032: every claimed pylon, at its own radius): a green wash and a ley ring. */

@@ -6,6 +6,7 @@ import { TITLE_ROWS, TITLE_SCREEN, type TitleRow } from '../../data/titleScreen'
 import { colorOf } from '../color';
 import { TextLine } from '../textLine';
 import { MenuColumn, type MenuRowShown } from './MenuColumn';
+import { MenuMotion } from '../MenuMotion';
 import { paintTitle } from './titlePainter';
 import { TitleWanderer, type TitleMotion } from './TitleWanderer';
 
@@ -47,6 +48,8 @@ export class TitleView {
   private readonly glow: GameObjects.Graphics;
   private readonly logo: TextLine;
   private readonly menu: MenuColumn;
+  /** 081: the menu column's open. */
+  private readonly motion: MenuMotion;
   private readonly wanderer: TitleWanderer;
   private readonly moteList: Mote[] = [];
   private elapsed = 0;
@@ -68,10 +71,15 @@ export class TitleView {
     const L = T.logo;
     this.glow = scene.add.graphics().setScrollFactor(0).setDepth(DEPTHS.titleGlow);
     for (let i = L.glow.rings; i >= 1; i--) this.glow.fillStyle(colorOf(L.glow.color), L.glow.alpha).fillEllipse(L.cx, L.y + L.glow.dy, (L.glow.rx * 2 * i) / L.glow.rings, (L.glow.ry * 2 * i) / L.glow.rings);
-    this.logo = new TextLine(scene, 0, L.y, DEPTHS.titleLogo, false, 'title', L.scale / 2).set(L.text);
+    // 081: titles turned pale brass; the logo is the painting's, and keeps its snow.
+    this.logo = new TextLine(scene, 0, L.y, DEPTHS.titleLogo, false, 'title', L.scale / 2).set(L.text).setFill(L.fill);
     this.logo.moveTo(Math.round(L.cx - this.logo.width / 2), L.y);
     this.menu = new MenuColumn(scene, T.menu.x, T.menu.y, { ...FLOW_ROWS, scale: T.menu.scale });
+    // 081: the menu column fades in and rises as the title shows (the painting doesn't move).
+    this.motion = new MenuMotion(scene, 'title', DEPTHS.menu);
+    this.menu.moveWith(this.motion);
     this.setContinue({ usable: false, line: null });
+    this.motion.show();
   }
 
   /** Shows the Continue row as the save allows. */
@@ -86,6 +94,8 @@ export class TitleView {
   }
 
   setVisible(visible: boolean): void {
+    if (visible && !this.visible) this.motion.show();
+    if (!visible) this.motion.hide();
     this.visible = visible;
     for (const o of [this.back, this.pipe, this.motes, this.glow]) o.setVisible(visible);
     this.logo.setVisible(visible);

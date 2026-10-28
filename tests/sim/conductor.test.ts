@@ -10,6 +10,7 @@ import { NO_COMMAND } from '../../src/sim/input';
 import { summarize } from '../../src/sim/summary';
 import { tileCentre } from '../../src/sim/tiles';
 import { die, movePlayer, run } from './fight';
+import { runIntro } from './introKit';
 import { CONDUCTOR, spire, SPIRE_DOOR_OUT, SPIRE_MIDDLE } from './spire';
 
 // The Conductor (064): the Stormcrown's boss in the Crown Spire. It wakes when the player enters the spire, stands
@@ -65,6 +66,7 @@ describe('waking and leaving', () => {
     run(s, 30);
     expect(c.mode).toBe('idle');
     movePlayer(s, SPIRE_MIDDLE.x, SPIRE_MIDDLE.y);
+    runIntro(s);
     run(s, 1);
     expect(c.mode).not.toBe('idle');
     expect(c.angle).toBeCloseTo(Math.atan2(SPIRE_MIDDLE.y - c.y, SPIRE_MIDDLE.x - c.x), 5);

@@ -1,5 +1,6 @@
 import { AUTO, Game, Scale } from 'phaser';
 import { INK_ID, paletteHex } from './data/palette';
+import { LIGHT_BUDGET } from './data/lights';
 import { loadFonts } from './render/fonts';
 import { FlowScene } from './render/flow/FlowScene';
 import { currentFit, keepScreenFit } from './render/scale';
@@ -25,6 +26,8 @@ function start(): void {
     pixelArt: false,
     antialiasGL: false,
     roundPixels: true,
+    // 074: High's light budget; Phaser reads it once at boot (a shader constant).
+    render: { maxLights: LIGHT_BUDGET.high },
     backgroundColor: paletteHex(INK_ID),
     scale: { mode: Scale.NONE, autoCenter: Scale.CENTER_BOTH, zoom: fit.zoom / fit.scale },
     scene: [flow],

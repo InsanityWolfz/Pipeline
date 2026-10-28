@@ -1,9 +1,10 @@
 import { roundTier } from '../tags';
 import { TIER_ARMED, TIER_PROJECTILES, TIER_SPRITES, type TierSprite } from '../tierAssets';
 import type { TierId } from '../tiers';
+import { casingShell } from './casing';
 import { MINE_SPRITES_VECTOR } from './mines';
 import { VECTOR_SPRITES } from './sprites';
-import { ellipse, flat, line, path, rect, solid, trim, type Ink, type Paint, type Shape, type VectorSprite } from './types';
+import { ellipse, flat, line, path, solid, trim, type Ink, type Paint, type Shape, type VectorSprite } from './types';
 
 // 062's art, in the 020 style. A tiered round's icon and its look in flight are its stone round's, recoloured by a
 // palette swap (TIER_ART): steel takes the iron palette's darker metal with a bright sheen along it, glass a clear
@@ -67,13 +68,15 @@ function swapPaint(p: Paint, swap: Readonly<Record<string, string>>): Paint {
   return 'linear' in p ? { linear: p.linear, stops } : { radial: p.radial, stops };
 }
 
-/** A shape in a tier's colours (TIER_ART): its fill, stroke, glow and line recoloured, its opacity scaled. */
+/** A shape in a tier's colours (TIER_ART): its fill, stroke, glow, rim and line recoloured, its opacity scaled. */
 export function inTier(shape: Shape, tier: TierId): Shape {
   const { swap, alpha } = TIER_ART[tier];
   const style = {
     ...(shape.fill ? { fill: swapPaint(shape.fill, swap) } : {}),
     ...(shape.stroke ? { stroke: { ...shape.stroke, color: swapInk(shape.stroke.color, swap) } } : {}),
     ...(shape.glow ? { glow: { ...shape.glow, color: swap[shape.glow.color] ?? shape.glow.color } } : {}),
+    // 078: the redrawn bodies' rim light takes the tier's colours too.
+    ...(shape.rim ? { rim: { ...shape.rim, color: swapInk(shape.rim.color, swap) } } : {}),
     ...(alpha !== 1 ? { alpha: (shape.alpha ?? 1) * alpha } : {}),
   };
   return shape.kind === 'line' ? { ...shape, ...style, color: swapInk(shape.color, swap) } : { ...shape, ...style };
@@ -108,12 +111,10 @@ const STEEL_ARROWHEAD: Shape[] = [
   { ...line([5, -5.6, -1.6, -1.6], 0.5, { id: 'snow', alpha: 0.85 }), glow: { color: 'rock-pale', blur: 1 } },
 ];
 
-// The steel casing: the bomb's sphere in dark steel, a riveted band, and the sheen.
+// The steel casing (081): the casing's open shell in dark steel, with its sheen.
 const STEEL_CASING: Shape[] = [
-  ellipse(-0.6, 1.4, 5.4, 5.4, { fill: { radial: [-2, -0.6, 6], stops: [{ at: 0, color: 'iron-light' }, { at: 0.5, color: 'iron' }, { at: 1, color: 'iron-dark' }] }, outline: true }),
-  rect(-5.8, 0.6, 10.4, 1.6, 0.8, flat('iron-dark')),
-  ...[-3.6, -0.6, 2.4].map((x) => ellipse(x, 1.4, 0.5, 0.4, flat('brass-light'))),
-  ellipse(-2.6, -1.6, 1.6, 0.8, { fill: { id: 'snow', alpha: 0.75 } }),
+  ...casingShell(['iron-light', 'iron', 'iron-dark'], { id: 'snow', alpha: 0.85 }),
+  ...[-4.6, -1.8, 1].map((x) => ellipse(x, 4.4, 0.45, 0.4, flat('brass-light'))),
 ];
 
 // The steel plate: the riveted sheet in dark steel, the vein glinting, the sheen along its top edge.
@@ -141,6 +142,15 @@ const spark = (x: number, y: number, r: number): Shape => ({
   ...path(`M ${x} ${y - r} L ${x + r * 0.3} ${y - r * 0.3} L ${x + r} ${y} L ${x + r * 0.3} ${y + r * 0.3} L ${x} ${y + r} L ${x - r * 0.3} ${y + r * 0.3} L ${x - r} ${y} L ${x - r * 0.3} ${y - r * 0.3} Z`, flat('snow')),
   glow: { color: 'storm-glow', blur: 3 },
 });
+
+// The stormsteel casing (081): the steel shell tempered, and struck through with lightning so it parts from the steel
+// one at real size: a violet vein forked down the bowl, a spark at the lid's lip, the lid's rim storm-pale.
+const STORMSTEEL_CASING: Shape[] = [
+  ...tempered(STEEL_CASING),
+  { ...path('M -5.4 3.2 L -3.2 4.2 L -1.8 3 L 0.4 4.6 L 2 3.4', trim('storm-pale', 0.7)), glow: { color: 'storm-glow', blur: 2.5 } },
+  { ...path('M 1.6 -3.2 L 3 -4.6 L 4.6 -3.8 L 6 -5.4', trim('storm-pale', 0.6)), glow: { color: 'storm-glow', blur: 2 } },
+  spark(0.2, -1.8, 1.6),
+];
 
 const STORMSTEEL: Shape[] = [
   ...tempered(LEY_STEEL),
@@ -171,6 +181,6 @@ export const TIER_SPRITES_VECTOR: readonly VectorSprite[] = [
   icon(TIER_SPRITES.itemStormsteel, STORMSTEEL),
   icon(TIER_SPRITES.itemStormGlass, STORM_GLASS),
   icon(TIER_SPRITES.itemStormsteelArrowhead, tempered(STEEL_ARROWHEAD)),
-  icon(TIER_SPRITES.itemStormsteelCasing, tempered(STEEL_CASING)),
+  icon(TIER_SPRITES.itemStormsteelCasing, STORMSTEEL_CASING),
   icon(TIER_SPRITES.itemStormsteelPlate, tempered(STEEL_PLATE)),
 ];

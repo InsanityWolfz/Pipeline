@@ -9,7 +9,8 @@ import { describe, expect, it } from 'vitest';
 import { FLOOR_VARIANTS, WALL_SPRITES } from '../../src/data/roomArt';
 import { animFrames, ENEMY_FX, MELEE_SWOOSH, PLAYER_HIT_FX } from '../../src/data/assets';
 import { HP_BAR, HUD_HEALTH_LAYOUT, INVENTORY_GRID } from '../../src/data/hudPanels';
-import { ARMOR_TINTS, GHOST, HARVEST_BAR, TABLET } from '../../src/data/hudLayout';
+import { GHOST, HARVEST_BAR } from '../../src/data/hudLayout';
+import { TABLET } from '../../src/data/hudLook';
 import { MINIMAP } from '../../src/data/minimap';
 import { ENEMIES } from '../../src/data/enemies';
 import { ENTRANCE_GAUGE_COLORS, INTAKE_LOOK } from '../../src/data/art/intake';
@@ -116,7 +117,6 @@ describe('feel and sound references', () => {
       HARVEST_BAR.back,
       ...Object.values(MINIMAP.terrain),
       ...Object.values(MINIMAP.markers).map((m) => m.color),
-      ...Object.values(ARMOR_TINTS),
       MELEE_SWOOSH.color,
       HUD_HEALTH_LAYOUT.fillColor,
       HUD_HEALTH_LAYOUT.lowColor,

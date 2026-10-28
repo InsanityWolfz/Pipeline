@@ -1,5 +1,5 @@
 import type { ShardbackDef } from '../data/hollowsEnemies';
-import { engage, inAggroBox, inArc, leash, startWindup, stepAttack, toward } from './aiCommon';
+import { engage, inAggroBox, inArc, leash, mayStart, startWindup, stepAttack, toward } from './aiCommon';
 import type { EnemyState } from './enemies';
 import { damagePlayer } from './health';
 import { turnToward } from './shield';
@@ -32,7 +32,7 @@ export function shardThink(state: SimState, e: EnemyState, def: ShardbackDef): [
   const dx = p.x - e.x;
   const dy = p.y - e.y;
   if (Math.hypot(dx, dy) > def.bash.triggerRange) return toward(dx, dy, def);
-  if (e.cooldown === 0) startWindup(e, def, dx, dy);
+  if (e.cooldown === 0 && mayStart(state, e)) startWindup(e, def, dx, dy);
   return [0, 0];
 }
 

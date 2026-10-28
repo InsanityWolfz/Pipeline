@@ -5,6 +5,7 @@ import { createEnemy } from '../../src/sim/enemies';
 import type { SimState } from '../../src/sim/state';
 import { summarize } from '../../src/sim/summary';
 import { die, movePlayer, run, runUntil } from './fight';
+import { runIntro } from './introKit';
 import { DEF, forum, START } from './forum';
 
 // The Bulwark (034): a slow-turning shielded wall in the Sunken Forum. It lobs bombs
@@ -38,6 +39,7 @@ describe('the Bulwark', () => {
     run(s, 30);
     expect(b.mode).toBe('idle');
     movePlayer(s, START.x, START.y + 160);
+    runIntro(s);
     run(s, 1);
     expect(b.mode).toBe('chase');
     expect(summarize(s).bosses).toEqual([expect.objectContaining({ id: b.id, enemyId: 'bulwark', health: DEF.maxHealth, mode: 'chase', engaged: true })]);

@@ -1,6 +1,6 @@
 import { enemyDef } from '../data/enemies';
 import type { MiteDef } from '../data/stormcrownEnemies';
-import { engage, enter, hold, inAggroBox, leash, startWindup, toward } from './aiCommon';
+import { engage, enter, hold, inAggroBox, leash, mayStart, startWindup, toward } from './aiCommon';
 import { aggro, type EnemyState } from './enemies';
 import { damagePlayer } from './health';
 import type { SimState } from './state';
@@ -40,7 +40,7 @@ export function miteThink(state: SimState, e: EnemyState, def: MiteDef): [number
   const dx = p.x - e.x;
   const dy = p.y - e.y;
   if (e.roomId === state.roomId && Math.hypot(dx, dy) <= zap.triggerRange) {
-    if (e.cooldown === 0) startWindup(e, def, dx, dy);
+    if (e.cooldown === 0 && mayStart(state, e)) startWindup(e, def, dx, dy);
     return [0, 0];
   }
   return toward(dx, dy, def);

@@ -1,5 +1,5 @@
 import type { RamDef } from '../data/stormcrownEnemies';
-import { engage, inAggroBox, inArc, leash, startWindup, stepAttack, toward } from './aiCommon';
+import { engage, inAggroBox, inArc, leash, mayStart, startWindup, stepAttack, toward } from './aiCommon';
 import type { EnemyState } from './enemies';
 import { damagePlayer } from './health';
 import { slowPlayer } from './slow';
@@ -20,7 +20,7 @@ export function ramThink(state: SimState, e: EnemyState, def: RamDef): [number, 
   const dx = state.player.x - e.x;
   const dy = state.player.y - e.y;
   if (Math.hypot(dx, dy) > def.gust.range) return toward(dx, dy, def);
-  if (e.cooldown === 0 && e.roomId === state.roomId) startWindup(e, def, dx, dy);
+  if (e.cooldown === 0 && mayStart(state, e)) startWindup(e, def, dx, dy);
   return [0, 0];
 }
 

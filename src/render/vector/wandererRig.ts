@@ -1,263 +1,246 @@
-import type { LimbStyle, Part, Shape } from '../../data/art/types';
-import { TUBE_PARTS, WANDERER, type WandererView } from '../../data/art/wanderer';
+import type { Part } from '../../data/art/types';
+import type { Rarity } from '../../data/gear';
+import { TUBE_PARTS, WANDERER, wandererViews, type WandererChannel, type WandererSchemeId, type WandererView, type WandererViewDef } from '../../data/art/wanderer';
+import { WANDERER_MOTION } from '../../data/art/wandererMotion';
 import { OUTLINE_WIDTH } from '../../data/art/style';
 import { TITLE_SCREEN } from '../../data/titleScreen';
 import { drawShape, drawShapes, type DrawOpts } from './draw';
+import { angleOf, apply, chain, invert, mul, rotate, rotateAbout, scaleAbout, translate, useMat, type Mat, type Pt } from './affine';
+import { drawArm, drawHose, drawLeg, hoseAt, hosePath } from './wandererBody';
+import { drawFlash, drawPulse, drawShimmer, drawTube, drawWindowFlare } from './wandererFx';
+import { bakePart, type Baked } from './partCache';
+import type { WandererPose } from './wandererPose';
 
-// Poses and draws the wanderer (016) onto a canvas whose origin is at the feet,
-// in world px. Pure canvas: PlayerView feeds it sim state each frame, and the
-// contact sheet feeds it fixed poses. Every pose number is render-side feel.
+// Poses and draws the wanderer (016; the arcane ranger since 075) onto a canvas whose origin is at the feet, in world
+// px. Pure canvas: PlayerView feeds it the motion's pose each frame, the title its idle, and the contact sheet fixed
+// poses. Frames: the feet; the figure (squash about the feet, a roll's or the KO's turn); the torso (hips, lean);
+// the tank riding its harness; the tube (held, or dropped on the ground by the KO). Its parts are baked once into
+// bitmaps (partCache.ts) and stamped; the limbs, hose and effects bend every frame and stay live vector.
 
-export interface WandererPose {
-  view: WandererView;
-  /** Mirror for facing left (side view). */
-  flip: boolean;
-  /** The tube's angle in the view's local frame, radians (0 = right, down is positive). */
-  aim: number;
-  /** Upper body lean from the hips, radians (negative leans back, away from the aim). */
-  lean: number;
-  /** Hips drop this far, style-test px. */
-  crouch: number;
-  /** Feet this far either side of the centre. */
-  stance: number;
-  /** Whole body shoved back along x by this much. */
-  push: number;
-  /** The tube slides back along its axis by this much. */
-  kick: number;
-  /** Walk cycle, radians; 0 when still. */
-  stride: number;
-  /** Stride size 0..1 (0 standing). */
-  stepping: number;
-  /** Cloak trail swing, radians. */
-  flap: number;
-  /** Hose band and tank bubble travel, px. */
-  flow: number;
-  /** Face glow opacity 0..1. */
-  glow: number;
-  hasTube: boolean;
-  /** Attuned to the foundry: once attuning finishes, the hose, tank window, barrel and rings run cyan. */
-  attuned: boolean;
-  /** While attuning, 0..1: the rings light up one by one. */
-  attuning: number | null;
-  /** Muzzle glow strength 0..1. */
-  muzzle: number;
-  /** A punch (023), 0..1 (1 fully out): the tube thrusts along its aim, or empty-handed the near fist drives out. */
-  jab: number;
-  /** 050 (F): the hose's sag swings this far sideways, px (the title's wind); 0 when absent. */
-  hoseSway?: number;
+export { REST_POSE, type WandererPose } from './wandererPose';
+
+const S = WANDERER.scale;
+
+/** The views by scheme and trim, built once each. */
+const viewCache = new Map<WandererSchemeId, Map<Rarity | null, Record<WandererView, WandererViewDef>>>();
+export function viewsFor(scheme: WandererSchemeId, trim: Rarity | null): Record<WandererView, WandererViewDef> {
+  let byTrim = viewCache.get(scheme);
+  if (!byTrim) viewCache.set(scheme, (byTrim = new Map()));
+  let v = byTrim.get(trim);
+  if (!v) byTrim.set(trim, (v = wandererViews(scheme, trim)));
+  return v;
 }
 
-export const REST_POSE: WandererPose = {
-  view: 'down',
-  flip: false,
-  aim: Math.PI / 2,
-  lean: 0,
-  crouch: 0,
-  stance: WANDERER.rig.restStance,
-  push: 0,
-  kick: 0,
-  stride: 0,
-  stepping: 0,
-  flap: 0,
-  flow: 0,
-  glow: 0.85,
-  hasTube: true,
-  attuned: true,
-  attuning: null,
-  muzzle: 0.6,
-  jab: 0,
-};
-
-type Pt = readonly [number, number];
-
-const rotate = ([x, y]: Pt, a: number): [number, number] => [x * Math.cos(a) - y * Math.sin(a), x * Math.sin(a) + y * Math.cos(a)];
-
-function limb(c: CanvasRenderingContext2D, pts: readonly number[], style: LimbStyle, o: DrawOpts, curve = false): void {
-  drawShape(c, { kind: 'line', pts, width: style.width, color: style.color, outline: style.outline, curve }, o);
-  if (!style.bands) return;
-  c.save();
-  c.setLineDash([...style.bands.dash]);
-  drawShape(c, { kind: 'line', pts, width: style.width, color: style.bands.color, curve }, o);
-  c.restore();
+/** A view's lookups, made once per view so a frame allocates none (075 review): parts by id, the tank's and the trim's parts, the hem's middle corner, and its baked parts by scale. */
+interface ViewIndex {
+  parts: Map<string, Part>;
+  tank: Set<string>;
+  trim: Set<string>;
+  hemCorner: Pt | null;
+  baked: Map<number, Map<string, Baked | null>>;
+}
+const indexCache = new WeakMap<WandererViewDef, ViewIndex>();
+function indexOf(def: WandererViewDef): ViewIndex {
+  let ix = indexCache.get(def);
+  if (!ix) {
+    const corners = def.hem?.d.filter((cmd) => cmd[0] === 'L') ?? [];
+    const mid = corners[Math.floor(corners.length / 2)];
+    ix = { parts: new Map(def.parts.map((p) => [p.id, p])), tank: new Set(def.tankParts), trim: new Set(def.trimParts), hemCorner: mid && mid[0] === 'L' ? [mid[1], mid[2]] : null, baked: new Map() };
+    indexCache.set(def, ix);
+  }
+  return ix;
 }
 
-function drawPart(c: CanvasRenderingContext2D, p: Part | undefined, o: DrawOpts, turn = 0): void {
-  if (!p) return;
-  if (turn === 0) return drawShapes(c, p.shapes, o);
-  c.save();
-  c.translate(p.pivot[0], p.pivot[1]);
-  c.rotate(turn);
-  c.translate(-p.pivot[0], -p.pivot[1]);
-  drawShapes(c, p.shapes, o);
-  c.restore();
+/** A part's bitmap at `k` canvas px per unit, from the view's index (baked on first use). */
+function bakedFor(ix: ViewIndex, p: Part, k: number, o: DrawOpts): Baked | null {
+  let byPart = ix.baked.get(k);
+  if (!byPart) ix.baked.set(k, (byPart = new Map()));
+  if (!byPart.has(p.id)) byPart.set(p.id, bakePart(p, k, o));
+  return byPart.get(p.id) ?? null;
+}
+
+/** Where things landed this frame, world px from the feet (for the test hook). */
+export interface WandererMarks {
+  hood: [number, number];
+  /** A corner of the cape's hem (in the trim), or null in a view without one. */
+  hem: [number, number] | null;
+  /** 078: the tube's muzzle (where its flash sits), or null with no tube in hand. */
+  muzzle: [number, number] | null;
+}
+
+/** The transform a part hangs from: its chain of joints, each turning (or flaring) by its pose channel. */
+function chainMat(def: WandererViewDef, pose: WandererPose, id: string): Mat {
+  const links = def.chains[id];
+  if (!links) return [1, 0, 0, 1, 0, 0];
+  const value = (ch: WandererChannel): number =>
+    ch === 'cape' ? pose.cape.trail + pose.cape.sway : ch === 'capeTail' ? pose.cape.tail : ch === 'hoodTail' ? pose.hoodTail : ch === 'skirtFront' ? pose.skirt.front : pose.skirt.back;
+  return chain(
+    ...links.map((ch): Mat => {
+      const j = def.joints[ch];
+      if (!j) return [1, 0, 0, 1, 0, 0];
+      if (j.kind === 'turn') return rotateAbout(value(ch), j.at);
+      const st = j.stretch ?? [0, 0];
+      const trail = pose.cape.trail;
+      return mul(rotateAbout(pose.cape.sway, j.at), scaleAbout(1 + st[0] * trail, 1 + st[1] * trail, j.at));
+    }),
+  );
+}
+
+/** Bakes every part of the three views in a scheme and trim at `pxPerUnit` ahead of the first frame (075: at boot). */
+export function prebakeWanderer(scheme: WandererSchemeId, trim: Rarity | null, pxPerUnit: number): void {
+  const o: DrawOpts = { outline: OUTLINE_WIDTH / S, blurScale: pxPerUnit * S };
+  for (const def of Object.values(viewsFor(scheme, trim))) {
+    const ix = indexOf(def);
+    for (const p of def.parts) bakedFor(ix, p, pxPerUnit * S, o);
+  }
 }
 
 /** Draws the wanderer with its feet at the canvas origin; `pxPerUnit` is canvas px per world px. */
-export function drawWanderer(c: CanvasRenderingContext2D, pose: WandererPose, pxPerUnit: number): void {
-  const S = WANDERER.scale;
-  const def = WANDERER.views[pose.view];
-  const parts = new Map(def.parts.map((p) => [p.id, p]));
+export function drawWanderer(c: CanvasRenderingContext2D, pose: WandererPose, pxPerUnit: number): WandererMarks {
+  const def = viewsFor(pose.scheme, pose.trim)[pose.view];
+  const ix = indexOf(def);
+  const parts = ix.parts;
   const o: DrawOpts = { outline: OUTLINE_WIDTH / S, blurScale: pxPerUnit * S };
-  const hipY = -WANDERER.hipHeight + pose.crouch;
-  // A point on the tube (gun-local) in hip-local px.
-  const kick = pose.kick - pose.jab * WANDERER.rig.jab.thrust;
-  const gun = (p: Pt): [number, number] => {
-    const [x, y] = rotate([p[0] - kick, p[1]], pose.aim);
-    return [x + def.gunPivot[0], y + def.gunPivot[1]];
-  };
   const lit = pose.attuned && pose.attuning === null;
+  const hipY = -WANDERER.hipHeight + pose.crouch;
 
+  // The figure: squashed about the feet, turned about its centre, lowered; the torso: at the hips, leaning.
+  const fig: Mat = chain(scaleAbout(1 + pose.squash, 1 - pose.squash, [0, 0]), translate(0, pose.drop), rotateAbout(pose.turn, [0, -pose.turnAt]));
+  const torso: Mat = chain(fig, translate(pose.push, hipY), rotate(pose.lean), translate(pose.shove, 0));
+  const tank: Mat = chain(torso, translate(0, pose.tank.bob), scaleAbout(1 + pose.tank.squash, 1 - pose.tank.squash, def.tankBase));
+
+  // The tube, rigid in the feet's frame: held at the hip (tucked in to the chest for a roll), or lying where it dropped.
+  const RL = WANDERER_MOTION.roll;
+  const tuckAim = pose.view === 'side' ? RL.tubeAim : pose.aim;
+  const aim = pose.aim + (tuckAim - pose.aim) * pose.tuck;
+  const slide = pose.kick - pose.jab * WANDERER.rig.jab.thrust + RL.tubeSlide * pose.tuck;
+  const heldAt = apply(torso, [def.gunPivot[0] + Math.cos(aim) * -slide, def.gunPivot[1] + Math.sin(aim) * -slide]);
+  const heldAngle = angleOf(torso) + aim;
+  const K = WANDERER_MOTION.ko;
+  const d = pose.tubeDrop;
+  const gunAt: Pt = [heldAt[0] + (K.tubeAt[0] - heldAt[0]) * d, heldAt[1] + (K.tubeAt[1] - heldAt[1]) * d];
+  const gun: Mat = mul(translate(gunAt[0], gunAt[1]), rotate(heldAngle + (K.tubeAngle - heldAngle) * d));
+  const toTorso = invert(torso);
+  const onGun = (p: Pt): Pt => apply(toTorso, apply(gun, p));
+
+  const inFrame = (m: Mat, draw: () => void): void => {
+    c.save();
+    useMat(c, m);
+    draw();
+    c.restore();
+  };
+  const drawPart = (p: Part | undefined): void => {
+    if (!p) return;
+    const base = ix.tank.has(p.id) ? tank : torso;
+    const baked = bakedFor(ix, p, pxPerUnit * S, o);
+    inFrame(mul(base, chainMat(def, pose, p.id)), () => {
+      if (ix.trim.has(p.id) && pose.trimPulse < 1) c.globalAlpha *= pose.trimPulse;
+      if (baked) c.drawImage(baked.image, baked.x, baked.y, baked.w, baked.h);
+      else drawShapes(c, p.shapes, o);
+    });
+  };
+
+  const marks: WandererMarks = { hood: [0, 0], hem: null, muzzle: null };
   c.save();
   c.scale(pose.flip ? -S : S, S);
-  c.translate(pose.push, 0);
-  drawLegs(c, pose, def.feet, hipY, o);
-  c.translate(0, hipY);
-  c.rotate(pose.lean);
   for (const step of def.order) {
     switch (step) {
+      case '@far-leg':
+      case '@near-leg': {
+        const near = step === '@near-leg';
+        const hip = near ? def.hips.near : def.hips.far;
+        inFrame(fig, () => drawLeg(c, pose.view, [hip[0] + pose.push, hipY + hip[1]], near ? pose.feet.near : pose.feet.far, near || def.matchedArms === true, near ? 1 : -1, o));
+        break;
+      }
+      case '@far-arm':
+      case '@near-arm': {
+        const near = step === '@near-arm';
+        const shoulder = near ? def.shoulders.near : def.shoulders.far;
+        const held = pose.hasTube && pose.tubeDrop < 0.5;
+        const rest = near ? WANDERER.rig.restHand.near : WANDERER.rig.restHand.far;
+        const side = def.matchedArms && !near ? -1 : 1;
+        let hand: Pt = [shoulder[0] + rest[0] * side, shoulder[1] + rest[1]];
+        if (held) hand = onGun(near ? TUBE_PARTS.rearGrip : TUBE_PARTS.frontGrip);
+        else if (near && pose.jab > 0) {
+          // Empty-handed, a punch drives the fist out from the shoulder along the aim.
+          const reach = WANDERER.rig.jab.fist;
+          hand = [hand[0] + (shoulder[0] + Math.cos(pose.aim) * reach - hand[0]) * pose.jab, hand[1] + (shoulder[1] + Math.sin(pose.aim) * reach - hand[1]) * pose.jab];
+        }
+        inFrame(torso, () => drawArm(c, pose.view, shoulder, hand, near || def.matchedArms === true, near ? def.sleeves.near : def.sleeves.far, o));
+        break;
+      }
       case '@window':
-        if (pose.hasTube && def.window) drawPart(c, parts.get(lit ? def.window.lit : def.window.dormant), o);
+        if (pose.hasTube && def.window) {
+          const win = parts.get(lit ? def.window.lit : def.window.dormant);
+          drawPart(win);
+          const shape = win?.shapes[0];
+          if (lit && shape) inFrame(tank, () => drawWindowFlare(c, shape, pose.windowFlare, o));
+        }
         break;
       case '@bubble':
         if (pose.hasTube && def.window && lit) {
-          c.save();
-          c.translate(0, -(pose.flow * 0.3) % def.window.rise);
-          drawShape(c, def.window.bubble, o);
-          c.restore();
+          const w = def.window;
+          inFrame(mul(tank, translate(0, -(pose.flow * WANDERER_MOTION.bubbleRise) % w.rise)), () => drawShape(c, w.bubble, o));
         }
         break;
       case '@glow':
         if (def.glow && pose.glow > 0) {
-          c.save();
-          c.globalAlpha *= pose.glow;
-          drawShape(c, def.glow, o);
-          c.restore();
+          const g = def.glow;
+          inFrame(torso, () => {
+            c.globalAlpha *= pose.glow;
+            drawShape(c, g, o);
+          });
         }
         break;
-      case '@far-arm': {
-        const rest = WANDERER.rig.restHand.far;
-        const end = pose.hasTube ? gun(TUBE_PARTS.frontGrip) : ([def.shoulders.far[0] + rest[0], def.shoulders.far[1] + rest[1]] as const);
-        // 050: facing forward, the far arm is the near arm's sleeve and forearm, mirrored, so the two match.
-        if (def.matchedArms) {
-          nearArm(c, def.shoulders.far, end, o, -1);
-          break;
-        }
-        limb(c, [...def.shoulders.far, end[0], end[1]], WANDERER.limbs.sleeveFar, o);
-        hand(c, end, o);
-        break;
-      }
-      case '@near-arm': {
-        const rest = WANDERER.rig.restHand.near;
-        const [sx, sy] = def.shoulders.near;
-        // Empty-handed, a punch drives the fist out from the shoulder along the aim.
-        const [fx, fy] = rotate([WANDERER.rig.jab.fist, 0], pose.aim);
-        const hand: Pt = [sx + rest[0] + (fx - rest[0]) * pose.jab, sy + rest[1] + (fy - rest[1]) * pose.jab];
-        nearArm(c, def.shoulders.near, pose.hasTube ? gun(TUBE_PARTS.rearGrip) : hand, o);
-        break;
-      }
       case '@hose': {
         if (!pose.hasTube) break;
-        const rear = gun(TUBE_PARTS.rear);
-        const bend = WANDERER.rig.hoseBend;
-        const back = rotate([-bend.back, 0], pose.aim);
-        const [fx, fy] = def.hose.from;
+        const B = WANDERER.rig.hoseBend;
+        const rear = onGun(TUBE_PARTS.rear);
+        const rearBend = onGun([TUBE_PARTS.rear[0] - B.back, TUBE_PARTS.rear[1] + B.drop]);
+        const from = apply(toTorso, apply(tank, def.hose.from));
         const sway = pose.hoseSway ?? 0;
-        const pts = [fx, fy, fx + def.hose.sag[0] + sway, fy + def.hose.sag[1] + sway * TITLE_SCREEN.motion.hoseLift, rear[0] + back[0], rear[1] + back[1] + bend.drop, rear[0], rear[1]];
-        const style = lit ? WANDERER.limbs.hose : WANDERER.limbs.hoseDormant;
-        c.save();
-        if (lit) c.lineDashOffset = -pose.flow;
-        limb(c, pts, style, o, true);
-        c.restore();
+        const h = hosePath(from, [def.hose.sag[0] + sway, def.hose.sag[1] + sway * TITLE_SCREEN.motion.hoseLift], def.hose.clip, rearBend, rear);
+        inFrame(torso, () => {
+          drawHose(c, h, lit ? WANDERER.limbs.hose : WANDERER.limbs.hoseDormant, pose.flow, o);
+          if (lit) for (const u of pose.pulses) drawPulse(c, ...hoseAt(h, u), o);
+        });
         break;
       }
       case '@tube':
-        if (pose.hasTube) drawTube(c, def.gunPivot, pose, kick, lit, o);
+        if (pose.hasTube) {
+          // The sling, from the housing up to the near shoulder.
+          const sl = TUBE_PARTS.sling;
+          const from = onGun(sl.at);
+          const to = def.shoulders.near;
+          if (pose.tubeDrop < 0.5)
+            inFrame(torso, () =>
+              drawShape(c, { kind: 'line', pts: [from[0], from[1], (from[0] + to[0]) / 2, (from[1] + to[1]) / 2 + sl.sag, (from[0] + to[0]) / 2, (from[1] + to[1]) / 2 + sl.sag, to[0], to[1]], width: sl.width, color: sl.color, outline: true, curve: true }, o),
+            );
+          inFrame(gun, () => drawTube(c, pose, lit, o));
+        }
+        break;
+      case '@flash': {
+        const f = pose.flash;
+        if (f && pose.hasTube && lit && pose.tubeDrop === 0) inFrame(gun, () => drawFlash(c, f, o));
+        break;
+      }
+      case '@shimmer':
+        if (pose.shimmer !== null && def.hem) {
+          const hem = def.hem;
+          inFrame(mul(torso, chainMat(def, pose, hem.part)), () => drawShimmer(c, hem.d, pose.shimmer ?? 0, o));
+        }
         break;
       default:
-        drawPart(c, parts.get(step), o, step === def.trail ? pose.flap : 0);
+        drawPart(parts.get(step));
     }
   }
   c.restore();
-}
-
-function hand(c: CanvasRenderingContext2D, at: Pt, o: DrawOpts): void {
-  c.save();
-  c.translate(at[0], at[1]);
-  drawShape(c, WANDERER.hand, o);
-  c.restore();
-}
-
-/** The near arm: a wide sleeve to the elbow, then a wrapped forearm and glove at `grip`. `side` -1 mirrors it (050: the far arm facing forward). */
-function nearArm(c: CanvasRenderingContext2D, shoulder: Pt, grip: Pt, o: DrawOpts, side: 1 | -1 = 1): void {
-  const [sx, sy] = shoulder;
-  const { sleeve: v, elbow } = WANDERER.rig;
-  const ex = (sx + grip[0]) / 2 + elbow[0] * side;
-  const ey = (sy + grip[1]) / 2 + elbow[1];
-  limb(c, [ex, ey, grip[0], grip[1]], WANDERER.limbs.forearm, o);
-  const sleeve: Shape = {
-    kind: 'path',
-    d: [
-      ['M', sx + v.top[0] * side, sy + v.top[1]],
-      ['Q', sx + v.bulge[0] * side, sy + v.bulge[1], ex + v.elbowOut[0] * side, ey + v.elbowOut[1]],
-      ['L', ex + v.elbowIn[0] * side, ey + v.elbowIn[1]],
-      ['Q', sx + v.back[0] * side, sy + v.back[1], sx + v.top[0] * side, sy + v.top[1]],
-      ['Z'],
-    ],
-    fill: WANDERER.limbs.sleeveNear.color,
-    outline: true,
-  };
-  drawShape(c, sleeve, o);
-  hand(c, grip, o);
-}
-
-function drawLegs(c: CanvasRenderingContext2D, pose: WandererPose, feet: number, hipY: number, o: DrawOpts): void {
-  const r = WANDERER.rig;
-  const swing = Math.sin(pose.stride) * pose.stepping;
-  const lift = (s: number): number => -Math.max(0, s) * r.lift * pose.stepping;
-  const spread = pose.stance - r.restStance + feet;
-  const [backX, frontX, backLift, frontLift] =
-    pose.view === 'side'
-      ? [-spread + swing * r.stride, spread + r.frontFoot - swing * r.stride, lift(-Math.sin(pose.stride)), lift(Math.sin(pose.stride))]
-      : [-spread, spread, lift(Math.sin(pose.stride)), lift(-Math.sin(pose.stride))];
-  const leg = (x: number, l: number, style: LimbStyle, boot: Shape, kneeX: number): void => {
-    limb(c, [kneeX, hipY + r.knee.below, x, r.ankle + l], style, o);
-    c.save();
-    c.translate(x, l);
-    drawShape(c, boot, o);
-    c.restore();
-  };
-  leg(backX, backLift, WANDERER.limbs.legBack, WANDERER.boot.back, -r.knee.x);
-  leg(frontX, frontLift, WANDERER.limbs.legFront, WANDERER.boot.front, r.knee.x);
-}
-
-function drawTube(c: CanvasRenderingContext2D, pivot: Pt, pose: WandererPose, kick: number, lit: boolean, o: DrawOpts): void {
-  c.save();
-  c.translate(pivot[0], pivot[1]);
-  c.rotate(pose.aim);
-  c.translate(-kick, 0);
-  drawShapes(c, TUBE_PARTS.housing, o);
-  drawShapes(c, lit ? TUBE_PARTS.barrel.lit : TUBE_PARTS.barrel.dormant, o);
-  TUBE_PARTS.rings.forEach((x, i) => {
-    const n = TUBE_PARTS.rings.length;
-    const ring =
-      pose.attuning !== null
-        ? pose.attuning >= (i + 1) / (n + 1)
-          ? TUBE_PARTS.ring.glowing
-          : TUBE_PARTS.ring.dormant
-        : lit
-          ? TUBE_PARTS.ring.lit
-          : TUBE_PARTS.ring.dormant;
-    c.save();
-    c.translate(x, 0);
-    drawShape(c, ring, o);
-    c.restore();
-  });
-  drawShape(c, lit ? TUBE_PARTS.muzzle.lit : TUBE_PARTS.muzzle.dormant, o);
-  if (lit && pose.muzzle > 0) {
-    c.save();
-    c.globalAlpha *= pose.muzzle;
-    drawShape(c, TUBE_PARTS.muzzleGlow, o);
-    c.restore();
-  }
-  c.restore();
+  const world = ([x, y]: Pt): [number, number] => [x * S * (pose.flip ? -1 : 1), y * S];
+  const hood = parts.get('hood');
+  if (hood) marks.hood = world(apply(torso, hood.pivot));
+  // The hem's middle corner, for the test hook's trim check.
+  if (def.hem && ix.hemCorner) marks.hem = world(apply(mul(torso, chainMat(def, pose, def.hem.part)), ix.hemCorner));
+  // 078: the posed muzzle, where the shot effects' sparks and a new round's trail start.
+  if (pose.hasTube && pose.tubeDrop === 0) marks.muzzle = world(apply(gun, TUBE_PARTS.flash.at));
+  return marks;
 }

@@ -15,6 +15,8 @@ export const TITLE_SCREEN = {
     // 050 (F, Shaun: "make the pipeline text bigger"): 6.4 (from 5), its middle where it was (about y 54).
     y: 38,
     scale: 6.4,
+    /** 081: the logo keeps its snow fill when the title style turned pale brass. */
+    fill: 'snow',
     glow: { color: 'cyan', rx: 143, ry: 38, rings: 6, alpha: 0.09, dy: 15 },
   },
   /**

@@ -11,6 +11,7 @@ import type { Inventory } from './inventory';
 import { itemRisks } from './banking';
 import { wakeRoom } from './tutorial';
 import { FOUNDRY_ROOM } from '../data/rooms';
+import { introShield } from './bossIntro';
 import { wakeSandbox } from './sandbox';
 
 // Player damage, banking and death. Specs 004 and 011.
@@ -19,7 +20,8 @@ import { wakeSandbox } from './sandbox';
  * Hits the player for `amount` (less their armor, 036), pushing them `knockback` px along (dirX, dirY)
  * over `knockTicks`. Does nothing during roll i-frames (unless `rollProof`, 041.12: the Bulwark's pound and enraged
  * lobs, which a roll doesn't save from) or hit invulnerability.
- * Returns whether the hit landed (a Wardstone block counts: the attack is spent on it).
+ * Returns whether the hit landed (a Wardstone block counts: the attack is spent on it). 080: nothing lands on a player
+ * inside an arena whose enemies are in their intro (no hit, knockback or Wardstone use).
  */
 export function damagePlayer(
   state: SimState,
@@ -31,6 +33,7 @@ export function damagePlayer(
   rollProof = false,
 ): boolean {
   const p = state.player;
+  if (introShield(state)) return false;
   if ((!rollProof && isInvulnerable(p)) || p.hurtTicks > 0 || p.dying > 0) return false;
   // A ready Wardstone (036) takes the hit whole: nothing lands, and the shot or swing is spent.
   if (wardBlocks(state)) return true;

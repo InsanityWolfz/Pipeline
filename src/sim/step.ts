@@ -26,6 +26,7 @@ import { stepIntakeRates } from './intakeRates';
 import { checkKo } from './health';
 import { stepHealing } from './healing';
 import { stepEnemies } from './enemyAi';
+import { stepIntros } from './bossIntro';
 import { NO_COMMAND, type Command } from './input';
 import { stepPlayer } from './movement';
 import { slowScale } from './slow';
@@ -50,6 +51,7 @@ import { rampOverpressure, stepPools } from './keystones';
 import { noteCarried } from './knownRounds';
 import { noteBag, sortBag } from './bag';
 import { stepSandbox } from './sandbox';
+import { stepReturnStones, stepReturnWake } from './returnStones';
 
 /** Each room's bodies, built once per tick on first use. */
 function bodiesOf(state: SimState): (roomId: string) => RoomBodies {
@@ -91,18 +93,22 @@ export function stepSim(state: SimState, input: Command = NO_COMMAND): void {
   stepLink(state);
   // Enemies act after the player moves, so a swipe lands on where the player stands now.
   stepDiscovery(state);
+  // 072: a return stone wakes as the player comes by it.
+  stepReturnWake(state);
   stepFog(state);
   stepPopulation(state);
   stepCacheRearm(state);
   // Before enemies act, so a Bulwark bomb thrown this tick starts its fuse at 0 (034; its fuseTicks keep the word).
   stepEnemyBombs(state);
+  // 080: boss intros start, run and end just before the enemies act, so an intro's end is its boss's wake tick.
+  stepIntros(state);
   stepEnemies(state, bodies);
   stepNodes(state.nodes, state.events.rodStrikes);
   // Before the tube, so fire this tick cancels a harvest in progress.
   // Build mode keeps E for hoppers and crates, not harvesting.
   // 045: a new E handler here adds its kind to INTERACT_KINDS (src/data/interact.ts) and to interactTarget
   // (src/sim/interactables.ts), whose test then holds it to a prompt.
-  const used = stepCache(state, stepClaims(state, stepAltars(state, stepArenaLock(state, stepTubeStone(state, cmd)))));
+  const used = stepCache(state, stepReturnStones(state, stepClaims(state, stepAltars(state, stepArenaLock(state, stepTubeStone(state, cmd))))));
   if (cmd.identify) identifyAll(state);
   if (cmd.equip) equip(state, cmd.equip);
   if (cmd.restore) restore(state, cmd.restore);

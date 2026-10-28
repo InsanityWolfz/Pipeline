@@ -5,6 +5,7 @@ import { FLOW_DIM, FLOW_ROWS, MENU_ROW_W } from '../../data/flowLayout';
 import { CARD } from '../../data/titleScreen';
 import { colorOf } from '../color';
 import { drawTablet } from '../tablet';
+import { MenuMotion } from '../MenuMotion';
 import { TextLine } from '../textLine';
 import { MenuColumn, type MenuRowShown, type MenuRowSpec } from './MenuColumn';
 
@@ -44,6 +45,8 @@ export class CardView {
   private box = { x: 0, y: 0, w: 0, h: 0 };
   private open = false;
   private actions = new Map<string, () => void>();
+  /** 081: the open's fade and rise. */
+  private readonly motion: MenuMotion;
 
   constructor(scene: Scene, depth: number = DEPTHS.flowCard) {
     this.scene = scene;
@@ -51,6 +54,8 @@ export class CardView {
     this.dim = scene.add.rectangle(0, 0, VIEW_WIDTH, VIEW_HEIGHT, colorOf(FLOW_DIM.color), FLOW_DIM.alpha).setOrigin(0).setScrollFactor(0).setDepth(depth);
     this.panel = scene.add.graphics().setScrollFactor(0).setDepth(depth + 1);
     this.menu = new MenuColumn(scene, 0, 0, FLOW_ROWS, depth + 2);
+    this.motion = new MenuMotion(scene, 'card', depth).adopt([this.dim, this.panel]);
+    this.menu.moveWith(this.motion);
     this.hide();
   }
 
@@ -77,6 +82,7 @@ export class CardView {
       y += h + CARD.lineGap;
       return t;
     });
+    this.motion.adopt(this.texts);
     this.lines = lines.map((l) => l.text);
     const textH = y;
     const menuH = MenuColumn.heightOf(buttons, FLOW_ROWS);
@@ -97,6 +103,8 @@ export class CardView {
   }
 
   private setOpen(open: boolean): void {
+    if (open && !this.open) this.motion.show();
+    if (!open) this.motion.hide();
     this.open = open;
     this.dim.setVisible(open);
     this.panel.setVisible(open);

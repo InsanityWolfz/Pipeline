@@ -1,9 +1,9 @@
+import type { BossShowUi } from './bossShow';
+import type { ReturnStoneShown } from './ReturnStoneView';
 import type { TunnelMark } from './tunnelMarks';
 import type { GroundItemShown } from './GroundItemView';
 import type { InteractPromptState } from './InteractPrompt';
-import type { SimSummary } from '../sim/summary';
-import type { Command } from '../sim/input';
-import type { FlowReport, FlowUi } from './flow/flowTypes';
+import type { FlowUi } from './flow/flowTypes';
 import type { CursorState } from './CursorView';
 import type { BottomHudState, HudPanelsState } from './HudView';
 import type { MadePopupShown } from './MadePopups';
@@ -17,12 +17,10 @@ import type { GuidedShown } from './GuidedView';
 import type { PromptState } from './PromptView';
 import type { PortShown } from './PortView';
 import type { GearPanelState } from './GearPanel';
-import type { GearPiece } from '../data/gear';
 import type { RelicsShown } from './RelicView';
 import type { TalentFxShown } from './TalentFxView';
 import type { MinesShown } from './MineView';
 import type { HealingShown } from './HealingView';
-import type { KeywordReport } from '../data/keywordReport';
 import type { ChampionShown } from './EnemyView';
 import type { LandmarksShown } from './LandmarkView';
 import type { ResearchShown } from './ResearchView';
@@ -35,71 +33,24 @@ import type { StormcrownShown } from './StormcrownView';
 import type { ArenaDoorShown } from './ArenaDoorView';
 import type { HollowsEnemiesShown } from './hollowsEnemyArt';
 import type { EnemyBarShown } from './enemyBar';
-import type { Legibility, LegibilityUi } from './Legibility';
+import type { EnemyArtUi } from './EnemyView';
+import type { LegibilityUi } from './Legibility';
 import type { SandboxPanelState } from './SandboxPanel';
+import type { LightingShown } from './lighting/LightingView';
+import type { MenuMotionShown } from './menuCurves';
+import type { HudDrawsShown } from './HudView';
+import type { PlayerUi } from './PlayerView';
+import type { WeatherShown, WorldShown } from './world/worldShown';
+import type { AmmoFxShown } from './fx/ammoFxShown';
 
-export interface GameTestHook {
-  /** The live game's summary; null on the title (042). */
-  getState(): SimSummary;
-  /** 042: the flow's state, the save slot's status, saves written this session, and stored notes. */
-  flow(): FlowReport;
-  /**
-   * Steps `frames` ticks holding `command`. Its dodge, interact, carried slot
-   * select and assign (047), build toggle, place, pick-up, deposit, withdraw (each with its amount, 022), sortInventory (047), pylon, travel, takeStash, identify, equip, restore (033), summon, takeTalent and respec (037) apply on the first tick only. Without an aim it keeps the player's last aim, as a still mouse would.
-   */
-  step(frames: number, command?: Partial<Command>): SimSummary;
-  /** Crafts a recipe once between ticks, as clicking its menu row does (070: `max`, as a Shift-click does). */
-  craft(recipeId: string, max?: boolean): SimSummary;
-  /** Hands the ticks back to the game loop after step() took them (050: a test of what a live key press reaches the sim). */
-  resume(): void;
-  ui(): UiState;
-  /** The sound settings (020: set from the pause menu). */
-  sound(): { muted: boolean; volume: number };
-  /** Lays an item on the ground at a world point in the player's room, as a drop would land (021: for the pickup screenshots). */
-  drop(itemId: string, x: number, y: number): SimSummary;
-  /** Scales the speed of every tween (1 is normal), so a screenshot can catch a short effect mid-way. */
-  tweenSpeed(scale: number): void;
-  /** The player's room as rows of tiles a player can stand on ('.') or not ('#'), solid things included: for test helpers that find paths. */
-  passable(): string[];
-  /** Claims a site outright, as holding E at its cleared pylon would (028: the e2e's "or set it claimed"). */
-  claim(site: string): SimSummary;
-  /** Marks the first `count` objectives done (028: to show a later goal in a screenshot without playing the whole run). */
-  completeObjectives(count: number): SimSummary;
-  /**
-   * Sets a live enemy's health (029: a Husk dies to the frost hit that would freeze it, so the frozen-Husk screenshot
-   * keeps one topped up between hits).
-   */
-  setEnemyHealth(id: number, health: number): SimSummary;
-  /** Sets the player's health (030: a hurt player for the healing e2e and screenshots, without a fight). */
-  setPlayerHealth(health: number): SimSummary;
-  /** Reveals the whole overworld on the minimap, as if every tile had been on screen (053: the round world's shot). */
-  revealMap(): SimSummary;
-  /**
-   * Spawns a pack near the player (032: to fight a champion): `enemyIds` in a row 6 tiles right of the player, a
-   * tile and a half apart, member `champion` (or none, for null) a champion named with the seeded RNG.
-   */
-  spawnChampionPack(enemyIds: string[], champion?: number | null): SimSummary;
-  /**
-   * Puts one enemy at a world point in the player's room, homed there (035: a test pack of each of Region 2's kinds
-   * in the `?start=hollows` sandbox), a champion named with the seeded RNG if `champion`.
-   */
-  spawnEnemy(enemyId: string, x: number, y: number, champion?: boolean): SimSummary;
-  /** Gives the player an identified piece, unworn, under the next id (036: a relic for the screenshots, without the roll). */
-  addGear(piece: Omit<GearPiece, 'id'>): SimSummary;
-  /** Gives the player XP as a kill would, levels and points included (037: a later level for the screenshots, without the fights). */
-  gainXp(amount: number): SimSummary;
-  /** 039: the rendered keyword list and every content line, as the game shows them. */
-  keywords(): KeywordReport;
-  /** 040: every summary the game can show (each round, talent, stage and gear piece), laid out as drawn: its rows (at most four), whether a line was cut, its size. */
-  summaryRows(): ReturnType<Legibility['summaryRows']>;
-}
+export type { GameTestHook } from './gameTestHook';
 
 /**
  * What the render shows, for tests: the world name under the cursor and its description (018), the build bar
  * tip's piece; the minimap (017) with its markers in view px; each node's frame by node id; and the claimed
  * pylon's supply motes (018), how many have started and those on their way.
  */
-export interface UiState {
+export interface UiState extends BossShowUi {
   /** The scene has built its views and the fonts are loaded (020): before this, nothing is drawn. */
   ready: boolean;
   /** The sim tick the last drawn frame showed (-1 before one): after a step, wait until it matches the state's tick before reading what's drawn. */
@@ -116,8 +67,8 @@ export interface UiState {
   hoverName: string | null;
   hoverDescription: string | null;
   buildTip: string | null;
-  /** 017, 051: the minimap, its markers (view px, with the name hovering shows), and the hovered one's name. */
-  minimap: { shown: boolean; markers: { kind: string; x: number; y: number; name?: string }[]; hover: string | null };
+  /** 017, 051: the minimap, its markers (view px, with the name hovering shows, the icon drawn and 072.9's stone id), and the hovered one's name. */
+  minimap: { shown: boolean; markers: { kind: string; x: number; y: number; name?: string; stone?: string; icon?: string }[]; hover: string | null };
   /** 051 (B.6): the foundry's minimap while it shows: carriers' lines, pieces' dots and the icons, view px. */
   foundryMap: FoundryMapShown;
   nodes: Record<number, string>;
@@ -127,13 +78,26 @@ export interface UiState {
   supply: { started: number; inFlight: { itemId: string; progress: number; site: string; icon: string; iconShown: boolean }[] };
   /** 053: the overworld's ground chunks built now, as `cx,cy` keys (only those near the camera are). */
   overworldChunks: string[];
-  /** The camera shakes asked for since boot, oldest first (the last 50) (021). */
+  /** 074: each overworld ground chunk's bake time so far, ms; 077: its whole build (bake, sprites, decor). */
+  groundBakeMs: readonly number[];
+  chunkBuildMs: readonly number[];
+  /** 077: the world's decor, sway, ripples, beads and set pieces, and the weather (WorldShown, WeatherShown). */
+  world: WorldShown;
+  weather: WeatherShown;
+  /** The camera shakes asked for since boot, oldest first (the last 50) (021; 080: `intro` and `intro-short`). */
   shakes: string[];
   /** 060: burn beats' small numbers shown since boot, and enemies drawn with flames on them now. */
   burnNumbers: number;
   enemyFlames: number;
-  /** Particles flying now (064). */
-  particles: number;
+  /** 078: the shot effects as drawn: trails by kind, their slots, the marks, the last impacts, the last muzzle sparks. */
+  ammoFx: AmmoFxShown;
+  /** 078: damage numbers shown and hit-stop holds since boot, and the last hold's ms (hit feedback is unchanged). */
+  hitFeedback: { numbers: number; holds: number; holdMs: number };
+  /**
+   * Particles flying now (064); 076: as `live`, with the death motes among them and the deaths dissolving; 077: `live` counts the weather too. 078: the
+   * ledger's weather (or room motes) and effects, the live effects by priority, and the pool's objects made since boot.
+   */
+  particles: { live: number; deathMotes: number; thrown: number; dissolving: number; weather: number; effects: number; byPriority: Record<'cue' | 'shot' | 'soft', number>; pool: { created: number } };
   /** Which cursor shows (021: the menu pointer or the crosshair), its depth, and the highest depth of anything else. */
   cursor: CursorState | null;
   /** Picked-up items still sliding into the player (021). */
@@ -178,9 +142,11 @@ export interface UiState {
   objectiveTick: number;
   /** The centre of the world camera's view, world px (023: screenshots wait for it to settle on the player), and the player's sprite point it follows (042: locked to it). */
   /** 069: `zoom` is the world's zoom over the view (1, or build mode's 0.75 zoomed out). */
-  camera: { x: number; y: number; player: { x: number; y: number }; fading: boolean; zoom: number };
+  camera: { x: number; y: number; player: { x: number; y: number }; fading: boolean; zoom: number; shaking: boolean };
   /** 065: the slow's wind curls are drawn round the player. */
   slowSwirl: boolean;
+  /** 075: the wanderer drawn: view, animation, scheme, trim, squash, hood, draw time and tint. Null before the scene. */
+  player: PlayerUi | null;
   /** 070: the player shows as a silhouette (a ruin block, tree, the bench or a machine in front hides them). */
   silhouette: boolean;
   /** The bottom HUD as drawn (025), view px: the hotbar row (and whether it shows) and the tube slot with each unit's icon frame and text. */
@@ -216,8 +182,15 @@ export interface UiState {
   hollowsEnemies: HollowsEnemiesShown;
   /** 054: each drawn enemy's health bar: whether it shows, and whether it reads immune (blue, with the shield). */
   enemyBars: EnemyBarShown[];
+  /** 076: each drawn enemy's art: family, pose, wind-up phase, reaction, squash, the frame shown and the tremble. */
+  enemyArt: EnemyArtUi[];
+  /** 076: the boot's vector bake: wall ms, texture pages, frames and the enemy frames among them. */
+  vectorBake: { ms: number; pages: number; frames: number; enemyFrames: number };
   /** 032: the waystone's menu while open (two or more claimed pylons): each row's text and box, view px; else null. */
   waystone: { text: string; x: number; y: number; w: number; h: number }[] | null;
+  /** 072: a claimed pylon's menu while open (its rows, with a row per woken return stone), and a woken return stone's; else null. */
+  pylonMenu: { text: string; x: number; y: number; w: number; h: number }[] | null;
+  returnMenu: { text: string; x: number; y: number; w: number; h: number }[] | null;
   /** 069: an intake entrance's purge menu while open: its row's text and box, view px; else null. */
   purgeMenu: { text: string; x: number; y: number; w: number; h: number }[] | null;
   /** 033: the diagrams drawn on the foundry, restored parts, running effects and the wing door. */
@@ -244,6 +217,8 @@ export interface UiState {
   lightningArcs: number;
   /** 055: each boss arena's door in the room on screen, sealed or open, and 043's seal over it while its boss fights. */
   arenaDoors: ArenaDoorShown[];
+  /** 072: the return stones in the room on show: dormant or woken, the scale of a wake's swell, and their drawn size. */
+  returnStones: ReturnStoneShown[];
   /** 036: the bench's gear panel while open (its cells, tabs, rows with ids and boxes, page and totals), else null. */
   gearPanel: GearPanelState | null;
   /** 036: the relics' effects as drawn: the Wardstone's shimmer (its alpha, 0 when hidden), ward breaks, ember flashes and bench flares live. */
@@ -273,13 +248,12 @@ export interface UiState {
   sandbox: SandboxPanelState | null;
   /** 056: whether any of the sandbox controls' objects is on screen, read from the objects themselves (never outside the sandbox). */
   sandboxDrawn: boolean;
+  /** 074: the region's mood and light as drawn: quality, the mood's ring and blend, the ambient and flash, lights by source, lit objects, fog layers, and light catches. */
+  lighting: LightingShown;
+  /** 081: the menus' motion (the last open, running or settled, its ms of tween time, alpha and rise; fades so far) and the HUD's redraw counts, live tweens and game objects. */
+  menuMotion: MenuMotionShown;
+  hudDraws: HudDrawsShown;
 }
 
 /** ui() without the flow's part: what a GameScene reports. */
 export type GameUiState = Omit<UiState, 'flow'>;
-
-declare global {
-  interface Window {
-    __GAME__?: GameTestHook;
-  }
-}

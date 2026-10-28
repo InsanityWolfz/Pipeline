@@ -1,4 +1,3 @@
-import { isFlatKind } from '../data/pieces';
 import type { Scene } from 'phaser';
 import { STAGES } from '../data/stages';
 import { TILE_SIZE } from '../data/config';
@@ -7,16 +6,14 @@ import { INTAKE } from '../data/foundry';
 import { DUST, GLOWS, HARVEST_BURSTS, HARVEST_WORK, HIT_STOP_MS } from '../data/juice';
 import { FOUNDRY_ROOM } from '../data/rooms';
 import { SOUND_LEVELS, SOUNDS, WINDUP_SOUNDS } from '../data/sounds';
-import { isClaimed } from '../sim/claims';
 import { wornRelic } from '../sim/stats';
 import type { SimEvents } from '../sim/events';
 import { pieceRect } from '../sim/pieces';
 import { roomById, type SimState } from '../sim/state';
 import { AmbientView, type GlowSpot } from './AmbientView';
+import { movingGlows } from './movingGlows';
 import { JuiceView } from './JuiceView';
 import { SoundView } from './SoundView';
-import { attuneBeat } from './attune';
-import { intakeAnchor } from './foundryLayout';
 import { playHollows, SealSound } from './hollowsFeel';
 import { playEmberworks, VentFeel } from './emberworksFeel';
 import { playStormcrown } from './stormcrownFeel';
@@ -25,6 +22,8 @@ import { arenaLocked } from '../sim/arenaLock';
 import { playMines } from './mineFeel';
 import { playShots, WorkFeel } from './tierFeel';
 import { HollowsEnemyFeel } from './hollowsEnemyFeel';
+import type { ParticleLedger } from './particleBudget';
+import type { Quality } from '../data/settings';
 
 // Look and feel (014), driven by what the sim did since the last draw and how
 // its state moved on: sound, shake, hit-stop, particles, numbers and light.
@@ -61,12 +60,16 @@ export class FeelView {
   /** `dropIn` bounces a just-placed piece in the foundry view; `freeze` holds a struck enemy still (hit-stop). */
   private readonly scene: Scene;
 
-  constructor(scene: Scene, dropIn: (id: number) => void, freeze: (id: number, ms: number) => void) {
+  /** 078: `fx` is the scene's particle ledger and the Graphics quality the particles scale by. */
+  private readonly ledger: ParticleLedger;
+
+  constructor(scene: Scene, dropIn: (id: number) => void, freeze: (id: number, ms: number) => void, fx: { ledger: ParticleLedger; quality: () => Quality }) {
     this.dropIn = dropIn;
     this.freeze = freeze;
     this.scene = scene;
+    this.ledger = fx.ledger;
     this.sound = new SoundView(scene);
-    this.juice = new JuiceView(scene);
+    this.juice = new JuiceView(scene, fx.ledger, fx.quality);
     this.ambient = new AmbientView(scene);
   }
 
@@ -77,7 +80,7 @@ export class FeelView {
     this.watch(sim, shown, deltaMs);
     this.juice.update(deltaMs);
     this.intakeMs = Math.max(0, this.intakeMs - deltaMs);
-    this.ambient.update(deltaMs, this.movingGlows(sim, shown));
+    this.ambient.update(deltaMs, movingGlows(sim, shown, this.intakeMs > 0));
     this.sound.endFrame();
   }
 
@@ -87,6 +90,8 @@ export class FeelView {
     const fixed: GlowSpot[] = room.crystal ? [{ ...tileCentre(room.crystal.tx, room.crystal.ty), ...GLOWS.crystal }] : [];
     this.ambient.show(room, fixed);
     this.juice.particles.clear();
+    // 078: 014's room motes count under the weather's share indoors; the overworld's weather reports its own.
+    this.ledger.set('weather', this.ambient.moteCount);
     this.sound.ambience(shown);
     this.modes.clear();
   }
@@ -131,9 +136,8 @@ export class FeelView {
       } else if (h.target === 'enemy') {
         if (!h.melee) s.play(SOUNDS.hit);
         s.play(SOUNDS.enemyHurt, SOUND_LEVELS.under);
-        // 060: a fire hit throws rising sparks, as a cold one throws frost.
-        // 064: a lightning hit spits pale cyan sparks.
-        j.burst(h.damageType === 'cold' ? 'hitCold' : h.damageType === 'fire' ? 'hitFire' : h.damageType === 'lightning' ? 'hitLightning' : 'hitPhysical', h.x, h.y);
+        // 078: a round's hit plays its impact (ShotFxView, by the round that made it); a punch keeps 014's burst.
+        if (h.melee) j.burst('hitPhysical', h.x, h.y);
         j.damageNumber(h.damage, h.x, h.y, false);
         this.freeze(h.id, HIT_STOP_MS);
       } else {
@@ -143,16 +147,16 @@ export class FeelView {
         j.shake('medium');
       }
     }
-    for (const d of ev.deaths) {
+    // 076: a death's motes rise off the body as it dissolves (DissolveView); its sound plays here, once each.
+    ev.deaths.forEach(() => {
       s.play(SOUNDS.enemyDeath);
-      j.burst('deathMotes', d.x, d.y);
       j.shake('small');
-    }
-    for (const b of ev.bursts) {
+    });
+    // 078: a burst's blast (debris, smoke, shock ring, scorch) is ShotFxView's; its sound and shake request stay.
+    ev.bursts.forEach(() => {
       s.play(SOUNDS.burst);
-      j.burst('embers', b.x, b.y);
       j.shake('medium');
-    }
+    });
     if (ev.ko) {
       s.play(SOUNDS.playerKo);
       j.shake('big');
@@ -196,6 +200,8 @@ export class FeelView {
     if (ev.schematicReveals.length > 0) s.play(SOUNDS.reveal);
     if (ev.claims.length > 0) s.play(SOUNDS.claim);
     if (ev.travels.length > 0) s.play(SOUNDS.travel);
+    // 072: a return stone waking chimes as a schematic's diagram appearing does.
+    if (ev.returnWakes.length > 0) s.play(SOUNDS.reveal);
     // 034: the Hollows' shield, bombs, pound, summon and barrier; the barrier's fall has its own sound.
     const barrier = playHollows(ev, j, s, this.scene.cameras.main.worldView);
     // 060: the Emberworks' barrier across its ramps falls the same way.
@@ -274,30 +280,5 @@ export class FeelView {
       this.workMs = 0;
       j.burst(HARVEST_BURSTS[worked.nodeId] ?? 'harvestChips', worked.x, worked.y);
     }
-  }
-
-  /** Lights that move or come and go: live veins, claimed pylons, items on conduits, the intake and the tube. */
-  private movingGlows(sim: SimState, shown: string): GlowSpot[] {
-    const spots: GlowSpot[] = [];
-    for (const n of sim.nodes) if (n.roomId === shown && n.nodeId === 'ley-vein' && n.uses > 0) spots.push({ x: n.x, y: n.y, ...GLOWS.vein });
-    for (const pylon of roomById(shown).pylons ?? []) if (isClaimed(sim, pylon.site)) spots.push({ ...tileCentre(pylon.tx, pylon.ty), ...GLOWS.pylon });
-    if (shown === FOUNDRY_ROOM) {
-      for (const p of sim.foundry.pieces) {
-        const r = pieceRect(p);
-        if (isFlatKind(p.kind)) spots.push({ x: r.x, y: r.y, ...GLOWS.conduit });
-        if (p.kind === 'conduit' && p.item) spots.push({ x: r.x, y: r.y, ...GLOWS.conduitItem });
-      }
-      // The intake glows once attuned (growing as its rings light), swelling as each item goes in.
-      const { pipeGlow } = attuneBeat(sim.link.attunePulse);
-      if (sim.link.attuned && pipeGlow > 0) {
-        const swell = sim.link.attunePulse > 0 ? pipeGlow : this.intakeMs > 0 ? GLOWS.intake.pulse : 1;
-        spots.push({ ...intakeAnchor(), color: GLOWS.intake.color, radius: GLOWS.intake.radius * swell });
-      }
-    }
-    if (sim.hasTube && sim.link.attuned && shown === sim.roomId) {
-      // The same growing glow round the tube while its rings light.
-      spots.push({ x: sim.player.x, y: sim.player.y, color: GLOWS.tube.color, radius: GLOWS.tube.radius * attuneBeat(sim.link.attunePulse).gunGlow });
-    }
-    return spots;
   }
 }

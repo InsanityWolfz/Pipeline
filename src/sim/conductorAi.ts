@@ -4,7 +4,8 @@ import { enter, hold } from './aiCommon';
 import { engaged } from './bulwarkAi';
 import { grounded, rodPoint, standing } from './conductorRods';
 import { resetBoss } from './arenaLock';
-import { aggro, type EnemyState } from './enemies';
+import type { EnemyState } from './enemies';
+import { wakeBoss } from './bossWake';
 import { damagePlayer } from './health';
 import { nextFloat, nextInt } from './rng';
 import { callStrike } from './strikes';
@@ -177,7 +178,7 @@ export function conductorThink(state: SimState, e: EnemyState, def: ConductorDef
   const playerIn = here && arena !== undefined && insideTiles(arena.inside, p.x, p.y);
   if (e.mode === 'idle') {
     if (!playerIn) return [0, 0];
-    aggro(e);
+    wakeBoss(e);
   }
   e.offScreenTicks = playerIn ? 0 : e.offScreenTicks + 1;
   // A downed player, or one out of the spire too long: the fight resets at once.

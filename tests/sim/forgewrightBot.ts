@@ -37,6 +37,8 @@ export type Bot = (s: SimState, f: EnemyState) => Parameters<typeof run>[2];
 /** Runs a fight for up to `limit` ticks from just inside the hall's door, the bot choosing each tick's command (`keepUp`: the player's health kept full). */
 export function fight(seed: number, limit: number, bot: Bot, keepUp = false): Fight {
   const { s, f } = hall(130, seed);
+  // 080: the intro the helper stepped out (2.75 s) counts toward the fight's length, from walking in.
+  const intro = s.tick;
   decentBuild(s);
   lines(s, 'arrow', 'arrow', 'arrow');
   const max = playerStats(s).maxHealth;
@@ -51,11 +53,11 @@ export function fight(seed: number, limit: number, bot: Bot, keepUp = false): Fi
     taken += takenThisTick(s);
     vents += s.events.vents.length;
     floods += s.events.floodStarts.length;
-    const end = (won: boolean, ko: boolean): Fight => ({ won, ko, ticks: t, taken, share: Math.round((taken / max) * 100) / 100, vents, floods, left: Math.round(f.health) });
+    const end = (won: boolean, ko: boolean): Fight => ({ won, ko, ticks: t + intro, taken, share: Math.round((taken / max) * 100) / 100, vents, floods, left: Math.round(f.health) });
     if (s.bossDefeats.includes('forgewright')) return end(true, false);
     if (s.player.dying > 0) return end(false, true);
   }
-  return { won: false, ko: false, ticks: limit, taken, share: Math.round((taken / max) * 100) / 100, vents, floods, left: Math.round(f.health) };
+  return { won: false, ko: false, ticks: limit + intro, taken, share: Math.round((taken / max) * 100) / 100, vents, floods, left: Math.round(f.health) };
 }
 
 /** The decent bot's numbers: it keeps 7.5 tiles off, face-on, and stays this far inside the walls. */

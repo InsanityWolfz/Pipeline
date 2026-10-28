@@ -29,12 +29,31 @@ function rime(x: number, y: number, h: number, w: number, lean: number, alpha = 
   ];
 }
 
-// The rimestone: three chips of rime ice on a crust of frost.
+/** A flat chip of rime lying on the frost (081): its top face from `pts` (snow to foam), and its thin lit-blue side under it. */
+const chip = (pts: readonly (readonly [number, number])[], drop: number): Shape[] => {
+  const d = (q: readonly (readonly [number, number])[]) => `M ${q.map(([x, y]) => `${x} ${y}`).join(' L ')} Z`;
+  const ys = pts.map(([, y]) => y);
+  const lo = Math.max(...ys);
+  const hi = Math.min(...ys);
+  // The side: the face's lower edge dropped by `drop`.
+  const under = pts.filter(([, y]) => y > (lo + hi) / 2);
+  const side = [...under, ...under.slice().reverse().map(([x, y]): [number, number] => [x, y + drop])];
+  return [
+    path(d(side), { fill: 'water-light', outline: true }),
+    path(d(pts), { fill: { linear: [0, hi, 0, lo], stops: [{ at: 0, color: 'snow' }, { at: 1, color: 'foam' }] }, outline: true }),
+  ];
+};
+
+// The rimestone (081): flat chips of rime lying on a crust of frost, white with pale blue, so it reads apart from the
+// ley crystal's upright cluster by shape. (It was an upright cluster of its own.)
 const RIME_SHARD: Shape[] = [
-  ellipse(0, 5, 6, 1.6, flat({ id: 'foam', alpha: 0.7 })),
-  ...rime(-3, 5.4, 7.5, 2, -1.4),
-  ...rime(3.4, 5.4, 6.5, 1.8, 1.6),
-  ...rime(0.2, 5.6, 11, 2.6, 0.4),
+  ellipse(0, 3.6, 7, 3, { fill: { linear: [0, 0.6, 0, 6.6], stops: [{ at: 0, color: 'snow' }, { at: 1, color: 'hollow-pale' }] }, outline: true }),
+  ellipse(-2.4, 2.4, 2.4, 0.8, flat({ id: 'snow', alpha: 0.8 })),
+  ...chip([[-6, 1.6], [-3.6, -0.6], [-0.4, 0.2], [-1.6, 2.6], [-4.8, 3]], 1.2),
+  ...chip([[0.6, 1.2], [3.6, -0.4], [6.2, 1.2], [4.4, 3.4], [1.4, 3]], 1.1),
+  ...chip([[-2.6, -1.6], [-0.4, -4.4], [3, -3.4], [1.8, -1.2], [-1.2, -0.8]], 1),
+  line([-4.6, 0.4, -3.4, -0.2], 0.5, { id: 'snow', alpha: 0.9 }),
+  line([-0.6, -3.4, 0.6, -3.8], 0.5, { id: 'snow', alpha: 0.9 }),
 ];
 
 // Rime outcrops: rime spikes rising from frosted rock in the Grotto; fewer and smaller as shards are chipped off,
@@ -160,9 +179,9 @@ function roundIcon(round: string): VectorSprite {
 }
 
 /** A Shard in flight (029), pointing right: a small ley crystal (054: bigger and brighter, so a star shot reads). */
+/** 078: a ley sliver lit from the top left with a pale rim; its streak is its trail (AMMO_FX), no longer baked in. */
 const SHARD: Shape[] = [
-  { ...line([-8, 0, -1, 0], 1.6, { id: 'cyan', alpha: 0.6 }), glow: { color: 'cyan', blur: 3 } },
-  path('M 5 0 L -0.4 -2.2 L -2.4 0 L -0.4 2.2 Z', { fill: 'cyan-glow', outline: true, glow: { color: 'cyan', blur: 4 } }),
+  path('M 5 0 L -0.4 -2.2 L -2.4 0 L -0.4 2.2 Z', { fill: { radial: [0.4, -0.5, 4], stops: [{ at: 0, color: 'cyan-glow' }, { at: 1, color: 'cyan' }] }, outline: true, glow: { color: 'cyan', blur: 4 }, rim: { color: 'snow', width: 0.5, offset: 0.45 } }),
   ellipse(1, -0.5, 1, 0.5, flat('snow')),
 ];
 

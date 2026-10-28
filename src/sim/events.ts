@@ -155,6 +155,8 @@ export interface SimEvents extends ForgeEvents, BlueprintEvents, EmberEvents, St
   blocked: { id: number; x: number; y: number }[];
   /** A region boss fell for the first time (034): it wakes its altar and is gone for good. */
   bossDefeats: { boss: string }[];
+  /** 080: a boss fight's intro started: the boss, its kind, and whether it's the short one (an altar re-fight). */
+  bossIntros: { id: number; enemyId: string; short: boolean }[];
   /** An offering at an altar (034) summons its boss again: it rises after the summon. */
   summons: { altar: string; boss: string }[];
   /** E at an arena's door from inside (043, 055): the player left and its fight reset. */
@@ -193,6 +195,8 @@ export interface SimEvents extends ForgeEvents, BlueprintEvents, EmberEvents, St
   bombletBursts: BurstEvent[];
   /** What the player carried was banked (on entering the foundry or depositing). */
   banks: Record<string, number>[];
+  /** 072: a return stone woke (its id). */
+  returnWakes: { id: string }[];
   /** 042: the player entered the foundry (by its door, by fast travel, or waking there after a KO): render saves. */
   foundryArrivals: { via: 'door' | 'travel' | 'wake' }[];
   /** On a KO, what was lost: item id to count. */
@@ -261,6 +265,7 @@ export function createEvents(): SimEvents {
     melees: [],
     blocked: [],
     bossDefeats: [],
+    bossIntros: [],
     summons: [],
     arenaLeaves: [],
     arenaEnters: [],
@@ -286,6 +291,7 @@ export function createEvents(): SimEvents {
     mineBursts: [],
     bombletBursts: [],
     banks: [],
+    returnWakes: [],
     foundryArrivals: [],
     lost: {},
     ko: false,

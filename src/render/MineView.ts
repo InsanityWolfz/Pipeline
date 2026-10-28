@@ -8,6 +8,7 @@ import type { SimState } from '../sim/state';
 import { colorOf } from './color';
 import { burstTint, roundTint, tintBurst } from './roundLook';
 import { addVector } from './vector/textures';
+import { bombletAt } from './bombletPath';
 
 /** 038's live art as drawn, for `ui().mines`: each armed mine's arm time (0..1) and whether it's in its last second, bomblets in the air, and flashes still showing. */
 export interface MinesShown {
@@ -137,11 +138,9 @@ export class MineView {
         d = { pellet: addVector(this.scene, b.fromX, b.fromY, MINE_SPRITES.bomblet), shadow: addVector(this.scene, b.fromX, b.fromY, MINE_SPRITES.bombletShadow).setDepth(DEPTHS.shadow) };
         this.bomblets.set(b.id, d);
       }
-      const t = 1 - b.ticks / b.delay;
-      const x = b.fromX + (b.x - b.fromX) * t;
-      const y = b.fromY + (b.y - b.fromY) * t;
-      d.shadow.setPosition(x, y);
-      d.pellet.setPosition(x, y - 4 * MINE_LOOK.bombletArc * t * (1 - t)).setDepth(y);
+      const at = bombletAt(b);
+      d.shadow.setPosition(at.x, at.y);
+      d.pellet.setPosition(at.x, at.y - at.lift).setDepth(at.y);
     }
     for (const [id, d] of this.bomblets) {
       if (live.has(id)) continue;

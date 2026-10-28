@@ -27,6 +27,9 @@ export function makeCell(scene: Scene): CellView {
   };
 }
 
+/** A cell's parts, for its menu's motion (081). */
+export const cellParts = (c: CellView): (GameObjects.Image | TextLine)[] => [c.frame, c.icon, c.count, c.warn];
+
 /** Draws a cell at `box` (hidden unless `shown`), holding `s` if given: its icon, count (rust while any is at risk) and mark. */
 export function drawCell(c: CellView | undefined, s: ShownSlot | undefined, box: ScreenBox, shown: boolean): void {
   if (!c) return;

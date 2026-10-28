@@ -6,6 +6,7 @@ import type { SimState } from '../sim/state';
 import { researchListLayout } from './researchLayout';
 import { researchRows, type ResearchListRow } from './researchRows';
 import { drawTablet } from './tablet';
+import { MenuMotion } from './MenuMotion';
 import { TextLine } from './textLine';
 import { addVector } from './vector/textures';
 
@@ -37,6 +38,8 @@ export class ResearchList {
   private readonly frame: { setVisible(visible: boolean): unknown }[] = [];
   private readonly rows = new Map<string, RowView>();
   private groups: ReturnType<typeof researchRows> = [];
+  /** 081: the open's fade and rise. */
+  private readonly motion: MenuMotion;
 
   constructor(scene: Scene) {
     const L = RESEARCH_LIST;
@@ -49,11 +52,14 @@ export class ResearchList {
     title.moveTo(Math.round(at.title.x + (L.title.w - title.width) / 2), at.title.y + L.title.titleY);
     const footer = text(at.footer.x, at.footer.y).set(L.footer.text).setFill(L.colors.dim).setAlpha(L.dimAlpha);
     this.frame.push(tablet, card, title, footer);
+    this.motion = new MenuMotion(scene, 'research', DEPTHS.menu).adopt([tablet, card, title, footer]);
     const groups = researchRows({ research: {}, inventory: {} });
     for (const [gi, g] of groups.entries()) {
       const place = at.groups[gi];
       if (!place) continue;
-      this.frame.push(text(place.x, place.y + L.headerY, 'display').set(g.label));
+      const header = text(place.x, place.y + L.headerY, 'display').set(g.label);
+      this.frame.push(header);
+      this.motion.adopt([header]);
       g.rows.forEach((r, k) => {
         const y = (place.rows[k] ?? 0) + L.textY;
         const x = place.x;
@@ -64,6 +70,8 @@ export class ResearchList {
           counts: Array.from({ length: MAX_COST_ITEMS }, (_, i) => text(x + L.col.cost + i * L.costStep + L.costTextX, y, 'count')),
           where: text(x + L.col.where, y).setFill(L.colors.dim).setAlpha(L.dimAlpha),
         });
+        const v = this.rows.get(r.id);
+        if (v) this.motion.adopt([v.name, v.state, v.where, ...v.icons, ...v.counts]);
       });
     }
     this.setOpen(false);
@@ -85,6 +93,8 @@ export class ResearchList {
   }
 
   setOpen(open: boolean): void {
+    if (open && !this.open) this.motion.show();
+    if (!open) this.motion.hide();
     this.open = open;
     for (const o of this.frame) o.setVisible(open);
     if (!open) for (const v of this.rows.values()) this.hide(v);

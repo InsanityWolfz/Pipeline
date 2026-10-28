@@ -1,3 +1,4 @@
+import { RETURN_STONES } from '../data/returnStones';
 import { SITE_SAFE_RADIUS, SITE_WAKES } from '../data/claims';
 import { EMBERWORKS_GATE } from '../data/emberworks';
 import { ANVIL_HALL } from '../data/emberworksSites';
@@ -187,13 +188,15 @@ export function generateOverworld(seed: number = OVERWORLD.seed, landmarks: read
   const altar = HOLLOWS.arena.altar;
   const anvilAltar = ANVIL_HALL.altar;
   const spireAltar = CROWN_SPIRE.altar;
+  // 072: the return stones outside the boss arenas' doors.
+  const stones = RETURN_STONES.map((s) => ({ id: s.id, tx: s.tx, ty: s.ty }));
   for (const t of [...pylons, ...caches, altar, anvilAltar, spireAltar, OVERWORLD.startStone, ...OVERWORLD.nodes, ...HOLLOWS.gate]) set(grid, t.tx, t.ty, TILE.floor);
   for (const f of OVERWORLD.features) {
     const p = feature(grid, f);
     if (p) kept.push(p);
   }
   // A feature never buries a pylon, a reliquary or the altar.
-  for (const t of [...pylons, ...caches, altar, anvilAltar, spireAltar]) set(grid, t.tx, t.ty, TILE.floor);
+  for (const t of [...pylons, ...caches, altar, anvilAltar, spireAltar, ...stones]) set(grid, t.tx, t.ty, TILE.floor);
   const door = OVERWORLD.entrance.door;
   set(grid, door.tx, door.ty, TILE.door);
   set(grid, OVERWORLD.entrance.arrive.tx, OVERWORLD.entrance.arrive.ty, TILE.path);
@@ -219,6 +222,7 @@ export function generateOverworld(seed: number = OVERWORLD.seed, landmarks: read
       { ...anvilAltar, boss: ANVIL_HALL.boss },
       { ...spireAltar, boss: CROWN_SPIRE.boss },
     ],
+    returnStones: stones,
     terrain: { ponds: kept, paths: OVERWORLD.paths },
   };
 }

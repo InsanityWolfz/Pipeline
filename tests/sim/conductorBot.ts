@@ -41,13 +41,15 @@ export function fight(seed: number, limit: number, bot: Bot, round: string): Fig
   const enter = tileCentre(CROWN_SPIRE.door.enterTo);
   const middle = tileCentre(CROWN_SPIRE.middle);
   const { s, c } = spire(enter.y - middle.y, seed, enter.x - middle.x);
+  // 080: the intro the helper stepped out (2.75 s) counts toward the fight's length, from walking in.
+  const intro = s.tick;
   decentBuild(s);
   lines(s, round, round, round, round);
   const max = playerStats(s).maxHealth;
   let taken = 0;
   let blinks = 0;
   let shieldDown = 0;
-  const end = (won: boolean, ko: boolean, t: number): Fight => ({ won, ko, ticks: t, taken, share: Math.round((taken / max) * 100) / 100, blinks, shieldDown });
+  const end = (won: boolean, ko: boolean, t: number): Fight => ({ won, ko, ticks: t + intro, taken, share: Math.round((taken / max) * 100) / 100, blinks, shieldDown });
   for (let t = 1; t <= limit; t++) {
     feed(s);
     run(s, 1, bot(s, c));

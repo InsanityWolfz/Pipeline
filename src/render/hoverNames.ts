@@ -28,6 +28,7 @@ import { machineSpeed } from '../sim/research';
 import { machineCardText } from './recipeText';
 import { intakeAnchor } from './foundryLayout';
 import { roomById, type SimState } from '../sim/state';
+import { SET_PIECES, setPieceAnchor } from '../data/setPieces';
 
 // What's under the cursor in the world, by name (015). Pure, so tests can check
 // it; render draws the name above the thing it returns.
@@ -154,6 +155,15 @@ export function nameAt(sim: SimState, roomId: string, px: number, py: number): H
     return { name: sim.hasTube ? WORLD_NAMES.tubeStone : WORLD_NAMES.dormantTube, ...centre(room.tubeStone), rise: HOVER_NAME.tile.rise };
   }
   if (on(room.crystal) && room.crystal) return { name: WORLD_NAMES.crystal, ...centre(room.crystal), rise: HOVER_NAME.tile.rise };
+  // 077: a set piece, by its name alone (no description), over its drawn box.
+  const piece = roomId === OVERWORLD.id ? SET_PIECES.find((p) => {
+    const a = setPieceAnchor(p, TILE_SIZE);
+    return Math.abs(px - a.x) <= (p.look.w * HOVER_NAME.setPieceWidth) / 2 && py <= a.y && py >= a.y - p.look.h;
+  }) : undefined;
+  if (piece) {
+    const a = setPieceAnchor(piece, TILE_SIZE);
+    return { name: piece.name, x: a.x, y: a.y, rise: piece.look.h };
+  }
   if (roomId === OVERWORLD.id && Object.values(OVERWORLD.leyLines).some((l) => toLine(px, py, l) <= HOVER_NAME.leyLine)) {
     return { name: WORLD_NAMES.leyLine, x: px, y: py, rise: HOVER_NAME.leyLineRise, description: DESCRIPTIONS.leyLine };
   }

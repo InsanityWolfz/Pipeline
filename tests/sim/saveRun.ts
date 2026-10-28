@@ -27,6 +27,8 @@ export function lateGame(): SimState {
   b.health = 0;
   runUntil(s, (x) => x.bossDefeats.includes('bulwark'), 5);
   gainXp(s, 5000, 'kill');
+  // 072: the forum's return stone woken, as walking out of its door does.
+  s.returnStones.push('sunken-forum-waystone');
   const helm = s.gear.find((g) => g.slot === 'helm');
   if (helm) equip(s, { id: helm.id });
   script(s, 120);

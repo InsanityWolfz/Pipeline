@@ -2,7 +2,8 @@ import { TILE_SIZE } from '../data/config';
 import type { BulwarkDef, EnemyDef } from '../data/enemies';
 import { arenaOf } from '../data/arenas';
 import { enter, hold, startWindup, stepAttack, toward, walkHome } from './aiCommon';
-import { aggro, type EnemyState } from './enemies';
+import type { EnemyState } from './enemies';
+import { wakeBoss } from './bossWake';
 import { countBehind, enrageIfDue, lobCooldownOf, resetFight, riseAddsIfDue, startStomp, stepRoar, stepStomp, stepWave, stompReady, turnRateOf, windupsOf } from './bulwarkPhases';
 import { throwBombs } from './enemyBombs';
 import { damagePlayer } from './health';
@@ -71,8 +72,7 @@ export function bulwarkThink(state: SimState, e: EnemyState, def: BulwarkDef): [
       if (atHome(e)) resetFight(state, e, def);
       return move;
     }
-    aggro(e);
-    e.lobCooldown = lobCooldownOf(e, def);
+    wakeBoss(e);
   }
   if (e.lobCooldown > 0) e.lobCooldown -= 1;
   if (e.stompCooldown > 0) e.stompCooldown -= 1;

@@ -1,4 +1,4 @@
-import { Scene } from 'phaser';
+import { Scene, WEBGL } from 'phaser';
 import { TUTORIAL_START } from '../../data/player';
 import { SAVE_TEXT } from '../../data/save';
 import { SOUNDS } from '../../data/sounds';
@@ -114,6 +114,7 @@ export class FlowScene extends Scene {
       damaged: () => this.slot.status === 'corrupt' || this.slot.status === 'too-old',
       notes: () => loadNotes().length,
       sandbox: isSandboxUrl(this.search),
+      fixedQuality: this.sys.renderer.type === WEBGL ? null : 'low',
       click: () => this.sounds?.play(SOUNDS.menuClick),
     });
     const card = this.card;

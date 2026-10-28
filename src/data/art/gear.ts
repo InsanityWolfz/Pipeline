@@ -92,11 +92,14 @@ const EMBER: Shape[] = [
   glowDot(-1, 1.2, 0.9, 'cinder-light'),
 ];
 
-/** A rounded square frame round an icon, 20x20, in a rarity's colour; Fine and up glow, a relic's more, with corner studs. */
+/** A rounded square frame round an icon, 20x20, in a rarity's colour; Fine and up glow, a relic's more, with corner studs; 081: bevelled, lit at its top-left corner. */
 function frame(key: string, color: string, glow: number, studs: boolean): VectorSprite {
   const shapes: Shape[] = [
     rect(-9, -9, 18, 18, 3, { fill: { id: 'ink', alpha: 0.45 } }),
     rect(-9, -9, 18, 18, 3, { stroke: { color, width: 1.4 }, ...(glow > 0 ? { glow: { color, blur: glow } } : {}) }),
+    // 081: a bevel (a dark inner edge along the foot and right, the well cut in) and a lit top-left corner.
+    path('M -7.6 7.6 L 5.4 7.6 Q 7.6 7.6 7.6 5.4 L 7.6 -7.6', trim({ id: 'ink', alpha: 0.5 }, 0.8)),
+    path('M -9 2 L -9 -6 Q -9 -9 -6 -9 L 2 -9', trim({ id: 'snow', alpha: 0.55 }, 0.6)),
     ...(studs ? [[-9, -9], [9, -9], [-9, 9], [9, 9]].map(([x, y]) => ellipse(x ?? 0, y ?? 0, 1.4, 1.4, { fill: color, outline: true, glow: { color, blur: 2 } })) : []),
   ];
   return { key, size: [22, 22], anchor: [11, 11], frames: [shapes] };

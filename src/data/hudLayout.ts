@@ -198,8 +198,6 @@ export const READOUT_LAYOUT = {
 export const MENU_MAX_ROWS = 10;
 export const MENU_COLUMN_GAP = 8;
 
-/** Palette tints on the player's body for the worn body piece's weight (010); Featherplate (036) shows no slow tint. */
-export const ARMOR_TINTS = { light: 'leaf-light', heavy: 'rock', feather: 'leaf-light' } as const;
 
 /**
  * World names on mouse-over (015). Things without a tile (enemies, nodes, ground
@@ -217,6 +215,8 @@ export const HOVER_NAME = {
   /** A ley line (018) hovers within this many px of its seam, and names itself this far above the cursor. */
   leyLine: 8,
   leyLineRise: 14,
+  /** 077: a set piece is hovered over the middle share of its drawn box's width (its edges are often air). */
+  setPieceWidth: 0.8,
   /** The description line (018) sits this far under the name, px. */
   descriptionGap: 2,
   gap: 4,
@@ -249,23 +249,8 @@ export const WORLD_NAMES = {
   altar: 'Altar',
 } as const;
 
-/**
- * Panels that change size (020), drawn live in the look of the HUD's vector tablets (src/data/art/hud.ts):
- * carved stone with an ink edge, a lit top bevel, a dark base line and brass corner brackets `corner` px long.
- * Palette ids and alphas.
- */
-export const TABLET = {
-  fill: 'carve-dark',
-  fillAlpha: 0.94,
-  edge: 'ink',
-  bevel: 'carve-light',
-  base: 'mortar',
-  brass: 'brass',
-  corner: 4,
-} as const;
-
-/** Menu rows (020): a pressed row flashes brass for this long, ms. */
-export const MENU_FEEDBACK = { pressMs: 160 } as const;
+/** Menu rows (020): a pressed row flashes brass for this long, ms (081: 160 → 140, inside the 150 ms motion rule). */
+export const MENU_FEEDBACK = { pressMs: 140 } as const;
 
 /**
  * The pause menu (020, Esc): a dim over the world, a title card, and rows (042): Resume, Settings (the sound rows

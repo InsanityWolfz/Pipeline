@@ -313,3 +313,45 @@ Each plan's build notes hold the detail; these are the lasting technical choices
   - A held key reaches the sim as its own command flag (`Command.interactHeld`) next to the press (`interact`); rules that chain on a hold read the flag, so a press alone still acts once.
   - Render-side checks that read pixels (the silhouette) cache on everything that can change the answer, including each prop's current frame, and look only at a spatial bucket round the player, never every prop each frame.
   - A craft max always carries `batches` on its one craft event (even for one batch); a plain click carries none, so the feed tells them apart.
+
+- **073 enemies only attack on screen:**
+  - Whether an enemy may start an attack is one shared sim rule (`mayStart`, `aiCommon.ts`), checked beside the cooldown, so a new enemy kind inherits it; "on screen" is the same feet-in-view box that waking uses.
+  - Boss arenas override it: anything standing in an arena with the player follows the boss's wake and leash rules (`inArenaWithPlayer`, `arenaWait.ts`).
+- **074 light and region moods:**
+  - Lighting is render-only and never feeds the sim: region and ring moods, light sources and quality tiers are data (`src/data`), drawn by a lighting layer in render.
+  - Characters sit in a never-darkened layer and take only a light's catch, so enemies and telegraphs stay readable in every mood.
+  - Lights reach only what's near them: ground is lit in 160 px squares and props one by one only where a light reaches, which keeps draw calls low on High.
+
+- **075 the wanderer redesign:**
+  - What the body shows of gear is a sim fact (`wornRarity`, the highest rarity worn), read by render; the rig never decides rarity.
+  - Pose timings read the sim's own durations (`ROLL_TICKS`, `PLAYER_HIT_FX.poseTicks`); every other motion number lives in `WANDERER_MOTION`, so a timing change can't leave the art out of step.
+  - Rig parts are baked to textures at boot and cached per view, so drawing allocates nothing per frame.
+
+- **077 world detail, landmarks and weather:**
+  - Decor and landmarks are render-only and never change collision: landmarks stand only on tiles that already block, and placement is a pure hash per tile, so the world is the same every boot.
+  - Sway keeps each plant's own cycle; wind changes only amplitude and lean, eased, so a gust or a region border never jumps a plant's phase.
+  - Weather lives in render, sized per Graphics quality tier, and never runs in the foundry or the sandbox.
+
+- **076 enemy and boss polish:**
+  - Enemy poses follow the sim's own wind-up progress (gather, coil, peak by share of the wind-up), so the art can't drift from timing; motion values live in `ENEMY_MOTION`, with per-attack overrides (slams take no release stretch).
+  - Death motes share one capped total per death, split across a boss and its standing parts, and scale with Graphics quality.
+  - Staggers count hits per sim tick, never per render frame, so slow machines see the same reactions.
+
+- **078 ammo visuals:**
+  - Ammo looks are data rows by family, element and tier, so a new ammo gets its look by adding a row.
+  - All particles (death motes, weather, effects) draw from one pooled ledger with a fixed share each per Graphics quality tier; no share borrows from another.
+  - e2e tests that wait for a screen to settle count drawn frames, never wall-clock seconds.
+
+- **080 boss intros and phases:**
+  - The intro is a sim mode (`intro`), not a pause: the world keeps stepping while the boss and its posted enemies are skipped and immune and the player's damage is guarded, so the fight that follows is unchanged tick for tick.
+  - Screen shake exists only in boss intros, on the world camera, behind the "Flashes and shake" setting and reduced motion; the HUD and name card sit on the UI camera.
+  - Boss phases are drawn from existing sim flags only; render never decides a phase.
+
+- **081 HUD polish:**
+  - Every panel draws through one tablet look (data), so a new panel, 080's name card included, gets it for free.
+  - Menu motion is short, never blocks input, and starts menus at a near-zero alpha, since Phaser 4 skips input on containers at alpha 0.
+
+- **072 boss return points:**
+  - Return stones are data (`src/data/returnStones.ts`: place, wake radius, landing tile, pack margin) read by sim rules; a fourth boss door gets a stone by a new row.
+  - Fast-travel destinations come from one sim list (`travelDestinations`) carrying each entry's `kind`, so every menu shows the same places in the same order.
+  - A sprite scaled for an effect divides by `textureScale()` like every other view, and `ui()` reports drawn sizes, not the tween's factor, so a test can catch a wrong scale.

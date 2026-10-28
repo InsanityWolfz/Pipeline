@@ -6,7 +6,7 @@ import { enemyAnims } from './enemyAnims';
 // bolt. Palette ids, ms, world px, alphas 0..1.
 
 /** Sprite frames (shapes in src/data/art): the Burrower's ripple, two frames it alternates as it moves. */
-export const HOLLOWS_ENEMY_SPRITES = { ripple: ['burrower-ripple/0', 'burrower-ripple/1'] } as const;
+export const HOLLOWS_ENEMY_SPRITES = { ripple: ['burrower-ripple/0', 'burrower-ripple/1'], rippleCracked: 'burrower-ripple/2' } as const;
 
 /** Their animation sets (joined into ENEMY_ANIMS): the Charger paws over two frames and reels when stunned; the Burrower digs; the Shardback shuffles and blocks; the Sniper steps out. */
 export const HOLLOWS_ENEMY_ANIMS = {
@@ -18,7 +18,7 @@ export const HOLLOWS_ENEMY_ANIMS = {
 
 export const HOLLOWS_ENEMY_LOOK = {
   /** The Charger's lane: faint over its whole length, a fill running down it with the wind-up, an edge line. */
-  lane: { alpha: 0.22, fillAlpha: 0.5, edgeWidth: 1.5, edgeAlpha: 0.75 },
+  lane: { alpha: 0.22, fillAlpha: 0.5 },
   /** The Burrower's cracked ring at the locked spot: growing to its radius over the wind-up, with `cracks` lines out from the middle, each jagging `jag` radians halfway. */
   ring: { alpha: 0.22, fillAlpha: 0.45, width: 2, cracks: 6, crackWidth: 1.5, crackStart: 0.3, crackAlpha: 0.8, jag: 0.25 },
   /**
@@ -26,6 +26,12 @@ export const HOLLOWS_ENEMY_LOOK = {
    * (out of step by `phaseMs` per enemy id), `drop` px below the feet and `depth` over the ground decals.
    */
   ripple: { wobbleMs: 260, minSpeed: 0.2, phaseMs: 97, drop: 4, depth: 0.1 },
+  /**
+   * 076: the ripple's wind-up phases (its body is underground): gathering, the mound settles to `settle` (x, y);
+   * coiling, it swells to `coil` with progress, its cracks gaping (the cracked frame) from `crackAt` of the wind-up and
+   * its dust thickening to every `dustMs` at the peak; at the peak it rises to `peak` and trembles.
+   */
+  rippleWindup: { settle: [1.1, 0.75] as const, coil: 1.25, peak: 1.4, crackAt: 0.5, dustMs: 30 },
   /** Dust kicked up every `ms`: by a moving ripple (`rippleDrop` px below its feet), and a Charger's hooves through the charge and on the paw strokes of its wind-up (down `pawOn` of every `pawTicks`). */
   dust: { ms: 90, rippleDrop: 2, pawTicks: 20, pawOn: 10 },
   /** Where 035's bursts go, px out along the attack: the Charger's chips on a wall, the Shardback's bash sparks, the Sniper's lens flash. */
