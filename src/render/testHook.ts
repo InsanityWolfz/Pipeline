@@ -145,7 +145,7 @@ export interface UiState {
   burnNumbers: number;
   enemyFlames: number;
   /** Particles flying now (064); 076: as `live`, with the death motes among them and the deaths dissolving. */
-  particles: { live: number; deathMotes: number; thrown: number; moteColors: Record<string, number>; dissolving: number };
+  particles: { live: number; deathMotes: number; thrown: number; dissolving: number };
   /** Which cursor shows (021: the menu pointer or the crosshair), its depth, and the highest depth of anything else. */
   cursor: CursorState | null;
   /** Picked-up items still sliding into the player (021). */
