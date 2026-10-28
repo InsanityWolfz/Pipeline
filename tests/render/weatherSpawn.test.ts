@@ -157,6 +157,27 @@ describe('weather lightning (077)', () => {
     expect(rods).toBeGreaterThan(10);
   });
 
+  it('never strikes where its bolt runs down over the player, or under the bottom HUD (review)', () => {
+    const L = WEATHER_LIGHTNING;
+    const bad: string[] = [];
+    let hits = 0;
+    for (let i = 0; i < 1500; i++) {
+      const tx = 20 + ((i * 37) % 250);
+      const ty = 10 + ((i * 53) % 270);
+      if (Math.hypot(tx - 146, ty - 146) < 113) continue;
+      // The player anywhere in the view, not only its middle.
+      const v = { x: tx * T - 320 + ((i * 29) % 200) - 100, y: ty * T - 180 + ((i * 41) % 120) - 60, width: 640, height: 360 };
+      const player = { x: tx * T, y: ty * T };
+      const hit = strikeTarget(room, v, player, rodNodes, createRng(i));
+      if (!hit) continue;
+      hits += 1;
+      if (Math.abs(hit.x - player.x) <= L.playerColumn && hit.y >= player.y - L.playerTall) bad.push(`${i}: ${hit.kind} through the player`);
+      if (hit.y > v.y + v.height - L.hudClear) bad.push(`${i}: ${hit.kind} under the HUD`);
+    }
+    expect(hits).toBeGreaterThan(50);
+    expect(bad).toEqual([]);
+  });
+
   it('skips when nothing suitable is in view', () => {
     // The open meadow by the foundry: no rod, cairn or cliff.
     const v = { x: 146 * T - 320, y: 150 * T - 180, width: 640, height: 360 };

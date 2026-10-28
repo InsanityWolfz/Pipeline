@@ -9,7 +9,8 @@ import { setPieceOnTile } from './decorPlace';
 // 077: weather lightning in the Stormcrown (render only, no game effect): when it strikes, from the render-side
 // stream, and what it strikes in view: the Storm Tower's crown first, else an iron rod at least `playerMargin` tiles
 // from the player, else a cairn or a cliff top (also clear of the player); never a Rod Field storm rod or within
-// `rodNodeMargin` tiles of one, so it can't be mistaken for a rod's charge. Pure but for the stream.
+// `rodNodeMargin` tiles of one, so it can't be mistaken for a rod's charge; never one whose bolt runs down over the
+// player or lands under the bottom HUD (review). Pure but for the stream.
 
 const T = TILE_SIZE;
 const L = WEATHER_LIGHTNING;
@@ -60,6 +61,10 @@ export interface StrikeTarget {
 
 const inside = (v: View, x: number, y: number): boolean => x >= v.x && x <= v.x + v.width && y >= v.y && y <= v.y + v.height;
 
+/** Review: a bolt may land at (x, y): over the bottom HUD's strip, and not running down over the player. */
+const boltClear = (v: View, player: { x: number; y: number }, x: number, y: number): boolean =>
+  y <= v.y + v.height - L.hudClear && !(Math.abs(x - player.x) <= L.playerColumn && y >= player.y - L.playerTall);
+
 /**
  * What a strike hits in `view`: the Storm Tower's crown if in view; else a rod, then a cairn or cliff top, in view,
  * at least `playerMargin` tiles from the player and `rodNodeMargin` from every storm-rod node; null to skip.
@@ -70,7 +75,7 @@ export function strikeTarget(room: Room, view: View, player: { x: number; y: num
     const a = setPieceAnchor(tower, T);
     const x = a.x + tower.strikeAt[0];
     const y = a.y + tower.strikeAt[1];
-    if (inside(view, x, y)) return { kind: 'tower', x, y };
+    if (inside(view, x, y) && boltClear(view, player, x, y)) return { kind: 'tower', x, y };
   }
   const clear = (tx: number, ty: number) => {
     const x = (tx + 0.5) * T;
@@ -87,9 +92,11 @@ export function strikeTarget(room: Room, view: View, player: { x: number; y: num
       if (setPieceOnTile(tx, ty) || !clear(tx, ty)) continue;
       const x = (tx + 0.5) * T;
       const bottom = (ty + 1) * T;
-      if (s === TILE.ironRod) rods.push({ kind: 'rod', x, y: bottom - L.riseRod });
+      const y = bottom - (s === TILE.ironRod ? L.riseRod : s === TILE.cairn ? L.riseCairn : L.riseCliff);
+      if (!boltClear(view, player, x, y)) continue;
+      if (s === TILE.ironRod) rods.push({ kind: 'rod', x, y });
       // A cairn's or cliff's top: one with nothing of its kind behind it (north), so the bolt lands on what you see.
-      else if (room.rows[ty - 1]?.[tx] !== s) tops.push({ kind: s === TILE.cairn ? 'cairn' : 'cliff', x, y: bottom - (s === TILE.cairn ? L.riseCairn : L.riseCliff) });
+      else if (room.rows[ty - 1]?.[tx] !== s) tops.push({ kind: s === TILE.cairn ? 'cairn' : 'cliff', x, y });
     }
   }
   const list = rods.length > 0 ? rods : tops;

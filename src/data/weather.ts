@@ -1,4 +1,5 @@
 import type { DecorRegion } from './decor';
+import { HUD_LAYOUT } from './hudLayout';
 import type { Quality } from './settings';
 
 // 077: each region's weather, render only and only in the overworld: Region 1's drifting pollen and ley motes, the
@@ -93,7 +94,10 @@ export const WEATHER_MARGIN = 32;
  * view at least `playerMargin` tiles from the player (never within `rodNodeMargin` tiles of a storm-rod node), else a
  * cairn or a cliff top in view; with nothing suitable it skips. The bolt (064's look) runs from `above` px over the
  * view's top edge for `boltMs`, with 074's flash and rod-strike light. `riseRod`/`riseCairn`/`riseCliff`: how far up
- * the target's tile bottom the bolt lands, px.
+ * the target's tile bottom the bolt lands, px. Review: a target is skipped when its bolt would run down over the
+ * player (within `playerColumn` px either side of it, the bolt's spread and jag and the wanderer's half width, landing
+ * lower than `playerTall` px over the player's middle) or land under the bottom HUD's strip (`hudClear` px: the hotbar
+ * row and the tube slot over it, with their margins).
  */
 export const WEATHER_LIGHTNING = {
   everyMs: [10000, 22000] as const,
@@ -112,6 +116,9 @@ export const WEATHER_LIGHTNING = {
   riseRod: 74,
   riseCairn: 28,
   riseCliff: 40,
+  playerColumn: 60 + 9 + 12,
+  playerTall: 24,
+  hudClear: HUD_LAYOUT.margin + HUD_LAYOUT.cell.h + HUD_LAYOUT.gap + HUD_LAYOUT.tubeSlot.h,
 } as const;
 
 /** The render-side weather stream's seed (src/sim/rng.ts's generator, its own stream: never the sim's). */
