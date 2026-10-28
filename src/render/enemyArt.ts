@@ -51,32 +51,112 @@ function modePose(e: EnemyState, moving: boolean): string {
 /** Poses a hit reaction shows over. */
 const REACTABLE: readonly string[] = ['idle', 'walk', 'recover', 'turn'];
 
+// Review 8: what a frame would otherwise build per enemy (anim keys, frame-name lists, `enemyId:pose` keys, the
+// reaction's input) is looked up once and kept, as 075's wanderer does.
+
+/** Each anim set's anims by view and pose (null: the set lacks it). */
+const animCache = new WeakMap<EnemyAnims, Record<View, Map<string, AnimDef | null>>>();
+/** Each anim's frame names. */
+const frameCache = new WeakMap<AnimDef, readonly string[]>();
+/** Per enemy kind: its family, its peak overrides by pose, and the release modes that don't stretch. */
+const kindCache = new Map<string, { family: FamilyId; peakAt: Map<string, number>; still: Set<string> }>();
+/** The reaction's input, filled per call. */
+const reactionIn = { attacking: false, reactable: false, boss: false, flash: 0, staggerMs: null as number | null };
+
+/** The set's anim for a pose in a view, or null if it has none. */
+function ownAnim(anims: EnemyAnims, view: View, pose: string): AnimDef | null {
+  let byView = animCache.get(anims);
+  if (!byView) {
+    byView = { down: new Map(), up: new Map(), side: new Map() };
+    animCache.set(anims, byView);
+  }
+  const m = byView[view];
+  let a = m.get(pose);
+  if (a === undefined) {
+    a = anims[`${pose}-${view}` as keyof EnemyAnims] ?? null;
+    m.set(pose, a);
+  }
+  return a;
+}
+
+/** The anim for a pose, `idle` standing in for one the set lacks. */
+const animOf = (anims: EnemyAnims, view: View, pose: string): AnimDef => ownAnim(anims, view, pose) ?? ownAnim(anims, view, 'idle') ?? anims['idle-side'];
+
+function framesOf(a: AnimDef): readonly string[] {
+  let f = frameCache.get(a);
+  if (!f) {
+    f = animFrames(a);
+    frameCache.set(a, f);
+  }
+  return f;
+}
+
+/** An anim's frame `i` (its last, past the end). */
+function frameAt(a: AnimDef, i: number): string | null {
+  return framesOf(a)[Math.min(i, a.frames - 1)] ?? null;
+}
+
+function kindOf(def: EnemyDef): { family: FamilyId; peakAt: Map<string, number>; still: Set<string> } {
+  let k = kindCache.get(def.id);
+  if (!k) {
+    const peakAt = new Map<string, number>();
+    for (const [key, v] of Object.entries(ENEMY_MOTION.peakAt)) if (key.startsWith(`${def.id}:`)) peakAt.set(key.slice(def.id.length + 1), v);
+    const still = new Set(ENEMY_MOTION.release.none.filter((key) => key.startsWith(`${def.id}:`)).map((key) => key.slice(def.id.length + 1)));
+    k = { family: familyOf(def.id).id, peakAt, still };
+    kindCache.set(def.id, k);
+  }
+  return k;
+}
+
+/** A blank art, for a caller to keep and pass back each frame. */
+export const blankArt = (anim: AnimDef): EnemyArtShown => ({ pose: 'idle', phase: null, reaction: null, squash: 0, anim, frame: null, dx: 0, dy: 0, family: 'ruin' });
+
+function fill(out: EnemyArtShown, pose: string, phase: WindupPhase | null, reaction: Reaction | null, squash: number, anim: AnimDef, frame: string | null, dx: number, dy: number, family: FamilyId): EnemyArtShown {
+  out.pose = pose;
+  out.phase = phase;
+  out.reaction = reaction;
+  out.squash = squash;
+  out.anim = anim;
+  out.frame = frame;
+  out.dx = dx;
+  out.dy = dy;
+  out.family = family;
+  return out;
+}
+
 /**
- * The art for this frame. `staggerMs` is ms since its stagger started (null for none); `now` is scene ms, which the
- * coil's loop and the tremble run on.
+ * The art for this frame, written into `out` (a caller's own, kept from frame to frame; a new one without it).
+ * `staggerMs` is ms since its stagger started (null for none); `now` is scene ms, which the coil's loop and the tremble
+ * run on.
  */
-export function enemyArt(e: EnemyState, def: EnemyDef, anims: EnemyAnims, view: View, turned: boolean, staggerMs: number | null, now: number): EnemyArtShown {
-  const family = familyOf(def.id).id;
-  const anim = (pose: string): AnimDef => anims[`${pose}-${view}` as keyof EnemyAnims] ?? anims[`idle-${view}`];
-  const hold = (pose: string, i: number) => {
-    const a = anim(pose);
-    return { anim: a, frame: animFrames(a)[Math.min(i, a.frames - 1)] ?? null };
-  };
+export function enemyArt(e: EnemyState, def: EnemyDef, anims: EnemyAnims, view: View, turned: boolean, staggerMs: number | null, now: number, out?: EnemyArtShown): EnemyArtShown {
+  const kind = kindOf(def);
+  const family = kind.family;
+  const o = out ?? blankArt(animOf(anims, view, 'idle'));
   const base = basePose(e, def, turned);
-  const reaction = reactionOf({ attacking: attacking(e.mode), reactable: REACTABLE.includes(base), boss: def.boss, flash: e.flash, staggerMs });
+  reactionIn.attacking = attacking(e.mode);
+  reactionIn.reactable = REACTABLE.includes(base);
+  reactionIn.boss = def.boss;
+  reactionIn.flash = e.flash;
+  reactionIn.staggerMs = staggerMs;
+  const reaction = reactionOf(reactionIn);
   if (reaction === 'stagger' && staggerMs !== null) {
-    return { pose: 'stagger', phase: null, reaction, squash: staggerSquash(staggerMs), ...hold('stagger', staggerIndex(staggerMs)), dx: 0, dy: 0, family };
+    const a = animOf(anims, view, 'stagger');
+    return fill(o, 'stagger', null, reaction, staggerSquash(staggerMs), a, frameAt(a, staggerIndex(staggerMs)), 0, 0, family);
   }
-  if (reaction === 'flinch') return { pose: 'hit', phase: null, reaction, squash: flinchSquash(def.hitFlashTicks - e.flash), anim: anim('hit'), frame: null, dx: 0, dy: 0, family };
+  if (reaction === 'flinch') return fill(o, 'hit', null, reaction, flinchSquash(def.hitFlashTicks - e.flash), animOf(anims, view, 'hit'), null, 0, 0, family);
   const strip = windupOf(e);
-  const stripAnim = strip && anims[`${strip.pose}-${view}` as keyof EnemyAnims];
+  const stripAnim = strip && ownAnim(anims, view, strip.pose);
   if (strip && stripAnim) {
-    const phase = windupPhase(e.modeTicks, strip.ticks, ENEMY_MOTION.peakAt[`${def.id}:${strip.pose}`]);
+    const phase = windupPhase(e.modeTicks, strip.ticks, kind.peakAt.get(strip.pose));
     const t = tremble(phase, now, def.boss);
-    return { pose: strip.pose, phase, reaction: null, squash: 0, ...hold(strip.pose, stripIndex(phase, stripAnim.frames - STRIP_ENDS, now)), dx: t.dx, dy: t.dy, family };
+    return fill(o, strip.pose, phase, null, 0, stripAnim, frameAt(stripAnim, stripIndex(phase, stripAnim.frames - STRIP_ENDS, now)), t.dx, t.dy, family);
   }
-  const squash = RELEASE_MODES.includes(e.mode) ? releaseSquash(e.modeTicks, `${def.id}:${e.mode}`) : 0;
+  const squash = RELEASE_MODES.includes(e.mode) && !kind.still.has(e.mode) ? releaseSquash(e.modeTicks) : 0;
   // The Conductor's storm call and rod chain release from their peak (064: one pose for both).
-  if ((base === 'call' || base === 'chain') && e.mode === 'swipe') return { pose: base, phase: null, reaction: null, squash, ...hold(base, 99), dx: 0, dy: 0, family };
-  return { pose: base, phase: null, reaction: null, squash, anim: anim(base), frame: null, dx: 0, dy: 0, family };
+  if ((base === 'call' || base === 'chain') && e.mode === 'swipe') {
+    const a = animOf(anims, view, base);
+    return fill(o, base, null, null, squash, a, frameAt(a, 99), 0, 0, family);
+  }
+  return fill(o, base, null, null, squash, animOf(anims, view, base), null, 0, 0, family);
 }

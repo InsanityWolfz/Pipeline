@@ -92,6 +92,31 @@ describe('wind-up phases (076)', () => {
     expect(releaseSquash(40)).toBe(0);
   });
 
+  it('fills the caller\'s object with cached anims and frame names, so a frame allocates nothing per enemy (review 8)', () => {
+    const def = ENEMIES.husk;
+    const anims = ENEMY_ANIMS.husk;
+    if (!def || !anims) throw new Error('husk');
+    const e = createEnemy(1, 'husk', { x: 0, y: 0 }, 'x');
+    e.mode = 'windup';
+    e.modeTicks = 20;
+    const out = enemyArt(e, def, anims, 'side', false, null, 0);
+    const again = enemyArt(e, def, anims, 'side', false, null, 0, out);
+    expect(again).toBe(out);
+    // The same strings and anim objects come back, not fresh copies, and match a fresh call's.
+    const fresh = enemyArt(e, def, anims, 'side', false, null, 0);
+    expect(again.frame).toBe(fresh.frame);
+    expect(again.anim).toBe(fresh.anim);
+    expect({ ...again }).toEqual({ ...fresh });
+    // Reused for another state, every field is rewritten.
+    e.mode = 'idle';
+    e.modeTicks = 1;
+    const idle = enemyArt(e, def, anims, 'side', false, null, 0, out);
+    expect(idle).toBe(out);
+    expect({ ...idle }).toEqual({ ...enemyArt(e, def, anims, 'side', false, null, 0) });
+    expect(idle.frame).toBeNull();
+    expect(idle.phase).toBeNull();
+  });
+
   it("never stretches a slam's or a stomp's impact frame, so its baked squash lands (review 1)", () => {
     // Every release an enemy can show: where the pose it shows on the release's first tick is baked squashed (an
     // impact), render adds no stretch and the frame lands squashed; elsewhere the stretch plays.

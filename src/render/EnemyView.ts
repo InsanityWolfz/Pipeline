@@ -166,7 +166,8 @@ export class EnemyView {
       d.angle = e.angle;
       // Freezing (029) holds the sprite, pose and all, as hit-stop does.
       if (d.staggerMs !== null && e.frozen <= 0) d.staggerMs += dt;
-      const art = e.frozen > 0 && d.art ? d.art : enemyArt(e, def, anims, view, now < (d.turnUntil ?? 0), d.staggerMs, now);
+      // Review 8: written into its own art object, kept from frame to frame.
+      const art = e.frozen > 0 && d.art ? d.art : enemyArt(e, def, anims, view, now < (d.turnUntil ?? 0), d.staggerMs, now, d.art);
       d.art = art;
       this.show(d, art, e.frozen > 0);
       // A champion (032) is drawn 1.5× its kind; 076: squashed about its feet.

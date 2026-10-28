@@ -62,9 +62,12 @@ export function stripIndex(phase: WindupPhase, coilFrames: number, nowMs: number
   return 1 + (coilFrames > 1 ? Math.floor((nowMs * M.phases.coilFps) / 1000) % coilFrames : 0);
 }
 
+/** No tremble (shared, so a frame outside a peak allocates nothing). */
+const STILL = { dx: 0, dy: 0 } as const;
+
 /** The peak's tremble: the sprite's own offset, world px (none outside the peak). */
-export function tremble(phase: WindupPhase | null, nowMs: number, boss: boolean): { dx: number; dy: number } {
-  if (phase !== 'peak') return { dx: 0, dy: 0 };
+export function tremble(phase: WindupPhase | null, nowMs: number, boss: boolean): { readonly dx: number; readonly dy: number } {
+  if (phase !== 'peak') return STILL;
   const px = boss ? M.tremble.bossPx : M.tremble.px;
   const a = (nowMs / 1000) * M.tremble.hz * Math.PI * 2;
   return { dx: px * Math.sin(a), dy: px * 0.5 * Math.cos(a * 1.5) };
