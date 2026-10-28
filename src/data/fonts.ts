@@ -33,7 +33,7 @@ export interface TextStyle {
   readonly upper?: boolean;
 }
 
-export type TextStyleKey = 'body' | 'count' | 'label' | 'display' | 'title' | 'float' | 'chip';
+export type TextStyleKey = 'body' | 'count' | 'label' | 'display' | 'title' | 'float' | 'chip' | 'bossName';
 
 export const TEXT_STYLES: Readonly<Record<TextStyleKey, TextStyle>> = {
   /** Counts, readouts, key caps, descriptions. */
@@ -44,10 +44,12 @@ export const TEXT_STYLES: Readonly<Record<TextStyleKey, TextStyle>> = {
   label: { font: 'body', size: 6, weight: 700, fill: 'snow', stroke: 'ink', strokeWidth: 1.2, lineHeight: 7 },
   /** Names and the objective line. */
   display: { font: 'display', size: 8, weight: 700, fill: 'snow', stroke: 'ink', strokeWidth: 0, lineHeight: 9 },
-  /** Titles: the pause card and the wake text. */
-  title: { font: 'display', size: 14, weight: 700, fill: 'snow', stroke: 'ink', strokeWidth: 2.4, lineHeight: 16 },
+  /** Titles: the pause card and the wake text; 081: in pale brass. */
+  title: { font: 'display', size: 14, weight: 700, fill: 'brass-light', stroke: 'ink', strokeWidth: 2.4, lineHeight: 16 },
   /** Damage numbers and pickup popups, floating in the world. */
   float: { font: 'body', size: 8, weight: 800, fill: 'snow', stroke: 'ink', strokeWidth: 2, lineHeight: 9 },
   /** A keyword chip's name (040), on its group's colour. */
   chip: { font: 'body', size: 7, weight: 700, fill: 'snow', stroke: 'ink', strokeWidth: 1.2, lineHeight: 8 },
+  /** 081: the boss bar's name: the display font at its size, with an ink outline so it reads over Region 1's bright ground. */
+  bossName: { font: 'display', size: 8, weight: 700, fill: 'snow', stroke: 'ink', strokeWidth: 1.6, lineHeight: 9 },
 };

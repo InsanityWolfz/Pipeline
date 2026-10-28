@@ -249,23 +249,8 @@ export const WORLD_NAMES = {
   altar: 'Altar',
 } as const;
 
-/**
- * Panels that change size (020), drawn live in the look of the HUD's vector tablets (src/data/art/hud.ts):
- * carved stone with an ink edge, a lit top bevel, a dark base line and brass corner brackets `corner` px long.
- * Palette ids and alphas.
- */
-export const TABLET = {
-  fill: 'carve-dark',
-  fillAlpha: 0.94,
-  edge: 'ink',
-  bevel: 'carve-light',
-  base: 'mortar',
-  brass: 'brass',
-  corner: 4,
-} as const;
-
-/** Menu rows (020): a pressed row flashes brass for this long, ms. */
-export const MENU_FEEDBACK = { pressMs: 160 } as const;
+/** Menu rows (020): a pressed row flashes brass for this long, ms (081: 160 → 140, inside the 150 ms motion rule). */
+export const MENU_FEEDBACK = { pressMs: 140 } as const;
 
 /**
  * The pause menu (020, Esc): a dim over the world, a title card, and rows (042): Resume, Settings (the sound rows
