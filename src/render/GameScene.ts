@@ -28,6 +28,8 @@ import { SiteView } from './SiteView';
 import { WakeView } from './WakeView';
 import { mergeEvents } from './eventLog';
 import { ParticleLedger } from './particleBudget';
+import { TrailView } from './fx/TrailView';
+import { ShotFxView } from './fx/ShotFxView';
 import type { Quality } from '../data/settings';
 import { FeelView } from './FeelView';
 import { TutorialUi } from './TutorialUi';
@@ -72,6 +74,9 @@ export class GameScene extends Scene {
   roomViews?: RoomViews;
   playerView?: PlayerView;
   arrowView?: ArrowView;
+  /** 078: the trails and the shot effects. */
+  trails?: TrailView;
+  shotFx?: ShotFxView;
   hud?: HudView;
   enemyView?: EnemyView;
   groundItemView?: GroundItemView;
@@ -158,7 +163,10 @@ export class GameScene extends Scene {
     this.playerView = new PlayerView(this);
     this.silhouette = new SilhouetteView(this, occluders);
     this.effects = new EffectsView(this, this.playerView.sprite, (atDark, ms, rgb) => this.sceneCameras?.fadeThrough(atDark, ms, rgb), () => this.feel?.juice.particles, (id) => this.enemyView?.lastOf(id));
-    this.arrowView = new ArrowView(this);
+    // 078: every trail ribbon (fed by ArrowView), and the shot effects (impacts, blasts, ends, sparks, marks).
+    this.trails = new TrailView(this);
+    this.arrowView = new ArrowView(this, this.trails);
+    this.shotFx = new ShotFxView(this, this.trails, () => this.feel?.juice.particles, (id) => this.enemyView?.lastOf(id));
     this.bombView = new BombView(this);
     this.hud = new HudView(this);
     this.buildView = new BuildView(this);
@@ -292,7 +300,6 @@ export class GameScene extends Scene {
     this.hud?.update(sim, this.pending, this.game.loop.delta, this.sandboxPanel?.loadoutOut ?? 0);
     // 063: a stamp's pieces don't switch the bar's tunnel end.
     if (this.pending.stamps.length === 0) this.buildView?.placed(this.pending.places.map((p) => p.pieceId));
-    clearEvents(this.pending);
     const inFoundry = shown === FOUNDRY_ROOM;
     this.foundryView?.update(sim.foundry, inFoundry, sim.building);
     this.nodeView?.update(inRoom(sim.nodes, shown), sim.harvest, this.game.loop.delta);
@@ -304,13 +311,24 @@ export class GameScene extends Scene {
     if (this.playerView) this.silhouette?.update(this.playerView.sprite, shown === sim.roomId && sim.player.dying === 0);
     if (this.playerView && shown === sim.roomId) catches?.offer(this.playerView.sprite, sim.player.x, sim.player.y, 'player', 0);
     catches?.end();
-    this.arrowView?.update(inRoom(sim.arrows, shown));
+    // 078: the trails, then the rounds, then the shot effects, which need this frame's events, rounds and posed muzzle.
+    const quality = this.fxQuality;
+    const fx = !(this.shotFx?.off ?? false);
+    const muzzle = shown === sim.roomId ? (this.playerView?.muzzle ?? null) : null;
+    this.trails?.begin(quality);
+    this.arrowView?.update(inRoom(sim.arrows, shown), muzzle, fx);
     this.bombView?.update(inRoom(sim.bombs, shown));
+    if (this.pending.woke) this.shotFx?.clear();
+    const tweenMs = this.game.loop.delta * this.tweens.timeScale;
+    this.shotFx?.update(sim, this.pending, shown, { muzzle, looks: (id) => this.arrowView?.lookOf(id), quality, flashes: settings().flashes, deltaMs: tweenMs });
+    this.trails?.end(tweenMs, quality, settings().flashes);
     this.site?.update(sim, shown);
     this.siteMenus?.update(sim);
     this.menu?.update(sim);
     const topOf = (id: number) => this.foundryView?.topOf(id);
     drawPointerUi(this, sim, { controls: this.controls, topOf, wakeShown: () => this.wake?.isShown ?? false, shown, inFoundry });
     this.drawnTick = sim.tick;
+    // Every view has had this frame's events (078: the shot effects play last); the next frame's start empty.
+    clearEvents(this.pending);
   }
 }

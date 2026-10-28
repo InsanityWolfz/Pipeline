@@ -43,6 +43,7 @@ import type { Quality } from '../data/settings';
 import type { PlayerPixels, PlayerUi } from './PlayerView';
 
 import type { WeatherShown, WorldShown } from './world/worldShown';
+import type { AmmoFxShown } from './fx/ShotFxView';
 
 export interface GameTestHook {
   /** The live game's summary; null on the title (042). */
@@ -67,6 +68,8 @@ export interface GameTestHook {
   tweenSpeed(scale: number): void;
   /** 074: sets the Graphics quality and Flashes, as their Settings rows do (stored, applied live). */
   setLook(look: { quality?: Quality; flashes?: boolean }): void;
+  /** 078: skips the shot effects (trails, impacts, marks, sparks), as `?fx=off` does, for the probe's A/B in one page. */
+  fxOff(off: boolean): void;
   /** 074: skips every mood, light and fog (as `?mood=off` does), for the frame-time A/B in one page. */
   lightingOff(off: boolean): void;
   /** 077: skips plants, sway, ripples, ley flow, set-piece loops and weather (as `?world=off`); and the next weather strike now. */
@@ -155,6 +158,8 @@ export interface UiState {
   /** 060: burn beats' small numbers shown since boot, and enemies drawn with flames on them now. */
   burnNumbers: number;
   enemyFlames: number;
+  /** 078: the shot effects as drawn: trails by kind, their slots, the marks, the last impacts, the last muzzle sparks. */
+  ammoFx: AmmoFxShown;
   /**
    * Particles flying now (064); 076: as `live`, with the death motes among them and the deaths dissolving. 078: the
    * ledger's weather (or room motes) and effects, the live effects by priority, and the pool's objects made since boot.

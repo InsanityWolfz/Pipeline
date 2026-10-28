@@ -48,6 +48,8 @@ export interface PlayerUi {
   /** The stride's phase, radians (0 and each π: a contact, the feet furthest apart). */
   stride: number;
   hood: [number, number];
+  /** 078: the tube's drawn muzzle, world px (not from the feet), or null with no tube in hand. */
+  muzzle: { x: number; y: number } | null;
   drawMs: number;
   /** Whether the sprite carries a tint (only the hit's white flash: armour never tints the body). */
   tinted: boolean;
@@ -72,7 +74,7 @@ export class PlayerView {
   pinnedMs: number | null = null;
   private anim: PlayerUi['anim'] = 'idle';
   private stride = 0;
-  private marks: WandererMarks = { hood: [0, 0], hem: null };
+  private marks: WandererMarks = { hood: [0, 0], hem: null, muzzle: null };
   private drawMs = 0;
   private lastX = 0;
   private lastY = 0;
@@ -182,6 +184,17 @@ export class PlayerView {
     return wandererMotion(clocks);
   }
 
+  /** 078: the tube's drawn muzzle this frame, world px, or null with no tube in hand (or none shown). */
+  get muzzle(): { x: number; y: number } | null {
+    const m = this.marks.muzzle;
+    if (!m || !this.sprite.visible) return null;
+    this.muzzleAt.x = this.sprite.x + m[0];
+    this.muzzleAt.y = this.sprite.y + m[1];
+    return this.muzzleAt;
+  }
+
+  private readonly muzzleAt = { x: 0, y: 0 };
+
   /** 075: what `ui().player` reports. */
   get ui(): PlayerUi {
     return {
@@ -192,6 +205,7 @@ export class PlayerView {
       squash: this.pose.squash,
       stride: this.stride,
       hood: this.marks.hood,
+      muzzle: this.muzzle,
       drawMs: this.drawMs,
       tinted: this.sprite.isTinted,
     };

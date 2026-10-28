@@ -1,10 +1,13 @@
 import { BlendModes, type GameObjects, type Scene } from 'phaser';
 import type { FxBurst } from '../data/ammoFx';
-import { FX_QUALITY, type FxPriority } from '../data/fxQuality';
+import { FX_PRIORITY, FX_QUALITY, type FxBurstName, type FxPriority } from '../data/fxQuality';
 import { PARTICLE_SHARES, type ParticleBurst } from '../data/juice';
 import type { Quality } from '../data/settings';
 import { colorOf } from './color';
 import { Pool } from './fx/fxPool';
+import { makeShotTextures } from './fx/shotTextures';
+import { SHOT_FX_TEXTURES } from '../data/assets';
+import { textureScale } from './vector/textures';
 import { fxCount } from './fx/roundFx';
 import type { ParticleKind, ParticleLedger } from './particleBudget';
 
@@ -16,7 +19,9 @@ import type { ParticleKind, ParticleLedger } from './particleBudget';
 // the Graphics quality (Medium is 014's counts).
 
 interface Particle {
-  rect: GameObjects.Rectangle;
+  rect: GameObjects.Image;
+  /** World px a scale of 1 draws its texture across. */
+  unit: number;
   x: number;
   y: number;
   vx: number;
@@ -40,6 +45,11 @@ export interface Mote {
   color: string;
 }
 
+/** The particle textures' widths in world px (shotTextures.ts), and a particle's drawn width per unit of its size. */
+const DOT_PX = 4;
+const PUFF_PX = 8;
+const DOT_SIZE = 1.25;
+
 const between = (r: readonly [number, number]): number => r[0] + Math.random() * (r[1] - r[0]);
 const AIM: Readonly<Record<NonNullable<FxBurst['aim']>, number | null>> = { flight: 0, up: -Math.PI / 2, down: Math.PI / 2, round: null };
 
@@ -60,8 +70,10 @@ export class Particles {
     this.scene = scene;
     this.ledger = ledger;
     this.quality = quality;
+    makeShotTextures(scene);
     this.pool = new Pool(() => ({
-      rect: scene.add.rectangle(0, 0, 1, 1, 0xffffff).setOrigin(0.5).setVisible(false),
+      rect: scene.add.image(0, 0, SHOT_FX_TEXTURES.dot).setVisible(false),
+      unit: 1,
       x: 0,
       y: 0,
       vx: 0,
@@ -105,8 +117,10 @@ export class Particles {
   }
 
   /** One particle from the pool, or none when the kind has no room. */
-  private spawn(kind: ParticleKind, priority: FxPriority, color: string, x: number, y: number, depth: number, size: number, add: boolean): Particle {
+  private spawn(kind: ParticleKind, priority: FxPriority, color: string, x: number, y: number, depth: number, size: number, add: boolean, puff = false): Particle {
     const p = this.pool.take();
+    p.unit = (puff ? PUFF_PX : DOT_PX) * textureScale();
+    p.rect.setTexture(puff ? SHOT_FX_TEXTURES.puff : SHOT_FX_TEXTURES.dot);
     p.kind = kind;
     p.priority = priority;
     p.x = x;
@@ -116,7 +130,7 @@ export class Particles {
     p.grow = size;
     p.alpha = 1;
     p.mote = null;
-    p.rect.setFillStyle(colorOf(color)).setDepth(depth).setScale(size).setAlpha(1).setVisible(true).setBlendMode(add ? BlendModes.ADD : BlendModes.NORMAL).setPosition(Math.round(x), Math.round(y));
+    p.rect.setTint(colorOf(color)).setDepth(depth).setScale((size * DOT_SIZE) / p.unit).setAlpha(1).setVisible(true).setBlendMode(add ? BlendModes.ADD : BlendModes.NORMAL).setPosition(Math.round(x), Math.round(y));
     this.ledger.add(kind);
     if (kind === 'effect') this.priorities[priority] += 1;
     return p;
@@ -141,16 +155,17 @@ export class Particles {
 
   /**
    * 078: one of a look's bursts at `x, y` (a ground point; it lifts by `lift`), aimed along `angle` for `aim: 'flight'`,
-   * scaled by the tier (an impact keeps at least one) and thinned to the effect share's room for `priority`.
+   * scaled by the tier (an impact keeps at least one) and thinned to the effect share's room for its name's priority.
    */
-  emitFx(b: FxBurst, x: number, y: number, depth: number, angle: number, priority: FxPriority, impact: boolean, scale = 1): number {
+  emitFx(b: FxBurst, x: number, y: number, depth: number, angle: number, name: FxBurstName, impact: boolean, scale = 1): number {
     const q = this.quality();
+    const priority = FX_PRIORITY[name];
     this.warm();
     const add = (b.additive ?? false) && FX_QUALITY[q].additive;
     const n = Math.min(fxCount(Math.round(b.count * scale), q, impact), this.ledger.room('effect', priority, q));
     const aim = AIM[b.aim ?? 'round'];
     for (let i = 0; i < n; i++) {
-      const p = this.spawn('effect', priority, b.colors[Math.floor(Math.random() * b.colors.length)] ?? 'snow', x, y - (b.lift ?? 0), depth, b.size, add);
+      const p = this.spawn('effect', priority, b.colors[Math.floor(Math.random() * b.colors.length)] ?? 'snow', x, y - (b.lift ?? 0), depth, b.size, add, b.role === 'smoke');
       const a = aim === null ? Math.random() * Math.PI * 2 : aim + (b.aim === 'flight' ? angle : 0) + (Math.random() - 0.5) * (b.cone ?? 0);
       const speed = between(b.speed);
       p.vx = Math.cos(a) * speed;
@@ -224,7 +239,7 @@ export class Particles {
       p.y += p.vy * dt;
       const k = p.age / p.life;
       p.rect.setPosition(Math.round(p.x), Math.round(p.y)).setAlpha(p.alpha * (1 - k * k));
-      if (p.grow !== p.size) p.rect.setScale(p.size + (p.grow - p.size) * k);
+      if (p.grow !== p.size) p.rect.setScale(((p.size + (p.grow - p.size) * k) * DOT_SIZE) / p.unit);
     }
   }
 

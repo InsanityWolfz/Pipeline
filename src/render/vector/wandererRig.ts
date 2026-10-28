@@ -64,6 +64,8 @@ export interface WandererMarks {
   hood: [number, number];
   /** A corner of the cape's hem (in the trim), or null in a view without one. */
   hem: [number, number] | null;
+  /** 078: the tube's muzzle (where its flash sits), or null with no tube in hand. */
+  muzzle: [number, number] | null;
 }
 
 /** The transform a part hangs from: its chain of joints, each turning (or flaring) by its pose channel. */
@@ -138,7 +140,7 @@ export function drawWanderer(c: CanvasRenderingContext2D, pose: WandererPose, px
     });
   };
 
-  const marks: WandererMarks = { hood: [0, 0], hem: null };
+  const marks: WandererMarks = { hood: [0, 0], hem: null, muzzle: null };
   c.save();
   c.scale(pose.flip ? -S : S, S);
   for (const step of def.order) {
@@ -238,5 +240,7 @@ export function drawWanderer(c: CanvasRenderingContext2D, pose: WandererPose, px
   if (hood) marks.hood = world(apply(torso, hood.pivot));
   // The hem's middle corner, for the test hook's trim check.
   if (def.hem && ix.hemCorner) marks.hem = world(apply(mul(torso, chainMat(def, pose, def.hem.part)), ix.hemCorner));
+  // 078: the posed muzzle, where the shot effects' sparks and a new round's trail start.
+  if (pose.hasTube && pose.tubeDrop === 0) marks.muzzle = world(apply(gun, TUBE_PARTS.flash.at));
   return marks;
 }

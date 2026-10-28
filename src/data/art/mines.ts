@@ -29,7 +29,8 @@ function mine(rx: number, lit: boolean): Shape[] {
   const ry = rx * 0.55;
   return [
     ellipse(0, 1.6, rx, ry, solid('iron-dark')),
-    ellipse(0, 0, rx, ry, { fill: ironFill(-rx, -ry, rx, ry), outline: true }),
+    // 078: lit from the top left with a pale rim on its lit edge.
+    ellipse(0, 0, rx, ry, { fill: ironFill(-rx, -ry, rx, ry), outline: true, rim: { color: { id: 'snow', alpha: 0.45 }, width: 0.7, offset: 0.6 } }),
     ellipse(0, 0, rx * 0.72, ry * 0.72, trim('brass', 1)),
     ...[0, 1, 2, 3].map((k) => {
       const a = Math.PI / 4 + (k * Math.PI) / 2;
@@ -57,7 +58,7 @@ const IRON_PLATE: Shape[] = [
 
 /** A bomblet: a small dark pellet with a cinder band and a fuse glint. */
 const BOMBLET: Shape[] = [
-  ellipse(0, 0, 2.6, 2.6, { fill: { radial: [-0.8, -0.8, 3], stops: [{ at: 0, color: 'rock-dark' }, { at: 1, color: 'ink' }] }, outline: true }),
+  ellipse(0, 0, 2.6, 2.6, { fill: { radial: [-0.9, -0.9, 3.6], stops: [{ at: 0, color: 'rock' }, { at: 0.75, color: 'rock-dark' }] }, outline: true, rim: { color: 'rock-pale', width: 0.5, offset: 0.45 } }),
   rect(-2.5, -0.5, 5, 1, 0.5, flat('cinder')),
   ellipse(1.6, -2.4, 0.8, 0.8, { fill: 'cinder-light', glow: { color: 'cinder', blur: 2 } }),
 ];

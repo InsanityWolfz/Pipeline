@@ -77,6 +77,11 @@ export function installTestHook(flow: FlowScene): void {
       if (l) l.off = off;
     },
     worldLifeOff: (off) => live().worldLife?.setOff(off),
+    fxOff: (off) => {
+      const scene = live();
+      if (scene.shotFx) scene.shotFx.off = off;
+      if (off) scene.shotFx?.clear();
+    },
     strikeWeather: () => live().worldLife?.strikeNow(),
     claim: act((sim, _scene, site: string) => claim(sim, site)),
     completeObjectives: act((sim, _scene, count: number) => {

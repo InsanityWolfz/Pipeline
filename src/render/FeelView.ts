@@ -139,9 +139,8 @@ export class FeelView {
       } else if (h.target === 'enemy') {
         if (!h.melee) s.play(SOUNDS.hit);
         s.play(SOUNDS.enemyHurt, SOUND_LEVELS.under);
-        // 060: a fire hit throws rising sparks, as a cold one throws frost.
-        // 064: a lightning hit spits pale cyan sparks.
-        j.burst(h.damageType === 'cold' ? 'hitCold' : h.damageType === 'fire' ? 'hitFire' : h.damageType === 'lightning' ? 'hitLightning' : 'hitPhysical', h.x, h.y);
+        // 078: a round's hit plays its impact (ShotFxView, by the round that made it); a punch keeps 014's burst.
+        if (h.melee) j.burst('hitPhysical', h.x, h.y);
         j.damageNumber(h.damage, h.x, h.y, false);
         this.freeze(h.id, HIT_STOP_MS);
       } else {
@@ -156,11 +155,11 @@ export class FeelView {
       s.play(SOUNDS.enemyDeath);
       j.shake('small');
     });
-    for (const b of ev.bursts) {
+    // 078: a burst's blast (debris, smoke, shock ring, scorch) is ShotFxView's; its sound and shake request stay.
+    ev.bursts.forEach(() => {
       s.play(SOUNDS.burst);
-      j.burst('embers', b.x, b.y);
       j.shake('medium');
-    }
+    });
     if (ev.ko) {
       s.play(SOUNDS.playerKo);
       j.shake('big');

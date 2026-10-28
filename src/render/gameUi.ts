@@ -11,6 +11,7 @@ import type { GameScene } from './GameScene';
 import { NO_BLUEPRINT_UI } from './BlueprintUi';
 import type { GameUiState } from './testHook';
 import { NO_LIGHTING } from './lighting/LightingView';
+import { NO_AMMO_FX } from './fx/ShotFxView';
 import { bakeReport } from './vector/textures';
 
 import { NO_WEATHER, NO_WORLD } from './world/worldShown';
@@ -81,12 +82,13 @@ export function gameUi(g: GameScene): GameUiState {
     buildBar: g.buildView?.state ?? null,
     blueprints: g.blueprintUi?.shown ?? NO_BLUEPRINT_UI,
     tunnels: g.tunnelView?.marks ?? [],
-    tagged: { splitFlashes: g.effects?.splitFlashes ?? 0, trails: g.arrowView?.trails ?? { count: 0, longest: 0 }, burning: g.arrowView?.burning ?? 0, shards: g.arrowView?.shards ?? 0 },
+    tagged: { splitFlashes: g.effects?.splitFlashes ?? 0, trails: g.arrowView?.trailsShown ?? { count: 0, longest: 0 }, burning: g.arrowView?.burning ?? 0, shards: g.arrowView?.shards ?? 0 },
     ...(g.enemyView?.ui ?? NO_ENEMY_UI),
     ...(g.legibility?.ui ?? NO_LEGIBILITY_UI),
     sandbox: g.sim.sandbox ? (g.sandboxPanel?.state ?? { open: false, rows: [], keys: [], boxes: [], tabs: [], sliding: false }) : null,
     sandboxDrawn: g.sandboxPanel?.drawn ?? false,
     lighting: g.lighting?.shown ?? NO_LIGHTING,
+    ammoFx: g.shotFx?.shown ?? NO_AMMO_FX,
     vectorBake: { ...bakeReport() },
 
     world: g.worldLife?.world ?? NO_WORLD,

@@ -86,3 +86,22 @@ describe('MarkRing (078)', () => {
     expect(marks.created).toBe(24);
   });
 });
+
+describe('machine sparks (078)', () => {
+  it('fly in a machine’s build group’s colours, a stage machine’s tag’s, or the Tempering coil’s; logistics has none', async () => {
+    const { machineSparkColors } = await import('../../src/render/fx/machineSparks');
+    const { PIECES } = await import('../../src/data/pieces');
+    const { STAGES } = await import('../../src/data/stages');
+    expect(machineSparkColors('cutter')).toEqual(['brass-light', 'wood-light']);
+    expect(machineSparkColors('tempering-coil')).toEqual(['storm-glow', 'snow']);
+    for (const [id, p] of Object.entries(PIECES)) {
+      if (p.category === 'logistics') expect(machineSparkColors(id), id).toBeNull();
+      else expect(machineSparkColors(id)?.length, id).toBeGreaterThan(0);
+    }
+    const frostStage = Object.values(STAGES).find((s) => s.tag === 'frost');
+    const clusterStage = Object.values(STAGES).find((s) => s.tag === 'cluster');
+    if (!frostStage || !clusterStage) throw new Error('no stages');
+    expect(machineSparkColors(frostStage.id)).toEqual(['foam', 'snow', 'water-light']);
+    expect(machineSparkColors(clusterStage.id)).toEqual(['cinder-light', 'gold-trim']);
+  });
+});

@@ -114,6 +114,17 @@ export function roundFx(id: string, tables: AmmoFxTables = AMMO_FX): RoundLook {
   return look;
 }
 
+/** 054: a burning arrow's look from the tick it caught fire: its round's, with the fire element's trail and embers. */
+export function burningFx(id: string): RoundLook {
+  const key = `burning|${id}`;
+  const cached = CACHE.get(key);
+  if (cached) return cached;
+  const p = parse(id, AMMO_FX);
+  const look = composeFx(p.family, 'fire', p.shape, p.tier, AMMO_FX, key);
+  CACHE.set(key, look);
+  return look;
+}
+
 /** The element row a damage type comes from (a Cold Shard is frost's), or none for physical. */
 export function elementOfDamage(damageType: DamageType): string | null {
   return Object.values(TAGS).find((t) => t.slot === 'element' && t.damageType === damageType)?.id ?? null;
