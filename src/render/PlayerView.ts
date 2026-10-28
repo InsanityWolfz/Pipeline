@@ -18,6 +18,7 @@ import { textureScale } from './vector/textures';
 import { wandererAnim, wandererMotion } from './vector/wandererMotion';
 import { drawWanderer, prebakeWanderer, REST_POSE, type WandererMarks, type WandererPose } from './vector/wandererRig';
 import { activeScheme } from './wandererScheme';
+import { colorAt, drawnBounds, furthest, type Texels } from './playerPixels';
 
 /** The share of a death, at its end, over which the remains fade out. */
 const DEATH_FADE_SHARE = 1 / 3;
@@ -59,6 +60,13 @@ export interface PlayerUi {
 export interface PlayerPixels {
   bounds: { w: number; h: number; left: number; top: number } | null;
   hemColor: [number, number, number] | null;
+  /** 078: the rig's muzzle mark (the effects' muzzle), world px from the feet, or null with no tube in hand. */
+  muzzle: [number, number] | null;
+  /**
+   * 078: the drawn wanderer's furthest edge along `along` (radians; the tube's tip when it points there), world px from
+   * the feet: the middle of the drawn pixels within a texture px of the furthest. Null when not asked or nothing shows.
+   */
+  tip: [number, number] | null;
 }
 
 // Draws the player from sim state (016): the wanderer rig posed each frame into a
@@ -211,44 +219,11 @@ export class PlayerView {
     };
   }
 
-  /** 075: the drawn texture's box and hem colour (scans pixels, so only the test hook's `wanderer()` asks). */
-  pixels(): PlayerPixels {
-    return { bounds: this.drawnBounds(), hemColor: this.colorAt(this.marks.hem) };
-  }
-
-  /** The drawn colour at a point, world px from the feet. */
-  private colorAt(at: [number, number] | null): [number, number, number] | null {
-    if (!at) return null;
-    const s = this.scale;
-    const [ax, ay] = WANDERER.box.anchor;
-    // The stroke's core, not an anti-aliased edge: the brightest pixel of the 3×3 round the point (the trim is lighter
-    // than the cape and outline it lies on).
-    const d = this.canvas.context.getImageData(Math.round((at[0] + ax) * s) - 1, Math.round((at[1] + ay) * s) - 1, 3, 3).data;
-    let best: [number, number, number] = [0, 0, 0];
-    for (let i = 0; i + 2 < d.length; i += 4) {
-      const px: [number, number, number] = [d[i] ?? 0, d[i + 1] ?? 0, d[i + 2] ?? 0];
-      if (px[0] + px[1] + px[2] > best[0] + best[1] + best[2]) best = px;
-    }
-    return best;
-  }
-
-  /** The drawn pixels' box in world px, from the feet (the texture's alpha above a quarter), or null when nothing shows. */
-  private drawnBounds(): PlayerPixels['bounds'] {
-    const { width, height } = this.canvas;
-    const data = this.canvas.context.getImageData(0, 0, width, height).data;
-    let [x0, y0, x1, y1] = [width, height, -1, -1];
-    for (let y = 0; y < height; y++)
-      for (let x = 0; x < width; x++) {
-        if ((data[(y * width + x) * 4 + 3] ?? 0) < 64) continue;
-        x0 = Math.min(x0, x);
-        x1 = Math.max(x1, x);
-        y0 = Math.min(y0, y);
-        y1 = Math.max(y1, y);
-      }
-    if (x1 < 0) return null;
-    const s = this.scale;
-    const [ax, ay] = WANDERER.box.anchor;
-    return { w: (x1 - x0 + 1) / s, h: (y1 - y0 + 1) / s, left: x0 / s - ax, top: y0 / s - ay };
+  /** 075: the drawn texture's box and hem colour (078: the muzzle mark, and the drawn edge along `along`) (scans pixels, so only the test hook's `wanderer()` asks). */
+  pixels(along?: number): PlayerPixels {
+    const m = this.marks.muzzle;
+    const t: Texels = { data: this.canvas.context, width: this.canvas.width, height: this.canvas.height, scale: this.scale };
+    return { bounds: drawnBounds(t), hemColor: colorAt(t, this.marks.hem), muzzle: m ? [m[0], m[1]] : null, tip: along === undefined ? null : furthest(t, along) };
   }
 
   private redraw(p: PlayerState): void {

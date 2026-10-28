@@ -152,3 +152,63 @@ export class MarkRing<T> {
     return gone;
   }
 }
+
+/** Anything with drawn points, newest first (a TrailRing, or the trails' scratch buffer). */
+export interface Points {
+  x(i: number): number;
+  y(i: number): number;
+}
+
+/** The longest a miter joint may reach, × the half-width, before it is cut (a hairpin bend). */
+const MITER_MAX = 2;
+
+/**
+ * 078 review: a ribbon's edges for one continuous fill (no overlapping segment caps, so no beads). For each of the `n`
+ * newest points, a left and a right vertex (`out[4i..4i+3]`), its half-width tapering from `headHalf` at the newest to
+ * `tailHalf` at the last, offset along the joint's bisector so neighbouring quads share their edge. Returns `n`.
+ */
+export function ribbonEdges(p: Points, n: number, headHalf: number, tailHalf: number, out: Float32Array): number {
+  for (let i = 0; i < n; i++) {
+    // Each side's direction toward the head (the newer point minus the older one).
+    const ax = i > 0 ? p.x(i - 1) - p.x(i) : p.x(0) - p.x(1);
+    const ay = i > 0 ? p.y(i - 1) - p.y(i) : p.y(0) - p.y(1);
+    const bx = i < n - 1 ? p.x(i) - p.x(i + 1) : ax;
+    const by = i < n - 1 ? p.y(i) - p.y(i + 1) : ay;
+    const la = Math.hypot(ax, ay) || 1;
+    const lb = Math.hypot(bx, by) || 1;
+    // The two segments' normals (left of the way to the head), and their bisector.
+    const n1x = ay / la;
+    const n1y = -ax / la;
+    const n2x = by / lb;
+    const n2y = -bx / lb;
+    let mx = n1x + n2x;
+    let my = n1y + n2y;
+    const lm = Math.hypot(mx, my);
+    if (lm < 1e-6) {
+      mx = n1x;
+      my = n1y;
+    } else {
+      mx /= lm;
+      my /= lm;
+    }
+    const cos = mx * n1x + my * n1y;
+    const half = headHalf + (tailHalf - headHalf) * (n > 1 ? i / (n - 1) : 0);
+    const reach = half / Math.max(cos, 1 / MITER_MAX);
+    out[i * 4] = p.x(i) + mx * reach;
+    out[i * 4 + 1] = p.y(i) + my * reach;
+    out[i * 4 + 2] = p.x(i) - mx * reach;
+    out[i * 4 + 3] = p.y(i) - my * reach;
+  }
+  return n;
+}
+
+/** 078 review: the indices (ascending) of the oldest of `kind` past the first `keep` youngest, which a lower tier frees at once. */
+export function oldestBeyond(live: readonly { kind: string; age: number }[], kind: string, keep: number): number[] {
+  const mine: number[] = [];
+  live.forEach((p, i) => {
+    if (p.kind === kind) mine.push(i);
+  });
+  if (mine.length <= keep) return [];
+  mine.sort((a, b) => (live[b]?.age ?? 0) - (live[a]?.age ?? 0));
+  return mine.slice(0, mine.length - keep).sort((a, b) => a - b);
+}

@@ -2,7 +2,7 @@ import type { Scene } from 'phaser';
 import { AMMO_FX, type FxBurst } from '../../data/ammoFx';
 import { DEPTHS } from '../../data/assets';
 import { TILE_SIZE } from '../../data/config';
-import { FX_QUALITY, MACHINE_SPARKS } from '../../data/fxQuality';
+import { FX_LOOK, FX_QUALITY, MACHINE_SPARKS } from '../../data/fxQuality';
 import { SPARKS } from '../../data/foundryFx';
 import { PARTICLES } from '../../data/juice';
 import { FEET_BOX } from '../../data/player';
@@ -17,10 +17,12 @@ import type { SimState } from '../../sim/state';
 import type { Particles } from '../Particles';
 import { matchImpacts, type ClusterAt, type HitMatch } from './impactMatch';
 import { machineSparkColors } from './machineSparks';
-import { MarkView, type MarksShown } from './MarkView';
-import { bombletFx, burstDepth, composeFx, elementOfDamage, roundFx, shownLook, type RoundLook } from './roundFx';
+import { MarkView } from './MarkView';
+import type { AmmoFxShown, ImpactShown } from './ammoFxShown';
+import { FuseView } from './FuseView';
+import { bombletFx, burstDepth, cachedFx, elementOfDamage, roundFx, shownLook, type RoundLook } from './roundFx';
 import { ShotTracks } from './shotTracks';
-import type { TrailsShown, TrailView } from './TrailView';
+import type { TrailView } from './TrailView';
 
 // 078: the shot effects, from the frame's events and the rounds drawn last frame and this frame: muzzle sparks down
 // each shot's lane from the tube's drawn muzzle; each hit's impact (the round that made it, impactMatch.ts), a blast
@@ -29,46 +31,9 @@ import type { TrailsShown, TrailView } from './TrailView';
 // dust as a mine arms; and machine sparks as a machine finishes a craft. Particles come from the pooled `Particles`
 // under the shared budget; marks, shock rings and flashes from MarkView's pools. Nothing feeds back into the sim.
 
-/** The last impacts played, for the test hook. */
-export interface ImpactShown {
-  look: string;
-  kind: string;
-  family: string;
-  element: string | null;
-  tier: string;
-  /** Particles thrown, the tier's glints among them. */
-  particles: number;
-  glints: number;
-  flash: boolean;
-  mark: string | null;
-}
-
-export interface AmmoFxShown {
-  off: boolean;
-  trails: TrailsShown['byKind'];
-  slots: { live: number; created: number };
-  trailCap: number;
-  /** The most a drawn trail bends, degrees. */
-  bend: number;
-  marks: MarksShown;
-  tracks: number;
-  /** The last impacts and blasts played (up to 24), and how many since boot. */
-  impacts: ImpactShown[];
-  played: number;
-  ends: number;
-  fallbacks: number;
-  /** The last shot's muzzle sparks: where they left, their lane (radians), its round, and how many flew. */
-  muzzle: { x: number; y: number; angle: number; ammoId: string; sparks: number } | null;
-  machineSparks: number;
-  landings: number;
-}
-
-/** `ui().ammoFx` before the scene has built the view. */
-export const NO_AMMO_FX: AmmoFxShown = { off: false, trails: {}, slots: { live: 0, created: 0 }, trailCap: 0, bend: 0, marks: { live: 0, created: 0, cap: 0, shocks: 0, flashes: 0, made: 0 }, tracks: 0, impacts: [], played: 0, ends: 0, fallbacks: 0, muzzle: null, machineSparks: 0, landings: 0 };
-
 const IMPACTS_KEPT = 24;
 /** Impact flashes sit at about the height shots fly. */
-const HIT_LIFT = 12;
+const HIT_LIFT = FX_LOOK.hitLift;
 const CLUSTERS_KEPT = 8;
 
 export class ShotFxView {
@@ -76,6 +41,7 @@ export class ShotFxView {
   private readonly lastOf: (id: number) => EnemyState | undefined;
   private readonly trails: TrailView;
   readonly marks: MarkView;
+  private readonly fuses: FuseView;
   private readonly tracks = new ShotTracks();
   private readonly clusters: ClusterAt[] = [];
   private lastTick = -1;
@@ -95,6 +61,7 @@ export class ShotFxView {
     this.particles = particles;
     this.lastOf = lastOf;
     this.marks = new MarkView(scene);
+    this.fuses = new FuseView(scene);
     this.off = import.meta.env.DEV && typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('fx') === 'off';
   }
 
@@ -108,6 +75,7 @@ export class ShotFxView {
       this.room = shown;
       this.tracks.clear();
       this.marks.clear();
+      this.fuses.clear();
       this.clusters.length = 0;
       this.lastTick = sim.tick;
       if (!here || this.off) return;
@@ -125,6 +93,7 @@ export class ShotFxView {
     const p = this.particles();
     if (p) this.play(sim, ev, p, o.quality, o.flashes, o.muzzle);
     if (p) this.shed(p, o.quality, o.deltaMs);
+    this.glintFuses(o.flashes, FX_QUALITY[o.quality].additive, o.deltaMs);
     t.sweep();
     this.marks.update(o.deltaMs);
   }
@@ -141,7 +110,7 @@ export class ShotFxView {
         this.impact(p, shownLook(look, flashes), hit.x, hit.y, Math.atan2(hit.dy, hit.dx), h.y, quality, 1);
       } else if (hit.kind === 'arc') {
         // An arc's hit plays half the lightning impact (064's arc is drawn by ArcView).
-        this.impact(p, shownLook(composeFx('shard', 'lightning', null, 'stone'), flashes), h.x, h.y, 0, h.y, quality, 0.5, true);
+        this.impact(p, shownLook(cachedFx('shard', 'lightning', null, 'stone'), flashes), h.x, h.y, 0, h.y, quality, 0.5, true);
       } else if (hit.kind === 'fallback') {
         const element = elementOfDamage(h.damageType);
         const key = (element ? AMMO_FX.elements[element]?.fallback : undefined) ?? 'hitPhysical';
@@ -151,7 +120,7 @@ export class ShotFxView {
     });
     ev.bursts.forEach((b, i) => {
       const id = m.bursts[i] ?? null;
-      const look = id ? roundFx(id) : composeFx('bomb', elementOfDamage(b.damageType), null, 'stone');
+      const look = id ? roundFx(id) : cachedFx('bomb', elementOfDamage(b.damageType), null, 'stone');
       if (look.impact.cluster) {
         this.clusters.push({ x: b.x, y: b.y, ammoId: look.id });
         if (this.clusters.length > CLUSTERS_KEPT) this.clusters.shift();
@@ -264,6 +233,12 @@ export class ShotFxView {
     p.emitFx(b, x, y, DEPTHS.shotTrail, angle, 'trailBits', false);
   }
 
+  /** Each bomb's and bomblet's fuse glint in flight. */
+  private glintFuses(flashes: boolean, additive: boolean, deltaMs: number): void {
+    this.fuses.begin(deltaMs);
+    for (const t of this.tracks.all) if (t.live && t.look.fuse && (t.kind === 'lob' || t.kind === 'bomblet')) this.fuses.glint(t.sx, t.sy, t.depth, t.id * 1.3, flashes, additive);
+  }
+
   /** 4 sparks from a machine's window as it finishes a craft (`craftPuff` still plays). 079: the forges' are FoundryMood's. */
   private machineSparks(p: Particles, sim: SimState, id: number, pieceId: string): void {
     if (SPARKS.machines.includes(pieceId)) return;
@@ -281,6 +256,7 @@ export class ShotFxView {
   clear(): void {
     this.tracks.clear();
     this.marks.clear();
+    this.fuses.clear();
     this.trails.clear();
   }
 
@@ -292,6 +268,9 @@ export class ShotFxView {
       slots: tr.slots,
       trailCap: tr.cap,
       bend: tr.bend,
+      drawn: tr.drawn,
+      start: tr.start,
+      fuses: this.fuses.count,
       marks: this.marks.shown,
       tracks: this.tracks.all.length,
       impacts: [...this.impacts],

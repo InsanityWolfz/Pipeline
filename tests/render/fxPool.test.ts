@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { FX_LOOK } from '../../src/data/fxQuality';
-import { MarkRing, Pool, TrailRing, trailCut } from '../../src/render/fx/fxPool';
+import { MarkRing, oldestBeyond, Pool, ribbonEdges, TrailRing, trailCut } from '../../src/render/fx/fxPool';
 
 // 078: the pools behind the particles, trails and marks: made once up to a high-water mark and reused, so a fight
 // allocates nothing per projectile per frame.
@@ -103,5 +103,39 @@ describe('machine sparks (078)', () => {
     if (!frostStage || !clusterStage) throw new Error('no stages');
     expect(machineSparkColors(frostStage.id)).toEqual(['foam', 'snow', 'water-light']);
     expect(machineSparkColors(clusterStage.id)).toEqual(['cinder-light', 'gold-trim']);
+  });
+});
+
+describe('a tier change (078 review)', () => {
+  it('picks the oldest of a kind beyond its new share, so they go at once', () => {
+    const live = [
+      { kind: 'effect', age: 50 },
+      { kind: 'death', age: 900 },
+      { kind: 'effect', age: 400 },
+      { kind: 'effect', age: 10 },
+      { kind: 'effect', age: 300 },
+    ];
+    expect(oldestBeyond(live, 'effect', 2)).toEqual([2, 4]);
+    expect(oldestBeyond(live, 'effect', 4)).toEqual([]);
+    expect(oldestBeyond(live, 'death', 0)).toEqual([1]);
+  });
+});
+
+describe('a ribbon’s edges (078 review: one continuous stroke, no beads)', () => {
+  it('gives each point one left and one right vertex, so neighbouring quads share their edge and never overlap', () => {
+    const r = new TrailRing();
+    for (const [x, y] of [[0, 0], [10, 0], [20, 5], [30, 5]] as const) r.push(x, y);
+    const out = new Float32Array(FX_LOOK.points * 4);
+    const n = ribbonEdges(r, 4, 2, 0.5, out);
+    expect(n).toBe(4);
+    // The newest point (30, 5), 2 wide: straight up and down across a level segment.
+    expect([...out.slice(0, 4)].map((v) => Math.round(v * 100) / 100)).toEqual([30, 3, 30, 7]);
+    // A bend's vertex sits on the bisector, so the quads on either side meet there.
+    const lx = out[4] ?? 0;
+    const ly = out[5] ?? 0;
+    expect(Math.hypot(lx - 20, ly - 5)).toBeGreaterThan(1.4);
+    expect(ly).toBeLessThan(5);
+    // The tail tapers to its own width.
+    expect(Math.hypot((out[12] ?? 0) - (out[14] ?? 0), (out[13] ?? 0) - (out[15] ?? 0))).toBeCloseTo(1, 5);
   });
 });

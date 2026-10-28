@@ -4,6 +4,7 @@ import type { EnemyDef } from '../data/enemies';
 import { HOLLOWS_ENEMY_LOOK } from '../data/hollowsEnemyAssets';
 import type { EnemyState } from '../sim/enemies';
 import { colorOf } from './color';
+import { fillAt, rimStyle } from './telegraphLook';
 import { drawArc } from './telegraphs';
 
 // Region 2's four's telegraphs (035), all in the shared enemy red: the Charger's lane from
@@ -34,7 +35,8 @@ function drawRing(g: GameObjects.Graphics, x: number, y: number, radius: number,
   const color = colorOf(ENEMY_FX.telegraphColor);
   const r = radius * progress;
   g.fillStyle(color, R.alpha).fillCircle(x, y, radius);
-  g.fillStyle(color, R.fillAlpha).fillCircle(x, y, r);
+  g.fillStyle(color, fillAt(R.fillAlpha, progress)).fillCircle(x, y, r);
+  rimStyle(g).strokeCircle(x, y, radius);
   g.lineStyle(R.width, color, R.crackAlpha).strokeCircle(x, y, r);
   g.lineStyle(R.crackWidth, color, R.crackAlpha);
   for (let i = 0; i < R.cracks; i++) {
@@ -66,8 +68,8 @@ export function drawLane(g: GameObjects.Graphics, e: EnemyState, length: number,
     ];
   };
   trace(g.fillStyle(color, L.alpha), band(length)).fillPath();
-  trace(g.fillStyle(color, L.fillAlpha), band(length * progress)).fillPath();
-  trace(g.lineStyle(L.edgeWidth, color, L.edgeAlpha), band(length)).strokePath();
+  trace(g.fillStyle(color, fillAt(L.fillAlpha, progress)), band(length * progress)).fillPath();
+  trace(rimStyle(g), band(length)).strokePath();
 }
 
 /** Traces a closed polygon as the graphics' current path. */

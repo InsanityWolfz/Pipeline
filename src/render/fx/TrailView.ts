@@ -4,7 +4,7 @@ import { DEPTHS } from '../../data/assets';
 import { FX_LOOK, FX_QUALITY } from '../../data/fxQuality';
 import type { Quality } from '../../data/settings';
 import { colorOf } from '../color';
-import { Pool, TrailRing, trailCut } from './fxPool';
+import { Pool, ribbonEdges, TrailRing, trailCut, type Points } from './fxPool';
 import { roundFx, type RoundLook } from './roundFx';
 
 // 078: every round's trail ribbon, from pooled slots: each a fixed ring of drawn points, cut to its trail's length
@@ -32,6 +32,10 @@ export interface TrailsShown {
   byKind: Partial<Record<TrailKind, number>>;
   slots: { live: number; created: number };
   cap: number;
+  /** Trails drawn last frame for rounds still flying (never past the cap). */
+  drawn: number;
+  /** Where the newest trail begun at the drawn muzzle starts (its first point), or null. */
+  start: { x: number; y: number } | null;
   /** The most any drawn trail turns from its tail to its head, degrees (a homing bolt's curving wake). */
   bend: number;
 }
@@ -43,9 +47,19 @@ export class TrailView {
   private readonly byKey = new Map<number, Slot>();
   private frame = 0;
   private cap = FX_QUALITY.medium.trailCap;
+  /** Test hook only: the cap held at this many trails (null: the tier's). */
+  capHeld: number | null = null;
   private time = 0;
   /** Slots whose round still flies (counted at each frame's start, then kept as slots are taken). */
   private live = 0;
+  /** Trails drawn this frame for rounds still flying, and the last frame's count (the cap's check). */
+  private drawnNow = 0;
+  private drawnLast = 0;
+  /** Where the newest trail begun at the drawn muzzle starts (075.10's bridge), for the test hook. */
+  private lastStart: { x: number; y: number } | null = null;
+  /** Scratch: a trail's drawn points and its edge vertices, made once. */
+  private readonly scratch = new Scratch();
+  private readonly edges = new Float32Array(FX_LOOK.points * 4);
 
   constructor(scene: Scene) {
     this.normal = scene.add.graphics().setDepth(DEPTHS.shotTrail);
@@ -55,7 +69,7 @@ export class TrailView {
   /** A new frame of points: rounds not fed one this frame start fading at `end`. */
   begin(quality: Quality): void {
     this.frame += 1;
-    this.cap = FX_QUALITY[quality].trailCap;
+    this.cap = this.capHeld ?? FX_QUALITY[quality].trailCap;
     // Pools only grow: a tier's slots are made once, as it comes in (each live slot can fade while a new one flies).
     this.pool.warm(this.cap + FX_LOOK.fadeSlots);
     this.live = this.flying();
@@ -91,7 +105,10 @@ export class TrailView {
       s.fade = -1;
       s.phase = (key * 1.7) % (Math.PI * 2);
       s.bridged = from !== null;
-      if (from) s.ring.push(from.x, from.y);
+      if (from) {
+        s.ring.push(from.x, from.y);
+        this.lastStart = { x: from.x, y: from.y };
+      }
       this.byKey.set(key, s);
     }
     s.look = look;
@@ -117,6 +134,7 @@ export class TrailView {
   end(deltaMs: number, quality: Quality, flashes: boolean): void {
     this.time += deltaMs;
     const q = FX_QUALITY[quality];
+    this.drawnNow = 0;
     this.normal.clear();
     this.additive.clear();
     const live = this.pool.live;
@@ -137,6 +155,7 @@ export class TrailView {
       }
       this.draw(s, q, flashes);
     }
+    this.drawnLast = this.drawnNow;
   }
 
   private draw(s: Slot, q: (typeof FX_QUALITY)[Quality], flashes: boolean): void {
@@ -145,39 +164,61 @@ export class TrailView {
     const glow = t.additive && q.additive ? this.additive : this.normal;
     const fade = s.fade < 0 ? 1 : s.fade / FX_LOOK.fadeMs;
     // Fire flickers ±flicker, smoothly (two slow waves, not a per-frame reroll); none with Flashes off.
-    const flicker = flashes && t.flicker > 0 ? 1 + t.flicker * Math.sin(this.time / 70 + s.phase) * Math.sin(this.time / 113 + s.phase * 2) : 1;
-    const jitter = flashes ? t.jitter : 0;
-    const cut = trailCut(s.ring, t.length);
-    const n = cut.points;
-    const last = cut.last;
+    const [fa, fb] = FX_LOOK.flickerMs;
+    const flicker = flashes && t.flicker > 0 ? 1 + t.flicker * Math.sin(this.time / fa + s.phase) * Math.sin(this.time / fb + s.phase * 2) : 1;
+    const n = this.gather(s, flashes ? t.jitter : 0);
     if (n < 2) return;
+    if (s.fade < 0) this.drawnNow += 1;
     const passes = q.edge ? 3 : q.core ? 2 : 1;
     for (let pass = passes === 3 ? 0 : 1; pass < (passes === 1 ? 2 : 3); pass++) {
-      // Pass 0: High's soft edge under it; 1: the colour; 2: the core.
+      // Pass 0: High's soft edge under it; 1: the colour; 2: the core (a tier's wider, so it reads in flight).
       const color = colorOf(pass === 0 ? (t.edge ?? t.color) : pass === 1 ? t.color : t.core);
-      const width = t.width * (pass === 0 ? FX_LOOK.edge : pass === 1 ? 1 : FX_LOOK.core) * flicker;
+      const share = pass === 0 ? FX_LOOK.edge : pass === 1 ? 1 : s.look.tier === 'stone' ? FX_LOOK.core : FX_LOOK.tierCore;
+      const half = (t.width * share * flicker) / 2;
       const alpha = t.alpha * fade * (pass === 0 ? FX_LOOK.edgeAlpha : 1);
-      const g = pass === 1 ? this.normal : glow;
-      let ax = s.ring.x(0);
-      let ay = s.ring.y(0);
-      for (let i = 1; i < n; i++) {
-        let bx = s.ring.x(i);
-        let by = s.ring.y(i);
-        if (i === n - 1 && last < 1) {
-          bx = ax + (bx - ax) * last;
-          by = ay + (by - ay) * last;
-        }
-        if (jitter > 0) {
-          bx += (Math.random() * 2 - 1) * jitter;
-          by += (Math.random() * 2 - 1) * jitter;
-        }
-        // Full at the round, tapering to `tail` of the width and to nothing at the far end.
-        const k = 1 - i / (n - 1);
-        g.lineStyle(width * (FX_LOOK.tail + (1 - FX_LOOK.tail) * k), color, alpha * Math.min(1, k + 1 / (n - 1)));
-        g.lineBetween(ax, ay, bx, by);
-        ax = bx;
-        ay = by;
+      this.fill(pass === 1 ? this.normal : glow, n, half, color, alpha);
+    }
+  }
+
+  /** The slot's drawn points into the scratch buffer: cut to its length (the last part way), crackled by `jitter`. */
+  private gather(s: Slot, jitter: number): number {
+    const cut = trailCut(s.ring, s.look.trail.length);
+    const n = cut.points;
+    const b = this.scratch;
+    for (let i = 0; i < n; i++) {
+      let x = s.ring.x(i);
+      let y = s.ring.y(i);
+      if (i === n - 1 && i > 0 && cut.last < 1) {
+        x = s.ring.x(i - 1) + (x - s.ring.x(i - 1)) * cut.last;
+        y = s.ring.y(i - 1) + (y - s.ring.y(i - 1)) * cut.last;
       }
+      if (jitter > 0 && i > 0) {
+        x += (Math.random() * 2 - 1) * jitter;
+        y += (Math.random() * 2 - 1) * jitter;
+      }
+      b.xs[i] = x;
+      b.ys[i] = y;
+    }
+    return n;
+  }
+
+  /**
+   * One ribbon as one continuous fill (078 review: separate round-capped segments overlapped into beads): quads between
+   * shared edge vertices, tapering from the round to `tail` of its width, fading toward the far end.
+   */
+  private fill(g: GameObjects.Graphics, n: number, half: number, color: number, alpha: number): void {
+    const e = this.edges;
+    ribbonEdges(this.scratch, n, half, half * FX_LOOK.tail, e);
+    for (let i = 1; i < n; i++) {
+      const k = 1 - i / (n - 1);
+      g.fillStyle(color, alpha * Math.min(1, k + 1 / (n - 1)));
+      g.beginPath();
+      g.moveTo(e[(i - 1) * 4] ?? 0, e[(i - 1) * 4 + 1] ?? 0);
+      g.lineTo(e[i * 4] ?? 0, e[i * 4 + 1] ?? 0);
+      g.lineTo(e[i * 4 + 2] ?? 0, e[i * 4 + 3] ?? 0);
+      g.lineTo(e[(i - 1) * 4 + 2] ?? 0, e[(i - 1) * 4 + 3] ?? 0);
+      g.closePath();
+      g.fillPath();
     }
   }
 
@@ -205,6 +246,20 @@ export class TrailView {
       const d = Math.abs(((head - tail + Math.PI * 3) % (Math.PI * 2)) - Math.PI);
       bend = Math.max(bend, (d * 180) / Math.PI);
     }
-    return { byKind, slots: { live: this.pool.live.length, created: this.pool.created }, cap: this.cap, bend };
+    return { byKind, slots: { live: this.pool.live.length, created: this.pool.created }, cap: this.cap, drawn: this.drawnLast, start: this.lastStart ? { ...this.lastStart } : null, bend };
+  }
+}
+
+/** A trail's drawn points (cut and crackled), reused for every trail each frame. */
+class Scratch implements Points {
+  readonly xs = new Float32Array(FX_LOOK.points);
+  readonly ys = new Float32Array(FX_LOOK.points);
+
+  x(i: number): number {
+    return this.xs[i] ?? 0;
+  }
+
+  y(i: number): number {
+    return this.ys[i] ?? 0;
   }
 }

@@ -8,6 +8,9 @@ import { textureScale } from '../vector/textures';
 
 /** The textures' sizes in world px (each drawn at the vector scale): marks and rings are discs `R` across. */
 export const SHOT_TEXTURE_SIZE = 32;
+/** The flashes' textures across, world px: the ring and the star 16, the tick 8 long. */
+export const FLASH_PX = 16;
+export const TICK_PX = 8;
 const R = SHOT_TEXTURE_SIZE;
 
 export function makeShotTextures(scene: Scene): void {
@@ -63,21 +66,21 @@ export function makeShotTextures(scene: Scene): void {
     c.arc(h, h, h - FX_LOOK.shockWidth, 0, Math.PI * 2);
     c.stroke();
   });
-  make(SHOT_FX_TEXTURES.ring, 16, 16, (c) => {
-    const g = c.createRadialGradient(8, 8, 2, 8, 8, 8);
+  make(SHOT_FX_TEXTURES.ring, FLASH_PX, FLASH_PX, (c) => {
+    const g = c.createRadialGradient(FLASH_PX / 2, FLASH_PX / 2, 2, FLASH_PX / 2, FLASH_PX / 2, FLASH_PX / 2);
     g.addColorStop(0, 'rgba(255,255,255,0)');
     g.addColorStop(0.7, 'rgba(255,255,255,1)');
     g.addColorStop(1, 'rgba(255,255,255,0)');
     c.fillStyle = g;
-    c.fillRect(0, 0, 16, 16);
+    c.fillRect(0, 0, FLASH_PX, FLASH_PX);
   });
-  make(SHOT_FX_TEXTURES.tick, 8, 2, (c) => {
-    const g = c.createLinearGradient(0, 0, 8, 0);
+  make(SHOT_FX_TEXTURES.tick, TICK_PX, 2, (c) => {
+    const g = c.createLinearGradient(0, 0, TICK_PX, 0);
     g.addColorStop(0, 'rgba(255,255,255,0)');
     g.addColorStop(0.5, 'rgba(255,255,255,1)');
     g.addColorStop(1, 'rgba(255,255,255,0)');
     c.fillStyle = g;
-    c.fillRect(0, 0.4, 8, 1.2);
+    c.fillRect(0, 0.4, TICK_PX, 1.2);
   });
   // Particles: a disc 4 px across with a soft rim, and a soft puff 8 px across (its edge fades out).
   make(SHOT_FX_TEXTURES.dot, 4, 4, (c) => {
@@ -97,12 +100,13 @@ export function makeShotTextures(scene: Scene): void {
     c.fillStyle = g;
     c.fillRect(0, 0, 8, 8);
   });
-  make(SHOT_FX_TEXTURES.star, 16, 16, (c) => {
+  make(SHOT_FX_TEXTURES.star, FLASH_PX, FLASH_PX, (c) => {
+    const m = FLASH_PX / 2;
     c.beginPath();
     for (let i = 0; i < 8; i++) {
       const a = (i * Math.PI) / 4;
-      const r = i % 2 === 0 ? 8 : 2;
-      c.lineTo(8 + Math.cos(a) * r, 8 + Math.sin(a) * r);
+      const r = i % 2 === 0 ? m : m / 4;
+      c.lineTo(m + Math.cos(a) * r, m + Math.sin(a) * r);
     }
     c.closePath();
     c.fill();

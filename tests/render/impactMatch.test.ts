@@ -70,6 +70,13 @@ describe('matchImpacts (078)', () => {
     expect(m.hits.map((h) => h.kind)).toEqual(['fallback', 'skip', 'skip', 'arc', 'skip']);
   });
 
+  it('lets a burst’s own area hits play its blast only: no fallback burst for them', () => {
+    const m = matchImpacts([lob(1, 'bomb', 200, 200)], { ...none, bursts: [burst(200, 200)], hits: [hit(5, 230, 210), hit(6, 400, 400)] }, reach, []);
+    expect(m.hits.map((h) => h.kind)).toEqual(['blast', 'fallback']);
+    const mine = matchImpacts([], { ...none, mineBursts: [{ x: 0, y: 0, radius: 24, damageType: 'physical' }], hits: [hit(5, 20, 0)] }, reach, []);
+    expect(mine.hits.map((h) => h.kind)).toEqual(['blast']);
+  });
+
   it('measures from the hurtbox’s centre, its half-size + 8 px', () => {
     const tall = () => ({ offsetY: -20, r: 20, half: 12 });
     const tracks = [straight(1, 'arrow', 0, 100, 82)];

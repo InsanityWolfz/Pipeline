@@ -1,4 +1,6 @@
 import { BOMB_LIFT } from '../../data/assets';
+import { TICK_RATE } from '../../data/config';
+import { bombletAt } from '../bombletPath';
 import { DRAW_HEIGHT } from '../../data/tube';
 import type { ArrowState } from '../../sim/arrows';
 import type { BombState } from '../../sim/bombs';
@@ -15,9 +17,10 @@ export interface FxTrack extends Track {
   look: RoundLook;
   /** Flight speed px/s (straight rounds), for an end's one frame of travel. */
   speed: number;
-  /** Where its shed bits leave: a straight round's drawn point, a bomb's fuse. */
+  /** Where its shed bits leave and its fuse glints: a straight round's drawn point, a bomb's or bomblet's fuse; and the depth it's drawn at. */
   sx: number;
   sy: number;
+  depth: number;
   /** Ms since each of its shed bursts last fired. */
   shed: [number, number];
   /** Made this frame (a round just fired). */
@@ -27,8 +30,9 @@ export interface FxTrack extends Track {
   seen: number;
 }
 
-/** A bomb's fuse spark, from its drawn centre (the bomb sprite's fuse tip, world px). */
-const FUSE = { x: 3.1, y: -6.2 } as const;
+
+/** No fuse: a round's own centre. */
+const NO_FUSE = [0, 0] as const;
 
 export class ShotTracks {
   private readonly pool = new Pool<FxTrack>(() => ({
@@ -48,6 +52,7 @@ export class ShotTracks {
     speed: 0,
     sx: 0,
     sy: 0,
+    depth: 0,
     shed: [0, 0],
     fresh: false,
     muzzled: false,
@@ -103,7 +108,7 @@ export class ShotTracks {
     else if (t.fresh) t.look = roundFx(a.ammoId);
     if (t.fresh) {
       // Its path this frame: from where it left (as far back as it has flown).
-      const back = Math.min(a.travelled, a.speed / 30);
+      const back = Math.min(a.travelled, (a.speed / TICK_RATE) * 2);
       t.x0 = a.x - a.dx * back;
       t.y0 = a.y - a.dy * back;
     }
@@ -114,6 +119,7 @@ export class ShotTracks {
     t.speed = a.speed;
     t.sx = a.x;
     t.sy = a.y - DRAW_HEIGHT;
+    t.depth = a.y;
   }
 
   /** A bomb or landmine in flight. */
@@ -131,8 +137,10 @@ export class ShotTracks {
     t.dy = (b.toY - b.fromY) / len;
     t.toX = b.toX;
     t.toY = b.toY;
-    t.sx = b.x + FUSE.x;
-    t.sy = b.y - BOMB_LIFT - b.height + FUSE.y;
+    const fuse = t.look.fuse ?? NO_FUSE;
+    t.sx = b.x + fuse[0];
+    t.sy = b.y - BOMB_LIFT - b.height + fuse[1];
+    t.depth = b.y;
   }
 
   /** A cluster bomb's bomblet on its way out; its burst's point is where it lands. */
@@ -141,6 +149,11 @@ export class ShotTracks {
     if (t.fresh) t.look = bombletFx(b.ammoId);
     t.x = t.toX = b.x;
     t.y = t.toY = b.y;
+    const at = bombletAt(b);
+    const fuse = t.look.fuse ?? NO_FUSE;
+    t.sx = at.x + fuse[0];
+    t.sy = at.y - at.lift + fuse[1];
+    t.depth = at.y;
   }
 
   /** An armed mine where it lies. */
@@ -156,7 +169,7 @@ export class ShotTracks {
     for (const t of this.pool.live) {
       if (t.live || t.seen === this.frame) continue;
       if (t.kind === 'straight') {
-        const step = (t.speed / 60) * Math.max(1, ticks);
+        const step = (t.speed / TICK_RATE) * Math.max(1, ticks);
         t.x = t.x0 + t.dx * step;
         t.y = t.y0 + t.dy * step;
       }

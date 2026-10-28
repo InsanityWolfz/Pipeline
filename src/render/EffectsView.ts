@@ -10,6 +10,7 @@ import {
   PICKUP_SPARKLE,
 } from '../data/assets';
 import { MELEE } from '../data/combat';
+import { FX_LOOK } from '../data/fxQuality';
 import { CAMERA_LERP, DOOR_FADE_MS } from '../data/config';
 import { INK_ID, hexToRgb, paletteHex } from '../data/palette';
 import { STAGE_SPRITES, SPLIT_FLASH } from '../data/stageAssets';
@@ -151,7 +152,10 @@ export class EffectsView {
     // 039.15: a Cold Burst's flash in frost colours.
     tintBurst(sprite, tint);
     sprite.setScale((radius * 2) / sprite.width);
+    // 078 review (078.10): kept, but dimmer and quicker, so the blast's smoke, debris, ring and scorch read.
+    sprite.setAlpha(FX_LOOK.blastFlash.alpha);
     sprite.play(FIRE_BURST.key);
+    sprite.anims.timeScale = FX_LOOK.blastFlash.speed;
     sprite.once('animationcomplete', () => sprite.destroy());
   }
 

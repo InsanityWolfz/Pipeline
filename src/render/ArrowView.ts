@@ -1,6 +1,7 @@
 import type { GameObjects, Scene } from 'phaser';
 import { AMMO } from '../data/ammo';
 import { DEPTHS } from '../data/assets';
+import { FX_LOOK } from '../data/fxQuality';
 import { ROUND_LOOKS, STAGE_SPRITES } from '../data/stageAssets';
 import { SPLIT } from '../data/tags';
 import { BURNING_LOOK, TALENT_SPRITES } from '../data/talentAssets';
@@ -34,10 +35,8 @@ interface SplitEnd {
   tier: string;
 }
 
-/** A Shard appears this close to where its Split round was last drawn (the round's last tick of travel and the hit). */
-const SPLIT_NEAR = 24;
-/** A round this new (px flown) starts its trail at the drawn muzzle (075.10: the sim's spawn point is a little off it). */
-const FRESH_PX = 40;
+/** A Shard appears this close to where its Split round was last drawn; a round this new (px flown) starts its trail at the drawn muzzle (075.10). */
+const { splitNear: SPLIT_NEAR, freshPx: FRESH_PX } = FX_LOOK;
 
 /** The sprite and shadow for a shot: its ammo's, or a Shard's (029), drawn as ice when it's Cold (039.3, 037's ice art). */
 function spritesOf(a: Pick<ArrowState, 'ammoId' | 'damageType'>): { sprite: string; shadow: string } {

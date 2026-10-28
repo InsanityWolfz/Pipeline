@@ -114,6 +114,26 @@ export const FX_LOOK = {
   flashes: 24,
   /** The rim of the shock ring, px, and its core's share of it. */
   shockWidth: 2,
+  /** A tier's core ring inside the shock ring, × its size. */
+  shockCore: 0.86,
+  /** Impacts throw, and their flashes sit, this far up: about the height shots fly. */
+  hitLift: 12,
+  /** Ground marks and rings are flattened to the three-quarter view's ground: height × this. */
+  groundSquash: 0.62,
+  /** A fire trail's flicker: two slow waves of these periods (ms) multiplied, never a per-frame reroll. */
+  flickerMs: [70, 113] as const,
+  /** A tier's core is this share of the trail's width (wider than an element's, so a tier reads in flight). */
+  tierCore: 0.6,
+  /**
+   * A fuse's glint (bombs and bomblets in flight): a small star at the fuse, `size` px, twinkling between `min` and 1 of
+   * its size at `hz` (steady with Flashes off), in `color` at `alpha`, additive on Medium and High.
+   */
+  fuseGlint: { size: 6, hz: 6, min: 0.55, color: 'cinder-light', alpha: 0.95 },
+  /** A Shard takes the tier of a Split round that ended within `splitNear` px; a round that has flown at most `freshPx` starts its trail at the drawn muzzle. */
+  splitNear: 24,
+  freshPx: 40,
+  /** 014's burst flash, kept at a bomb's blast (078.10): dimmed to `alpha` and played `speed` × as fast, so the blast's own smoke, debris, ring and scorch read. */
+  blastFlash: { alpha: 0.6, speed: 1.6 },
 } as const;
 
 /**

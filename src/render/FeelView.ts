@@ -1,4 +1,3 @@
-import { isFlatKind } from '../data/pieces';
 import type { Scene } from 'phaser';
 import { STAGES } from '../data/stages';
 import { TILE_SIZE } from '../data/config';
@@ -7,16 +6,15 @@ import { INTAKE } from '../data/foundry';
 import { DUST, GLOWS, HARVEST_BURSTS, HARVEST_WORK, HIT_STOP_MS } from '../data/juice';
 import { FOUNDRY_ROOM } from '../data/rooms';
 import { SOUND_LEVELS, SOUNDS, WINDUP_SOUNDS } from '../data/sounds';
-import { isClaimed } from '../sim/claims';
 import { wornRelic } from '../sim/stats';
 import type { SimEvents } from '../sim/events';
 import { pieceRect } from '../sim/pieces';
 import { roomById, type SimState } from '../sim/state';
 import { AmbientView, type GlowSpot } from './AmbientView';
+import { intakeGlowRadius, movingGlows } from './movingGlows';
+import { intakeAnchor } from './foundryLayout';
 import { JuiceView } from './JuiceView';
 import { SoundView } from './SoundView';
-import { attuneBeat } from './attune';
-import { intakeAnchor } from './foundryLayout';
 import { playHollows, SealSound } from './hollowsFeel';
 import { playEmberworks, VentFeel } from './emberworksFeel';
 import { playStormcrown } from './stormcrownFeel';
@@ -83,7 +81,7 @@ export class FeelView {
     this.watch(sim, shown, deltaMs);
     this.juice.update(deltaMs);
     this.intakeMs = Math.max(0, this.intakeMs - deltaMs);
-    this.ambient.update(deltaMs, this.movingGlows(sim, shown));
+    this.ambient.update(deltaMs, movingGlows(sim, shown, this.intakeMs > 0));
     this.sound.endFrame();
   }
 
@@ -288,39 +286,9 @@ export class FeelView {
     return this.ambient.moteCount;
   }
 
-  /** The intake's glow radius now (019): growing as its rings light once attuned, swelling as each item goes in; 0 while it doesn't glow. */
-  intakeGlowRadius(sim: SimState): number {
-    const { pipeGlow } = attuneBeat(sim.link.attunePulse);
-    if (!sim.link.attuned || pipeGlow <= 0) return 0;
-    const swell = sim.link.attunePulse > 0 ? pipeGlow : this.intakeMs > 0 ? GLOWS.intake.pulse : 1;
-    return GLOWS.intake.radius * swell;
-  }
-
   /** 079: the intake's mouth and its glow's radius while it glows (for its light), else null. */
   intakeGlow(sim: SimState): { x: number; y: number; glowRadius: number } | null {
-    const r = this.intakeGlowRadius(sim);
+    const r = intakeGlowRadius(sim, this.intakeMs > 0);
     return r > 0 ? { ...intakeAnchor(), glowRadius: r } : null;
-  }
-
-  /** Lights that move or come and go: live veins, claimed pylons, items on conduits, the intake and the tube. */
-  private movingGlows(sim: SimState, shown: string): GlowSpot[] {
-    const spots: GlowSpot[] = [];
-    for (const n of sim.nodes) if (n.roomId === shown && n.nodeId === 'ley-vein' && n.uses > 0) spots.push({ x: n.x, y: n.y, ...GLOWS.vein });
-    for (const pylon of roomById(shown).pylons ?? []) if (isClaimed(sim, pylon.site)) spots.push({ ...tileCentre(pylon.tx, pylon.ty), ...GLOWS.pylon });
-    if (shown === FOUNDRY_ROOM) {
-      for (const p of sim.foundry.pieces) {
-        const r = pieceRect(p);
-        if (isFlatKind(p.kind)) spots.push({ x: r.x, y: r.y, ...GLOWS.conduit });
-        if (p.kind === 'conduit' && p.item) spots.push({ x: r.x, y: r.y, ...GLOWS.conduitItem });
-      }
-      // The intake glows once attuned (growing as its rings light), swelling as each item goes in.
-      const radius = this.intakeGlowRadius(sim);
-      if (radius > 0) spots.push({ ...intakeAnchor(), color: GLOWS.intake.color, radius });
-    }
-    if (sim.hasTube && sim.link.attuned && shown === sim.roomId) {
-      // The same growing glow round the tube while its rings light.
-      spots.push({ x: sim.player.x, y: sim.player.y, color: GLOWS.tube.color, radius: GLOWS.tube.radius * attuneBeat(sim.link.attunePulse).gunGlow });
-    }
-    return spots;
   }
 }

@@ -8,8 +8,8 @@ import { steelArrowLine } from './tierPage';
 // an arrow and a bomb; each tier on each family it takes; a homing bolt's curve; a Split's star and Shards; a cluster
 // bomb's bomblets; a landmine's burst; the same volley on Low and High; a volley over a telegraph; machine sparks; the
 // projectile bodies at 4×. Effects are held on the tween clock for the capture. Motion strips (30 frames over a second,
-// two ticks a frame on Playwright's fake clock): an arrow volley, a ley bolt, a bomb's arc and blast, frost, homing, a
-// Split and the tiers.
+// two ticks a frame, Phaser's time locked to the sim's: a virtual clock gives each frame exactly 33 ms): an arrow volley,
+// a ley bolt, a bomb's arc and blast, frost, homing, a Split and the tiers.
 
 const SHOTS = 'docs/review/078';
 
@@ -164,7 +164,7 @@ test.describe('078 review shots', () => {
 
   test('motion strips: 30 frames over a second of each, at real speed', async ({ page }) => {
     test.setTimeout(900_000);
-    await page.clock.install();
+    await page.addInitScript(virtualTime);
     const scenes: [string, (string | null)[], (readonly [string, number, number])[], readonly [number, number], number][] = [
       ['20-strip-arrow-volley', ['arrow', 'arrow', 'arrow', 'arrow', 'arrow'], [['husk', 90, 0], ['husk', 110, 30]], [100, 10], 6],
       ['21-strip-ley-bolt', ['ley-bolt', null, null, null, null], [['husk', 100, 0]], [100, 0], 6],
@@ -174,33 +174,90 @@ test.describe('078 review shots', () => {
       ['25-strip-split', ['ley-bolt+split', null, null, null, null], [['husk', 80, 0], ['husk', 130, 45], ['husk', 130, -45]], [80, 0], 2],
       ['26-strip-tiers', ['arrow+steel', 'arrow+stormsteel', 'ley-bolt+glass', 'ley-bolt+storm-glass', 'bomb+steel'], [['husk', 95, 0], ['husk', 105, 35]], [100, 15], 2],
     ];
+    const only = process.env.STRIPS?.split(',');
     for (const [name, rounds, enemies, aim, fire] of scenes) {
+      if (only && !only.some((n) => name.startsWith(n))) continue;
       // A fresh boot each, so no earlier scene's drops or dissolves show.
       await fxSandbox(page, rounds, enemies, { quality: 'medium' });
-      for (let i = 0; i < 10; i++) await page.clock.runFor(33);
       await strip(page, name, aim, fire);
     }
   });
 });
 
-/** 30 frames, two ticks each (real speed at 30 fps), the view's middle, laid out 5 across in one image. */
+/** The page's virtual clock (`virtualTime`): while on, animation frames run only on `tick`, and performance.now is its time. */
+interface VirtualTime {
+  start(): void;
+  tick(ms: number): number;
+  stop(): void;
+}
+
+/** Installed before the page loads: requestAnimationFrame and performance.now on a clock the strip advances 33 ms a frame. */
+function virtualTime(): void {
+  const realRaf = window.requestAnimationFrame.bind(window);
+  const realNow = performance.now.bind(performance);
+  let on = false;
+  let now = 0;
+  let queue: FrameRequestCallback[] = [];
+  performance.now = () => (on ? now : realNow());
+  window.requestAnimationFrame = (cb) => {
+    if (on) queue.push(cb);
+    else return realRaf((t) => (on ? queue.push(cb) : cb(t)));
+    return 1;
+  };
+  const run = (): FrameRequestCallback[] => {
+    const q = queue;
+    queue = [];
+    return q;
+  };
+  const clock: VirtualTime = {
+    start: () => {
+      now = realNow();
+      on = true;
+    },
+    tick: (ms) => {
+      now += ms;
+      const q = run();
+      for (const cb of q) cb(now);
+      return q.length;
+    },
+    stop: () => {
+      on = false;
+      for (const cb of run()) realRaf(cb);
+    },
+  };
+  (window as unknown as { __vt: VirtualTime }).__vt = clock;
+}
+
+/** 30 frames, two ticks each and 33 ms of Phaser time (real speed at 30 fps), the view's middle, laid out 5 across in one image. */
 async function strip(page: Page, name: string, aim: readonly [number, number], fireFrames: number): Promise<void> {
   const size = page.viewportSize() ?? { width: 1280, height: 720 };
   const clip = { x: size.width * 0.42, y: size.height * 0.28, width: size.width * 0.4, height: size.height * 0.44 };
   const shots: string[] = [];
+  await page.evaluate(() => window.__GAME__?.tweenSpeed(1));
+  await page.evaluate(() => (window as unknown as { __vt: VirtualTime }).__vt.start());
+  // A few settling frames: the loop's first virtual frame sees one 33 ms step, not the wait before it.
+  for (let i = 0; i < 3; i++) await page.evaluate(() => (window as unknown as { __vt: VirtualTime }).__vt.tick(1000 / 30));
   for (let i = 0; i < 30; i++) {
-    await page.evaluate(
-      ([a, f]) => {
+    let ran = await page.evaluate(
+      ([a, frame, f]) => {
         const g = window.__GAME__;
         if (!g) throw new Error('no game');
         const p = g.getState().player;
-        g.step(2, { fire: f, aimX: p.x + a[0], aimY: p.y + a[1] });
+        for (let k = 0; k < 2; k++) g.step(1, { fire: frame * 2 + k < f * 2, aimX: p.x + a[0], aimY: p.y + a[1] });
+        return (window as unknown as { __vt: VirtualTime }).__vt.tick(1000 / 30);
       },
-      [aim, i < fireFrames] as const,
+      [aim, i, fireFrames] as const,
     );
-    await page.clock.runFor(33);
+    // A frame Phaser asked for before the clock went virtual may still be on its way: run it when it lands (the 33 ms
+    // are already on the clock, so that frame still steps 33 ms).
+    for (let wait = 0; ran === 0 && wait < 40; wait++) {
+      await page.waitForTimeout(25);
+      ran = await page.evaluate(() => (window as unknown as { __vt: VirtualTime }).__vt.tick(0));
+    }
+    expect(ran, 'a Phaser frame ran on the virtual clock').toBeGreaterThan(0);
     shots.push((await page.screenshot({ clip })).toString('base64'));
   }
+  await page.evaluate(() => (window as unknown as { __vt: VirtualTime }).__vt.stop());
   const sheet = await page.context().newPage();
   const w = Math.round(clip.width * 0.75);
   const h = Math.round(clip.height * 0.75);

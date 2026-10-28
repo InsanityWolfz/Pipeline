@@ -145,12 +145,13 @@ export class WorldLife {
     const fight = BOSS_ARENAS.some((a) => arenaLocked(sim, a));
     const inArena = BOSS_ARENAS.some((a) => playerInside(sim, a));
     const targets = this.off ? [] : layerTargets(weights, quality, fight);
-    const room0 = budgetRoom(quality, this.hooks.particles(), this.weather.count());
+    const from = { other: this.hooks.particles(), weather: this.weather.count() };
+    const room0 = budgetRoom(quality, from.other, from.weather);
     const dead = this.weather.step(dt, view, targets, room0, wind);
     this.hooks.weather(this.weather.count());
     this.weatherView.draw(this.weather, dead, quality);
     this.lightning(sim, room, view, dt, { quality, flashes: this.hooks.flashes(), stormWeight: weights.storm, fight, inArena, overworld: true });
-    this.report(step, pieces, beads.length, glinting.length, quality, weights, targets.reduce((n, t) => n + t.count, 0), fight, room0);
+    this.report(step, pieces, beads.length, glinting.length, quality, weights, targets.reduce((n, t) => n + t.count, 0), fight, { room: room0, from });
   }
 
   /** The overworld isn't shown: nothing moves or draws. */
@@ -231,7 +232,7 @@ export class WorldLife {
     drawBolt(this.bolt, boltPoints(f.fromX, f.fromY, f.target.x, f.target.y, L.step, L.jag, seed), BOLT, 1 - f.age / L.boltMs);
   }
 
-  private report(step: { updated: number; chunks: string[]; sample: number[] }, pieces: string[], beads: number, glints: number, quality: Quality, weights: Record<string, number>, want: number, fight: boolean, room: number): void {
+  private report(step: { updated: number; chunks: string[]; sample: number[] }, pieces: string[], beads: number, glints: number, quality: Quality, weights: Record<string, number>, want: number, fight: boolean, budget: { room: number; from: WeatherShown['roomFrom'] }): void {
     // The chunks only when the hook reads them: never a walk over every built chunk a frame.
     const decor = this.decor;
     const chunks = () => [...decor.chunks.entries()].map(([key, c]) => ({ key, plants: c.plants, vines: c.vines.length, trees: c.trees, variants: c.variants, setPieces: c.pieces.map((p) => p.def.id), shown: decor.chunkShown(c) }));
@@ -256,7 +257,8 @@ export class WorldLife {
       live: this.weather.live(),
       fading: this.weather.count() - this.weather.live(),
       want,
-      room,
+      room: budget.room,
+      roomFrom: budget.from,
       fight,
       wind: { ...this.wind.now },
       strikes: this.strikes,

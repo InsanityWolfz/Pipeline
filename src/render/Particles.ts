@@ -4,7 +4,7 @@ import { FX_PRIORITY, FX_QUALITY, type FxBurstName, type FxPriority } from '../d
 import { PARTICLE_SHARES, type ParticleBurst } from '../data/juice';
 import type { Quality } from '../data/settings';
 import { colorOf } from './color';
-import { Pool } from './fx/fxPool';
+import { oldestBeyond, Pool } from './fx/fxPool';
 import { makeShotTextures } from './fx/shotTextures';
 import { SHOT_FX_TEXTURES } from '../data/assets';
 import { textureScale } from './vector/textures';
@@ -66,6 +66,8 @@ export class Particles {
   /** 078: live effect particles by priority, and the most the pool has been warmed to. */
   private readonly priorities: Record<FxPriority, number> = { cue: 0, shot: 0, soft: 0 };
   private warmed = 0;
+  /** The tier the live particles were thrown under: a change frees the oldest past the new shares at once. */
+  private tier: Quality | null = null;
 
   constructor(scene: Scene, ledger: ParticleLedger, quality: () => Quality) {
     this.scene = scene;
@@ -218,7 +220,22 @@ export class Particles {
     this.pool.release(i);
   }
 
+  /** 078 review: on a tier change, the oldest effects and death motes past the new tier's shares go at once. */
+  private retier(): void {
+    const q = this.quality();
+    if (q === this.tier) return;
+    const was = this.tier;
+    this.tier = q;
+    if (was === null) return;
+    const s = PARTICLE_SHARES[q];
+    for (const [kind, keep] of [['effect', s.effect], ['death', s.death]] as const) {
+      const gone = oldestBeyond(this.pool.live, kind, keep);
+      for (let k = gone.length - 1; k >= 0; k--) this.free(gone[k] ?? -1);
+    }
+  }
+
   update(deltaMs: number): void {
+    this.retier();
     const dt = deltaMs / 1000;
     const live = this.pool.live;
     for (let i = live.length - 1; i >= 0; i--) {

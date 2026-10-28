@@ -87,8 +87,12 @@ export function installTestHook(flow: FlowScene): void {
     }),
     fxOff: (off) => {
       const scene = live();
-      if (scene.shotFx) scene.shotFx.off = off;
-      if (off) scene.shotFx?.clear();
+      if (scene.shots) scene.shots.fx.off = off;
+      if (off) scene.shots?.fx.clear();
+    },
+    trailCap: (cap) => {
+      const shots = live().shots;
+      if (shots) shots.trails.capHeld = cap;
     },
     strikeWeather: () => live().worldLife?.strikeNow(),
     claim: act((sim, _scene, site: string) => claim(sim, site)),
@@ -123,7 +127,7 @@ export function installTestHook(flow: FlowScene): void {
       const scene = live();
       return scene.legibility?.summaryRows(scene.sim) ?? [];
     },
-    wanderer: () => flow.live?.playerView?.pixels() ?? null,
+    wanderer: (along?: number) => flow.live?.playerView?.pixels(along) ?? null,
     wandererClock: (ms: number | null) => {
       const view = live().playerView;
       if (view) view.pinnedMs = ms;
