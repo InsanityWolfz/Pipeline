@@ -44,6 +44,8 @@ export function foundryInlays(room: Room, mouth: { x: number; y: number }): Inla
 
 /** One pulse: its front's distance from the mouth, and when it passed each inlay it has passed (ms since it started). */
 export interface Pulse {
+  /** Which pulse since boot (the first is 1). */
+  id: number;
   front: number;
   age: number;
   /** Inlays passed so far (by index, farthest first). */
@@ -108,7 +110,7 @@ export class LeyPulses {
     if (input.triggers > 0 && this.since >= LEY_PULSE.everyMs && this.live.length < cap && this.inlays.length > 0) {
       this.since = 0;
       this.started += 1;
-      this.live.push({ front: this.inlays[0]?.dist ?? 0, age: 0, passed: 0, fadedTo: 0, passedAt: [] });
+      this.live.push({ id: this.started, front: this.inlays[0]?.dist ?? 0, age: 0, passed: 0, fadedTo: 0, passedAt: [] });
     }
   }
 

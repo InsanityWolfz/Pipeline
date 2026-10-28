@@ -85,12 +85,21 @@ function showcase(): { place: Place[]; fills: Fill[]; machines: (readonly [numbe
 /**
  * Boots ?playtest (plus `query`), walks into the foundry and builds a layout: `columns` (the busy foundry: `units` forge
  * units, 12 at most, the coil's unit if `coil`, the arrow line into the intake if `intake`) or `showcase`. The hoppers,
- * crates and conduits go down first and each hopper is filled with `per` of its input by hand (E, ten at a time; the
+ * crates and conduits go down first and each hopper is filled with `per` of its input (90 arrows) by hand (E, ten at a time; the
  * extra raws dropped at the player's feet first), then the machines, so every forge starts with its whole supply.
- * Returns the machines' ids. Nothing runs past the build: the caller steps.
+ * Returns the machines' ids. Nothing runs past the build: the caller steps. `start` pins the tick the build starts at.
  */
-export async function forgeLine(page: Page, opts: { units?: number; per?: number; coil?: boolean; intake?: boolean; query?: string; layout?: 'columns' | 'showcase' } = {}): Promise<LineIds> {
+export async function forgeLine(page: Page, opts: { units?: number; per?: number; coil?: boolean; intake?: boolean; query?: string; layout?: 'columns' | 'showcase'; start?: number } = {}): Promise<LineIds> {
   await boot(page, `?playtest${opts.query ?? ''}`);
+  // `start`: the real-time loop ran the sim while the page booted; take the clock and start at one fixed tick (077's method).
+  if (opts.start !== undefined)
+    await page.evaluate((at) => {
+      const g = window.__GAME__;
+      if (!g) throw new Error('no game');
+      const now = g.step(0).tick;
+      if (now > at) throw new Error(`booted too slowly: tick ${now}`);
+      g.step(at - now);
+    }, opts.start);
   const plan = opts.layout === 'showcase' ? showcase() : columns(opts.units ?? 12, opts.coil ?? false, opts.intake ?? false);
   return page.evaluate(
     ([place, fills, machines, coilAt, per]) => {
@@ -105,12 +114,13 @@ export async function forgeLine(page: Page, opts: { units?: number; per?: number
       let s = g.step(1);
       const at = (tx: number, ty: number) => s.foundry.pieces.find((p) => p.tx === tx && p.ty === ty);
       const want: Record<string, number> = {};
-      for (const f of fills) want[f.item] = (want[f.item] ?? 0) + per;
+      const amount = (item: string) => (item === 'arrow' ? Math.max(per, 90) : per);
+      for (const f of fills) want[f.item] = (want[f.item] ?? 0) + amount(f.item);
       for (const [item, n] of Object.entries(want)) for (let k = s.inventory[item] ?? 0; k < n; k++) g.drop(item, s.player.x, s.player.y);
       s = g.step(30);
       for (const f of fills) {
         h.walkTo(f.from[0] * 32, f.from[1] * 32);
-        for (let k = 0; k < per; k += 10) s = g.step(1, { deposit: { id: at(f.tx, f.ty)?.id ?? -1, itemId: f.item, amount: 'ten' } });
+        for (let k = 0; k < amount(f.item); k += 10) s = g.step(1, { deposit: { id: at(f.tx, f.ty)?.id ?? -1, itemId: f.item, amount: 'ten' } });
       }
       // Stand clear, in the room's middle, so the camera holds most of the floor; then the machines go down.
       h.walkTo(12.5 * 32, 6.6 * 32);

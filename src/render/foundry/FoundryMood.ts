@@ -50,14 +50,14 @@ export interface FoundryMoodShown {
   quenches: number;
   sparks: number;
   thinned: number;
-  /** Ley pulses live, started since boot, and the inlays lit now (by index, farthest from the intake first). */
-  pulses: { live: number; started: number; lit: number[] };
+  /** Ley pulses live, started since boot, the inlays lit now (by index, farthest from the intake first), and by pulse. */
+  pulses: { live: number; started: number; lit: number[]; byPulse: { id: number; lit: number[] }[] };
   inlays: { tx: number; ty: number; dist: number }[];
   shimmer: { id: number; alpha: number; frame: string }[];
   glows: { x: number; y: number; alpha: number }[];
 }
 
-export const NO_FOUNDRY_MOOD: FoundryMoodShown = { shown: false, off: false, quality: 'medium', running: [], onScreen: [], effects: [], visited: 0, particles: { live: 0, motes: 0, steam: 0, sparks: 0, cap: 0, total: 0 }, puffs: 0, quenches: 0, sparks: 0, thinned: 0, pulses: { live: 0, started: 0, lit: [] }, inlays: [], shimmer: [], glows: [] };
+export const NO_FOUNDRY_MOOD: FoundryMoodShown = { shown: false, off: false, quality: 'medium', running: [], onScreen: [], effects: [], visited: 0, particles: { live: 0, motes: 0, steam: 0, sparks: 0, cap: 0, total: 0 }, puffs: 0, quenches: 0, sparks: 0, thinned: 0, pulses: { live: 0, started: 0, lit: [], byPulse: [] }, inlays: [], shimmer: [], glows: [] };
 
 const HOT = new Set(HEAT.machines);
 const SPARKING = new Set(SPARKS.machines);
@@ -176,7 +176,12 @@ export class FoundryMood {
       visited: pick.visited,
       particles: { live: motes + this.model.count, motes, steam: counts.steam, sparks: counts.sparks, cap: FOUNDRY_FX_CAP[quality], total: this.hooks.ledger.total },
       ...this.counts,
-      pulses: { live: this.pulses?.live.length ?? 0, started: this.pulses?.started ?? 0, lit: lit.map((l) => l.index) },
+      pulses: {
+        live: this.pulses?.live.length ?? 0,
+        started: this.pulses?.started ?? 0,
+        lit: lit.map((l) => l.index),
+        byPulse: (this.pulses?.live ?? []).map((p, i) => ({ id: p.id, lit: lit.filter((l) => l.pulse === i).map((l) => l.index) })),
+      },
       inlays: this.inlays.map((t) => ({ tx: t.tx, ty: t.ty, dist: Math.round(t.dist) })),
       shimmer: this.fx.shimmerShown,
       glows: this.fx.glowShown,
