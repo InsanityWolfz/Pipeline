@@ -71,6 +71,7 @@ for (const view of ['side', 'down', 'up'] as const satisfies readonly WandererVi
 const VARIANT_NAMES = new Set(RUIN_VARIANTS.flatMap((v) => v.base.flatMap((b) => v.frames(b))));
 
 const FAMILIES: readonly [title: string, test: (name: string) => boolean][] = [
+  ['Boss phase parts (080): the Bulwark’s runes, chipped rim, red crack and spikes; the Forgewright’s plates and crest; the Conductor’s dome and halo', (n) => n.startsWith('boss-phase-')],
   ['Set pieces (077): each base, its loop frames and the Colossus\'s ivy', (n) => n.startsWith('setpiece-')],
   ['World detail (077): plants, ground scatter, ruin variants, the ripple ring, glint and ley bead', (n) => /^(decor-|scatter-|fx-ripple|fx-ley-bead)/.test(n) || VARIANT_NAMES.has(n)],
   ...MACHINE_IDS.map((id): [string, (n: string) => boolean] => [`Machine: ${id} (idle, jammed, working)`, (n) => n.startsWith(`machine-${id}-`)]),

@@ -46,9 +46,9 @@ function tickBurn(state: SimState, e: EnemyState): void {
   if (e.health > 0) e.burnDps = 0;
 }
 
-/** Every living enemy's burn, a tick, in every room: its own pass, after everything that hits this tick. */
+/** Every living enemy's burn, a tick, in every room: its own pass, after everything that hits this tick. 080: one in its boss's intro counts nothing. */
 export function stepBurns(state: SimState): void {
-  for (const e of state.enemies) if (e.burnTicks > 0 && e.health > 0) tickBurn(state, e);
+  for (const e of state.enemies) if (e.burnTicks > 0 && e.health > 0 && e.mode !== 'intro') tickBurn(state, e);
 }
 
 /** A burning enemy that died passes its burn to every living, hittable enemy in its room within the spread radius; a plated Forgewright's body passes no Fire (060.26), so never catches. */

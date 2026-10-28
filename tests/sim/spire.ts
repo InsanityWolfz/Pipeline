@@ -6,6 +6,7 @@ import type { EnemyState } from '../../src/sim/enemies';
 import { createSim, type SimState } from '../../src/sim/state';
 import { tileCentre } from '../../src/sim/tiles';
 import { movePlayer } from './fight';
+import { runIntro } from './introKit';
 
 // The Conductor's Crown Spire (064) for sim tests, like hall.ts: the Stormcrown's barrier down (the Forgewright
 // beaten), only the Conductor left, and the player placed in the spire.
@@ -16,7 +17,7 @@ export const SPIRE_MIDDLE = tileCentre(CROWN_SPIRE.middle);
 export const SPIRE_DOOR_OUT = tileCentre(CROWN_ARENA.door.leaveTo);
 
 /** The Stormcrown open, only the Conductor left, and the player in the spire `dy` px below its middle (`dx` across). */
-export function spire(dy = 0, seed = 11, dx = 0): { s: SimState; c: EnemyState } {
+export function spire(dy = 0, seed = 11, dx = 0, intro = true): { s: SimState; c: EnemyState } {
   const s = createSim(seed, { start: HOLLOWS_START });
   s.bossDefeats.push('bulwark', 'forgewright');
   s.gates.emberworks = true;
@@ -25,6 +26,8 @@ export function spire(dy = 0, seed = 11, dx = 0): { s: SimState; c: EnemyState }
   if (!c) throw new Error('no Conductor');
   s.enemies = [c];
   movePlayer(s, SPIRE_MIDDLE.x + dx, SPIRE_MIDDLE.y + dy);
+  // 080: the intro stepped out (unless asked not to), so the next tick is the boss's wake as before.
+  if (intro) runIntro(s);
   return { s, c };
 }
 

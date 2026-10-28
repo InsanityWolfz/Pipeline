@@ -6,6 +6,7 @@ import { inRect, menuRows } from './foundryLayout';
 import { flashRow, RowHover } from './menuFeedback';
 import { TextLine } from './textLine';
 import { addVector } from './vector/textures';
+import { MenuMotion } from './MenuMotion';
 
 /** One row: up to two icons, a number beside them, and what clicking it means. */
 export interface Choice<T> {
@@ -24,18 +25,24 @@ export class ChoiceMenu<T> {
   private key = '';
   private readonly hover: RowHover;
   isOpen = false;
+  /** 081: the open's fade and rise; `name` says which menu, for `ui().menuMotion`. */
+  private readonly motion: MenuMotion;
 
-  constructor(scene: Scene) {
+  constructor(scene: Scene, name = 'choice') {
     this.scene = scene;
     this.hover = new RowHover(scene);
     this.panel = scene.add.graphics().setScrollFactor(0).setDepth(DEPTHS.menu - 1);
+    this.motion = new MenuMotion(scene, name, DEPTHS.menu - 1).adopt([this.panel]);
   }
 
   open(): void {
+    if (!this.isOpen) this.motion.show();
     this.isOpen = true;
   }
 
   close(): void {
+    this.motion.hide();
+    this.hover.close();
     this.isOpen = false;
     this.show([]);
   }
@@ -61,7 +68,7 @@ export class ChoiceMenu<T> {
   pointAt(x: number, y: number): void {
     const i = this.isOpen ? this.rects(this.choices.length).findIndex((r) => inRect(r, x, y)) : -1;
     if (!this.hover.set(i)) return;
-    for (const [k, r] of this.rows.entries()) r.images[0]?.setFrame(this.hover.frame(k));
+    for (const [k, r] of this.rows.entries()) if (r.images[0]) this.hover.paint(k, r.images[0]);
   }
 
   /** Flashes the row under a screen point, as it's pressed. */
@@ -81,6 +88,7 @@ export class ChoiceMenu<T> {
     const key = list.map((c) => `${c.icons.join('+')}:${c.text}`).join('|');
     if (key === this.key) return;
     this.key = key;
+    this.hover.close();
     for (const r of this.rows) {
       for (const o of r.images) o.destroy();
       r.text.destroy();
@@ -106,6 +114,7 @@ export class ChoiceMenu<T> {
       const shift = Math.max(0, icons.length - 1) * L.takeShift;
       const text = new TextLine(this.scene, r.x + L.count.x + shift, r.y + L.count.y, DEPTHS.menu + 1);
       text.set(c?.text ?? '');
+      this.motion.adopt([...images, text]);
       return { images, text };
     });
   }

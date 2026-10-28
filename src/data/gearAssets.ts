@@ -98,11 +98,11 @@ export const GEAR_PANEL = {
     /** 050: the scroll bar's track and thumb. */
     track: { color: 'ink', alpha: 0.4 },
     thumb: { color: 'brass', alpha: 0.85 },
-    /** A press flashes this colour, fading from `alpha` over `flashMs`. */
+    /** A press flashes this colour, fading from `alpha` over `flashMs` (081: 160 → 140, as every menu's press). */
     flash: { color: 'brass-light', alpha: 0.35 },
   },
   /** A pressed row or button flashes this long. */
-  flashMs: 160,
+  flashMs: 140,
 } as const;
 
 /** The relics' effects on the player and at the bench. Depths are px above (or below) the player's feet, or the bench's base. */

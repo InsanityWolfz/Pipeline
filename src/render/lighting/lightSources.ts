@@ -11,6 +11,9 @@ import { ventState, type NodeState } from '../../sim/nodes';
 import { roomById, type SimState } from '../../sim/state';
 import { chainSegments } from '../../sim/conductorAi';
 import { conductorDefOf } from '../../sim/conductorRods';
+import { INTRO_LOOK } from '../../data/art/bossIntro';
+import { introShort } from '../../sim/bossIntro';
+import { beatsOf } from '../bossIntro';
 import { firePoints, leyLinePoints, springPoints } from './fixedLights';
 import type { LightCandidate } from './lightPick';
 import type { LightPulses } from './lightPulses';
@@ -112,6 +115,12 @@ export function gatherLights(input: SourceInput): LightCandidate[] {
   // A Pool left by a burst (Blastfletch) burns too.
   for (const pool of sim.pools) if (pool.roomId === shown) add('fire', pool.x, pool.y, Math.max(S.fire.radii.ground, pool.radius), S.fire.color, S.fire.intensity * flicker(time, pool.id), S.fire.priority);
   for (const [id, at] of input.pulses.venting) add('forgewright', at.x, at.y - 40, S.forgewright.radius, S.forgewright.color, S.forgewright.intensity * flicker(time, id), S.forgewright.priority);
+  // 080: a boss's ignition through its intro, from the beat to the fight.
+  for (const e of sim.enemies) {
+    const look = e.mode === 'intro' && e.roomId === shown ? INTRO_LOOK.bosses[e.enemyId] : undefined;
+    if (!look || e.modeTicks - 1 < beatsOf(introShort(sim, e)).beat) continue;
+    add('bossIntro', e.x, e.y - look.light.rise, look.light.radius, look.light.color, look.light.intensity, S.bossIntro.priority);
+  }
   for (const s of input.chain) add('conductor', (s.x0 + s.x1) / 2, (s.y0 + s.y1) / 2, S.conductor.radius, S.conductor.color, S.conductor.intensity, S.conductor.priority);
   if (quality === 'high') {
     for (const a of sim.arrows) {

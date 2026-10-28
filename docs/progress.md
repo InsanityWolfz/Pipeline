@@ -2,6 +2,33 @@
 
 Newest entry first. Entries before 050 are in docs/progress-archive.md.
 
+## 2026-10-28: 081 HUD polish
+**Changed:** on `claude/081-hud-polish` (InsanityWolfz/Pipeline#98, stacked on 073–080; merges last), art pass 8 of 8 (plan docs/plans/081-hud-polish.md):
+- one polished stone-tablet look for every panel (stone gradient, carved inner line, lit brass corners) inside today's boxes; cut wells for the carried cells and tube card; a lit top line on the HP and XP bars; titles in pale brass;
+- the boss bar framed like the HP bar, the same size, redrawing only on a change (080's intro fill included);
+- five icons redrawn that read wrong: the casings (were the bomb), unidentified armour, rimestone, and the Tube talent (read as a battery);
+- menu motion: open 120 ms (fade, and a 4 px rise that's visual only; Crafting fades without it), hover and tabs 80 ms, press 140 ms, close instant; never blocks input; follows the system's reduced-motion setting.
+
+No sim change. Reviewed, with a motion check at 60 fps: two blocking findings fixed (the hover snapped out and blinked dark between rows; 081 was stacked only on 074, so its tests and the boss bar would break as 075–080 merged). `npm run check` 3055 tests; CI green. Raised for Shaun: 081.1–081.10; 081.1 and 081.2 need his call.
+
+**Next:** Shaun's playtest; "merge 98" last, after 96, 97 and 95.
+
+**Notes:**
+- GameScene.ts is 314 lines after the 078 and 080 merges (081.10); split it next time it grows.
+
+## 2026-10-28: 080 Boss intros and phases
+**Changed:** on `claude/080-boss-intros` (InsanityWolfz/Pipeline#97, stacked on 073 and 074–076), art pass 7 of 8 (plan docs/plans/080-boss-intros.md):
+- a 2.75 s intro per boss when the player first stands inside its arena: dormant, stir, rise, one beat with the only screen shake in the game (300 ms, world camera only, off with "Flashes and shake" or reduced motion), then a name card on the stone tablet; the Warden stands and slams, the Bulwark hauls its shield from the floor, the Forgewright's cold forge kindles, the Conductor draws a bolt to its staff; a short pan in and out;
+- a sim `intro` mode: the boss and its posted enemies are inactive and untargetable, the player takes no damage, burns don't tick; altar re-fights get a 1 s intro with no card; it replays only when the fight restarts; each fight from the intro's end is today's fight from its wake, tick for tick;
+- visible phases from existing sim flags: the Bulwark's called runes and enraged veins and roar, the Forgewright's heat bands and flame crest, the Conductor's storm dome, earthed arcs and halo.
+
+`SAVE_VERSION` 24 (072 takes 23). Reviewed, with a motion check: two blocking findings fixed (two criteria had no test; tuning numbers lived in render), plus burns skipping intros and a 3 px hand-back. `npm run check` 2886 tests; CI green. Raised for Shaun: 080.15–080.27; 080.25 and 080.27 need his call.
+
+**Next:** Shaun's playtest; his call on 080.27 (the Conductor's pan ends as he attacks); "merge 97" after 90 and 91–93.
+
+**Notes:**
+- `npm run measure`: every boss fight is exactly 2.75 s longer; the targets met are unchanged (Bulwark 21.2 s).
+
 ## 2026-10-28: 078 Ammo visuals and particles
 **Changed:** on `claude/078-ammo-visuals` (InsanityWolfz/Pipeline#96, stacked on 074–077), art pass 5 of 8 (plan docs/plans/078-ammo-visuals.md):
 - every ammo family, element and tier has its own trail and impact as data rows: arrows streak and splinter, ley bolts trail a ribbon and splash light, bombs trail fuse smoke with a glint and blast with smoke, debris, a shock ring and a scorch; frost, fire, lightning, homing, Split, Cluster and the four tiers each read (stormsteel violet in flight);
@@ -16,7 +43,7 @@ No sim change; `SAVE_VERSION` unchanged. Reviewed, with a motion check: blocking
 - The foundry-entry tests (foundryFlow, spread, guidance) now wait by drawn frames (`frameSettled`), not a 5 s timer: under load the door's fade outlasted the timer on main's code too.
 
 ## 2026-10-28: 077 World detail, landmarks and weather
-**Changed:** on `claude/077-world-and-weather` (InsanityWolfz/Pipeline#94, stacked on 074), art pass 4 of 8, from Shaun's art interview (plan docs/plans/077-world-and-weather.md):
+**Changed:** on `claude/077-world-and-weather` (InsanityWolfz/Pipeline#94, stacked on 074–076), art pass 4 of 8, from Shaun's art interview (plan docs/plans/077-world-and-weather.md):
 - moderate world detail: flowers, rubble, plants and ruin bits per region, placed by a deterministic hash per tile, with paths and fight space kept clear;
 - three landmarks per region (Region 1: Fallen Colossus, Ley Tower, The Watcher; Hollows: Unfinished Giant, Aqueduct Head, Great Crane; Emberworks: Great Furnace, Great Crucible, Toppled Stack; Stormcrown: Storm Tower, Stormcaller, Wind Harp), each only on tiles that already block, named on hover;
 - swaying grass and trees on a fixed 2.4–3.6 s cycle (wind changes only amplitude, eased), rippling water and flowing ley;
@@ -24,11 +51,11 @@ No sim change; `SAVE_VERSION` unchanged. Reviewed, with a motion check: blocking
 
 No sim change; `SAVE_VERSION` stays 22. Reviewed, including a motion check at real speed: two blocking findings fixed (plants snapped at every gust and fluttered at region borders; a per-frame walk over every chunk). `npm run check` 2749 tests; CI green. Raised for Shaun: 077.1–077.17; 077.3, 077.4, 077.12, 077.16 and 077.17 need his call.
 
-**Next:** Shaun's playtest after 074; "merge 94" after 91.
+**Next:** Shaun's playtest; "merge 94" after 91, 92 and 93.
 
 **Notes:**
 - Frame times (software renderer): a Stormcrown rain fight 108 / 107 / 303 ms on Low / Medium / High; Low is no slower than the world off.
-- The shared particle budget copies 076's numbers until 076 merges; 078 turns it into one ledger.
+- Restacked on 076 (with 075): weather reads 076's own budget constants, and `ui().particles.live` and the death-mote room both count weather; 078 turns it into one ledger.
 - `tests/e2e/feedback.spec.ts` "F in play" sits near its 30 s limit on a loaded runner (typing about 350 ms a key); older than 077, worth a fix-track change.
 
 ## 2026-10-28: 076 Enemy and boss polish
@@ -44,6 +71,7 @@ No sim change; `SAVE_VERSION` stays 22. Reviewed, including a motion check at re
 **Next:** Shaun's playtest after 074 and 075; "merge 93" after 91 and 92.
 
 **Notes:**
+- After review: ground telegraphs got a 0.9-alpha `danger` rim and a fill strengthening to 0.85 at the peak, because 074's redness check sat at 25.3 against its floor of 25 on Region 1 grass once 077's detail was in; now 69.6 there and 70–93 elsewhere.
 - Boot bakes more frames: 1.13 s against main's 0.63 s at 2×, 1.92 s against 1.08 s at 3×; boot to ready 3.8 s against 3.1 s.
 - This machine draws 8–13 frames a second under load, so real-time motion strips have 11–19 cells a second.
 
@@ -78,6 +106,35 @@ No sim change; `SAVE_VERSION` stays 22. Reviewed, including a motion check at re
 **Notes:**
 - Frame times (headless software renderer, loaded machine): a Stormcrown fight 127 / 123 / 385 ms on Low / Medium / High; Low costs no more than the moods off (0.97×). High lights only what a light reaches: 29 draw calls a frame, against 218 before.
 - The sim runs fixed ticks, but under about 6 fps (`MAX_TICKS_PER_FRAME` 10) the game slows rather than skip; true on main too.
+## 2026-10-27: 073 Enemies only attack on screen
+**Changed:** on `claude/073-offscreen-attacks` (InsanityWolfz/Pipeline#90), from Shaun's call on 071 ("anything off the screen should de aggro") and his interview (docs/brainstorm/2026-10-27-offscreen-attacks.md; plan docs/plans/073-offscreen-attacks.md):
+- no enemy starts an attack (a wind-up, a shot, a charge, a heal beam) while off screen; held, it acts as if its cooldown weren't ready, and walks home after the 1 s leash grace as before;
+- ranges are kept; a wind-up seen starting and shots in flight still land; trails and pools keep burning;
+- inside a boss arena, everything follows the boss rules (Shaun, on approval): it wakes once the player is inside and never leashes there, adds included;
+- one shared rule, `mayStart` in `aiCommon.ts`, used by every enemy kind.
+
+`SAVE_VERSION` stays 22. Reviewed: one blocking finding fixed (only the attack half of the arena rule was built, so arena enemies gave up after 1 s off screen), plus tests for wind-ups finishing off screen and trails burning. `npm run check` 2659 tests; CI green. Raised for Shaun: 073.7–073.14; 073.12–073.14 need his call. 071 closed unmerged.
+
+**Next:** "merge 90". Shaun OK'd 073.12–073.14 on 2026-10-28.
+
+**Notes:**
+- `npm run measure`: pack fights and the Bulwark match main (the ring 3 stone mean 15.3 s against 15.6 s); there's no Warden measure.
+- tutorialFrost.spec.ts's long walk now also clears enemies midway: pack respawn spots drift with the seeded RNG once fights go differently.
+
+## 2026-10-27: 072 Boss return points
+**Changed:** on `claude/072-boss-return-points` (InsanityWolfz/Pipeline#86), from the agent-playtest proposals Shaun picked (plan docs/plans/072-boss-return-points.md):
+- a return stone stands three tiles west of each boss arena's door (the Bulwark's Forum, the Anvil Hall, the Conductor's hall); it wakes when the player passes within 2.5 tiles from outside, never from inside an arena;
+- woken stones join fast travel (claimed pylons first, then stones in the order they woke), and a stone offers "Travel to foundry"; a travel lands on the tile west of the stone, clear of the door's E;
+- packs never spawn within 7 tiles of a stone; woken stones survive KOs and saves.
+
+`SAVE_VERSION` 23 (069 takes 22). Reviewed: one blocking finding fixed (the stone was drawn at about twice its size; `ui()` now reports its drawn size and the e2e checks it), plus four suggestions (the spawn margin from 5 to 7 tiles, matching a pylon's safe zone). `npm run check` 2539 tests; CI green. Raised for Shaun: 072.1–072.9; 072.5, 072.7 and 072.9 need his call.
+
+**Next:** Shaun's playtest; his calls on 072.5 (travelling home banks the haul), 072.7 (7-tile margin), 072.9 (a minimap icon); "merge 86".
+
+**Notes:**
+- The plan's landing tile (one below the stone) was in the Forum door's E reach; it moved west of the stone.
+- The container restarted twice during the build; nothing was lost.
+- 2026-10-27: Shaun OK'd 072.5, 072.7 and the rest; 072.9 built on this branch (a woken stone's minimap icon, the pylon's in brass, with a hover line; shot 06); main (069) merged in.
 
 ## 2026-10-26: 070 Handling and clarity
 **Changed:** on `claude/070-handling-clarity` (InsanityWolfz/Pipeline#84), from the agent-playtest proposals Shaun picked (plan docs/plans/070-handling-clarity.md, six slices):

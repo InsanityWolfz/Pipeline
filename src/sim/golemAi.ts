@@ -1,5 +1,5 @@
 import type { GolemDef } from '../data/emberworksEnemies';
-import { engage, inAggroBox, leash, startWindup, stepAttack, toward } from './aiCommon';
+import { engage, inAggroBox, leash, mayStart, startWindup, stepAttack, toward } from './aiCommon';
 import type { EnemyState } from './enemies';
 import { damagePlayer } from './health';
 import type { SimState } from './state';
@@ -21,7 +21,7 @@ export function golemThink(state: SimState, e: EnemyState, def: GolemDef): [numb
   const dx = state.player.x - e.x;
   const dy = state.player.y - e.y;
   if (e.roomId !== state.roomId || Math.hypot(dx, dy) > slam.triggerRange) return toward(dx, dy, def);
-  if (e.cooldown === 0) {
+  if (e.cooldown === 0 && mayStart(state, e)) {
     startWindup(e, def, dx, dy);
     e.spotX = e.x + e.swipeDirX * slam.ahead;
     e.spotY = e.y + e.swipeDirY * slam.ahead;

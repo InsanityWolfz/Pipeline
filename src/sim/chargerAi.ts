@@ -1,5 +1,5 @@
 import type { ChargerDef } from '../data/hollowsEnemies';
-import { engage, enter, hold, inAggroBox, leash, startWindup, toward } from './aiCommon';
+import { engage, enter, hold, inAggroBox, leash, mayStart, startWindup, toward } from './aiCommon';
 import type { EnemyState } from './enemies';
 import { laneRun } from './laneRun';
 import { clearGround } from './sightLine';
@@ -37,8 +37,8 @@ export function chargeThink(state: SimState, e: EnemyState, def: ChargerDef): [n
   const dx = p.x - e.x;
   const dy = p.y - e.y;
   if (Math.hypot(dx, dy) > charge.triggerRange || e.roomId !== state.roomId || !clearGround(roomById(e.roomId), e.x, e.y, p.x, p.y)) return toward(dx, dy, def);
-  // In range with a clear line: plant and wind up, or stand and wait out the cooldown.
-  if (e.cooldown === 0) {
+  // In range with a clear line: plant and wind up, or stand and wait out the cooldown (or until it is on screen, 073).
+  if (e.cooldown === 0 && mayStart(state, e)) {
     startWindup(e, def, dx, dy);
     e.spotX = e.x;
     e.spotY = e.y;

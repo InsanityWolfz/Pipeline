@@ -4,7 +4,8 @@ import type { ForgewrightDef } from '../data/enemies';
 import { enter, hold, startWindup, stepAttack, toward, walkHome } from './aiCommon';
 import { engaged, inArena } from './bulwarkAi';
 import { chillScale, chillSlow } from './cold';
-import { aggro, type EnemyState } from './enemies';
+import type { EnemyState } from './enemies';
+import { wakeBoss } from './bossWake';
 import { floodOut } from './floodPools';
 import { createBellows } from './forgewrightParts';
 import { unit } from './direction';
@@ -158,8 +159,7 @@ export function forgewrightThink(state: SimState, e: EnemyState, def: Forgewrigh
       if (isIdle(e)) resetForge(state, e, def);
       return move;
     }
-    aggro(e);
-    e.lobCooldown = def.spray.cooldownTicks;
+    wakeBoss(e);
   }
   if (e.lobCooldown > 0) e.lobCooldown -= 1;
   e.offScreenTicks = playerIn ? 0 : e.offScreenTicks + 1;

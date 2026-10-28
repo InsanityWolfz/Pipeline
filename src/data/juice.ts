@@ -14,6 +14,17 @@ export const SHAKE = {
   big: { ms: 320, intensity: 0.014 },
 } as const;
 
+/**
+ * 080: the only screen shake the game makes, once per boss intro, on its beat's first tick, on the world camera only
+ * (Shaun, 2026-10-27: "the only time a screen shake makes sense is like during a boss spawn animation"). Off with
+ * Flashes off (the "Flashes and shake" row) or a system asking for reduced motion. `SHAKE_ON` stays false for 014's.
+ * About ±3.8 px across and ±2.2 px down at 640×360 for the full intro.
+ */
+export const INTRO_SHAKE = {
+  full: { ms: 300, intensity: 0.006 },
+  short: { ms: 200, intensity: 0.004 },
+} as const;
+
 /** Hit-stop: how long a struck enemy's sprite holds still, ms (about 3 frames at 60 Hz). */
 export const HIT_STOP_MS = 50;
 

@@ -1,3 +1,5 @@
+import type { BossShowUi } from './bossShow';
+import type { ReturnStoneShown } from './ReturnStoneView';
 import type { TunnelMark } from './tunnelMarks';
 import type { GroundItemShown } from './GroundItemView';
 import type { InteractPromptState } from './InteractPrompt';
@@ -35,6 +37,8 @@ import type { EnemyArtUi } from './EnemyView';
 import type { LegibilityUi } from './Legibility';
 import type { SandboxPanelState } from './SandboxPanel';
 import type { LightingShown } from './lighting/LightingView';
+import type { MenuMotionShown } from './menuCurves';
+import type { HudDrawsShown } from './HudView';
 import type { PlayerUi } from './PlayerView';
 import type { WeatherShown, WorldShown } from './world/worldShown';
 import type { AmmoFxShown } from './fx/ammoFxShown';
@@ -47,7 +51,7 @@ export type { GameTestHook } from './gameTestHook';
  * tip's piece; the minimap (017) with its markers in view px; each node's frame by node id; and the claimed
  * pylon's supply motes (018), how many have started and those on their way.
  */
-export interface UiState {
+export interface UiState extends BossShowUi {
   /** The scene has built its views and the fonts are loaded (020): before this, nothing is drawn. */
   ready: boolean;
   /** The sim tick the last drawn frame showed (-1 before one): after a step, wait until it matches the state's tick before reading what's drawn. */
@@ -64,8 +68,8 @@ export interface UiState {
   hoverName: string | null;
   hoverDescription: string | null;
   buildTip: string | null;
-  /** 017, 051: the minimap, its markers (view px, with the name hovering shows), and the hovered one's name. */
-  minimap: { shown: boolean; markers: { kind: string; x: number; y: number; name?: string }[]; hover: string | null };
+  /** 017, 051: the minimap, its markers (view px, with the name hovering shows, the icon drawn and 072.9's stone id), and the hovered one's name. */
+  minimap: { shown: boolean; markers: { kind: string; x: number; y: number; name?: string; stone?: string; icon?: string }[]; hover: string | null };
   /** 051 (B.6): the foundry's minimap while it shows: carriers' lines, pieces' dots and the icons, view px. */
   foundryMap: FoundryMapShown;
   nodes: Record<number, string>;
@@ -81,7 +85,7 @@ export interface UiState {
   /** 077: the world's decor, sway, ripples, beads and set pieces, and the weather (WorldShown, WeatherShown). */
   world: WorldShown;
   weather: WeatherShown;
-  /** The camera shakes asked for since boot, oldest first (the last 50) (021). */
+  /** The camera shakes asked for since boot, oldest first (the last 50) (021; 080: `intro` and `intro-short`). */
   shakes: string[];
   /** 060: burn beats' small numbers shown since boot, and enemies drawn with flames on them now. */
   burnNumbers: number;
@@ -185,6 +189,9 @@ export interface UiState {
   vectorBake: { ms: number; pages: number; frames: number; enemyFrames: number };
   /** 032: the waystone's menu while open (two or more claimed pylons): each row's text and box, view px; else null. */
   waystone: { text: string; x: number; y: number; w: number; h: number }[] | null;
+  /** 072: a claimed pylon's menu while open (its rows, with a row per woken return stone), and a woken return stone's; else null. */
+  pylonMenu: { text: string; x: number; y: number; w: number; h: number }[] | null;
+  returnMenu: { text: string; x: number; y: number; w: number; h: number }[] | null;
   /** 069: an intake entrance's purge menu while open: its row's text and box, view px; else null. */
   purgeMenu: { text: string; x: number; y: number; w: number; h: number }[] | null;
   /** 033: the diagrams drawn on the foundry, restored parts, running effects and the wing door. */
@@ -211,6 +218,8 @@ export interface UiState {
   lightningArcs: number;
   /** 055: each boss arena's door in the room on screen, sealed or open, and 043's seal over it while its boss fights. */
   arenaDoors: ArenaDoorShown[];
+  /** 072: the return stones in the room on show: dormant or woken, the scale of a wake's swell, and their drawn size. */
+  returnStones: ReturnStoneShown[];
   /** 036: the bench's gear panel while open (its cells, tabs, rows with ids and boxes, page and totals), else null. */
   gearPanel: GearPanelState | null;
   /** 036: the relics' effects as drawn: the Wardstone's shimmer (its alpha, 0 when hidden), ward breaks, ember flashes and bench flares live. */
@@ -244,6 +253,9 @@ export interface UiState {
   lighting: LightingShown;
   /** 079: the foundry's running forges, their effects, its particles against its cap, the ley pulses and inlays, and `visited`. */
   foundryMood: FoundryMoodShown;
+  /** 081: the menus' motion (the last open, running or settled, its ms of tween time, alpha and rise; fades so far) and the HUD's redraw counts, live tweens and game objects. */
+  menuMotion: MenuMotionShown;
+  hudDraws: HudDrawsShown;
 }
 
 /** ui() without the flow's part: what a GameScene reports. */

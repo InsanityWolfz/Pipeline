@@ -4,7 +4,7 @@ import { packFight } from './enemyWindups';
 
 // 076: the same seed and commands play the same fight as on main, tick for tick: a scripted pack fight per region,
 // its summary fingerprinted every 120 ticks, against the fingerprints recorded on main (regionHash.json, written with
-// RECORD_076=1 on origin/main at efd53de). The summary is main's: 075's `wornRarity`, which main's lacks and this fight
+// RECORD_076=1 on origin/main at efd53de; 080 re-recorded them with 073 merged, which holds off-screen attacks). The summary is main's: 075's `wornRarity`, which main's lacks and this fight
 // never changes, is left out (enemyWindups.ts's mainSummary). The boss fights are covered by windupTicks.test.ts's runs.
 
 const FILE = 'tests/sim/regionHash.json';

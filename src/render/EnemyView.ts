@@ -16,19 +16,20 @@ import type { HitEvent } from '../sim/events';
 import type { Facing } from '../sim/player';
 import { registerAnim } from './anims';
 import { colorOf } from './color';
-import { addVector, addVectorSprite, showFrame, textureScale } from './vector/textures';
+import { addVector, addVectorSprite, showFrame } from './vector/textures';
 import { COLD } from '../data/tags';
 import { HOLLOWS_LOOK } from '../data/hollowsAssets';
 import { drawSeam, riseShown } from './bulwarkLook';
-import { chillTint, drawCore, drawFlames, drawIce, drawResin } from './enemyOverlays';
+import { chillTint, drawChampion, drawCore, drawFlames, drawIce, drawResin } from './enemyOverlays';
 import { enemyArt, type EnemyArtShown } from './enemyArt';
+import { introShort } from '../sim/bossIntro';
 import { attacking, staggeredInTick } from './enemyReaction';
 import { drawTelegraph } from './telegraphs';
 import { destroyEnemyBar, drawEnemyBar, makeEnemyBar, type EnemyBar, type EnemyBarShown } from './enemyBar';
 import { destroyHollowsArt, drawHollowsArt, makeHollowsArt, shownOf, type HollowsArt, type HollowsEnemiesShown } from './hollowsEnemyArt';
 
 /** A champion's extras (032): its glow, and its name with its kind under it. */
-interface ChampionArt {
+export interface ChampionArt {
   glow: GameObjects.Image;
   name: TextLine;
   kind: TextLine;
@@ -125,6 +126,11 @@ export class EnemyView {
     this.frozenUntil.set(id, this.scene.time.now + ms);
   }
 
+  /** 080: an enemy's sprite as drawn (the boss phase looks sit on its frame), or undefined. */
+  spriteOf(id: number): GameObjects.Sprite | undefined {
+    return this.drawn.get(id)?.sprite;
+  }
+
   /** An enemy as last drawn (076: a death's dissolve reads the Forgewright's bellows off it). */
   lastOf(id: number): EnemyState | undefined {
     return this.last.get(id);
@@ -172,7 +178,7 @@ export class EnemyView {
       // Freezing (029) holds the sprite, pose and all, as hit-stop does.
       if (d.staggerMs !== null && e.frozen <= 0) d.staggerMs += dt;
       // Review 8: written into its own art object, kept from frame to frame.
-      const art = e.frozen > 0 && d.art ? d.art : enemyArt(e, def, anims, view, now < (d.turnUntil ?? 0), d.staggerMs, now, d.art);
+      const art = e.frozen > 0 && d.art ? d.art : enemyArt(e, def, anims, view, now < (d.turnUntil ?? 0), d.staggerMs, now, d.art, e.mode === 'intro' && introShort(sim, e));
       d.art = art;
       this.show(d, art, e.frozen > 0);
       // A champion (032) is drawn 1.5× its kind; 076: squashed about its feet.
@@ -192,7 +198,7 @@ export class EnemyView {
       // 076: the bar and labels sit on its unsquashed height, so they don't bob.
       const top = bottom - d.sprite.height * d.baseScale * (e.champion ? CHAMPIONS.scale : 1) * d.sprite.originY;
       drawEnemyBar(this.scene, d.bar, e, top);
-      if (d.champion) this.drawChampion(d.champion, e, bottom, top, now);
+      if (d.champion) drawChampion(d.champion, e, bottom, top, now);
       d.waveShaded = drawTelegraph(d.telegraph, e);
       drawHollowsArt(d.hollows, d.sprite, e, def, sim, now, d.art ?? STILL);
       if (d.overlay && e.enemyId === RESIN.enemyId) drawResin(d.overlay, e, bottom, view, now);
@@ -290,18 +296,5 @@ export class EnemyView {
     return [...this.drawn.entries()].flatMap(([id, d]) =>
       d.champion ? [{ id, name: d.champion.name.obj.text, kind: d.champion.kind.obj.text, scale: d.sprite.scaleX / d.baseScale, glow: d.champion.glow.alpha }] : [],
     );
-  }
-
-  /** A champion's soft glow round its body, pulsing slowly, and its name with its kind under it, over the health bar. */
-  private drawChampion(c: ChampionArt, e: EnemyState, bottom: number, top: number, now: number): void {
-    const G = CHAMPIONS.glow;
-    const pulse = (Math.sin((now / G.pulseMs) * Math.PI * 2) + 1) / 2;
-    const size = (G.radius * CHAMPIONS.scale) / LANDMARK_LOOK.championGlowPx;
-    c.glow.setPosition(e.x, (bottom + top) / 2).setScale(size / textureScale()).setAlpha(G.alpha[0] + (G.alpha[1] - G.alpha[0]) * pulse);
-    const L = LANDMARK_LOOK.championLabel;
-    const { h, gap, border } = ENEMY_FX.healthBar;
-    const kindY = Math.round(top - gap - h - border - L.rise - c.kind.lineHeight);
-    c.kind.moveTo(Math.round(e.x - c.kind.width / 2), kindY);
-    c.name.moveTo(Math.round(e.x - c.name.width / 2), kindY - L.gap - c.name.lineHeight);
   }
 }

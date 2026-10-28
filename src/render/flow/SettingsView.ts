@@ -6,6 +6,7 @@ import { ACTION_LABELS, BIND_ACTIONS, SANDBOX_ONLY, SETTINGS_TEXT, type Quality,
 import { colorOf } from '../color';
 import { keyLabel } from '../keyHint';
 import { drawTablet } from '../tablet';
+import { MenuMotion } from '../MenuMotion';
 import { TextLine } from '../textLine';
 import { MenuColumn, type MenuHit, type MenuRowShown, type MenuRowSpec } from './MenuColumn';
 
@@ -37,6 +38,8 @@ export class SettingsView {
   private mode: 'closed' | 'main' | 'keys' = 'closed';
   /** The action waiting for a key in the key list, or null. */
   waiting: string | null = null;
+  /** 081: the open's fade and rise; the main list and the key list fade in as tabs. */
+  private readonly motion: MenuMotion;
 
   constructor(scene: Scene, depth: number = DEPTHS.flowSettings) {
     this.dim = scene.add.rectangle(0, 0, VIEW_WIDTH, VIEW_HEIGHT, colorOf(FLOW_DIM.color), FLOW_DIM.alpha).setOrigin(0).setScrollFactor(0).setDepth(depth);
@@ -45,6 +48,9 @@ export class SettingsView {
     this.note = new TextLine(scene, 0, 0, depth + 3, false, 'body');
     this.main = new MenuColumn(scene, 0, 0, FLOW_ROWS, depth + 2);
     this.keyColumns = [new MenuColumn(scene, 0, 0, FLOW_ROWS, depth + 2), new MenuColumn(scene, 0, 0, FLOW_ROWS, depth + 2)];
+    this.motion = new MenuMotion(scene, 'settings', depth).adopt([this.dim, this.panel, this.title, this.note]);
+    const lists = this.motion.tabLayer(depth + 2);
+    for (const c of [this.main, ...this.keyColumns]) c.moveWith(this.motion, lists);
     this.close();
   }
 
@@ -58,7 +64,7 @@ export class SettingsView {
 
   /** Opens (or redraws) the main list. */
   showMain(m: SettingsModel): void {
-    this.mode = 'main';
+    this.enter('main');
     this.waiting = null;
     const s = m.settings;
     const T = SETTINGS_TEXT.rows;
@@ -86,7 +92,7 @@ export class SettingsView {
 
   /** Opens (or redraws) the key list. */
   showKeys(s: Readonly<Settings>, waiting: string | null, sandbox = false): void {
-    this.mode = 'keys';
+    this.enter('keys');
     this.waiting = waiting;
     const rows: MenuRowSpec[] = [
       ...BIND_ACTIONS.filter((a) => sandbox || !SANDBOX_ONLY.includes(a)).map((a) => ({ id: a, label: ACTION_LABELS[a], value: a === waiting ? SETTINGS_TEXT.waiting : keyLabel(s.bindings[a]) })),
@@ -112,7 +118,15 @@ export class SettingsView {
     this.note.set(note ?? '').moveTo(Math.round(VIEW_WIDTH / 2 - this.note.width / 2), y + noteY);
   }
 
+  /** 081: opening fades the panel in and up; switching between the main list and the key list fades the new list in. */
+  private enter(mode: 'main' | 'keys'): void {
+    if (this.mode === 'closed') this.motion.show();
+    else if (this.mode !== mode) this.motion.switchTab();
+    this.mode = mode;
+  }
+
   close(): void {
+    this.motion.hide();
     this.mode = 'closed';
     this.waiting = null;
     this.setVisible();

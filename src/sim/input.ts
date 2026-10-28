@@ -74,7 +74,10 @@ export interface Command {
   sortInventory: boolean;
   /** The claimed pylon's menu choice this tick (an edge), or null. */
   pylon: 'deposit' | 'travel' | null;
-  /** The waystone menu's choice (032): the claimed site to travel to, standing at the waystone, this tick (an edge), or null. */
+  /**
+   * A travel menu's choice this tick (an edge), or null: at the waystone (032), a destination's id (a claimed site, or
+   * 072's woken return stone); at a claimed pylon, a woken return stone's id (072); at a woken return stone, 'foundry'.
+   */
   travel: string | null;
   /**
    * Take some of a kind out of the stash, standing at it, this tick (an edge), or null: by `amount` (052: the stash

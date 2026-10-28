@@ -41,6 +41,8 @@ export const LIGHT_SOURCES = {
   conductor: { color: 'storm-glow', radius: 96, intensity: 1.4, priority: 1, tiers: LIT, ms: 200 },
   /** The Forgewright's vents (its core while it vents) and heat flood, while they burn. */
   forgewright: { color: 'cinder', radius: 88, intensity: 1.2, priority: 1, tiers: LIT },
+  /** 080: a boss's ignition in its intro, from the beat to the fight (the Warden's core, the Bulwark's seam, the Forgewright's seams, the Conductor's bolt): colour, radius and rise per boss in INTRO_LOOK. */
+  bossIntro: { color: 'cyan', radius: 72, intensity: 1, priority: 1, tiers: LIT },
   /** Lightning striking a storm rod (the Rod Field), lit `rise` px up the rod. */
   rodStrike: { color: 'storm-pale', radius: 112, intensity: 1.5, priority: 1, tiers: LIT, ms: 200, rise: 40 },
   /** Blasts (`bursts` events), coloured by damage type; radius × the blast's. */

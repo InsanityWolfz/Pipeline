@@ -1,13 +1,15 @@
 import { INTAKE_CAP_ICON, INTAKE_EMPTY_ICON, LOGISTICS_ICONS, SITE_ICONS } from '../foundryAssets';
 import { SPRITES } from '../assets';
+import { ICON_CASING } from './casing';
 import { ellipse, flat, line, path, rect, solid, trim, type Shape, type VectorSprite } from './types';
 
 // Item icons and build emblems (020), in the 016 vector style: 16x16 world px
 // round the centre, used on the ground, in the HUD, in menus and riding
 // conduits. The 005 look-alike pairs stay apart by shape: the shaft is a thin
 // straight rod and the fuse a fat twisted coil; the ley dust is three loose
-// chunks and the ley bolt one head on a trail. The casing (031) is the bomb's plain
-// black sphere: only the bomb's wick and cinder band tell them apart.
+// chunks and the ley bolt one head on a trail. The casing is an open shell, its two
+// halves parted with the hollow showing (081: it was the bomb's sphere, and read as a
+// bomb at real size), and the bomb a sealed sphere.
 
 const icon = (key: string, shapes: readonly Shape[]): VectorSprite => ({ key, size: [16, 16], anchor: [8, 8], frames: [shapes] });
 
@@ -123,15 +125,23 @@ const WARDEN_CORE: Shape[] = [
   ellipse(-0.4, 0.2, 0.8, 0.8, flat('snow')),
 ];
 
+// 081: unidentified armor: a cuirass's shape (shoulders, a waist) under a cloth wrap, tied with cord, a dim rune on
+// the wrap: armor, not yet known. (It was a banded chest, and read as the stash.)
 const UNIDENTIFIED_ARMOR: Shape[] = [
-  path('M -6 -2 Q -6.4 -5 -3 -5.4 L 3.4 -5.4 Q 6.6 -5 6 -2 L 5.4 4.4 Q 5 6 3 6 L -3 6 Q -5 6 -5.4 4.4 Z', {
-    fill: { linear: [0, -5.4, 0, 6], stops: [{ at: 0, color: 'leather' }, { at: 1, color: 'leather-dark' }] },
+  path('M -6.4 -4 L -3 -6.2 Q 0 -4.8 3 -6.2 L 6.4 -4 L 5.2 0 Q 4.4 2 5 6.2 L -5 6.2 Q -4.4 2 -5.2 0 Z', {
+    fill: { linear: [-5, -6, 5, 6], stops: [{ at: 0, color: 'robe' }, { at: 0.55, color: 'flag-light' }, { at: 1, color: 'flag' }] },
     outline: true,
   }),
-  path('M -5.6 -0.6 Q 0 1.4 5.6 -0.6', trim('straw', 1.2)),
-  path('M -1.2 -5.4 Q 0.6 0 -0.6 6', trim('straw', 1.2)),
-  ellipse(-0.3, 0.5, 1.4, 1, solid('straw-dark')),
-  path('M 2.2 -3.8 Q 3.4 -4.6 4 -3.4', trim('leather-dark', 0.6)),
+  // The wrap's folds, lit from the top left.
+  path('M -4.6 -3 Q -1 -1.6 3.6 -3.4', trim({ id: 'flag-dark', alpha: 0.7 }, 0.6)),
+  path('M -4.4 3.6 Q 0 2.4 4.4 4', trim({ id: 'flag-dark', alpha: 0.7 }, 0.6)),
+  path('M -5.4 -3.6 L -3 -5.6', trim({ id: 'snow', alpha: 0.6 }, 0.6)),
+  // The cord, crossed round the waist and knotted.
+  path('M -5.2 0.6 Q 0 2.2 5.2 0.4', trim('strap', 1)),
+  path('M -2.6 -5.2 L 2.8 5.8', trim('strap', 0.8)),
+  ellipse(0.2, 1.2, 1.1, 0.9, solid('leather')),
+  // A dim rune on the wrap.
+  { ...path('M 2.4 -3.4 L 3.4 -2.2 L 2.6 -1.6 L 3.6 -0.6', trim({ id: 'cyan', alpha: 0.55 }, 0.5)), glow: { color: 'cyan', blur: 1.5 } },
 ];
 
 const ARMOR_LIGHT: Shape[] = [
@@ -165,7 +175,7 @@ export const ICON_ARROW: Shape[] = [
   ICON_ARROW_HEAD,
 ];
 
-/** The bomb's sphere (031): a dark radial ball, outlined, with a highlight. The casing is this alone. */
+/** The bomb's sphere (031): a dark radial ball, outlined, with a highlight. */
 export const BOMB_SPHERE: Shape[] = [
   ellipse(-0.6, 1.4, 5.4, 5.4, { fill: { radial: [-2, -0.6, 6], stops: [{ at: 0, color: 'rock-dark' }, { at: 1, color: 'ink' }] }, outline: true }),
   ellipse(-2.6, -1.4, 1.4, 0.9, flat('rock-light')),
@@ -262,7 +272,7 @@ export const ITEM_SPRITES_VECTOR: readonly VectorSprite[] = [
   icon(SPRITES.itemShaft, SHAFT),
   icon(SPRITES.itemArrowhead, ARROWHEAD),
   icon(SPRITES.itemRope, ROPE),
-  icon(SPRITES.itemCasing, BOMB_SPHERE),
+  icon(SPRITES.itemCasing, ICON_CASING),
   icon(SPRITES.itemFuse, FUSE),
   icon(SPRITES.itemLeyDust, LEY_SHARD),
   icon(SPRITES.itemWardenCore, WARDEN_CORE),

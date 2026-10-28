@@ -84,8 +84,8 @@ Only Shaun moves a spec to approved. Unattended runs only pick up approved items
 | 077 | World props, landmarks and weather: moderate detail with clear paths, a few big set pieces per region, swaying grass and trees, water and ley motion, dust, ash and embers, rain and lightning; no critters | done |
 | 078 | Ammo visuals and particles: a trail and impact for every ammo (frost, homing and the tiers too), moderate particles for impacts, deaths, muzzle flashes, machine sparks and ambient motes | done |
 | 079 | The foundry's mood: a warm torch- and forge-lit workshop, a little extra on the machines and conduits, heat, steam, glow and ley flow pulses | approved |
-| 080 | Boss intros and phases: a 2–3 s spawn animation (the only screen shake) and a name card; a visible change at each phase | approved |
-| 081 | HUD polish: the stone tablets polished | approved |
+| 080 | Boss intros and phases: a 2–3 s spawn animation (the only screen shake) and a name card; a visible change at each phase | done |
+| 081 | HUD polish: the stone tablets polished: one tighter tablet look with lit brass and cut wells, four icons redrawn, menu motion under 150 ms that never blocks input; no layout moves, nothing shrinks, readable in every mood | done |
 
 008–014 were approved on Shaun's behalf for the overnight run (Shaun, 2026-10-18: "Yes, approve all"), from his interview answers. He reviews them in the morning report.
 

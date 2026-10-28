@@ -11,7 +11,11 @@ const WALK_FRAMES = 4;
  * Forgewright's spray, flood and vent stagger; 064: the Conductor's blink, call and chain), besides
  * `recover`.
  */
-export type ExtraPose = 'turn' | 'lob' | 'throw' | 'block' | 'stun' | 'dig' | 'step' | 'roar' | 'brace' | 'stomp' | 'spray' | 'flood' | 'vent' | 'blink' | 'call' | 'chain';
+export type ExtraPose = 'turn' | 'lob' | 'throw' | 'block' | 'stun' | 'dig' | 'step' | 'roar' | 'brace' | 'stomp' | 'spray' | 'flood' | 'vent' | 'blink' | 'call' | 'chain' | IntroPose;
+
+/** 080: every boss's intro poses, shown by intro ticks (the rise's three frames and ready's two picked, never played). */
+export type IntroPose = 'dormant' | 'stir' | 'rise' | 'beat' | 'ready';
+export const INTRO_EXTRAS: readonly IntroPose[] = ['dormant', 'stir', 'rise', 'beat', 'ready'];
 
 /**
  * Enemy animations. `side` faces right; left is drawn flipped. `recover` is optional: without it, a recovering enemy
@@ -38,9 +42,10 @@ export const STAGGER_FRAMES = 2;
 /**
  * Looping poses of more than one frame: the Bulwark's shuffle, a Charger's daze, a Burrower digging, a Sniper's
  * sidestep, the Forgewright's vent stagger (060), the Conductor's blink flicker (064). 076: the bosses' attack strips
- * (gather, coil, peak), which render shows by the wind-up's progress rather than playing.
+ * (gather, coil, peak), which render shows by the wind-up's progress rather than playing. 080: the Bulwark's roar (three
+ * frames by its progress) and the intro's rise and ready, shown by intro ticks.
  */
-const MULTI_FRAME_EXTRAS: Readonly<Partial<Record<ExtraPose, number>>> = { turn: 2, stun: 2, dig: 2, step: 2, roar: 2, vent: 2, blink: 2, lob: 3, brace: 3, spray: 3, flood: 3, call: 3, chain: 3 };
+const MULTI_FRAME_EXTRAS: Readonly<Partial<Record<ExtraPose, number>>> = { turn: 2, stun: 2, dig: 2, step: 2, roar: 3, vent: 2, blink: 2, lob: 3, brace: 3, spray: 3, flood: 3, call: 3, chain: 3, rise: 3, ready: 2 };
 
 /**
  * `windupFrames` is the wind-up's coil: 2 alternates at walk pace (035: a Charger pawing the ground). 076: the wind-up

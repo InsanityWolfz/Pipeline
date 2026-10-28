@@ -5,6 +5,7 @@ import { WORLD } from './world';
 import { defOf } from './champions';
 import { altarState, type AltarState } from './altar';
 import { ARENAS } from '../data/arenas';
+import { RETURN_STONES } from '../data/returnStones';
 import { arenaLocked, doorUnlocked, playerInside } from './arenaLock';
 import { engaged } from './bulwarkAi';
 import { fuseProgress } from './enemyBombs';
@@ -77,6 +78,8 @@ export interface HollowsSummary {
    * door goes in (its gate is open); `inside` while the player is in it; and its door's tiles.
    */
   arenas: { id: string; locked: boolean; unlocked: boolean; inside: boolean; door: { tx: number; ty: number }[] }[];
+  /** 072: each boss arena's return stone: its name in the travel menus, its tile, and whether it has woken. */
+  returnStones: { id: string; name: string; tx: number; ty: number; woken: boolean }[];
 }
 
 
@@ -129,6 +132,7 @@ export function hollowsSummary(state: SimState): HollowsSummary {
         door: a.door.tiles.map((t) => ({ tx: t.tx, ty: t.ty })),
       };
     }),
+    returnStones: RETURN_STONES.map((r) => ({ id: r.id, name: r.name, tx: r.tx, ty: r.ty, woken: state.returnStones.includes(r.id) })),
     altars: (WORLD[OVERWORLD_ROOM]?.altars ?? []).map((a) => ({ id: a.id, boss: a.boss, state: altarState(state, a.id), summonTicks: state.summoning?.altar === a.id ? state.summoning.ticks : 0 })),
   };
 }

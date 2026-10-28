@@ -46,7 +46,7 @@ describe('the lock', () => {
   });
 
   it('is open while the Bulwark idles, and locks the tick it engages, shown in getState()', () => {
-    const { s } = forum(160);
+    const { s } = forum(160, 11, false);
     expect(sealedNow(s)).toBe(false);
     const door = SEAL.map((t) => ({ tx: t.tx, ty: t.ty }));
     expect(summarize(s).arenas.find((a) => a.id === A.id)).toEqual({ id: A.id, locked: false, unlocked: true, inside: true, door });

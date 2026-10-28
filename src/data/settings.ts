@@ -166,7 +166,8 @@ export const SETTINGS_TEXT = {
     music: 'Music volume',
     effects: 'Effects volume',
     mute: 'Mute',
-    flashes: 'Flashes',
+    // 080: the intro's shake rides on the same setting (080.8).
+    flashes: 'Flashes and shake',
     quality: 'Graphics quality',
     keys: 'Key bindings',
     export: 'Export save',

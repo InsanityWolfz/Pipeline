@@ -52,7 +52,7 @@ export function portFront(f: Pick<FixtureState, 'id'>): Tile {
   return { tx: d.tx + dx, ty: d.ty + dy };
 }
 
-/** The solid things standing on a room's tiles that aren't fixtures or nodes: pylons, reliquaries (032), altars (034) and the tube's stone. */
-export function standingRects(room: { pylons?: readonly Tile[]; caches?: readonly Tile[]; altars?: readonly Tile[]; tubeStone?: Tile }): Rect[] {
-  return [...(room.pylons ?? []), ...(room.caches ?? []), ...(room.altars ?? []), ...(room.tubeStone ? [room.tubeStone] : [])].map(tileRect);
+/** The solid things standing on a room's tiles that aren't fixtures or nodes: pylons, reliquaries (032), altars (034), return stones (072) and the tube's stone. */
+export function standingRects(room: { pylons?: readonly Tile[]; caches?: readonly Tile[]; altars?: readonly Tile[]; returnStones?: readonly Tile[]; tubeStone?: Tile }): Rect[] {
+  return [...(room.pylons ?? []), ...(room.caches ?? []), ...(room.altars ?? []), ...(room.returnStones ?? []), ...(room.tubeStone ? [room.tubeStone] : [])].map(tileRect);
 }

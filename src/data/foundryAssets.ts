@@ -188,6 +188,17 @@ export const FIXTURE_SPRITES = {
 } as const satisfies { stash: string; port: AnimDef; waystone: AnimDef; bench: AnimDef };
 
 /**
+ * 072: a boss arena's return stone. Dormant, the waystone's ring round dark stone; woken, the waystone's own shimmer
+ * (FIXTURE_SPRITES.waystone). As it wakes it swells to `swell` × its size and back over `wakeMs` (on the tween clock).
+ */
+export const RETURN_STONE_LOOK = {
+  dormant: 'return-stone-dormant',
+  woken: FIXTURE_SPRITES.waystone,
+  wakeMs: 700,
+  swell: 1.3,
+} as const;
+
+/**
  * A supply port's face and plate (028): its raw's icon sits on the round face at `face`, px from the port sprite's
  * bottom centre, drawn at `iconScale`; the plate hangs `plateGap` below the sprite, padded round its text, its left
  * edge `plateX` right of the port tile's (it reads into the room, clear of the wall and the HUD's left column).

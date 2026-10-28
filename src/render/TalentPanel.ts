@@ -10,6 +10,7 @@ import { canTake } from '../sim/talents';
 import type { ScreenBox } from './bottomHud';
 import { colorOf } from './color';
 import { drawTablet } from './tablet';
+import { MenuMotion } from './MenuMotion';
 import { onRect, talentAt, talentPanelLayout } from './talentLayout';
 import { TextLine } from './textLine';
 import type { TipHit } from './tipTypes';
@@ -89,6 +90,8 @@ export class TalentPanel {
   private hovered: string | null = null;
   private state: TalentPanelState = NO_TALENT_PANEL;
   private inFoundry = false;
+  /** 081: the open's fade and rise; the tree and the Build tab fade in on a tab switch. */
+  private readonly motion: MenuMotion;
 
   constructor(scene: Scene) {
     const P = TALENT_PANEL;
@@ -123,6 +126,9 @@ export class TalentPanel {
       icon?.setScale(icon.scaleX * look.scale);
       this.nodes.push({ def, halo, ring, stone, icon });
     }
+    this.motion = new MenuMotion(scene, 'talents', depth).adopt([this.tablet, this.header, ...this.tabs.parts]);
+    const tree = this.nodes.flatMap((v) => (v.icon ? [v.halo, v.ring, v.stone, v.icon] : [v.halo, v.ring, v.stone]));
+    this.motion.adopt([this.links, this.hint, this.resetBox, this.resetText, ...tree, ...this.buildTab.parts], this.motion.tabLayer(depth + 1));
     this.setOpen(false);
   }
 
@@ -150,6 +156,8 @@ export class TalentPanel {
   }
 
   setOpen(open: boolean): void {
+    if (open && !this.open) this.motion.show();
+    if (!open) this.motion.hide();
     this.open = open;
     this.showParts();
     if (!open) this.hovered = null;
@@ -190,6 +198,7 @@ export class TalentPanel {
     if (!this.open) return null;
     const tab = this.tabs.tabAt(this.layout, x, y);
     if (tab) {
+      if (tab !== this.tab) this.motion.switchTab();
       this.tab = tab;
       this.hovered = null;
       this.showParts();

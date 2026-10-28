@@ -82,7 +82,13 @@ export const MINIMAP = {
     schematic: { color: 'cyan-glow', r: 2 },
   },
   /** 051 (B.5): the places shown as icons once their tile has been seen (landmarkAssets' MAP_ICONS), by marker kind. */
-  icons: { entrance: 'foundry', shrine: 'pylon', arena: 'arena' },
+  icons: { entrance: 'foundry', shrine: 'pylon', arena: 'arena', returnStone: 'returnStone' },
+  /**
+   * 072.9: a woken return stone's icon (none while dormant: a pylon gets its own marker only once claimed) stands with
+   * its foot on the stone's tile, its middle `lift` view px above it, so it rises clear of the Forum's arena icon just
+   * south. Hovering it names the stone ("Sunken Forum door").
+   */
+  returnStone: { lift: 4 },
   ping: { ms: 1100, reach: 6, color: 'cyan-glow', width: 1 },
   /** Discovered landmarks' icons (032), by marker: shown at this scale of their sprite (landmarkAssets' MAP_ICONS). */
   landmarkScale: 0.6,

@@ -1,0 +1,128 @@
+import { expect, test, type Page } from '@playwright/test';
+import { FORUM_ARENA } from '../../src/data/arenas';
+import { FIXTURES } from '../../src/data/claims';
+import { MAP_ICONS } from '../../src/data/landmarkAssets';
+import { returnStoneDef } from '../../src/data/returnStones';
+import { menuRows } from '../../src/render/foundryLayout';
+import { screenPoint, state } from './foundryPage';
+import { boot, watchErrors } from './helpers';
+import { clickRow, flowIs } from './flowPage';
+
+// 072: boss return points. In the Hollows, walk to the Sunken Forum's door: its return stone wakes. A KO wakes the
+// player in the foundry; the waystone's menu now lists the Forum's door, and its row stands the player by the stone
+// outside the Forum. E there offers "Travel to foundry", which goes home.
+
+const T = 32;
+const STONE = returnStoneDef('sunken-forum-waystone');
+const WAY = FIXTURES.find((f) => f.kind === 'waystone') ?? { tx: 0, ty: 0 };
+/** The waystone's frame (and the dormant stone's), world px: src/data/art/fixtures.ts. */
+const STONE_SIZE = { w: 32, h: 48 };
+
+/** Clicks row `row` of an `rows`-row menu, pressing E first to open it, until `done` says it took (a menu can take a frame to open). */
+async function menuChoice(page: Page, rows: number, row: number, done: () => Promise<boolean>): Promise<void> {
+  const r = menuRows(rows)[row];
+  if (!r) throw new Error('no row');
+  const p = await screenPoint(page, r.x + r.w / 2, r.y + r.h / 2);
+  for (let i = 0; i < 5 && !(await done()); i++) {
+    if (!(await page.evaluate(() => window.__GAME__?.ui().siteOpen))) await page.keyboard.press('e');
+    await expect.poll(async () => page.evaluate(() => window.__GAME__?.ui().siteOpen)).toBe(true);
+    await page.mouse.click(p.x, p.y);
+    await page.evaluate(() => window.__GAME__?.step(1));
+  }
+}
+
+/** A site menu's rows' words, pressing E first while no menu is open (under load a press can miss a frame). */
+async function openWith(page: Page, menu: 'waystone' | 'returnMenu'): Promise<string[] | undefined> {
+  if (!(await page.evaluate(() => window.__GAME__?.ui().siteOpen))) await page.keyboard.press('e');
+  await page.evaluate(() => window.__GAME__?.step(1));
+  return (await page.evaluate((m) => window.__GAME__?.ui()[m], menu))?.map((r) => r.text);
+}
+
+test("the Forum's return stone wakes at its door; after a KO the waystone travels back to it, and it travels home", async ({ page }) => {
+  test.setTimeout(180_000);
+  const errors = watchErrors(page);
+  await boot(page, '?start=hollows');
+  const before = await page.evaluate(() => {
+    const g = window.__GAME__;
+    if (!g) throw new Error('no game');
+    // Declared setup, not play: everything but the Bulwark is cleared, so the walk is the test.
+    for (const e of g.getState().enemies) if (e.enemyId !== 'bulwark') g.setEnemyHealth(e.id, 0);
+    return g.step(1);
+  });
+  expect(before.returnStones.map((r) => r.woken)).toEqual([false, false, false]);
+  // 072.9: a dormant stone has no minimap icon.
+  expect((await page.evaluate(() => window.__GAME__?.ui().minimap))?.markers.some((m) => m.kind === 'returnStone')).toBe(false);
+
+  // To the Forum's door: walking up to its outside passes the stone, which wakes.
+  const woke = await page.evaluate(([tx, ty]) => {
+    const g = window.__GAME__;
+    const h = window.__helpers;
+    if (!g || !h) throw new Error('no game');
+    h.walkTo((tx + 0.5) * 32, (ty + 0.5) * 32);
+    return g.step(1).returnStones;
+  }, [FORUM_ARENA.door.leaveTo.tx, FORUM_ARENA.door.leaveTo.ty] as const);
+  expect(woke.find((r) => r.id === STONE.id)).toMatchObject({ woken: true, name: 'Sunken Forum door' });
+  await expect.poll(async () => (await page.evaluate(() => window.__GAME__?.ui().returnStones))?.find((r) => r.id === STONE.id)?.look).toBe('woken');
+  // 072.9: woken, the minimap shows its icon (the pylon's, in a boss door's brass), and hovering it names it.
+  await expect
+    .poll(async () => (await page.evaluate(() => window.__GAME__?.ui().minimap))?.markers.find((m) => m.stone === STONE.id))
+    .toMatchObject({ kind: 'returnStone', name: 'Sunken Forum door', icon: MAP_ICONS.returnStone });
+  const icon = (await page.evaluate(() => window.__GAME__?.ui().minimap))?.markers.find((m) => m.stone === STONE.id) ?? { x: 0, y: 0 };
+  const over = await screenPoint(page, icon.x, icon.y);
+  await page.mouse.move(over.x, over.y);
+  await expect.poll(async () => (await page.evaluate(() => window.__GAME__?.ui().minimap))?.hover).toBe('Sunken Forum door');
+  // Its swell over, it is drawn at its frame's size on the world, as the foundry's waystone is (32 × 48 px), whatever
+  // the texture's bake scale.
+  // The swell plays on the tween clock, sped up here so a slow, loaded page doesn't hold the poll.
+  await page.evaluate(() => window.__GAME__?.tweenSpeed(10));
+  await expect.poll(async () => (await page.evaluate(() => window.__GAME__?.ui().returnStones))?.find((r) => r.id === STONE.id)?.scale, { timeout: 20_000 }).toBe(1);
+  await page.evaluate(() => window.__GAME__?.tweenSpeed(1));
+  const drawn = (await page.evaluate(() => window.__GAME__?.ui().returnStones))?.find((r) => r.id === STONE.id);
+  expect(drawn?.w).toBeCloseTo(STONE_SIZE.w, 0);
+  expect(drawn?.h).toBeCloseTo(STONE_SIZE.h, 0);
+
+  // A KO: the player wakes in the foundry, the stone still woken.
+  const ko = await page.evaluate(() => {
+    const g = window.__GAME__;
+    if (!g) throw new Error('no game');
+    g.setPlayerHealth(0);
+    let s = g.step(1);
+    for (let t = 0; t < 600 && !s.events.ko; t++) s = g.step(1);
+    return g.step(1);
+  });
+  expect(ko.room).toBe('foundry');
+  expect(ko.returnStones.find((r) => r.id === STONE.id)?.woken).toBe(true);
+
+  // The waystone: its menu lists the Shrine and the Forum's door; the second row goes there.
+  await page.evaluate(([tx, ty]) => window.__helpers?.walkTo((tx + 0.5) * 32, (ty + 1.5) * 32), [WAY.tx, WAY.ty] as const);
+  // 042: arriving home may show the end card (the Hollows start's goals are done); Keep playing closes it.
+  if ((await page.evaluate(() => window.__GAME__?.flow().state)) === 'endCard') {
+    await clickRow(page, 'keepPlaying');
+    await flowIs(page, 'play');
+  }
+  await expect.poll(async () => openWith(page, 'waystone')).toEqual(['Travel to Shrine', 'Travel to Sunken Forum door']);
+  await menuChoice(page, 2, 1, async () => (await state(page)).room === 'overworld');
+  const there = await state(page);
+  expect({ room: there.room, x: there.player.x, y: there.player.y }).toEqual({ room: 'overworld', x: (STONE.arrive.tx + 0.5) * T, y: (STONE.arrive.ty + 0.5) * T });
+
+  // E at the stone: its one row goes home.
+  await expect.poll(async () => openWith(page, 'returnMenu')).toEqual(['Travel to foundry']);
+  await menuChoice(page, 1, 0, async () => (await state(page)).room === 'foundry');
+  expect((await state(page)).room).toBe('foundry');
+  expect(errors).toEqual([]);
+});
+
+test('the sandbox shows all three return stones woken', async ({ page }) => {
+  test.setTimeout(120_000);
+  const errors = watchErrors(page);
+  await boot(page, '?sandbox');
+  const s = await page.evaluate(() => window.__GAME__?.step(1));
+  expect(s?.returnStones.map((r) => r.woken)).toEqual([true, true, true]);
+  // Each stands in the sandbox's room, outside its arena's door, drawn woken.
+  await expect.poll(async () => (await page.evaluate(() => window.__GAME__?.ui().returnStones))?.map((r) => r.look)).toEqual(['woken', 'woken', 'woken']);
+  for (const r of (await page.evaluate(() => window.__GAME__?.ui().returnStones)) ?? []) {
+    expect(r.w, r.id).toBeCloseTo(STONE_SIZE.w, 0);
+    expect(r.h, r.id).toBeCloseTo(STONE_SIZE.h, 0);
+  }
+  expect(errors).toEqual([]);
+});

@@ -2,6 +2,7 @@ import type { GameObjects, Scene } from 'phaser';
 import { DEPTHS, SPRITES } from '../../data/assets';
 import { MENU_ROW_H, MENU_ROW_W } from '../../data/flowLayout';
 import { flashRow, RowHover } from '../menuFeedback';
+import type { MenuMotion } from '../MenuMotion';
 import { TextLine } from '../textLine';
 import { addVector } from '../vector/textures';
 
@@ -77,6 +78,8 @@ export class MenuColumn {
   private readonly k: number;
   private readonly rowW: number;
   private readonly rowH: number;
+  /** 081: the menu whose motion its rows move with, and the container they go in. */
+  private motion: { menu: MenuMotion; into: GameObjects.Container } | null = null;
 
   constructor(scene: Scene, x: number, y: number, layout: MenuColumnLayout, depth: number = DEPTHS.menu) {
     this.scene = scene;
@@ -88,6 +91,12 @@ export class MenuColumn {
     this.k = layout.scale ?? 1;
     this.rowW = MENU_ROW_W * this.k;
     this.rowH = MENU_ROW_H * this.k;
+  }
+
+  /** 081: its rows move with this menu's motion, in `into` (the menu's root, or its tab layer). */
+  moveWith(menu: MenuMotion, into: GameObjects.Container = menu.root): this {
+    this.motion = { menu, into };
+    return this;
   }
 
   /** The column's height for these rows, view px. */
@@ -137,6 +146,7 @@ export class MenuColumn {
       top += this.rowH + (spec.sub ? L.subH * k : 0) + L.gap * k;
       return parts;
     });
+    if (this.motion) this.motion.menu.adopt(this.rows.flatMap((r) => [r.image, ...r.texts]), this.motion.into);
     for (const [i, s] of specs.entries()) this.refresh(i, s);
     this.setVisible(this.visible);
   }
@@ -173,7 +183,8 @@ export class MenuColumn {
     if (sub && spec.sub) sub.set(spec.sub).moveTo(Math.round(this.x + this.rowW - L.sub.x * k - sub.width), row.y + this.rowH + L.sub.y * k);
     const usable = spec.usable !== false;
     const alpha = usable ? 1 : L.greyAlpha;
-    row.image.setAlpha(alpha).setFrame(this.hover.frame(i, usable));
+    row.image.setAlpha(alpha);
+    this.hover.paint(i, row.image, usable);
     for (const t of row.texts) t.setAlpha(alpha);
   }
 
@@ -183,7 +194,7 @@ export class MenuColumn {
       r.image.setVisible(visible);
       for (const t of r.texts) t.setVisible(visible);
     }
-    if (!visible) this.hover.set(-1);
+    if (!visible) this.hover.close();
   }
 
   /** The rows as drawn, for the test hook. */
@@ -200,7 +211,7 @@ export class MenuColumn {
     const i = this.visible ? this.indexAt(x, y) : -1;
     const usable = this.rows[i]?.spec.usable !== false;
     if (!this.hover.set(i, usable)) return;
-    for (const [k, r] of this.rows.entries()) r.image.setFrame(this.hover.frame(k, r.spec.usable !== false));
+    for (const [k, r] of this.rows.entries()) this.hover.paint(k, r.image, r.spec.usable !== false);
   }
 
   /** What a click at a view point hits, flashing its row; null off the rows or on a greyed one. */
@@ -231,7 +242,7 @@ export class MenuColumn {
       for (const t of r.texts) t.destroy();
     }
     this.rows = [];
-    this.hover.set(-1);
+    this.hover.close();
   }
 }
 

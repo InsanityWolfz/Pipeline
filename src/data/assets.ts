@@ -1,5 +1,5 @@
 // Asset keys. Render code loads and draws by these keys, never string literals.
-import { enemyAnims, type EnemyAnims } from './enemyAnims';
+import { enemyAnims, INTRO_EXTRAS, type EnemyAnims } from './enemyAnims';
 import { HOLLOWS_ENEMY_ANIMS } from './hollowsEnemyAssets';
 import { FORGE_ANIMS } from './forgewrightAssets';
 import { CONDUCTOR_ANIMS } from './conductorAssets';
@@ -54,6 +54,8 @@ export const SPRITES = {
   itemShadow: 'item-shadow',
   /** The HP bar's carved frame (031: bottom-left, larger), its healing glow, the shield by the armor value and the at-risk mark. */
   hudHealth: 'hud-health',
+  /** 081: the boss bar's baked frame, in the HP bar's look. */
+  hudBossBar: 'hud-boss-bar',
   hudHealthGlow: 'hud-health-glow',
   hudShield: 'hud-shield',
   hudWarn: 'hud-warn',
@@ -145,8 +147,8 @@ export type { EnemyAnim, EnemyAnims, ExtraPose } from './enemyAnims';
 export const ENEMY_ANIMS: Readonly<Record<string, EnemyAnims>> = {
   husk: enemyAnims('husk'),
   wisp: enemyAnims('wisp'),
-  warden: enemyAnims('warden', true, [], 1, true),
-  bulwark: enemyAnims('bulwark', true, ['turn', 'lob', 'throw', 'block', 'roar', 'brace', 'stomp'], 1, true),
+  warden: enemyAnims('warden', true, INTRO_EXTRAS, 1, true),
+  bulwark: enemyAnims('bulwark', true, ['turn', 'lob', 'throw', 'block', 'roar', 'brace', 'stomp', ...INTRO_EXTRAS], 1, true),
   ...HOLLOWS_ENEMY_ANIMS,
   ...FORGE_ANIMS,
   ...CONDUCTOR_ANIMS,

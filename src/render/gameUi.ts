@@ -11,8 +11,12 @@ import type { GameScene } from './GameScene';
 import { NO_BLUEPRINT_UI } from './BlueprintUi';
 import type { GameUiState } from './testHook';
 import { NO_LIGHTING } from './lighting/LightingView';
+import type { GameObjects } from 'phaser';
+import { MENU_MOTION_SHOWN } from './menuCurves';
+import { hoverRims } from './menuFeedback';
 import { NO_AMMO_FX } from './fx/ammoFxShown';
 import { bakeReport } from './vector/textures';
+import { NO_BOSS_SHOW } from './bossShow';
 
 import { NO_WEATHER, NO_WORLD } from './world/worldShown';
 import { NO_FOUNDRY_MOOD } from './foundry/FoundryMood';
@@ -60,6 +64,10 @@ export function gameUi(g: GameScene): GameUiState {
     nodes: g.nodeView?.frames ?? {},
     nodeGlow: g.nodeView?.glowing ?? [],
     shakes: [...(g.feel?.juice.shakes ?? [])],
+    // 080: the intro shakes and every real shake of the world camera; the intro and the phase looks as drawn.
+    introShakes: [...(g.feel?.juice.introShakes ?? [])],
+    cameraShakes: g.feel?.juice.cameraShakes ?? 0,
+    ...(g.bossShow?.ui ?? NO_BOSS_SHOW),
     burnNumbers: g.feel?.juice.burnNumbers ?? 0,
     particles: particlesUi(g),
     cursor: g.cursorView?.state ?? null,
@@ -90,6 +98,8 @@ export function gameUi(g: GameScene): GameUiState {
     sandboxDrawn: g.sandboxPanel?.drawn ?? false,
     lighting: g.lighting?.shown ?? NO_LIGHTING,
     foundryMood: g.foundryMood?.shown ?? NO_FOUNDRY_MOOD,
+    menuMotion: { ...MENU_MOTION_SHOWN, rims: hoverRims() },
+    hudDraws: { bossBar: 0, hpFill: 0, xp: 0, tubeCard: 0, ...g.hud?.draws, tweens: g.tweens?.getTweens().length ?? 0, objects: objectCount(g.children?.list ?? []) },
     ammoFx: g.shots?.fx.shown ?? NO_AMMO_FX,
     hitFeedback: { numbers: g.feel?.juice.numbers ?? 0, holds: g.enemyView?.holds ?? 0, holdMs: g.enemyView?.holdMs ?? 0 },
     vectorBake: { ...bakeReport() },
@@ -97,4 +107,11 @@ export function gameUi(g: GameScene): GameUiState {
     world: g.worldLife?.world ?? NO_WORLD,
     weather: g.worldLife?.weatherShown ?? NO_WEATHER,
   };
+}
+
+/** 081: every game object in the scene, containers' children counted. */
+function objectCount(list: readonly GameObjects.GameObject[]): number {
+  let n = 0;
+  for (const o of list) n += 1 + ('list' in o && Array.isArray(o.list) ? objectCount(o.list as GameObjects.GameObject[]) : 0);
+  return n;
 }

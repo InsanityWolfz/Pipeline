@@ -7,6 +7,7 @@ import { blueprintIcon } from './blueprintLayout';
 import { blueprintListLayout } from './blueprintListLayout';
 import { inRect, type ScreenRect } from './foundryLayout';
 import { RowHover } from './menuFeedback';
+import { MenuMotion } from './MenuMotion';
 import { drawTablet } from './tablet';
 import { TextLine } from './textLine';
 import { addVector } from './vector/textures';
@@ -39,6 +40,8 @@ export class BlueprintList {
   private key = '';
   private open = false;
   shown: BlueprintListShown = NO_BLUEPRINT_LIST;
+  /** 081: the open's fade and rise. */
+  private readonly motion: MenuMotion;
 
   constructor(scene: Scene) {
     this.scene = scene;
@@ -46,6 +49,7 @@ export class BlueprintList {
     this.panel = scene.add.graphics().setScrollFactor(0).setDepth(DEPTHS.menu - 1).setVisible(false);
     this.title = new TextLine(scene, 0, 0, DEPTHS.menu + 1, false, 'display').set(BLUEPRINT_TEXT.listTitle).setVisible(false);
     this.empty = new TextLine(scene, 0, 0, DEPTHS.menu + 1, false, 'body').set(BLUEPRINT_TEXT.empty).setVisible(false);
+    this.motion = new MenuMotion(scene, 'blueprints', DEPTHS.menu - 1).adopt([this.panel, this.title, this.empty]);
   }
 
   /** Over the open panel. */
@@ -64,7 +68,7 @@ export class BlueprintList {
   pointAt(x: number, y: number): void {
     const i = this.open ? this.shown.rows.findIndex((r) => inRect(r.box, x, y)) : -1;
     if (!this.hover.set(i)) return;
-    for (const [k, r] of this.rows.entries()) r.images[0]?.setFrame(this.hover.frame(k));
+    for (const [k, r] of this.rows.entries()) if (r.images[0]) this.hover.paint(k, r.images[0]);
   }
 
   update(open: boolean, blueprints: readonly Blueprint[]): void {
@@ -73,6 +77,9 @@ export class BlueprintList {
   }
 
   private rebuild(open: boolean, blueprints: readonly Blueprint[], key: string): void {
+    if (open && !this.open) this.motion.show();
+    if (!open) this.motion.hide();
+    this.hover.close();
     this.open = open;
     this.key = key;
     for (const r of this.rows) {
@@ -99,6 +106,7 @@ export class BlueprintList {
       const count = new TextLine(this.scene, 0, r.y + B.count.y, DEPTHS.menu + 1, false, 'label').set(BLUEPRINT_TEXT.pieces(bp.pieces.length));
       count.moveTo(r.x + r.w - B.count.right - count.width, r.y + B.count.y);
       this.rows.push({ images, texts: [name, count] });
+      this.motion.adopt([...images, name, count]);
       shownRows.push({ slot: r.slot, name: bp.name, pieces: bp.pieces.length, icon, box: { x: r.x, y: r.y, w: r.w, h: r.h }, del: r.del });
     }
     this.shown = { open, rows: shownRows, empty: open && list.length === 0 };

@@ -64,7 +64,7 @@ export class BlueprintUi {
     this.area = new AreaView(scene);
     this.list = new BlueprintList(scene);
     this.ghost = new BlueprintGhost(scene);
-    this.menu = new ChoiceMenu<MenuValue>(scene);
+    this.menu = new ChoiceMenu<MenuValue>(scene, 'blueprint-menu');
   }
 
   /** The release menu's rows for a box: what it can do with the pieces it counts. */

@@ -1,3 +1,4 @@
+import { CONDUCTOR_INTRO } from './bossIntroPoses';
 import { CONDUCTOR_SPRITES } from '../conductorAssets';
 import type { EnemyPart, EnemyRigDef } from './enemyRig';
 import { BRASS, glassInlay, litRect, rimOf, rivets, stormVein } from './enemyLook';
@@ -160,6 +161,8 @@ export const CONDUCTOR_RIG: EnemyRigDef = {
       { armFront: -1.35, armBack: -1.35, spread: 4, bob: -4, squash: 0.08, glow: 1 },
       { armFront: -1.5, armBack: -1.5, spread: 5, bob: -4.5, squash: 0.1, glow: 1 },
     ],
+    // 080: its intro.
+    ...CONDUCTOR_INTRO,
     // The staff falls and the crown's sparks die.
     death: [{ armFront: 1.35, armBack: 0.4, head: 0.35, headLift: 2, bob: 0, squash: -0.06, lean: 0.12, glow: 0 }],
   },

@@ -1,11 +1,13 @@
 import type { GameObjects, Scene } from 'phaser';
-import { DEPTHS } from '../data/assets';
+import { DEPTHS, ENEMY_FX } from '../data/assets';
+import { LANDMARK_LOOK } from '../data/landmarkAssets';
+import type { ChampionArt } from './EnemyView';
 import { HUSK_RIG, RESIN } from '../data/art/husk';
 import { CORE, WARDEN_RIG } from '../data/art/warden';
 import { BURN_FLAMES, burnFlamesFrame, CHILL_TINT, ICE_CRACK_TICKS, STAGE_SPRITES } from '../data/stageAssets';
 import { CHAMPIONS } from '../data/champions';
 import { enemyDef } from '../data/enemies';
-import { addVector, showFrame } from './vector/textures';
+import { addVector, showFrame, textureScale } from './vector/textures';
 import type { EnemyState } from '../sim/enemies';
 import { colorOf } from './color';
 
@@ -81,4 +83,17 @@ export function drawFlames(scene: Scene, d: Iced, e: EnemyState, bottom: number,
   if (d.flames.frame.name !== frame) showFrame(d.flames, frame);
   const k = enemyDef(e.enemyId).boss ? BURN_FLAMES.big : 1;
   d.flames.setVisible(true).setScale(d.baseScale * k * (e.champion ? CHAMPIONS.scale : 1)).setPosition(e.x, bottom).setDepth(bottom + DEPTHS.overlayNudge);
+}
+
+/** A champion's soft glow round its body, pulsing slowly, and its name with its kind under it, over the health bar (032; out of EnemyView in 080). */
+export function drawChampion(c: ChampionArt, e: EnemyState, bottom: number, top: number, now: number): void {
+  const G = CHAMPIONS.glow;
+  const pulse = (Math.sin((now / G.pulseMs) * Math.PI * 2) + 1) / 2;
+  const size = (G.radius * CHAMPIONS.scale) / LANDMARK_LOOK.championGlowPx;
+  c.glow.setPosition(e.x, (bottom + top) / 2).setScale(size / textureScale()).setAlpha(G.alpha[0] + (G.alpha[1] - G.alpha[0]) * pulse);
+  const L = LANDMARK_LOOK.championLabel;
+  const { h, gap, border } = ENEMY_FX.healthBar;
+  const kindY = Math.round(top - gap - h - border - L.rise - c.kind.lineHeight);
+  c.kind.moveTo(Math.round(e.x - c.kind.width / 2), kindY);
+  c.name.moveTo(Math.round(e.x - c.name.width / 2), kindY - L.gap - c.name.lineHeight);
 }
