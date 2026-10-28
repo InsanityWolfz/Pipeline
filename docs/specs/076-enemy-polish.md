@@ -206,39 +206,39 @@ The slices:
 - No screen shake: `SHAKE_ON` stays false, and nothing in 076 moves the camera.
 
 ## Acceptance criteria
-- [ ] **Families:** `ENEMY_FAMILIES` holds the four families above. Every enemy id in `ENEMIES` is in exactly one, every id in a family is a real enemy, and every colour is a palette id. No palette entries are added.
-- [ ] **Look:** every rig is drawn with gradients, the `rim` style in its family's rim colour and the ink outline, and shows its family marks in every view (the contact sheet and review shots).
-- [ ] **Size:** `feetBox`, `hurtbox` and rig `scale` match a baseline committed from main. Each rig's idle drawn height is within ±10% of main's in each view.
-- [ ] **Wind-up phases:** a unit test on `enemyMotion` shows gather, coil and peak at the fractions above for every attack in the tables, the peak at least 5 ticks, the Sniper's peak starting at its lock, and the tremble only in the peak. In Playwright, an enemy's `ui().enemyArt` phase walks gather → coil → peak through a real wind-up, and the attack starts on the same tick as before.
-- [ ] **Sim timing unchanged:**
+- [x] **Families:** `ENEMY_FAMILIES` holds the four families above. Every enemy id in `ENEMIES` is in exactly one, every id in a family is a real enemy, and every colour is a palette id. No palette entries are added.
+- [x] **Look:** every rig is drawn with gradients, the `rim` style in its family's rim colour and the ink outline, and shows its family marks in every view (the contact sheet and review shots).
+- [x] **Size:** `feetBox`, `hurtbox` and rig `scale` match a baseline committed from main. Each rig's idle drawn height is within ±10% of main's in each view.
+- [x] **Wind-up phases:** a unit test on `enemyMotion` shows gather, coil and peak at the fractions above for every attack in the tables, the peak at least 5 ticks, the Sniper's peak starting at its lock, and the tremble only in the peak. In Playwright, an enemy's `ui().enemyArt` phase walks gather → coil → peak through a real wind-up, and the attack starts on the same tick as before.
+- [x] **Sim timing unchanged:**
   - every attack's wind-up, attack, recovery and cooldown ticks equal a baseline table committed from main (data test);
   - a sim test that runs each enemy into its attacks counts the same wind-up ticks per attack as the baseline recorded on main;
   - the same seed and commands give the same `getState()` hash as main over a scripted fight per region, and the same on Low and High;
   - no file under `src/sim` changes, and `SAVE_VERSION` is unchanged.
-- [ ] **Flinch and stagger:** a unit test shows a small hit choosing flinch, a frame's hits of 40% or more (or a punch) choosing stagger, a boss never staggering, no reaction during a wind-up or attack, and a starting wind-up cutting a stagger off. In Playwright, a punch on a ring 1 Husk shows a stagger and a single arrow shows a flinch. The hit flash, numbers and hit-stop are unchanged.
-- [ ] **Death dissolve:**
+- [x] **Flinch and stagger:** a unit test shows a small hit choosing flinch, a frame's hits of 40% or more (or a punch) choosing stagger, a boss never staggering, no reaction during a wind-up or attack, and a starting wind-up cutting a stagger off. In Playwright, a punch on a ring 1 Husk shows a stagger and a single arrow shows a flinch. The hit flash, numbers and hit-stop are unchanged.
+- [x] **Death dissolve:**
   - a death shows the struck pose, then the dissolve, over about 600 ms (bosses 1.4 s), and the corpse no longer lingers;
   - the motes rise from the body in the family's colours (pixel check on the motes' hues per family);
   - the cinder mote's burst, the mite's discharge and the golem's split still play;
   - the death sound plays once per death.
-- [ ] **Mote budget:**
+- [x] **Mote budget:**
   - unit tests on the mote count: size class, champion, tier, per-death cap, live cap and total budget;
   - in Playwright, killing 10 Hollows enemies at once (sandbox, god mode, one big burst) on each tier never shows more live death motes than that tier's cap or more particles than its budget;
   - Low throws half of Medium's motes.
-- [ ] **Frames registered:**
+- [x] **Frames registered:**
   - every rig has, in every view, its wind-up strip for each attack, `hit`, `stagger` (bosses excepted) and a 1-frame `death`;
   - every frame is in `ENEMY_ANIMS` with one pose per frame (the existing art tests, extended);
   - the vector-frame registration test passes;
   - /sheet.html shows every new pose under its family with no console errors (Playwright checks the labels against the rigs);
   - a sandbox run that spawns every enemy and forces each pose logs no "frame never drawn" error.
-- [ ] **No shake:** `SHAKE_ON` is false and the camera doesn't move through a wind-up, a stagger or a boss's death.
-- [ ] **Performance:**
+- [x] **No shake:** `SHAKE_ON` is false and the camera doesn't move through a wind-up, a stagger or a boss's death.
+- [x] **Performance:**
   - enemy frames grow by at most 35% over main's 733;
   - the boot bake time and texture pages are measured and reported in the PR;
   - 074's Low frame-time probe and newGameAfterQuit.spec.ts stay green;
   - a ring 5 pack fight's mean frame time on Medium is reported.
-- [ ] **Docs:** art.md gains an "Enemies" section: the families and their ids, the rim, the wind-up phases, the reactions and the dissolve.
-- [ ] **Review shots (docs/review/076):**
+- [x] **Docs:** art.md gains an "Enemies" section: the families and their ids, the rim, the wind-up phases, the reactions and the dissolve.
+- [x] **Review shots (docs/review/076):**
   - the contact sheet per family;
   - each family's pack in its own region mood on Medium;
   - every enemy's gather, coil and peak at game size and at 4×;
@@ -329,3 +329,26 @@ For Shaun's OK at the playtest; the conservative choice is what gets built.
 
 ## Open questions
 None.
+
+## Results
+Built on `claude/076-enemy-polish` (InsanityWolfz/Pipeline#93) to docs/plans/076-enemy-polish.md, both slices (A: the shared systems, Region 1 and the Hollows; B: the Emberworks and the Stormcrown) in this PR. **Stacked on 074 and 075** (both merged into this branch; it must merge after them). No file under `src/sim` changes, the palette doesn't change, and nothing in the save changes: **`SAVE_VERSION` is unchanged**.
+
+- **Families and look:** `ENEMY_FAMILIES` and `DEATH_SIZE` (`src/data/art/enemyFamilies.ts`), the shared shading and marks (`enemyLook.ts`: `lit*`, the family rim, moss tufts, rune discs, slate lips, ley-iron bands, soot, cinder seams, rivets, storm-glass, violet veins). All 19 rigs redrawn in three views; the Forgewright's bellows and the Conductor's rods too.
+- **Motion:** `ENEMY_MOTION` and `WINDUP_STRIPS` (`enemyMotion.ts`, data); the pure `enemyMotion.ts`, `enemyReaction.ts` and `deathMotes.ts` (render); `enemyArt.ts` picks each frame's anim or held strip frame, squash and tremble; poses are matrices (`vector/enemyPose.ts`) shared by drawing, `posedPoint` and `rigBounds`. `EnemyView` reads the frame's hits for staggers; `DissolveView` (from `EffectsView`) runs the deaths; `Particles` counts death motes. `ui()` gains `enemyArt`, `particles: { live, deathMotes, dissolving }` and `vectorBake`.
+- **Frames:** 954 enemy frames (main 733: +30%, within the +35% budget). Boot bake (headless, software renderer): 1.4 s and 11 texture pages at 2× (1280×720), 2.2 s and 24 pages at 3× (1920×1080), 1,824 frames in all; boot to ready 4.1–5.3 s.
+- **Tests:** `npm run check` green (see the PR for the count); new: tests/data/enemyFamilies, enemyTiming (+ JSON from main), enemySize (+ JSON from main); tests/sim/windupTicks (+ JSON from main), regionHash (+ JSON from main); tests/render/enemyMotion, enemyReaction, deathMotes, enemyTells (tells, boxes, feet through a squash).
+- **e2e** (each alone, `--workers=1`): enemyPolish.spec.ts (a Husk's gather → coil → peak through its real wind-up, the swipe on the baseline tick, the peak's tremble, the camera still; one arrow flinches; a punch staggers, reel then recover, cut off by the next wind-up; the same `getState()` on Low and High), enemyDeaths.spec.ts (dissolve lengths; Low 8, Medium 16, High 24 motes for a Husk; ten Hollows enemies at once within each tier's caps and budget; each family's mote hues; the cinder mote's burst), enemySheet.spec.ts (the sheet's labels by family, every enemy fought with no undrawn frame), enemyPolishShots.spec.ts (REVIEW_SHOTS=1). Kept green: art, hollowsEnemies, emberworksEnemies, stormcrownEnemies, forgewright, conductorSandbox, forgewrightSandbox, hollows, newGameAfterQuit, lighting (one 074 check re-read, 076.2), enemies, death, melee, feedback, settings. 074's probe (PROBE=1): Low against the moods off 1.01× in a Stormcrown pack fight; that ring 5 fight's mean frame on Medium 70 ms (Low 67, High 208; headless software renderer, loaded machine).
+- **Review shots** in docs/review/076: 01 the contact sheet per family; 02 each family's pack winding up in its region's mood on Medium; 03 every wind-up strip at 4× per family; 04 a dissolve mid-way per family; 05 the enemies' gather, coil and peak at game size (and doubled; 076.7); 07 a stagger; 08 a flinch (Flashes off); 09 the motes on Low, Medium and High.
+
+### Raised after the build
+- **076.1 Tells measured on the posed geometry.** The "coil moves its attack part 4 px (bosses 6)" check runs in Vitest on the same matrices drawEnemy draws with (exact at any zoom), not on Playwright pixels; Playwright checks the phase walk and the tremble.
+- **076.2 074's telegraph check (for 074's builder; Shaun FYI).** lighting.spec.ts's "a telegraph reads as red" found its red in the old wanderer's rust robe; with 075's cobalt wanderer the early wind-up's faint arc over Region 1's grass isn't red by its measure. It now reads at the wind-up's 32nd tick, its fill most of the way out; its floor and its Stormcrown ratio are unchanged.
+- **076.3 A struck pose per view.** The spec's death had one view; the criteria ask for a 1-frame death in every view, so each rig has `death-side/down/up` and a death faces as it fell.
+- **076.4 Boxes grew** where stretched poses would clip (every rig but the slag whelp and static mite); scale, feet boxes, hurtboxes and idle heights (±10%) match main's (tests).
+- **076.5 More pose channels than `squash`:** `head`/`headLift` (head parts and glow parts that follow them turn together), `legBack`/`legFront`, `shift`, `spread` and `raise`, so the poses the tables ask for (a claw high over the hood, hands wide apart, a shield raised high, a foot lifted) can be drawn.
+- **076.6 The stagger's clock runs on the tween clock** and holds through hit-stop and freezing; the dissolve runs on the tween clock too, so review shots can slow both.
+- **076.7 Shot 05's gaps.** The late bosses don't attack outside their arenas and the kiln-tender only beams at a hurt packmate, so shot 05 has the other 13 enemies and the Warden; every strip, theirs included, is in shot 03 at 4×.
+- **076.8 The death sound** has no test hook; its path is unchanged (FeelView plays it per death event, once a frame as before).
+- **076.9 074's probe:** its soft ground-chunk bake ratio read 1.40 against 1.25 here (074's blended ground; 076 doesn't touch it).
+- **076.10 For Shaun's eye at the playtest:** the family looks and their marks; the strength of the wind-ups and the tremble; the stagger threshold (40%); the dissolve's speed and the motes' colours, Emberworks' brass-gold; the Stormcrown's violet lightning against the cyan ley marks.
+
