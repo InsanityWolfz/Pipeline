@@ -3,7 +3,7 @@ import { CONDUIT_TICKS } from '../../src/data/foundry';
 import { FOUNDRY_LAYOUT } from '../../src/data/foundryAssets';
 import { VIEW_WIDTH } from '../../src/data/config';
 import { forgeLine, runFrames } from './foundryMoodPage';
-import { frames, lighting, pixels, setLook } from './lightingPage';
+import { frames, lighting, openWorld, pixels, setLook, toRegion } from './lightingPage';
 import { cameraStill, ui, worldOnCanvas } from './factoryPage';
 
 // 079: what must stay readable in the foundry's warm light, against `?mood=off` (the hook's lightingOff) on High: the
@@ -182,4 +182,39 @@ test('the four wall torches stand at their tiles, flicker gently, light the floo
   expect(placed).toBe(1);
   expect((await lighting(page)).lights.wall).toBe(6);
   expect((await runFrames(page, 1, 0)).at(-1)?.shown).toBe(true);
+});
+
+const luma = (p: readonly number[]): number => 0.299 * (p[0] ?? 0) + 0.587 * (p[1] ?? 0) + 0.114 * (p[2] ?? 0);
+
+/** The screen's median brightness over its middle band (074's measure). */
+async function worldBrightness(page: Page): Promise<number> {
+  const size = page.viewportSize() ?? { width: 1280, height: 720 };
+  const px = await pixels(page, await page.screenshot(), { x: 0, y: Math.round(size.height * 0.2), w: size.width, h: Math.round(size.height * 0.55) });
+  const b = px.map(luma).sort((x, y) => x - y);
+  return b[Math.floor(b.length / 2)] ?? 0;
+}
+
+test('on High the foundry’s floor is darker than Region 1’s ground and brighter than the Hollows’', async ({ page }) => {
+  test.setTimeout(420_000);
+  await openWorld(page);
+  await setLook(page, { quality: 'high' });
+  const seen: Record<string, number> = {};
+  for (const region of ['region1', 'hollows'] as const) {
+    await toRegion(page, region);
+    await frames(page, 3);
+    seen[region] = await worldBrightness(page);
+  }
+  await page.evaluate(() => {
+    window.__helpers?.toFoundry();
+    window.__helpers?.walkTo(12 * 32, 7 * 32);
+  });
+  await page.evaluate(() => window.__GAME__?.tweenSpeed(40));
+  await expect.poll(async () => (await lighting(page)).mood, { timeout: 60_000 }).toBe('foundry');
+  await frames(page, 40);
+  await page.evaluate(() => window.__GAME__?.tweenSpeed(1));
+  await cameraStill(page);
+  seen.foundry = await worldBrightness(page);
+  console.log('brightness', JSON.stringify(seen));
+  expect(seen.foundry).toBeLessThan(seen.region1 ?? 0);
+  expect(seen.foundry).toBeGreaterThan(seen.hollows ?? 255);
 });
