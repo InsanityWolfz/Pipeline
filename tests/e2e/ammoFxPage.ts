@@ -36,8 +36,8 @@ export interface Seen {
   impacts: ImpactShown[];
   bend: number;
   muzzleSparks: number;
-  /** Each shot's sparks: where, the rig's drawn muzzle then, the drawn colour at it, the feet, the lane, the sim's spawn. */
-  muzzles: { x: number; y: number; posed: { x: number; y: number } | null; color: [number, number, number] | null; feet: { x: number; y: number }; angle: number }[];
+  /** Each shot's sparks: where, the rig's drawn muzzle then, the feet, the lane. */
+  muzzles: { x: number; y: number; posed: { x: number; y: number } | null; feet: { x: number; y: number }; angle: number }[];
   /** Each new muzzle-begun trail's first point, and the rig's drawn muzzle on that frame. */
   starts: { x: number; y: number; posed: { x: number; y: number } | null }[];
   /** Each frame: trails drawn for flying rounds, the tier's cap, and the rounds flying. */
@@ -81,7 +81,7 @@ export function fire(page: Page, aim: readonly [number, number], frames: number,
         if (fx.muzzle && JSON.stringify(fx.muzzle) !== JSON.stringify(lastMuzzle)) {
           sparks += fx.muzzle.sparks;
           const feet = { x: sim.player.x, y: sim.player.y };
-          muzzles.push({ x: fx.muzzle.x, y: fx.muzzle.y, posed: u.player?.muzzle ?? null, color: g.wanderer()?.muzzleColor ?? null, feet, angle: fx.muzzle.angle });
+          muzzles.push({ x: fx.muzzle.x, y: fx.muzzle.y, posed: u.player?.muzzle ?? null, feet, angle: fx.muzzle.angle });
         }
         lastMuzzle = fx.muzzle;
         if (fx.start && JSON.stringify(fx.start) !== JSON.stringify(lastStart)) starts.push({ ...fx.start, posed: u.player?.muzzle ?? null });

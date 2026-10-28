@@ -3,6 +3,8 @@ import { FX_QUALITY } from '../../src/data/fxQuality';
 import { HIT_STOP_MS, PARTICLE_SHARES, SHAKE_ON } from '../../src/data/juice';
 import { SPLIT } from '../../src/data/tags';
 import { MUZZLE_OFFSET } from '../../src/data/tube';
+import { WANDERER } from '../../src/data/art/wanderer';
+import { TUBE_PARTS } from '../../src/data/art/wandererTube';
 import { boot, watchErrors } from './helpers';
 import { fire, fxSandbox } from './ammoFxPage';
 
@@ -68,7 +70,7 @@ test('a homing bolt’s wake curves; a Split shows its star and Shards; a cluste
   expect(cluster.impacts.filter((i) => i.kind === 'mini-blast')).toHaveLength(4);
 });
 
-test('the sparks and each new trail leave from the tube’s drawn muzzle (the barrel’s cyan in the drawn wanderer), not the sim’s spawn point', async ({ page }) => {
+test('the sparks and each new trail leave from the tube’s drawn muzzle (just past its drawn tip), not the sim’s spawn point', async ({ page }) => {
   test.setTimeout(180_000);
   expect(MUZZLE_OFFSET).toBe(12);
   await fxSandbox(page, ['arrow', 'arrow', 'arrow', null, null], HUSK, { quality: 'medium' });
@@ -76,11 +78,6 @@ test('the sparks and each new trail leave from the tube’s drawn muzzle (the ba
   expect(seen.muzzles.length).toBeGreaterThan(0);
   const aim = Math.atan2(30, 90);
   for (const m of seen.muzzles) {
-    // The rig's muzzle mark is where the tube is drawn: the drawn wanderer's pixel there is the barrel's cyan (a wrong
-    // mark lands on the cape, the outline or nothing).
-    const [r, gr, b] = m.color ?? [0, 0, 0];
-    expect(gr - r, `muzzle colour ${String(m.color)}`).toBeGreaterThan(40);
-    expect(b - r, `muzzle colour ${String(m.color)}`).toBeGreaterThan(40);
     expect(m.posed).not.toBeNull();
     expect(Math.hypot(m.x - (m.posed?.x ?? 0), m.y - (m.posed?.y ?? 0))).toBeLessThanOrEqual(1);
     // Out toward the aim from the feet and up at the tube's height, so clear of the sim's spawn (MUZZLE_OFFSET down the
@@ -97,6 +94,29 @@ test('the sparks and each new trail leave from the tube’s drawn muzzle (the ba
   for (const st of seen.starts) {
     expect(st.posed).not.toBeNull();
     expect(Math.hypot(st.x - (st.posed?.x ?? 0), st.y - (st.posed?.y ?? 0))).toBeLessThanOrEqual(1);
+  }
+  // The rig's muzzle mark against the drawn pixels: aimed far off (so the tube lies along the aim from any pivot) and
+  // its flash over, the drawn wanderer's furthest edge that way is the muzzle cap's face, and the mark sits on its
+  // middle, the cap-to-flash gap (TUBE_PARTS) beyond it, within a px.
+  for (const far of [[600, 200], [600, -150], [-600, 120]] as const) {
+    const w = await page.evaluate(async ([fx, fy]) => {
+      const g = window.__GAME__;
+      if (!g) throw new Error('no game');
+      const p = g.getState().player;
+      for (let i = 0; i < 12; i++) {
+        g.step(1, { aimX: p.x + fx, aimY: p.y + fy });
+        await new Promise((r) => requestAnimationFrame(r));
+      }
+      return g.wanderer(Math.atan2(fy, fx));
+    }, far);
+    const along = Math.atan2(far[1], far[0]);
+    const cap = TUBE_PARTS.muzzle.lit;
+    if (cap.kind !== 'rect') throw new Error('the muzzle cap is a rect');
+    const gap = (TUBE_PARTS.flash.at[0] - (cap.x + cap.w)) * WANDERER.scale;
+    const [tx, ty] = w?.tip ?? [NaN, NaN];
+    const [mx, my] = w?.muzzle ?? [NaN, NaN];
+    const want = [tx + Math.cos(along) * gap, ty + Math.sin(along) * gap];
+    expect(Math.hypot(mx - (want[0] ?? 0), my - (want[1] ?? 0)), `aim ${far.join(',')}: mark ${mx},${my} tip ${tx},${ty}`).toBeLessThanOrEqual(1);
   }
 });
 

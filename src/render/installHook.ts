@@ -127,7 +127,7 @@ export function installTestHook(flow: FlowScene): void {
       const scene = live();
       return scene.legibility?.summaryRows(scene.sim) ?? [];
     },
-    wanderer: () => flow.live?.playerView?.pixels() ?? null,
+    wanderer: (along?: number) => flow.live?.playerView?.pixels(along) ?? null,
     wandererClock: (ms: number | null) => {
       const view = live().playerView;
       if (view) view.pinnedMs = ms;
