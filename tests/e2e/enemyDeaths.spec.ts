@@ -218,6 +218,9 @@ test("the motes rise in each family's colours", async ({ page }) => {
   const one = { ruin: 'husk', quarry: 'charger', forge: 'bellows-hound', storm: 'storm-sentinel' } as const;
   for (const fam of ENEMY_FAMILIES) {
     await sandbox(page, 'low');
+    // 077's weather drifts across the frame between the grabs: Region 1's pollen is `sun` gold, which counted as the
+    // forge's motes (CI: ruin vs forge [48,16,48,0]). Only the death's motes are counted, so the weather is off.
+    await page.evaluate(() => window.__GAME__?.worldLifeOff(true));
     await grab(page, 'ground');
     // Held on the tween clock at its struck pose (and its drop): the body to mask out, before any mote is thrown.
     await page.evaluate(() => window.__GAME__?.tweenSpeed(0));
