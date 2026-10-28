@@ -145,9 +145,12 @@ export function fingerprint(text: string): string {
 function mainSummary(s: SimState): object {
   const summary: Record<string, unknown> = { ...summarize(s) };
   delete summary.wornRarity;
+  // 072's woken return stones, empty in these pack fights (no stone in the test arena), which main's summary lacks.
+  delete summary.returnStones;
   // 080's intro event list, always empty in these pack fights (no boss arena), which main's events lack.
   const events: Record<string, unknown> = { ...(summary.events as Record<string, unknown>) };
   delete events.bossIntros;
+  delete events.returnWakes;
   summary.events = events;
   return summary;
 }

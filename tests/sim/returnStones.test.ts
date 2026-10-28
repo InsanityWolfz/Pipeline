@@ -147,8 +147,8 @@ describe('return stones (072): waking', () => {
     const read = readSave(JSON.stringify(makeEnvelope(snapshot(s), { build: 'x', savedAt: 'now', endCardSeen: false })));
     if (read.status !== 'ok') throw new Error(read.status);
     expect(read.state.returnStones).toEqual([FORUM.id]);
-    // SAVE_VERSION 23 (22 is 069's): main's version 22 save reads as too old, by Shaun's rule (no migration).
-    expect(SAVE_VERSION).toBe(23);
+    // SAVE_VERSION 23 was 072's (22 is 069's); 080's intro event took 24 once both merged: a version 22 save reads as too old, by Shaun's rule (no migration).
+    expect(SAVE_VERSION).toBe(24);
     const v22 = readSave(JSON.stringify({ ...makeEnvelope(snapshot(s), { build: 'x', savedAt: 'now', endCardSeen: false }), version: 22 }));
     expect(v22.status).toBe('too-old');
   });
