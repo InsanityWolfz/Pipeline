@@ -30,7 +30,8 @@ function worldZoom(g: GameScene): number {
 function particlesUi(g: GameScene): GameUiState['particles'] {
   const p = g.feel?.juice.particles;
   return {
-    live: p?.count ?? 0,
+    // 077: the weather counts as live particles too.
+    live: (p?.count ?? 0) + (g.worldLife?.weatherCount ?? 0),
     deathMotes: p?.deathMotes ?? 0,
     thrown: p?.motesThrown ?? 0,
     dissolving: g.effects?.dissolves.count ?? 0,

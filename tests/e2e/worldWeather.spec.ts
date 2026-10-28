@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { WEATHER, WEATHER_CAP } from '../../src/data/weather';
-import { PARTICLE_BUDGET } from '../../src/data/juice';
+import { DEATH_MOTES, PARTICLE_BUDGET } from '../../src/data/juice';
 import { watchErrors } from './helpers';
 import { stepUntil } from './hollowsSandbox';
 import { drawn, frames, lighting, openWorld, pixels, setLook, spawnPack, toCrownSpire, toRegion, type Region } from './lightingPage';
@@ -56,12 +56,16 @@ test('killing 10 Hollows enemies at once in the dust: weather keeps to its share
     const seen = await sample(page, 40);
     for (const [i, s] of seen.entries()) {
       expect(s.weather.live, q).toBeLessThanOrEqual(WEATHER_CAP[q]);
+      // 076 is in: its death motes stay within their live cap with the weather on.
+      expect(s.deathMotes, q).toBeLessThanOrEqual(DEATH_MOTES.liveCap[q]);
       // 078: the room this frame's spawns had is exactly weather's own share less the weather alive, or what the budget
       // has left after every particle alive, whichever is less (no other kind's room is lent to it, nor its to them);
       // every particle together stays within the budget.
       const { other, weather: alive } = s.weather.roomFrom;
       expect(s.weather.room, q).toBe(Math.max(0, Math.min(WEATHER_CAP[q] - alive, PARTICLE_BUDGET[q] - other - alive)));
       expect(s.particles + s.weather.live + s.weather.fading, q).toBeLessThanOrEqual(PARTICLE_BUDGET[q]);
+      // And every live particle, the weather among them, within the tier's budget (077's count).
+      expect(s.all, q).toBeLessThanOrEqual(PARTICLE_BUDGET[q]);
       const before = seen[i - 1];
       if (s.weather.room === 0 && before) expect(s.weather.live, `${q}: no spawn with no room`).toBeLessThanOrEqual(before.weather.live);
     }
