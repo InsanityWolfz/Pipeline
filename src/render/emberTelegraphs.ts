@@ -4,6 +4,7 @@ import type { EnemyDef } from '../data/enemies';
 import { EMBER_ENEMY_LOOK } from '../data/emberworksEnemyAssets';
 import type { EnemyState } from '../sim/enemies';
 import { colorOf } from './color';
+import { fillAt, rimStyle } from './telegraphLook';
 import { drawLane } from './hollowsTelegraphs';
 
 // The Emberworks enemies' telegraphs (061), all in the shared enemy red: a cinder mote's burst circle growing under it
@@ -32,6 +33,6 @@ export function drawGrowingCircle(g: GameObjects.Graphics, x: number, y: number,
   const S = EMBER_ENEMY_LOOK.swell;
   const color = colorOf(ENEMY_FX.telegraphColor);
   g.fillStyle(color, S.alpha).fillCircle(x, y, radius);
-  g.fillStyle(color, S.fillAlpha).fillCircle(x, y, radius * progress);
-  g.lineStyle(S.edgeWidth, color, S.edgeAlpha).strokeCircle(x, y, radius);
+  g.fillStyle(color, fillAt(S.fillAlpha, progress)).fillCircle(x, y, radius * progress);
+  rimStyle(g).strokeCircle(x, y, radius);
 }

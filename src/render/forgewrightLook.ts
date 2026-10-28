@@ -6,6 +6,7 @@ import { FORGE_LOOK } from '../data/forgewrightAssets';
 import type { EnemyState } from '../sim/enemies';
 import { floodRect } from '../sim/forgewrightAi';
 import { colorOf } from './color';
+import { fillAt, rimStyle } from './telegraphLook';
 
 // How the Forgewright reads on screen (060), for EnemyView and telegraphs.ts: its pose for its mode (the slam, the
 // spray's draw-back, the flood's raised hammer, the vent's stagger, a rock on its plating as a hit rings off), and its
@@ -23,7 +24,9 @@ export function drawForgeTelegraph(g: GameObjects.Graphics, e: EnemyState, def: 
     const x = e.x + e.swipeDirX * def.slam.reach;
     const y = e.y + e.swipeDirY * def.slam.reach;
     g.fillStyle(color, S.alpha).fillCircle(x, y, def.slam.radius);
-    g.fillStyle(color, S.fillAlpha).fillCircle(x, y, def.slam.radius * progress(e, def.slam.windupTicks));
+    const p = progress(e, def.slam.windupTicks);
+    g.fillStyle(color, fillAt(S.fillAlpha, p)).fillCircle(x, y, def.slam.radius * p);
+    rimStyle(g).strokeCircle(x, y, def.slam.radius);
     return false;
   }
   if (e.mode === 'spray-windup') {
@@ -33,9 +36,13 @@ export function drawForgeTelegraph(g: GameObjects.Graphics, e: EnemyState, def: 
     g.fillStyle(color, S.alpha);
     g.slice(e.x, e.y, S.length, angle - half, angle + half, false);
     g.fillPath();
-    g.fillStyle(color, S.fillAlpha);
-    g.slice(e.x, e.y, S.length * progress(e, def.spray.windupTicks), angle - half, angle + half, false);
+    const p = progress(e, def.spray.windupTicks);
+    g.fillStyle(color, fillAt(S.fillAlpha, p));
+    g.slice(e.x, e.y, S.length * p, angle - half, angle + half, false);
     g.fillPath();
+    rimStyle(g);
+    g.slice(e.x, e.y, S.length, angle - half, angle + half, false);
+    g.strokePath();
     return false;
   }
   const arena = arenaOf(e.enemyId);
@@ -47,7 +54,7 @@ export function drawForgeTelegraph(g: GameObjects.Graphics, e: EnemyState, def: 
   g.fillStyle(color, F.shadeAlpha).fillRect(r.x0, r.y0, w, h);
   // The fill climbs from the half's south edge to its north as the hammer goes up.
   const k = progress(e, def.flood.windupTicks);
-  g.fillStyle(color, F.fillAlpha).fillRect(r.x0, r.y1 - h * k, w, h * k);
-  g.lineStyle(F.edgeWidth, color, F.edgeAlpha).strokeRect(r.x0, r.y0, w, h);
+  g.fillStyle(color, fillAt(F.fillAlpha, k)).fillRect(r.x0, r.y1 - h * k, w, h * k);
+  rimStyle(g).strokeRect(r.x0, r.y0, w, h);
   return true;
 }

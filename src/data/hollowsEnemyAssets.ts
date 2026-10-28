@@ -18,7 +18,7 @@ export const HOLLOWS_ENEMY_ANIMS = {
 
 export const HOLLOWS_ENEMY_LOOK = {
   /** The Charger's lane: faint over its whole length, a fill running down it with the wind-up, an edge line. */
-  lane: { alpha: 0.22, fillAlpha: 0.5, edgeWidth: 1.5, edgeAlpha: 0.75 },
+  lane: { alpha: 0.22, fillAlpha: 0.5 },
   /** The Burrower's cracked ring at the locked spot: growing to its radius over the wind-up, with `cracks` lines out from the middle, each jagging `jag` radians halfway. */
   ring: { alpha: 0.22, fillAlpha: 0.45, width: 2, cracks: 6, crackWidth: 1.5, crackStart: 0.3, crackAlpha: 0.8, jag: 0.25 },
   /**

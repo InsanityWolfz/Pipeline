@@ -191,6 +191,12 @@ export const ENEMY_FX = {
   telegraphColor: 'rust',
   telegraphAlpha: 0.25,
   telegraphFillAlpha: 0.55,
+  /**
+   * 076: every ground telegraph's rim round its full extent, near-opaque `danger`, so it reads over sunlit grass as
+   * over slate; and the alpha its fill strengthens to by the wind-up's peak.
+   */
+  telegraphRim: { color: 'danger', width: 1.5, alpha: 0.9 },
+  telegraphFillPeak: 0.85,
   /** The Wisp's cast telegraph: a ley ring tightening on it and a faint line along its locked aim (009). */
   castColor: 'cyan',
   castRing: { from: 22, to: 10, width: 2, alphaFrom: 0.4 },

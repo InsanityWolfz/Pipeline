@@ -3,7 +3,7 @@ import { VIEW_WIDTH } from '../../src/data/config';
 import { HOLLOWS } from '../../src/data/hollows';
 import { OBJECTIVES } from '../../src/data/objectives';
 import { OVERWORLD } from '../../src/data/overworld';
-import { boot, cameraSettled, watchErrors } from './helpers';
+import { boot, cameraSettled, frameSettled, watchErrors } from './helpers';
 
 // 051: guidance. The waypoint arrow (B.1) at the screen's edge for an off-screen goal and over it on screen, through
 // the foundry's door; the bomb goal's sub-lines (B.3); the minimap's icons named on hover, and the arena's once seen (B.5).
@@ -48,6 +48,7 @@ test('inside the foundry a goal outside points at the door; the bomb goal lists 
     g.step(400);
     g.completeObjectives(n);
   }, SHRINE);
+  await frameSettled(page);
   await expect.poll(async () => (await page.evaluate(() => window.__GAME__?.ui().waypoint))?.via).toBe('door');
   // Within a few px: the edge arrow keeps clear of the corner map and the objective band (053 moved the band down).
   expect(Math.abs(((await page.evaluate(() => window.__GAME__?.ui().waypoint))?.x ?? 0) - 23.5 * T)).toBeLessThanOrEqual(4);
