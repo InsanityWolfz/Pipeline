@@ -1,0 +1,190 @@
+# 081: HUD polish
+status: approved
+
+Approved by Shaun in chat, 2026-10-27, with the whole art pass (074–081); its plan is pre-approved.
+
+Drafted from Shaun's art-pass interview (docs/brainstorm/2026-10-27-art-interview.md, answers 15, 17, 25, 27 and 28) and his calls on 081 that day. This is art spec 8 of 8, built in order after 074–080. Shaun asked for no sample pages first ("Just build it"); he reviews the result at the playtest.
+
+## Goal
+The HUD and menus keep their carved stone and brass, made tighter: one crisp tablet look everywhere, wells that read as cut into the stone, brass that catches the light, a soft ley glow on what the cursor is over, and four icons redrawn where they read wrong at real size. Menus open, light and press with short, snappy motion that never holds up a click. Nothing moves to a new place, nothing gets smaller, and everything reads the same in the sunny Region 1 and the dark Stormcrown.
+
+## Shaun's calls (2026-10-27)
+- The whole art pass (074–081) is approved ("Approve all, build in order"). 081 is approved.
+- **HUD and menus:** polish the stone tablets. Keep the carved stone and brass look, but tighter, with better icons, and light glow and motion on menus (the interview's option text).
+- **Particles are moderate. No screen shake.** The HUD and menus have neither.
+- **Motion is judged in motion, at real speed,** at the playtest.
+- **"Just build it":** no sample pages.
+- His earlier HUD calls stand (docs/brainstorm/2026-10-26-playtest-calls.md, built in #88): the HUD smaller (the tube card at the carried cells' size), the boss bar slimmer with the camera easing up under it, and the objective band wrapping at the corner map's width. 081 undoes none of them.
+
+## Design references
+- docs/design.md "Camera and art" (the 2026-10-27 wording, applied by 074) and the theme rule: rune-carved stone, glowing ley lines, brass and crystal, nothing modern.
+- docs/art.md "HUD, menus and text" (020, 025): tablets as vector frames (`hud.ts`) and live panels in the same look (`src/render/tablet.ts`, `TABLET`), the tube slot ringed in cyan, the fist, menu rows lit cyan under the cursor and flashing brass when pressed, Cinzel and Source Sans 3. The build updates this section.
+- docs/specs/074-light-and-moods.md: the readability layer ("the HUD camera is never lit or tinted; the HUD's pixels are the same in every region"), its HUD check in lighting.spec.ts (the HP bar's pixels match between Region 1 and the Stormcrown on High), and the Graphics quality setting.
+- docs/specs/079-foundry-mood.md: its readability checks (a hover card, a purge prompt and a recipe card match mood off; the HUD's pixels the same).
+- Earlier specs it builds on: 020 (vector HUD and fonts), 025 (bottom HUD, tube slot), 026 (menu labels), 031 (HP bar, inventory, pickup feed), 034 (boss bar), 036 and 075 (gear panel and rarity frames; 075 left the gear panel's frames to 081), 037 and 040 (talents, the Build tab), 042 and 050 (flow screens, Settings, the title's menu), 047 (the grid inventory, carried bar), 051 (minimap), 052 (stash), 069 (recipe cards), 070 (the empty-tube card, greyed slots), #88 (smaller HUD, boss bar, objective wrap).
+
+## Depends on
+074–080, built in order. 081 changes the boss bar's frame only; if 080 changes the bar (its phase look), 081 builds on 080's version and keeps what 080 added. If one of them is still unmerged when the build starts, the build merges its branch in first and says so in the PR.
+
+## Rules for this spec
+1. **Visual only.** No file under `src/sim` changes. `SAVE_VERSION`, settings and key bindings stay as they are.
+2. **No layout moves.** Every box, position, size, gap and wrap width in `hudLayout.ts`, `hudPanels.ts`, `flowLayout.ts`, `minimap.ts`, `HOLLOWS_LOOK.bossBar` and the objective's cap (`objectiveCapWidth`) stays as on main. Every e2e that reads a HUD or menu position or its text through `ui()` holds unchanged. `ui()` reports each menu's final layout from its first frame, never a mid-motion one.
+3. **Nothing shrinks.** Text sizes and weights (`TEXT_STYLES`), cell and card sizes, the HP bar, the boss bar, the minimap's scale and the 16×16 icon size stay as they are. Nothing grows either: #88 made the HUD smaller on Shaun's word.
+4. **Readable in every mood.** The HUD stays unlit and untinted (074). Text on a tablet keeps at least 4.5:1 contrast against the tablet over any ground, from snow to ink. Text on the world keeps its ink outline.
+5. **Motion only on menus, and short.** Every menu motion ends within 150 ms. It never blocks input. It respects the player's reduced-motion preference. The HUD at rest and a menu at rest are still.
+6. **No per-frame allocations.** 081's code creates no objects, arrays, strings, closures, tweens or game objects per frame. Tweens are made on an event (open, hover, press). A piece 081 redraws in Graphics redraws only when what it shows changes.
+7. **No shake, no particles, no camera moves** in the HUD or menus.
+8. **Colours that carry meaning stay:** danger red, low-HP red, the immune blue, the heat ember, rarity colours, keyword chip colours, cyan for the tube and selection, greyed empty slots (070).
+
+## One tablet look
+Today the baked tablets (`tablet()` in `hud.ts`) have a gradient, rounded corners and brass brackets, while the live ones (`drawTablet`) are a flat fill with 1 px L-corners. 081 gives both one look, drawn inside today's outer box (`drawTablet` still covers x−1 to x+w+1, y−1 to y+h+1, and its signature is unchanged):
+- **Stone:** a vertical gradient from `carve` at the top to `carve-dark` at the foot, at today's fill alpha or more.
+- **Carving:** a 1 px lit top bevel (`carve-light`), a dark base line (`mortar`), and a thin carved inner line 2 px in (`mortar` at 0.5), so the edge reads as cut, not painted.
+- **Brass:** corner brackets as today's length, each with a `brass-light` lit end at its top-left, as light falls from the top left.
+- **Runes:** big panels (the craft menu, inventory, talents, gear, Settings, cards) keep or gain a faint rune course along the top, `carve` at 0.7 as today's craft panel.
+- Text-carrying tablets keep an effective fill alpha (the fill alpha times the piece's alpha) high enough for rule 4. Today's lowest, the objective band at 0.85, passes, so no alpha has to drop or rise. The tests check it.
+
+Every `drawTablet` caller takes the look at once, including the world-space plates (waypoint plates, the foundry ports' rate plates). Their positions and sizes don't change.
+
+## What changes, per HUD piece
+All still: no idle motion. Today's existing motions are unchanged: the low-HP pulse and red edges, the healing glow, the XP gain tick, the heat gauge's flash, the build-bar pulse, the objective's fade and tick, the carried hint's swap.
+
+| Piece | Today | 081 |
+| --- | --- | --- |
+| **Carried bar** (047, `hud-ammo-cell`, also the build bar's cells and the inventory grid's) | Small tablet, flat dark well | The well cut in: darker at its top edge, a 1 px lit lip (`carve-light` 0.4) at its foot; lit brass brackets. Key numbers, icons and counts where they are. Greyed empty slots as 070 |
+| **Selection ring** (`hud-ammo-select`) | Cyan ring, glow 3 | Same ring, a `cyan-glow` rim light on its top-left arc. It still snaps to the selected cell |
+| **Tube card** (025, 070, `hud-tube-slot-1..5` and the wide card) | Tablet, wells ringed cyan, brass studs | Wells as the carried cells', each ring with a thin inner `cyan-glow` line; studs become rivets with a lit point; brass end caps like the HP bar's, so the card reads as the tube's brass. The wide card drawn live matches. "Melee" and "Tube empty · RMB fires carried" unchanged |
+| **HP bar** (031, `hud-health`) | Carved frame, flat fill | The frame's rune course a little deeper. The fill gains a 1 px lit top line (`snow` 0.25) and a dark foot line (`ink` 0.2): a rim light. Red, low red, the white chunk and the text unchanged |
+| **XP row** (037) | Thin `ink` 0.7 well, flat cyan fill | The well edged in `ink` with a lit lip under it; the fill's top px in `cyan-glow`. "Lv 7", the pip and the gain tick unchanged |
+| **Shield and armor value** (036) | | Unchanged |
+| **Boss bar** (034, #88) | Flat brass, ink and red rectangles redrawn every frame | A baked frame, `hud-boss-bar`, in the HP bar's look (carved stone, brass end caps and studs) at today's outer box, 244 × 10, so `bossBarBottom` and the camera lift don't move. The fill keeps `danger` (or the immune blue) with a lit top line. The heat gauge sits in a carved well, its colours unchanged. The name keeps the display font and size and gains an ink outline (1.6), so it reads over Region 1's bright ground. The bar redraws only when health, shield or heat change |
+| **Minimap** (017, 051) | Live tablet frame, 2 px | The new tablet at the same 2 px; a 3 px inner shadow (`ink` 0.35) along the map's top and left, so the map reads as set into the stone. Terrain colours, fog, markers and icons unchanged. The hover label is the new tablet |
+| **Objective band** (058, #88) | Live tablet at 0.85 | The new tablet. The cap at the corner map's width, the right alignment, the wrap, the tick, the sub-lines and the fade unchanged |
+| **Pickup feed, carried hint, banners, the wake text, notices** | Live tablets | The new tablet; layout and timing unchanged |
+| **Crosshair, menu pointer, key caps, the intake marker** | | Unchanged |
+
+## What changes, per menu
+Every menu gets the new tablets, the row frames below, and the menu motion (next section).
+- **Row frames** (`craft-row`, `craft-recipe-row` and their hover and press frames; also the picker, pause, site, Settings and flow rows through `MENU_ROW_FRAMES` and `MenuColumn`): the plain row is a cut well as the carried cells'. Hover: today's cyan rim and 0.08 wash, with the rim lit at its top-left (`cyan-glow`) and its glow at blur 3. Press: today's brass rim and wash.
+- **Crafting** (026, 047, 062): the panel frame (`craft-panel`) redrawn in the new look with its rune course; tabs drawn live take it at once; the open tab's brass stripe gains a soft `gold-trim` glow (blur 2). The title card's word in pale brass (below).
+- **Inventory and the hopper and crate screens** (047): the panel, the Sort button, the grid cells (the carried cells' wells) and the title card. Drag and drop unchanged.
+- **Talents and the Build tab** (037, 040): the panel, the reset box and the tab bar (the open tab's brass glow as Crafting's). Nodes, links and their colours unchanged, except the Tube lane's icon (icon list).
+- **Gear panel** (036, 075's hand-off): the panel, and the four rarity frames (`frame-common`, `-fine`, `-rare`, `-relic`) get the bevel and lit corner. Rarity colours and glow strengths unchanged.
+- **Stash, pylon and waystone menus, research list, blueprint list, restore panel** (009, 032, 033, 052, 063): panels and rows.
+- **Pause, Settings and the flow screens** (042, 050): the pause card, Settings, the title's menu column (at its 050 scale), the cards, notes, notices and the end card: panels, rows and motion. The title screen's painting and wanderer are unchanged.
+- **Hover cards and recipe cards** (015, 040, 069): the new tablet. They appear at once, with no motion, so a tip is readable the moment it shows and 079's pixel checks hold. Text, keyword chips and the recipe line ("1 wood → 2 shafts · 1.0 s") unchanged.
+- **Titles in pale brass:** the `title` text style's fill becomes `brass-light` (the menus' title cards, the pause card, the wake text), keeping its ink stroke and size. Body text stays `snow`.
+
+## Icons
+Icons stay 16×16 vector frames, anchored at their middle, drawn at today's scale. Four are redrawn, plus two tier variants that share one's shape. Each was checked at real size (1×, 1280 × 720) in the inventory, the carried bar and the talent panel.
+
+| Icon (frame) | Why | Redraw |
+| --- | --- | --- |
+| **Casing** (`item-casing`, `items.ts`) | It is today the bomb's plain black sphere, so at 1× it reads as a bomb. art.md's 005 rule says "the casing an open shell and the bomb a sealed sphere" | An open iron shell: two halves parted, a brass rim on each, the dark hollow showing. No wick, no cinder band |
+| **Steel and stormsteel casings** (`item-steel-casing`, `item-stormsteel-casing`, `tiers.ts`) | They are the bomb's sphere in steel, and follow the casing | The new shell in dark steel with its sheen, and tempered as today |
+| **Unidentified armor** (`item-unidentified-armor`) | At 1× it reads as a banded wooden chest, like the stash's emblem, not as armor | A cuirass's shape under a cloth wrap tied with cord, a dim rune on the wrap: armor, not yet known |
+| **Rimestone** (`item-rimestone`, `stages.ts`) | At 1× it is an upright crystal cluster beside the ley crystal's; they differ only by tint | Flat chips of rime lying on a crust of frost (what its comment describes), white with pale blue, so it differs from the ley crystal by shape |
+| **The Tube lane** (`talent-lane-tube`, `talents.ts`) | At node size its grey body and cyan bands read as a battery: modern, against the theme rule | The relic tube in three-quarter view: a ringed cyan barrel, brass bands and a flared brass mouth |
+
+Every other icon stays. The frame keys don't change, so nothing that shows an icon changes.
+
+## Menu motion
+Data in `MENU_MOTION` (src/data). All durations are tween time, so the test hook's tween speed slows or freezes them like every other effect; the sim never waits on them.
+
+| Motion | Duration | What moves |
+| --- | --- | --- |
+| **Open** (a menu, panel, card or Settings) | 120 ms, ease out | The panel and everything in it fade from 0 to 1 and rise 4 px into place, as one |
+| **Close** | instant | Gone on the frame it closes, as today |
+| **Hover in** (a row, tab or cell under the cursor) | 80 ms | The hover rim fades in, instead of snapping |
+| **Hover out** | 80 ms | The rim fades out |
+| **Press** | 140 ms | Today's brass flash fading out (was 160 ms, shortened to fit the 150 ms rule) |
+| **Tab switch** (Crafting's tabs, Talents and Build, Settings' main list and key list) | 80 ms | The new tab's rows fade in; the panel doesn't re-open |
+
+- **Never blocking.** A menu takes keys, clicks, hover and scroll on its first frame. Clicks hit the final layout, so a click on a row during the open lands on that row. Esc closes a menu mid-open. A menu opened and closed inside 120 ms leaves nothing behind.
+- **Reduced motion.** The game has no motion setting of its own (checked: Settings has the volumes, Mute, Flashes, 074's Graphics quality, the key list and the save rows). It already honours the system's `prefers-reduced-motion: reduce` for shake (JuiceView). 081 does the same, read at each open: menus open at once, tabs switch at once and hover rims switch at once (as today). The press flash stays as today. No Settings row is added.
+- **Flashes off** (042.10) changes nothing here; the press flash was never on its list.
+- **The HUD has no new motion.** The selection ring snaps between cells as today.
+- **Same on every Graphics tier.** The look is baked frames and a handful of short tweens.
+
+## Phaser 4 notes (from .claude/skills/phaser)
+- Tweens through `scene.tweens` (already used by `flashRow` and the objective's fade), so `tweens.timeScale` from the test hook governs them.
+- A menu's parts move as one: a Container, or one shared offset and alpha applied to the parts the menu already holds. The builder checks the skill for Container input and scroll-factor behaviour before choosing.
+- `window.matchMedia('(prefers-reduced-motion: reduce)')`, as JuiceView reads it.
+
+## Acceptance criteria
+- [ ] **Layout unchanged:** every layout constant named in rule 2 equals main's (a data test pins them). The e2e files that read HUD and menu positions or text through `ui()` pass unchanged: hud, hudInventory, hotbars, handling, playtestUi, menuLabels, settings, talents, crafting, stash, equipment, legibility, hoverPress, sandboxStrip, zoom, and the rest in CI.
+- [ ] **Nothing shrinks:** `TEXT_STYLES` sizes and weights, the cell, card, HP bar, boss bar and minimap sizes, and the icon size equal main's (the same data test).
+- [ ] **One tablet look:** `drawTablet` and `tablet()` draw the gradient, bevel, inner line, base and lit brass brackets. `drawTablet` draws nothing outside x−1..x+w+1, y−1..y+h+1 (a unit test with a recording Graphics).
+- [ ] **Readability:** for every text-carrying tablet, its effective fill over snow and over ink gives snow text and pale-brass titles at least 4.5:1 (a unit test over the data). In the Stormcrown on High against Region 1 (074's method), the HP bar's pixels, a carried cell's, the tube card's and an open craft menu row's differ by less than 3 per channel on average. 074's and 079's readability checks pass.
+- [ ] **Icons:** the five frames in the icon list are redrawn, 16×16, anchored at (8, 8), and registered; the contact sheet shows them. `item-casing` no longer uses the bomb's sphere (a data test). Review shots show each beside its old look at 1× and 4×.
+- [ ] **Motion:** every `MENU_MOTION` duration is under 150 ms (a data test). Opening the craft menu, `ui().menuMotion` reports the open running and then settled within 150 ms of tween time. A click on a recipe row on the menu's first frame crafts. Esc on the first frame closes it. With `reducedMotion: 'reduce'` emulated, the menu is at full alpha and in place on its first frame.
+- [ ] **Still at rest:** with no input for 120 frames, nothing in the HUD or an open menu changes alpha, position or scale, outside the existing motions listed above (`ui().menuMotion` idle, the HUD's redraw counts flat).
+- [ ] **No per-frame allocations:** over 120 idle frames, with the HUD alone and with each menu open, the scene's game object count and live tween count stay flat, and the HUD's Graphics redraw counts don't grow. In a boss fight the boss bar redraws only on a health, shield or heat change. Review checks 081's update paths for allocations.
+- [ ] **Sim untouched:** no file under `src/sim` changes. `SAVE_VERSION` is unchanged.
+- [ ] **No shake or particles:** nothing in this spec moves the camera or spawns a particle.
+- [ ] **Docs:** art.md's "HUD, menus and text" describes the one tablet look, the wells and brass, the boss bar frame, the menu motion and its limits, reduced motion, and the redrawn icons.
+- [ ] **Review shots (docs/review/081):**
+  - the HUD in Region 1 and in the Stormcrown on High (carried bar, tube card, HP and XP, minimap, objective);
+  - the boss bar in a fight, and with the Forgewright's heat gauge;
+  - Crafting, the inventory, Talents, the gear panel, the stash, pause, Settings and the title's menu, each open;
+  - a hovered row and a pressed row (the flash held with its tween stopped);
+  - a hover card and a recipe card;
+  - the redrawn icons at 1× and 4×, old beside new;
+  - motion strips of the craft menu opening and a row's hover, a frame every 16 ms on Playwright's clock.
+
+## Data changes
+- `src/data/hudLook.ts` (new; `hudLayout.ts` is at its ~300-line limit): the tablet look's added fields (gradient stops, inner line, brass highlight), `MENU_MOTION` (open 120 ms and its 4 px rise and ease, hover 80, tab 80, press 140), and the 4.5:1 contrast floor. `TABLET` moves here if that keeps `hudLayout.ts` under its limit.
+- `src/data/hudLayout.ts`: `MENU_FEEDBACK.pressMs` 160 → 140.
+- `src/data/fonts.ts`: `title`'s fill `brass-light`; a `bossName` style (the display font at 8, ink stroke 1.6).
+- `src/data/art/hud.ts`: `tablet()`, the cells, selection ring, tube slot frames, HP frame, row frames and the craft panel in the new look; the new `hud-boss-bar` frame.
+- `src/data/art/items.ts` (casing, unidentified armor), `tiers.ts` (steel and stormsteel casings), `stages.ts` (rimestone), `talents.ts` (the Tube lane), `gear.ts` (rarity frames' bevel).
+- `src/data/assets.ts`: `SPRITES.hudBossBar`.
+- No palette, sim, save or settings changes.
+
+## Out of scope
+- Moving, resizing or re-flowing any HUD piece or menu; new HUD information; new menus or rows.
+- New fonts, font sizes or weights.
+- The minimap's terrain colours, fog and markers.
+- World-space readability pieces: enemy health bars and name tags (054, 076), damage numbers, prompts, key caps and the intake marker.
+- The title screen's painting and wanderer.
+- Sound: hover and press sounds stay as they are.
+- A reduced-motion row in Settings.
+- Motion on the HUD (the selection ring gliding, counts popping).
+- The boss's name card and phase looks (080).
+- Tidying existing per-frame allocations in the HUD's sim reading (the input objects `HudView.update` builds, the minimap's marker list, the objective's key string). 081 adds none; the PR lists these for a later fix.
+- Screen shake and particles.
+
+## Test plan
+- **Unit (Vitest, tests first):**
+  - `tests/data/hudLook.test.ts`: the layout and size constants equal main's; every `MENU_MOTION` duration is under 150 ms and the press flash is 140; every colour is a palette id; the contrast floor holds for every text-carrying tablet's effective alpha over snow and ink, for snow and pale-brass text; `item-casing` doesn't use the bomb's sphere.
+  - `tests/render/tablet.test.ts`: `drawTablet` with a recording Graphics stays inside its box and draws the gradient, inner line and lit brackets; a small box shortens its brackets as today.
+  - `tests/render/menuMotion.test.ts`: the open's alpha and rise over time end at 1 and 0 by 120 ms; reduced motion gives the end state at once; hover in and out and the tab fade; stepping the motion reuses its state (no new objects).
+  - The existing art tests: every frame registered and drawn, icons 16×16.
+- **Playwright:**
+  - `ui().menuMotion` (the menu opening, the motion running and its ms, settled) and `ui().hudDraws` (redraw counts for the boss bar and the other Graphics pieces 081 touches).
+  - `tests/e2e/hudPolish.spec.ts`:
+    - the open motion settles within 150 ms of tween time;
+    - a click on the first frame crafts, and Esc on the first frame closes;
+    - reduced motion emulated: in place at once;
+    - still at rest over 120 frames, the HUD alone and each menu open;
+    - object, tween and redraw counts flat;
+    - the boss bar redraws only on change, its box and `bossBarBottom` as main's;
+    - the Stormcrown against Region 1 readability checks.
+  - `tests/e2e/hudPolishShots.spec.ts` (`REVIEW_SHOTS=1`): the review shots.
+- **Kept green:** the e2e files listed in the layout criterion, lighting.spec.ts (074), foundryMood.spec.ts (079), newGameAfterQuit.spec.ts, and the other files the change touches. The full suite runs in CI. Older specs' review shots aren't retaken.
+
+## Decisions in this draft
+For Shaun's OK at the playtest; the conservative choice is what gets built.
+- **One tablet look for every panel,** baked and live, world plates included, inside today's boxes.
+- **Motion on menus only.** The HUD at rest stays still, so nothing flickers by the player in a fight and 074's pixel checks stay steady. The selection ring keeps snapping.
+- **Open in 120 ms** (fade and a 4 px rise), **close at once**, hover 80 ms, tab switch 80 ms, and the press flash shortened from 160 to 140 ms to fit the 150 ms rule.
+- **Reduced motion follows the system setting,** as the shake already does. No Settings row.
+- **Hover and recipe cards appear at once,** with the new look but no motion: a tip mid-fight shouldn't lag.
+- **Titles in pale brass** (`brass-light`), body text in snow.
+- **The boss's name gets an ink outline,** at its size, for Region 1's bright ground.
+- **Four icons redrawn** (casing, unidentified armor, rimestone, the Tube lane), and the two tier casings with the casing. Others stay.
+- **Same on every Graphics tier.**
+- **Existing per-frame allocations** in the HUD's sim reading stay, listed in the PR. 081 adds none and makes the boss bar redraw on change only.
+
+## Open questions
+None.
