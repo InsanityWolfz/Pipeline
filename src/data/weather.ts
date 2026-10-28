@@ -76,16 +76,6 @@ export const WEATHER: Readonly<Record<DecorRegion, RegionWeather>> = {
 export const WEATHER_CAP: Readonly<Record<Quality, number>> = { low: 40, medium: 100, high: 160 };
 
 /**
- * The particle budget weather shares (076, not yet on main: `PARTICLE_BUDGET` and the live death-mote cap in its
- * src/data/juice.ts). Weather spawns a particle only while the live total of every kind is below `particles` minus
- * `deathMotes`, so deaths always have their room. These mirror 076's numbers; when 076 merges they read its constants.
- */
-export const WEATHER_BUDGET: { readonly particles: Readonly<Record<Quality, number>>; readonly deathMotes: Readonly<Record<Quality, number>> } = {
-  particles: { low: 150, medium: 300, high: 500 },
-  deathMotes: { low: 60, medium: 120, high: 200 },
-};
-
-/**
  * How weather particles move and fade (render only). Rising layers drift downwind at `riseDrift` × their speed;
  * falling ones at `fallDrift` × it × the wind's strength (at most `fallMaxStrength`). Drifting and falling particles
  * sway across the wind at `swayRate` radians a second, `swayDrift` (drifting) or `swayFall` (falling) px/s across it

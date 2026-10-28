@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { TILE_SIZE } from '../../src/data/config';
 import { OVERWORLD, OVERWORLD_ROOM } from '../../src/data/overworld';
 import { SET_PIECES, setPieceAnchor } from '../../src/data/setPieces';
-import { WEATHER, WEATHER_BUDGET, WEATHER_CAP, WEATHER_LIGHTNING, WEATHER_MARGIN, WEATHER_MOTION } from '../../src/data/weather';
+import { WEATHER, WEATHER_CAP, WEATHER_LIGHTNING, WEATHER_MARGIN, WEATHER_MOTION } from '../../src/data/weather';
 import { createRng } from '../../src/sim/rng';
 import { WORLD } from '../../src/sim/world';
 import { moodAt } from '../../src/render/lighting/mood';
@@ -49,9 +49,12 @@ describe('weather (077)', () => {
     expect(edge.map((x) => x.layer.id).sort()).toEqual(['ash', 'embers', 'rain', 'splashes']);
   });
 
-  it('spawns only while every live particle is below the budget less the death motes’ room', () => {
-    expect(budgetRoom('high', 0, 0)).toBe(WEATHER_BUDGET.particles.high - WEATHER_BUDGET.deathMotes.high);
-    expect(budgetRoom('high', 290, 10)).toBe(0);
+  it('spawns only within weather’s share of the budget, and while every live particle is below the budget (078’s ledger)', () => {
+    // 078: weather's own share (its cap), less the live weather, never past the budget less every live particle.
+    expect(budgetRoom('high', 0, 0)).toBe(WEATHER_CAP.high);
+    expect(budgetRoom('high', 0, 150)).toBe(WEATHER_CAP.high - 150);
+    expect(budgetRoom('high', 340, 150)).toBe(10);
+    expect(budgetRoom('high', 350, 150)).toBe(0);
     expect(budgetRoom('medium', 500, 0)).toBe(0);
     const m = new WeatherModel(createRng(1));
     const t = layerTargets(weatherWeights(moodAt(125)), 'high', false);

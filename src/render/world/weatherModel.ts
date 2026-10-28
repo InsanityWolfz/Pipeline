@@ -1,7 +1,8 @@
 import { DECOR_REGIONS, type DecorRegion } from '../../data/decor';
 import type { Ring } from '../../data/ringScale';
 import type { Quality } from '../../data/settings';
-import { WEATHER, WEATHER_BUDGET, WEATHER_CAP, WEATHER_MARGIN, WEATHER_MOTION, type WeatherLayer } from '../../data/weather';
+import { roomFor } from '../particleBudget';
+import { WEATHER, WEATHER_CAP, WEATHER_MARGIN, WEATHER_MOTION, type WeatherLayer } from '../../data/weather';
 import { nextFloat, type RngState } from '../../sim/rng';
 
 // 077: the weather as a pure model (render only): each region's weight in 074's mood blend, the layers' target counts
@@ -57,9 +58,12 @@ export function layerTargets(weights: Record<DecorRegion, number>, quality: Qual
   return out;
 }
 
-/** How many weather particles may spawn now: the budget less the death motes' room and every particle alive. */
+/**
+ * How many weather particles may spawn now (078: the ledger's `roomFor`): weather's share less the live weather, within
+ * the budget less every particle alive (`liveOther`: the death motes and every effect).
+ */
 export function budgetRoom(quality: Quality, liveOther: number, liveWeather: number): number {
-  return Math.max(0, WEATHER_BUDGET.particles[quality] - WEATHER_BUDGET.deathMotes[quality] - liveOther - liveWeather);
+  return roomFor('weather', 'cue', quality, { death: 0, weather: liveWeather, effect: liveOther });
 }
 
 /** A weather particle as modelled: where, how it moves, its age and life (ms), its look. */

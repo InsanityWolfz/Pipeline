@@ -246,6 +246,17 @@ export { AMBIENT_FRAMES, PLANT_FRAMES, SCATTER_FRAMES, SET_PIECE_FRAMES, VARIANT
 /** Textures drawn at runtime (014): the soft glow and the vignette; the low-HP edges (031), white to be tinted. */
 export const FX_TEXTURES = { glow: 'fx-glow', vignette: 'fx-vignette', lowHp: 'fx-low-hp', fog: 'fx-fog', lightPool: 'fx-light-pool' } as const;
 
+/** 078: the shot effects' textures, white, drawn at boot to be tinted: a mark's soft blot, a splash's ring, a frost rime, a shock ring, a flash's ring, tick and star, a particle's square. */
+export const SHOT_FX_TEXTURES = {
+  blot: 'fx-shot-blot',
+  splash: 'fx-shot-splash',
+  rime: 'fx-shot-rime',
+  shock: 'fx-shot-shock',
+  ring: 'fx-shot-ring',
+  tick: 'fx-shot-tick',
+  star: 'fx-shot-star',
+} as const;
+
 /** Render depths. World sprites sort by the bottom of their footprint (px); these sit around that. */
 export const DEPTHS = {
   /** Flat floor tiles, under everything. */
@@ -254,6 +265,10 @@ export const DEPTHS = {
   shadow: 0,
   /** Ground decals like the swipe telegraph, above shadows. */
   groundFx: 0.5,
+  /** 078: the player's shots' ground marks (scorch, rime, ley splash, shock rings): over the fog, under the trails and telegraphs. */
+  shotMark: 0.35,
+  /** 078: every trail ribbon and everything a shot leaves lingering (smoke, mist, flakes, embers, motes): under the telegraphs and anything standing. */
+  shotTrail: 0.45,
   /** Nudge that puts a tutorial seal just in front of its door. */
   tubeNudge: 0.01,
   /** Nudge that puts an overlay (a Husk's resin, the Warden's core, the ice on a frozen enemy) just in front of the enemy it's on. */

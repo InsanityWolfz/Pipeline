@@ -3,7 +3,8 @@ import { DECOR_REGIONS } from '../../src/data/decor';
 import { LEY_FLOW, RIPPLES, SWAY, WIND } from '../../src/data/ambient';
 import { paletteHex } from '../../src/data/palette';
 import { QUALITY_TIERS } from '../../src/data/settings';
-import { WEATHER, WEATHER_BUDGET, WEATHER_CAP, WEATHER_LIGHTNING } from '../../src/data/weather';
+import { WEATHER, WEATHER_CAP, WEATHER_LIGHTNING } from '../../src/data/weather';
+import { DEATH_MOTES, PARTICLE_BUDGET } from '../../src/data/juice';
 import { DEPTHS } from '../../src/data/assets';
 
 // 077: each region's weather and the ambient motion as data: layers in palette ids, each tier's counts within the
@@ -37,10 +38,10 @@ describe('weather (077)', () => {
   });
 
   it('leaves 076’s death motes their room in the shared budget, and 50, 80 and 140 for 078', () => {
-    const left = Object.fromEntries(QUALITY_TIERS.map((q) => [q, WEATHER_BUDGET.particles[q] - WEATHER_BUDGET.deathMotes[q] - WEATHER_CAP[q]]));
+    const left = Object.fromEntries(QUALITY_TIERS.map((q) => [q, PARTICLE_BUDGET[q] - DEATH_MOTES.liveCap[q] - WEATHER_CAP[q]]));
     expect(left).toEqual({ low: 50, medium: 80, high: 140 });
-    // 076's numbers (its spec's PARTICLE_BUDGET and live death-mote cap), mirrored until it merges.
-    expect(WEATHER_BUDGET).toEqual({ particles: { low: 150, medium: 300, high: 500 }, deathMotes: { low: 60, medium: 120, high: 200 } });
+    // 076's numbers, read from 076's own constants (078: the mirror, WEATHER_BUDGET, is gone; PARTICLE_SHARES derives them).
+    expect({ particles: PARTICLE_BUDGET, deathMotes: DEATH_MOTES.liveCap }).toEqual({ particles: { low: 150, medium: 300, high: 500 }, deathMotes: { low: 60, medium: 120, high: 200 } });
   });
 
   it('times weather lightning every 10–22 s, never near a storm rod, at least 6 tiles from the player', () => {

@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
-import { WEATHER, WEATHER_BUDGET, WEATHER_CAP } from '../../src/data/weather';
+import { WEATHER, WEATHER_CAP } from '../../src/data/weather';
+import { PARTICLE_BUDGET } from '../../src/data/juice';
 import { watchErrors } from './helpers';
 import { stepUntil } from './hollowsSandbox';
 import { drawn, frames, lighting, openWorld, pixels, setLook, spawnPack, toCrownSpire, toRegion, type Region } from './lightingPage';
@@ -37,7 +38,7 @@ test('each region shows its weather on every tier, never past the tier’s cap',
   expect(errors).toEqual([]);
 });
 
-test('killing 10 Hollows enemies at once in the dust: weather stops spawning while the budget less the death motes’ room is used, and never passes its cap', async ({ page }, info) => {
+test('killing 10 Hollows enemies at once in the dust: weather keeps to its share of the budget (078’s ledger), never passes its cap, and spawns nothing with no room', async ({ page }, info) => {
   test.setTimeout(300_000);
   await openWorld(page);
   await toRegion(page, 'hollows');
@@ -53,21 +54,18 @@ test('killing 10 Hollows enemies at once in the dust: weather stops spawning whi
       g.step(1);
     }, ids);
     const seen = await sample(page, 40);
-    let gated = 0;
     for (const [i, s] of seen.entries()) {
       expect(s.weather.live, q).toBeLessThanOrEqual(WEATHER_CAP[q]);
-      // The room this frame's spawns had: the budget less the death motes' room and every live particle.
-      expect(s.weather.room, q).toBeLessThanOrEqual(Math.max(0, WEATHER_BUDGET.particles[q] - WEATHER_BUDGET.deathMotes[q] - s.particles));
+      // 078: the room this frame's spawns had is weather's own share less the weather alive (no other kind's room is
+      // lent to it, nor its to them); every particle together stays within the budget.
+      expect(s.weather.room, q).toBeLessThanOrEqual(WEATHER_CAP[q]);
+      expect(s.particles + s.weather.live + s.weather.fading, q).toBeLessThanOrEqual(PARTICLE_BUDGET[q]);
       const before = seen[i - 1];
-      if (s.weather.room === 0 && before) {
-        gated += 1;
-        expect(s.weather.live, `${q}: no spawn with no room`).toBeLessThanOrEqual(before.weather.live);
-      }
+      if (s.weather.room === 0 && before) expect(s.weather.live, `${q}: no spawn with no room`).toBeLessThanOrEqual(before.weather.live);
     }
-    if (q === 'low') expect(gated).toBeGreaterThan(0);
     most[q] = Math.max(...seen.map((s) => s.particles + s.weather.live));
   }
-  // 014's bursts aren't under the budget until 078 (076 brings the death motes): what they and the weather reached.
+  // 078: every burst is under the budget now; what they and the weather reached.
   await info.attach('burst.json', { body: JSON.stringify(most), contentType: 'application/json' });
   console.log('burst', JSON.stringify(most));
 });
