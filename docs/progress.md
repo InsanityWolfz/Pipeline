@@ -43,7 +43,7 @@ No sim change; `SAVE_VERSION` unchanged. Reviewed, with a motion check: blocking
 - The foundry-entry tests (foundryFlow, spread, guidance) now wait by drawn frames (`frameSettled`), not a 5 s timer: under load the door's fade outlasted the timer on main's code too.
 
 ## 2026-10-28: 077 World detail, landmarks and weather
-**Changed:** on `claude/077-world-and-weather` (InsanityWolfz/Pipeline#94, stacked on 074), art pass 4 of 8, from Shaun's art interview (plan docs/plans/077-world-and-weather.md):
+**Changed:** on `claude/077-world-and-weather` (InsanityWolfz/Pipeline#94, stacked on 074–076), art pass 4 of 8, from Shaun's art interview (plan docs/plans/077-world-and-weather.md):
 - moderate world detail: flowers, rubble, plants and ruin bits per region, placed by a deterministic hash per tile, with paths and fight space kept clear;
 - three landmarks per region (Region 1: Fallen Colossus, Ley Tower, The Watcher; Hollows: Unfinished Giant, Aqueduct Head, Great Crane; Emberworks: Great Furnace, Great Crucible, Toppled Stack; Stormcrown: Storm Tower, Stormcaller, Wind Harp), each only on tiles that already block, named on hover;
 - swaying grass and trees on a fixed 2.4–3.6 s cycle (wind changes only amplitude, eased), rippling water and flowing ley;
@@ -51,11 +51,11 @@ No sim change; `SAVE_VERSION` unchanged. Reviewed, with a motion check: blocking
 
 No sim change; `SAVE_VERSION` stays 22. Reviewed, including a motion check at real speed: two blocking findings fixed (plants snapped at every gust and fluttered at region borders; a per-frame walk over every chunk). `npm run check` 2749 tests; CI green. Raised for Shaun: 077.1–077.17; 077.3, 077.4, 077.12, 077.16 and 077.17 need his call.
 
-**Next:** Shaun's playtest after 074; "merge 94" after 91.
+**Next:** Shaun's playtest; "merge 94" after 91, 92 and 93.
 
 **Notes:**
 - Frame times (software renderer): a Stormcrown rain fight 108 / 107 / 303 ms on Low / Medium / High; Low is no slower than the world off.
-- The shared particle budget copies 076's numbers until 076 merges; 078 turns it into one ledger.
+- Restacked on 076 (with 075): weather reads 076's own budget constants, and `ui().particles.live` and the death-mote room both count weather; 078 turns it into one ledger.
 - `tests/e2e/feedback.spec.ts` "F in play" sits near its 30 s limit on a loaded runner (typing about 350 ms a key); older than 077, worth a fix-track change.
 
 ## 2026-10-28: 076 Enemy and boss polish
