@@ -8,4 +8,14 @@ export const BOSS_INTRO = {
   fullTicks: 165,
   /** An altar re-fight: 1 s, after the summon's 2 s crack. */
   shortTicks: 60,
+  /**
+   * A full intro's extra beat for a boss whose pan comes back from far off, ticks: it holds still, ready, after the
+   * camera is home, so its first attack isn't telegraphed off screen (Shaun, 2026-10-28, on 080.27: "The fight should
+   * start a beat later"). The Conductor wakes 290 px away.
+   */
+  settleTicks: { conductor: 30 } as Readonly<Record<string, number>>,
 } as const;
+
+/** A boss's intro length, ticks: the short one for a re-fight, else the full one plus its settle beat. */
+export const introTicksFor = (bossId: string, short: boolean): number =>
+  short ? BOSS_INTRO.shortTicks : BOSS_INTRO.fullTicks + (BOSS_INTRO.settleTicks[bossId] ?? 0);

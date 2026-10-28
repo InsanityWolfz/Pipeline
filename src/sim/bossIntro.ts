@@ -1,5 +1,5 @@
 import { ARENAS, type ArenaDef } from '../data/arenas';
-import { BOSS_INTRO } from '../data/bossIntro';
+import { introTicksFor } from '../data/bossIntro';
 import { arenaBoss, playerInside } from './arenaLock';
 import { arenaOfPost } from './arenaWait';
 import { wakeBoss } from './bossWake';
@@ -25,8 +25,11 @@ export const introShort = (state: Pick2<'bossDefeats'>, e: Pick<EnemyState, 'roo
   return arena !== undefined && shortFor(state, arena);
 };
 
-/** An intro's length for this enemy, ticks: `shortTicks` for a re-fight, else `fullTicks`. */
-export const introLength = (state: Pick2<'bossDefeats'>, e: Pick<EnemyState, 'roomId' | 'homeX' | 'homeY'>): number => (introShort(state, e) ? BOSS_INTRO.shortTicks : BOSS_INTRO.fullTicks);
+/** An intro's length for this enemy, ticks: its arena's boss's (`introTicksFor`: short for a re-fight, else full plus any settle beat). */
+export function introLength(state: Pick2<'bossDefeats'>, e: Pick<EnemyState, 'roomId' | 'homeX' | 'homeY'>): number {
+  const arena = arenaOfPost(e);
+  return arena ? introTicksFor(arena.boss, shortFor(state, arena)) : introTicksFor('', false);
+}
 
 /** True if the player is in the arena's room, inside its floor and not going down. */
 const playerHere = (state: Pick2<'player' | 'roomId'>, arena: ArenaDef): boolean => state.player.dying === 0 && playerInside(state, arena);
