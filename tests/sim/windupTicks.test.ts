@@ -4,12 +4,13 @@ import { ENEMIES } from '../../src/data/enemies';
 import { bossWindups, enemyWindups, type WindupRun } from './enemyWindups';
 
 // 076: every enemy's and boss's wind-ups, counted tick by tick, are the ticks recorded on main before the art pass
-// (windupTicks.json, written with RECORD_076=1 on main). The art never changes the sim.
+// (windupTicks.json, written with RECORD_076=1 on origin/main at efd53de), the Forgewright's slam among them (fought up
+// close: `forgewright-slam`). The art never changes the sim.
 
 const FILE = 'tests/sim/windupTicks.json';
 const ENEMY_TICKS = 900;
 const BOSS_TICKS = 2400;
-const BOSSES = ['bulwark', 'forgewright', 'conductor'] as const;
+const BOSSES = ['bulwark', 'forgewright', 'forgewright-slam', 'conductor'] as const;
 
 function measure(): Record<string, WindupRun[]> {
   const out: Record<string, WindupRun[]> = {};

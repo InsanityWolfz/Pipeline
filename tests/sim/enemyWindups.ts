@@ -7,6 +7,7 @@ import { decentBot as bulwarkBot, fight as bulwarkFight } from './bulwarkBot';
 import { carefulBot, fight as conductorFight } from './conductorBot';
 import { arena, HALL, hold, PLAYER_AT, run } from './fight';
 import { decentBot as forgeBot, fight as forgeFight } from './forgewrightBot';
+import { ROLLER, steer } from './bots';
 
 // 076: what the sim does with every enemy's attacks, recorded on main before the art pass and checked after it
 // (tests/sim/windupTicks.test.ts, regionHash.test.ts): the art may never change a tick.
@@ -78,9 +79,24 @@ export function enemyWindups(enemyId: string, ticks: number, seed = 7): WindupRu
 }
 
 /** Each boss fought by its bot for `ticks` (a bot's own fight, its health kept up where it allows): its wind-up runs. */
-export function bossWindups(boss: 'bulwark' | 'forgewright' | 'conductor', ticks: number): WindupRun[] {
+/**
+ * Each boss's fight with its decent bot; `forgewright-slam` is the Forgewright fought up close (the decent bot keeps
+ * 7.5 tiles off, out of the slam's trigger range), so its slam's wind-up is counted too.
+ */
+export function bossWindups(boss: 'bulwark' | 'forgewright' | 'forgewright-slam' | 'conductor', ticks: number): WindupRun[] {
   const log = new WindupLog();
-  if (boss === 'bulwark') {
+  if (boss === 'forgewright-slam') {
+    forgeFight(
+      1,
+      ticks,
+      (s, f) => {
+        log.see(f);
+        // Kept 40 px off its front, firing at its middle, rolling through what lands as the decent bot does.
+        return { ...steer(s, { x: f.x + (s.player.x < f.x ? -40 : 40), y: f.y }, ROLLER).cmd, fire: true, aimX: f.x, aimY: f.y - 24 };
+      },
+      true,
+    );
+  } else if (boss === 'bulwark') {
     const bot = bulwarkBot();
     bulwarkFight(1, ticks, (s, b) => {
       log.see(b);
@@ -122,6 +138,16 @@ export function fingerprint(text: string): string {
   return h.toString(16).padStart(8, '0');
 }
 
+/**
+ * The summary as main has it: without 075's `wornRarity` (the gear worn's best rarity, which this fight never
+ * changes), so the fingerprints recorded on main hold against 074+075+076.
+ */
+function mainSummary(s: SimState): object {
+  const summary: Record<string, unknown> = { ...summarize(s) };
+  delete summary.wornRarity;
+  return summary;
+}
+
 /** A pack of a region's enemies round the player, who fires arrows at the nearest each tick: the summary's fingerprint every 120 ticks. */
 export function packFight(enemyIds: readonly string[], ticks: number, seed = 7): string[] {
   const s = arena(seed);
@@ -136,7 +162,7 @@ export function packFight(enemyIds: readonly string[], ticks: number, seed = 7):
     const near = s.enemies.filter((e) => e.roomId === HALL).sort((a, b) => Math.hypot(a.x - s.player.x, a.y - s.player.y) - Math.hypot(b.x - s.player.x, b.y - s.player.y))[0];
     run(s, 1, near ? { use: true, aimX: near.x, aimY: near.y - 10 } : {});
     s.player.health = 100;
-    if (t % 120 === 0) prints.push(fingerprint(JSON.stringify(summarize(s))));
+    if (t % 120 === 0) prints.push(fingerprint(JSON.stringify(mainSummary(s))));
   }
   return prints;
 }
