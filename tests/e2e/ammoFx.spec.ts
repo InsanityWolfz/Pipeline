@@ -167,6 +167,14 @@ function softSeen(page: Page, q: string): Promise<number> {
 /** The same scripted fight from a fresh sandbox boot; its getState() (events included) every 10 ticks. */
 async function script(page: Page, query: string, quality: 'low' | 'medium' | 'high'): Promise<string> {
   await boot(page, query);
+  // The real-time loop ran the sim while the page booted: take the clock, then start at one fixed tick (077's method).
+  await page.evaluate(() => {
+    const g = window.__GAME__;
+    if (!g) throw new Error('no game');
+    const at = g.step(0).tick;
+    if (at > 900) throw new Error(`booted too slowly: tick ${at}`);
+    g.step(900 - at);
+  });
   await fxSandbox(page, ['arrow+fire', 'bomb+cluster', 'ley-bolt+split', 'landmine', 'ley-bolt+homing'], [['husk', 90, 0], ['husk', 110, 40]], { quality }, false);
   return page.evaluate(async () => {
     const g = window.__GAME__;
