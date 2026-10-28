@@ -2,6 +2,22 @@
 
 Newest entry first. Entries before 050 are in docs/progress-archive.md.
 
+## 2026-10-28: 076 Enemy and boss polish
+**Changed:** on `claude/076-enemy-polish` (InsanityWolfz/Pipeline#93, stacked on 074 and 075), art pass 3 of 8, from Shaun's art interview (plan docs/plans/076-enemy-polish.md):
+- all 19 rigs (15 enemies, 4 bosses) redrawn in a family look per region: Mossbound ruins (Region 1), Quarry constructs (the Hollows), Forge constructs (the Emberworks), Storm-works (the Stormcrown); soft gradients, a rim light per family, the thin ink outline; boxes and hitboxes unchanged;
+- wind-ups gather, coil and peak by the sim's own wind-up progress (the peak trembles; the camera never moves), with sim timing unchanged and tested tick for tick;
+- hit reactions: a flinch on every hit, a stagger at 40% of max health in one tick; bosses only flinch, nothing reacts mid-wind-up;
+- deaths dissolve into ley motes in the family's colour (600 ms, bosses 1.4 s) under per-death and live caps that scale with Graphics quality;
+- every walk calmed after Shaun's note on 075's wanderer: bob halved, squash 0.015 at most, guarded by tests.
+
+`SAVE_VERSION` stays 22. Reviewed, including a motion check: three blocking findings fixed (a release stretch cancelled the slams' impact squash; the Forgewright's death went over the mote cap; a fight-hash baseline wasn't main's), plus beams starting from the shown frame, staggers counted per sim tick and no per-frame allocation. `npm run check` 2780 tests; CI green. Raised for Shaun: 076.1–076.12; 076.10 and 076.11 are for his eye.
+
+**Next:** Shaun's playtest after 074 and 075; "merge 93" after 91 and 92.
+
+**Notes:**
+- Boot bakes more frames: 1.13 s against main's 0.63 s at 2×, 1.92 s against 1.08 s at 3×; boot to ready 3.8 s against 3.1 s.
+- This machine draws 8–13 frames a second under load, so real-time motion strips have 11–19 cells a second.
+
 ## 2026-10-27: 074 Light and region moods
 **Changed:** on `claude/074-light-and-moods` (InsanityWolfz/Pipeline#91), art pass 1 of 8, from Shaun's art interview and his pick of the "pushed vector, ley light, a mood per region" direction (docs/brainstorm/2026-10-27-art-interview.md, docs/art/style-test-2.html; plan docs/plans/074-light-and-moods.md):
 - a mood per region as data: Region 1 stays sunny; the Hollows dusky (`hollow` 0.7, `hollow-dark` fog); the Emberworks rust-dark with ash smoke and a flame wash; the Stormcrown dark (`storm-dark` 0.85) with fog and lightning flashes that obey the Flashes setting;

@@ -322,3 +322,8 @@ Each plan's build notes hold the detail; these are the lasting technical choices
   - What the body shows of gear is a sim fact (`wornRarity`, the highest rarity worn), read by render; the rig never decides rarity.
   - Pose timings read the sim's own durations (`ROLL_TICKS`, `PLAYER_HIT_FX.poseTicks`); every other motion number lives in `WANDERER_MOTION`, so a timing change can't leave the art out of step.
   - Rig parts are baked to textures at boot and cached per view, so drawing allocates nothing per frame.
+
+- **076 enemy and boss polish:**
+  - Enemy poses follow the sim's own wind-up progress (gather, coil, peak by share of the wind-up), so the art can't drift from timing; motion values live in `ENEMY_MOTION`, with per-attack overrides (slams take no release stretch).
+  - Death motes share one capped total per death, split across a boss and its standing parts, and scale with Graphics quality.
+  - Staggers count hits per sim tick, never per render frame, so slow machines see the same reactions.
