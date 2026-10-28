@@ -36,7 +36,6 @@ import type { EnemyArtUi } from './EnemyView';
 import type { LegibilityUi } from './Legibility';
 import type { SandboxPanelState } from './SandboxPanel';
 import type { LightingShown } from './lighting/LightingView';
-import type { Quality } from '../data/settings';
 import type { MenuMotionShown } from './menuCurves';
 import type { HudDrawsShown } from './HudView';
 import type { PlayerUi } from './PlayerView';
