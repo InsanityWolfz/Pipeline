@@ -129,6 +129,9 @@ export class DissolveView {
     return { quality: settings().quality, liveMotes: p?.deathMotes ?? 0, liveParticles: p?.count ?? 0, liveWeather: p?.ledger.live.weather ?? 0 };
   }
 
+  /** The tween-clock ms the last finished dissolve ran (-1 before any): a test reads the dissolve's length on the clock it runs on. */
+  lastDoneMs = -1;
+
   /** Moves every dissolve on by `deltaMs` of the tween clock. */
   update(deltaMs: number): void {
     for (let i = this.live.length - 1; i >= 0; i--) {
@@ -136,6 +139,7 @@ export class DissolveView {
       if (!d) continue;
       d.ms += deltaMs;
       if (!this.draw(d)) {
+        this.lastDoneMs = d.ms;
         this.destroy(d);
         this.live.splice(i, 1);
       }
