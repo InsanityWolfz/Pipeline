@@ -30,6 +30,7 @@ import { mergeEvents } from './eventLog';
 import { ParticleLedger } from './particleBudget';
 import { TrailView } from './fx/TrailView';
 import { ShotFxView } from './fx/ShotFxView';
+import { drawShots } from './fx/drawShots';
 import type { Quality } from '../data/settings';
 import { FeelView } from './FeelView';
 import { TutorialUi } from './TutorialUi';
@@ -311,17 +312,8 @@ export class GameScene extends Scene {
     if (this.playerView) this.silhouette?.update(this.playerView.sprite, shown === sim.roomId && sim.player.dying === 0);
     if (this.playerView && shown === sim.roomId) catches?.offer(this.playerView.sprite, sim.player.x, sim.player.y, 'player', 0);
     catches?.end();
-    // 078: the trails, then the rounds, then the shot effects, which need this frame's events, rounds and posed muzzle.
-    const quality = this.fxQuality;
-    const fx = !(this.shotFx?.off ?? false);
-    const muzzle = shown === sim.roomId ? (this.playerView?.muzzle ?? null) : null;
-    this.trails?.begin(quality);
-    this.arrowView?.update(inRoom(sim.arrows, shown), muzzle, fx);
-    this.bombView?.update(inRoom(sim.bombs, shown));
-    if (this.pending.woke) this.shotFx?.clear();
-    const tweenMs = this.game.loop.delta * this.tweens.timeScale;
-    this.shotFx?.update(sim, this.pending, shown, { muzzle, looks: (id) => this.arrowView?.lookOf(id), quality, flashes: settings().flashes, deltaMs: tweenMs });
-    this.trails?.end(tweenMs, quality, settings().flashes);
+    // 078: the rounds and the shot effects, which need this frame's events, rounds and posed muzzle.
+    drawShots({ trails: this.trails, arrows: this.arrowView, bombs: this.bombView, shotFx: this.shotFx, player: this.playerView }, sim, this.pending, shown, this.fxQuality, this.game.loop.delta * this.tweens.timeScale);
     this.site?.update(sim, shown);
     this.siteMenus?.update(sim);
     this.menu?.update(sim);

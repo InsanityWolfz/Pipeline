@@ -82,16 +82,16 @@ test.describe('078 review shots', () => {
   test('04–08: homing, Split, cluster, landmine, and one volley on Low and on High', async ({ page }) => {
     test.setTimeout(600_000);
     await fxSandbox(page, ['ley-bolt+homing', null, null, null, null], [['husk', 110, -45]], { quality: 'medium' });
-    await fireUntil(page, [110, 5], 1, 'g.ui().ammoFx.bend > 20');
+    await fireUntil(page, [110, 5], 1, 'g.ui().ammoFx.bend > 10 && g.getState().arrows.every((a) => a.travelled > 50)');
     await shot(page, '04-homing-curve');
     await fxSandbox(page, ['ley-bolt+split', null, null, null, null], [['husk', 70, 0], ['husk', 120, 50], ['husk', 120, -50]], { quality: 'medium' });
-    await fireUntil(page, [70, 0], 1, 'g.ui().tagged.shards >= 3');
+    await fireUntil(page, [70, 0], 1, 'g.ui().tagged.shards >= 3 && g.getState().arrows.every((a) => a.travelled > 30)');
     await shot(page, '05-split-star-and-shards');
     await fxSandbox(page, ['bomb+cluster', null, null, null, null], [['husk', 100, 0]], { quality: 'medium' });
     await fireUntil(page, [100, 0], 1, `g.ui().ammoFx.impacts.filter((i) => i.kind === 'mini-blast').length >= 3`);
     await shot(page, '06-cluster-bomblets');
-    await fxSandbox(page, ['landmine+fire', null, null, null, null], [['husk', 100, 0]], { quality: 'medium' });
-    await fireUntil(page, [100, 0], 1, impacted('mine-blast'), 500);
+    await fxSandbox(page, ['landmine+fire', null, null, null, null], [['husk', 70, 0]], { quality: 'medium' });
+    await fireUntil(page, [60, 0], 1, impacted('mine-blast'), 500);
     await shot(page, '07-landmine-burst');
     for (const q of ['low', 'high'] as const) {
       await fxSandbox(page, ['bomb+fire', 'arrow+frost', 'ley-bolt+lightning', 'arrow+stormsteel', 'ley-bolt+homing'], [['husk', 100, -30], ['husk', 110, 10], ['husk', 100, 45]], { quality: q });

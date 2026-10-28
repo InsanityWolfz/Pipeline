@@ -91,6 +91,36 @@ Every enemy and boss keeps its design, drawn in the pushed vector look with a **
 
 **Deaths** (`src/render/DissolveView.ts`, `src/render/deathMotes.ts`): the rig's one-frame struck `death` pose for 100 ms (bosses 200), then the **dissolve** over 500 ms (bosses 1,200): the body narrows to 0.8× and stretches to 1.1× upward as it fades, an additive copy in the family's first mote colour rises to 0.5 alpha (0.25 with Flashes off) and fades with it, and the family's motes leave random points of the hurtbox in three waves, rising. The Warden's core and the Bulwark's seam fade with the body; a champion dissolves at its size with its glow; the Forgewright's bellows dissolve with it. Kept: the death sound, the drops, the cinder mote's burst, the mite's discharge, the golem's split. **Motes** (`DEATH_MOTES`): small 10, medium 16, large 24, boss 60; ×1.5 a champion; ×0.5 / 1 / 1.5 on Low / Medium / High; additive on Medium and High. A death's motes are thinned to its per-death cap (30 / 60 / 90), the live death-mote cap (60 / 120 / 200) and what `PARTICLE_BUDGET` (150 / 300 / 500 live particles) leaves; the cap is hard.
 
+## Ammo and particles (078)
+Render only: no file under `src/sim` changed, and `getState()` is the same with the effects on, off (`?fx=off`) and on any tier.
+- **Bodies** (`src/data/art/sprites.ts`, `mines.ts`, `stages.ts`): the arrow, ley bolt, bomb, landmine, Shard and bomblet in the pushed look: a gradient lit from the top left, a `rim` on the lit edge (the arrowhead's and bolt's `snow`, the bomb's `rock-pale`), the ink outline. The lines once baked behind the arrow, bolt and Shard are gone (the trails replace them). 062's tier swap recolours the rim too; elements tint as before (`ROUND_LOOKS`).
+- **Composition** (`AMMO_FX` in `src/data/ammoFx.ts`, composed by `roundFx` in `src/render/fx/roundFx.ts`): **the family sets the shape** (trail kind and length, impact kind, muzzle sparks, base colours), **the element the colour** (the trail's colour, its shed bits, the bursts added to impacts and blasts, its mark), **the tier the core and glints** (the trail's core and High's edge, glints added to impacts and the muzzle, the shock ring's core); a **shape** row lengthens homing's wake (×2) and marks the Split's star and the cluster's bomblets (drawn elsewhere, kept). A Shard and a bomblet take their parent's element and tier. A new ammo, tag or tier is one row.
+
+| Family | In flight | Impact | End (wall, range) | Muzzle |
+| --- | --- | --- | --- | --- |
+| Arrow | a 28 px streak, `rock-pale` with a `snow` core | splinter: 5 chips on through the hit (60° cone), a white tick | 2 dust chips | 3 sparks |
+| Ley bolt | a 22 px ribbon, `cyan` with a `cyan-glow` core, motes shed | ley splash: a ring of light, 6 sparks, a splash mark | the ring at 0.6×, 3 sparks | 4 sparks |
+| Bomb | fuse smoke puffs | blast: 10 debris, 6 smoke, a shock ring to its radius, a scorch (today's flash kept) | none | a launch puff and 2 sparks |
+| Landmine | tumbling 1.5 turns a second, no trail; dust as it arms | mine blast: 14 shards, 3 smoke, a tight shock ring, a scorch | none | as the bomb's |
+| Shard | a 24 px ribbon | a flick of 3 sparks | none | none |
+| Bomblet | its fuse glint | mini blast: 4 debris, 2 smoke | none | none |
+
+| Element | Trail | Impact | Blast |
+| --- | --- | --- | --- |
+| Frost | `water-light`, `snow` core, flakes drifting down | 4 falling ice chips, a rime mark | cold mist for smoke, rime for scorch |
+| Fire | `flame-dark`, `cinder-light` core, flickering ±15%, embers rising | 4 rising embers, a small scorch | darker smoke, 4 embers, scorch at 0.45 |
+| Lightning | `storm-glow`, `snow` core, crackling ±1.5 px | 4 fast sparks, a 2-frame star | 4 sparks |
+
+Tiers (core, glints): steel `iron-light` with a `snow` edge, glass `snow` with `foam`, stormsteel `storm-pale` with `storm-glow`, storm glass `snow` with `storm-pale`; each adds 3 glints (storm glass a violet spark too) and 1 at the muzzle. No row uses `danger` or `hit-red`; `flame-dark` only in the fire trail.
+- **Impacts** are matched in render (`src/render/fx/impactMatch.ts`): a hit goes to the straight round whose path this frame passed nearest the hurtbox (within its half-size + 8 px), and plays where that path meets the hurtbox's near side; bursts to the bomb, mine or bomblet that vanished there; a round that vanished with no hit plays its end; no match plays the element's 014 hit burst. They replace 014's per-element hit bursts for the player's rounds (a punch keeps its own); an arc's hit plays half the lightning impact. Hit feedback (the flash, numbers, sounds, the 50 ms hold) is unchanged; no shake.
+- **The muzzle:** each shot's sparks leave 075's posed muzzle (the rig's `muzzle` mark) down the shot's lane, and a new round's trail starts there (075.10's spawn point unchanged).
+- **Machine sparks:** 4 from a machine's window as it finishes a craft (`MACHINE_SPARKS`: by build group, a stage machine by its tag, the Tempering coil its own; logistics none). `craftPuff` stays.
+- **Particles** are tinted soft dots (smoke and mist soft puffs that grow), from one pool (`Particles`) made up to the tier's high-water mark and reused: nothing is made per projectile per frame. Trails are two Graphics redrawn each frame from pooled ring slots (the colour flat, a glowing trail's core and edge additive); marks, shock rings and flashes are pooled images.
+- **The budget** (`src/render/particleBudget.ts`, `PARTICLE_SHARES` in `src/data/juice.ts`): one ledger per scene counts every live particle as a death mote, weather (014's room motes indoors) or an effect; each kind may spawn up to its share less its live count, never past the budget less everything alive, and no share lends its room. Shares: deaths 60 / 120 / 200, weather 40 / 100 / 160, effects (derived) 50 / 80 / 140 of 150 / 300 / 500. Inside the effect share, `FX_PRIORITY`: cues (enemy and boss attacks, hazards, a hit on the player, a shield's ring) to 100%, shots (impacts, blasts, muzzle and machine sparks, freezes, thaws, ignites, harvests, pickups, the foundry's bursts) to 85%, soft bits (trail bits, landing dust, footsteps) to 50%.
+- **Graphics quality** (`FX_QUALITY`): Low ×0.5 counts (an impact keeps 1), trails at most 24 in one colour, no trail bits, marks at most 6, nothing additive; Medium ×1, 48 trails with their core, bits every 80 ms (smoke 60), 12 marks; High ×1.25, 96 trails with a soft edge, bits every 40 ms, 24 marks. A tier change applies at once; pools only grow.
+- **Flashes off:** no ring, tick or star, no crackle or flicker; particles, trails and marks still show.
+- **Draw order:** marks and shock rings at `DEPTHS.shotMark` (0.35), every trail and lingering bit (anything living past 400 ms: smoke, mist, flakes, embers, motes) at `shotTrail` (0.45), both under the telegraphs (`groundFx`) and everything standing; impact sparks just behind the struck enemy (its feet − 0.5); ends and blasts at their ground point. They draw in their own colours in every mood.
+
 ## Palette
 Every colour comes from the palette, by id. The source of truth is `src/data/palette.ts`; this table mirrors it, and tests check that they match. (The pixel palette went with the pixel sprites in 020.)
 

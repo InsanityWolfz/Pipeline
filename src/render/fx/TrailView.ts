@@ -23,6 +23,8 @@ interface Slot {
   fade: number;
   /** A phase for its fire flicker. */
   phase: number;
+  /** It began at the drawn muzzle: its oldest point bridges the tube to the round (not its flight). */
+  bridged: boolean;
 }
 
 /** What the trails draw, for the test hook. */
@@ -37,7 +39,7 @@ export interface TrailsShown {
 export class TrailView {
   private readonly normal: GameObjects.Graphics;
   private readonly additive: GameObjects.Graphics;
-  private readonly pool = new Pool<Slot>(() => ({ ring: new TrailRing(), key: -1, look: roundFx('arrow'), seen: 0, fade: -1, phase: 0 }));
+  private readonly pool = new Pool<Slot>(() => ({ ring: new TrailRing(), key: -1, look: roundFx('arrow'), seen: 0, fade: -1, phase: 0, bridged: false }));
   private readonly byKey = new Map<number, Slot>();
   private frame = 0;
   private cap = FX_QUALITY.medium.trailCap;
@@ -88,6 +90,7 @@ export class TrailView {
       s.key = key;
       s.fade = -1;
       s.phase = (key * 1.7) % (Math.PI * 2);
+      s.bridged = from !== null;
       if (from) s.ring.push(from.x, from.y);
       this.byKey.set(key, s);
     }
@@ -193,7 +196,9 @@ export class TrailView {
       if (s.fade >= 0) continue;
       byKind[s.look.trail.kind] = (byKind[s.look.trail.kind] ?? 0) + 1;
       const r = s.ring;
-      const n = trailCut(r, s.look.trail.length).points;
+      const cut = trailCut(r, s.look.trail.length).points;
+      // The muzzle's bridge (while the ring still holds it) is no part of the flight's bend.
+      const n = s.bridged && cut === r.count && r.count < FX_LOOK.points ? cut - 1 : cut;
       if (n < 3) continue;
       const head = Math.atan2(r.y(0) - r.y(1), r.x(0) - r.x(1));
       const tail = Math.atan2(r.y(n - 2) - r.y(n - 1), r.x(n - 2) - r.x(n - 1));
