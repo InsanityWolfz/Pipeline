@@ -65,7 +65,7 @@ const ring = (x: number, y: number, w: number, h: number, width: number, alpha: 
 const rivet = (x: number, y: number, r: number): Shape[] => [ellipse(x, y, r, r, solid('brass')), ellipse(x - r * 0.35, y - r * 0.35, r * 0.4, r * 0.4, flat('brass-light'))];
 
 /** A brass end cap like the HP bar's, `w` wide and `h` tall at x. */
-const cap = (x: number, w: number, h: number): Shape => rect(x, 0, w, h, 1.4, { fill: vertical('brass-light', 'brass-dark', 0, h), outline: true });
+const cap = (x: number, w: number, h: number): Shape => rect(x, 0, w, h, 1.4, { fill: vertical(HUD_EDGES.cap.top, HUD_EDGES.cap.foot, 0, h), outline: true });
 
 const sprite = (key: string, size: readonly [number, number], shapes: readonly Shape[]): VectorSprite => ({ key, size, anchor: [0, 0], frames: [shapes] });
 
@@ -86,7 +86,7 @@ const tubeSlot = (n: number): Shape[] => {
         ...well(x, UNIT.inset, ww, wh),
         ...ring(x, UNIT.inset, ww, wh, 1.2, 0.85, 2),
         // 081: a thin cyan-glow line inside each ring.
-        rect(x + 1.4, UNIT.inset + 1.4, ww - 2.8, wh - 2.8, 1.6, { stroke: { color: { id: 'cyan-glow', alpha: 0.35 }, width: 0.5 } }),
+        rect(x + 1.4, UNIT.inset + 1.4, ww - 2.8, wh - 2.8, 1.6, { stroke: { color: { id: HUD_EDGES.ring.inner.color, alpha: HUD_EDGES.ring.inner.alpha }, width: 0.5 } }),
       ];
     }).flat(),
     // Brass rivets between the wells (081: lit at a point), so a volley reads as one slot.

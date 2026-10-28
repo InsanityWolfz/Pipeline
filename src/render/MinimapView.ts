@@ -3,6 +3,7 @@ import type { GameObjects, Scene, Textures } from 'phaser';
 import { DEPTHS, OVERWORLD_TEXTURES } from '../data/assets';
 import { TILE_SIZE, VIEW_WIDTH } from '../data/config';
 import { MINIMAP, minimapColor } from '../data/minimap';
+import { HUD_EDGES } from '../data/hudLook';
 import { OVERWORLD } from '../data/overworld';
 import { HOLLOWS } from '../data/hollows';
 import { LANDMARK_LIST, type LandmarkMarker } from '../data/landmarks';
@@ -45,6 +46,8 @@ export class MinimapView {
   private readonly fog: GameObjects.Image;
   private readonly fogTex: Textures.CanvasTexture | null;
   private readonly marks: GameObjects.Graphics;
+  /** 081: the inner shadow along the map's top and left. */
+  private readonly shade: GameObjects.Graphics;
   private readonly label: TextLine;
   private readonly labelPanel: GameObjects.Graphics;
   /** Each icon on show, by its marker's key, made on first sight. */
@@ -100,6 +103,13 @@ export class MinimapView {
     drawTablet(this.frame, this.x - f.width, this.y - f.width, width + f.width * 2, height + f.width * 2);
     this.map = scene.add.image(this.x, this.y, OVERWORLD_TEXTURES.minimap).setOrigin(0).setScale(MINIMAP.scale / k).setScrollFactor(0).setDepth(DEPTHS.hud + 1);
     this.fog = scene.add.image(this.x, this.y, OVERWORLD_TEXTURES.minimapFog).setOrigin(0).setScale(MINIMAP.scale / k).setScrollFactor(0).setDepth(DEPTHS.hud + 1.2);
+    // 081: an inner shadow along the map's top and left, so it reads as set into the stone (over the fog, under the marks).
+    this.shade = scene.add.graphics().setScrollFactor(0).setDepth(DEPTHS.hud + 1.4);
+    const S = HUD_EDGES.minimap;
+    for (let i = 0; i < S.w; i++) {
+      this.shade.fillStyle(colorOf(S.color), (S.alpha * (S.w - i)) / S.w);
+      this.shade.fillRect(this.x, this.y + i, width, 1).fillRect(this.x + i, this.y + S.w, 1, height - S.w);
+    }
     this.marks = scene.add.graphics().setScrollFactor(0).setDepth(DEPTHS.hud + 2);
     this.labelPanel = scene.add.graphics().setScrollFactor(0).setDepth(DEPTHS.hud + 3);
     this.label = new TextLine(scene, 0, 0, DEPTHS.hud + 4, false, 'body');
@@ -127,7 +137,7 @@ export class MinimapView {
 
   update(sim: SimState): void {
     this.shown = sim.roomId === OVERWORLD.id;
-    for (const o of [this.frame, this.map, this.fog, this.marks]) o.setVisible(this.shown);
+    for (const o of [this.frame, this.map, this.fog, this.shade, this.marks]) o.setVisible(this.shown);
     if (!this.shown) {
       for (const icon of this.icons.values()) icon.setVisible(false);
       this.markers = [];

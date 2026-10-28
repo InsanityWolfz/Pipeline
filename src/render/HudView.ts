@@ -53,6 +53,16 @@ export interface HudPanelsState {
   buildTab: BuildTabState;
 }
 
+/** 081: how many times each live HUD piece 081 touches has redrawn (they redraw only on a change), the scene's live tweens and game objects (containers' children counted). */
+export interface HudDrawsShown {
+  bossBar: number;
+  hpFill: number;
+  xp: number;
+  tubeCard: number;
+  tweens: number;
+  objects: number;
+}
+
 /** The 031 part of `ui()` before the scene has built its views. */
 export const NO_HUD_PANELS: HudPanelsState = {
   inventory: { open: false, mode: null, containerId: null, scroll: 0, rows: 0, slots: [], container: [], stash: [], stashScroll: 0, stashRows: 0, sort: { x: 0, y: 0, w: 0, h: 0 }, footer: [], panel: { x: 0, y: 0, w: 0, h: 0 } },
@@ -149,6 +159,12 @@ export class HudView {
   }
 
   /** The inventory panel, pickup feed and HP bar as drawn (031), for the test hook. */
+  /** 081: the live pieces' redraw counts (the scene's part is the test hook's). */
+  get draws(): Pick<HudDrawsShown, 'bossBar' | 'hpFill' | 'xp' | 'tubeCard'> {
+    const h = this.health.draws;
+    return { bossBar: this.boss.draws, hpFill: h.fill, xp: h.xp, tubeCard: this.tubeSlot.draws };
+  }
+
   get panels(): HudPanelsState {
     return { inventory: this.inventory.shown, researchList: this.research.shown, pickupFeed: this.feed.shown, health: this.health.shown, bossBar: this.boss.shown, talents: this.talents.shown, talentPanel: this.talents.tabState, buildTab: this.talents.buildRows };
   }

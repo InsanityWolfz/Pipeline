@@ -1,9 +1,11 @@
 import type { GameObjects, Scene } from 'phaser';
 import { DEPTHS, SPRITES } from '../data/assets';
 import { HP_BAR, HUD_HEALTH_LAYOUT, levelText } from '../data/hudPanels';
+import { HUD_EDGES } from '../data/hudLook';
 import { LEVEL_UP, TALENT_SPRITES } from '../data/talentAssets';
 import type { ScreenBox } from './bottomHud';
 import { colorOf } from './color';
+import { DrawKey } from './drawKey';
 import { chunkOf, createHealthBar, pulseOf, stepHealthBar } from './healthBarModel';
 import { healthBlockBox } from './healthLayout';
 import { TextLine } from './textLine';
@@ -49,6 +51,19 @@ export interface HealthInput {
 // a white chunk for damage just taken; a cyan glow while healing (030). Under it 037's XP
 // row: a thin cyan bar that ticks bright on a gain (no popups), "Lv 7" and a pip while
 // talent points wait. Fixed to the screen.
+const E = HUD_EDGES;
+/** 081's rim colours, made once. */
+const RIM = {
+  top: colorOf(E.hpFill.top.color),
+  foot: colorOf(E.hpFill.foot.color),
+  xpEdge: colorOf(E.xp.edge),
+  xpLip: colorOf(E.xp.lip.color),
+  xpTop: colorOf(E.xp.top),
+};
+
+/** The fill's width for `hp` of `max`, px. */
+const fillPx = (hp: number, max: number): number => Math.round((HUD_HEALTH_LAYOUT.fill.w * Math.max(0, Math.min(max, hp))) / max);
+
 export class HealthBar {
   private readonly frame: GameObjects.Image;
   private readonly glow: GameObjects.Image;
@@ -72,6 +87,9 @@ export class HealthBar {
   /** Ms on the slow's streaks' slide. */
   private slideMs = 0;
   private block: ScreenBox = healthBlockBox(null);
+  /** 081: what the fill and the XP row last drew; they redraw only on a change. */
+  private readonly fillKey = new DrawKey(5);
+  private readonly xpKey = new DrawKey(4);
 
   constructor(scene: Scene) {
     const fixed = <T extends GameObjects.Components.ScrollFactor & GameObjects.Components.Depth>(o: T, depth: number = DEPTHS.hud): T => {
@@ -101,6 +119,11 @@ export class HealthBar {
     return pulseOf(this.model);
   }
 
+  /** 081: how many times the fill and the XP row have redrawn, for `ui().hudDraws`. */
+  get draws(): { fill: number; xp: number } {
+    return { fill: this.fillKey.draws, xp: this.xpKey.draws };
+  }
+
   get shown(): HealthShown {
     return { box: { ...this.block }, text: this.text.obj.text, low: this.model.low, healing: this.healing, chunk: Math.round(chunkOf(this.model) * 100) / 100, slowed: this.slowed, xp: { ...this.xpShown } };
   }
@@ -122,16 +145,25 @@ export class HealthBar {
     this.glowAlpha = Math.max(0, Math.min(1, this.glowAlpha + (this.healing ? 1 : -1) * (dtMs / HP_BAR.glow.fadeMs)));
     this.glow.setPosition(cx, cy).setAlpha(this.glowAlpha).setVisible(this.glowAlpha > 0);
 
-    const g = this.fill.clear().setPosition(x, bottom).setScale(scale);
+    const g = this.fill.setPosition(x, bottom).setScale(scale);
     const left = L.fill.x;
     const top = L.fill.y - L.frame.h;
-    const px = (hp: number) => Math.round((L.fill.w * Math.max(0, Math.min(input.max, hp))) / input.max);
-    const filled = px(m.shown);
-    g.fillStyle(colorOf(m.low ? L.lowColor : L.fillColor)).fillRect(left, top, filled, L.fill.h);
-    if (pulse > 0) g.fillStyle(colorOf(L.chunkColor), pulse * HP_BAR.pulseBrighten).fillRect(left, top, filled, L.fill.h);
-    const chunkEnd = px(m.top);
-    if (chunkEnd > filled) g.fillStyle(colorOf(L.chunkColor)).fillRect(left + filled, top, chunkEnd - filled, L.fill.h);
-    this.drawSlow(g, input.slowed === true && !input.dying, left, top, dtMs);
+    const filled = fillPx(m.shown, input.max);
+    const chunkEnd = fillPx(m.top, input.max);
+    const slowed = input.slowed === true && !input.dying;
+    if (slowed) this.slideMs = (this.slideMs + dtMs) % STORM_ENEMY_LOOK.slowBar.slideMs;
+    this.slowed = slowed;
+    // 081: redrawn only when what it shows changes.
+    if (this.fillKey.put(filled).put(chunkEnd).put(m.low).put(pulse).put(slowed ? this.slideMs : -1).changed()) {
+      g.clear();
+      g.fillStyle(colorOf(m.low ? L.lowColor : L.fillColor)).fillRect(left, top, filled, L.fill.h);
+      if (pulse > 0) g.fillStyle(colorOf(L.chunkColor), pulse * HP_BAR.pulseBrighten).fillRect(left, top, filled, L.fill.h);
+      // 081: a rim light: a lit top line and a dark foot line on the fill.
+      g.fillStyle(RIM.top, E.hpFill.top.alpha).fillRect(left, top, filled, 1);
+      g.fillStyle(RIM.foot, E.hpFill.foot.alpha).fillRect(left, top + L.fill.h - 1, filled, 1);
+      if (chunkEnd > filled) g.fillStyle(colorOf(L.chunkColor)).fillRect(left + filled, top, chunkEnd - filled, L.fill.h);
+      if (slowed) this.drawSlow(g, left, top);
+    }
 
     this.text.set(`${Math.ceil(input.health)} / ${input.max}`);
     this.text.moveTo(Math.round(cx - this.text.width / 2), y + L.textY);
@@ -144,12 +176,9 @@ export class HealthBar {
   }
 
   /** 065: slowed, short pale wind streaks slant across the fill, sliding left to right. */
-  private drawSlow(g: GameObjects.Graphics, slowed: boolean, left: number, top: number, dtMs: number): void {
-    this.slowed = slowed;
-    if (!slowed) return;
+  private drawSlow(g: GameObjects.Graphics, left: number, top: number): void {
     const S = STORM_ENEMY_LOOK.slowBar;
     const { w, h } = HUD_HEALTH_LAYOUT.fill;
-    this.slideMs = (this.slideMs + dtMs) % S.slideMs;
     g.lineStyle(S.width, colorOf(S.color), S.alpha);
     for (let i = 0; i < S.streaks; i++) {
       const x = left + (((i / S.streaks + this.slideMs / S.slideMs) % 1) * (w - S.slant));
@@ -166,10 +195,20 @@ export class HealthBar {
     const tick = this.tickMs / LEVEL_UP.tickMs;
     const fill = Math.max(0, Math.min(1, xp.fill));
     const w = Math.round(B.w * fill);
-    const g = this.xpBar.clear();
-    g.fillStyle(colorOf(X.back), X.backAlpha).fillRect(x + B.x, y + B.y, B.w, B.h);
-    g.fillStyle(colorOf(X.fill)).fillRect(x + B.x, y + B.y, w, B.h);
-    if (tick > 0 && w > 0) g.fillStyle(colorOf(X.tickColor), tick).fillRect(x + B.x + Math.max(0, w - LEVEL_UP.tickWidth), y + B.y, Math.min(w, LEVEL_UP.tickWidth), B.h);
+    if (this.xpKey.put(x).put(y).put(w).put(tick).changed()) {
+      const bx = x + B.x;
+      const by = y + B.y;
+      const g = this.xpBar.clear();
+      // 081: the well edged in ink, with a lit lip under it.
+      g.fillStyle(RIM.xpEdge, 1).fillRect(bx - 1, by - 1, B.w + 2, 1).fillRect(bx - 1, by + B.h, B.w + 2, 1);
+      g.fillRect(bx - 1, by, 1, B.h).fillRect(bx + B.w, by, 1, B.h);
+      g.fillStyle(RIM.xpLip, E.xp.lip.alpha).fillRect(bx, by + B.h + 1, B.w, 1);
+      g.fillStyle(colorOf(X.back), X.backAlpha).fillRect(bx, by, B.w, B.h);
+      g.fillStyle(colorOf(X.fill)).fillRect(bx, by, w, B.h);
+      // 081: the fill's top px lit.
+      g.fillStyle(RIM.xpTop, 1).fillRect(bx, by, w, 1);
+      if (tick > 0 && w > 0) g.fillStyle(colorOf(X.tickColor), tick).fillRect(bx + Math.max(0, w - LEVEL_UP.tickWidth), by, Math.min(w, LEVEL_UP.tickWidth), B.h);
+    }
     const text = levelText(xp.level);
     this.level.set(text).moveTo(textX, y + X.textY);
     const pip = xp.points > 0;

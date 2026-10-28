@@ -3,6 +3,7 @@ import { SPRITES } from '../data/assets';
 import { GEAR_PANEL } from '../data/gearAssets';
 import { TALENT_TABS, type TalentTab } from '../data/legibility';
 import { colorOf } from './color';
+import { drawGlow } from './tablet';
 import { MENU_HOVER_EVENT } from './menuFeedback';
 import { onRect, type TalentPanelLayout } from './talentLayout';
 import { TextLine } from './textLine';
@@ -22,6 +23,11 @@ export class TalentTabs {
     this.card = addVector(scene, 0, 0, SPRITES.inventoryTitle).setOrigin(0).setScrollFactor(0).setDepth(depth);
     this.g = scene.add.graphics().setScrollFactor(0).setDepth(depth + 1);
     this.texts = TALENT_TABS.tabs.map((t) => new TextLine(scene, 0, 0, depth + 3, false, 'body').set(t.text));
+  }
+
+  /** 081: its parts, for the T panel's motion. */
+  get parts(): (GameObjects.Graphics | GameObjects.Image | TextLine)[] {
+    return [this.card, this.g, ...this.texts];
   }
 
   setVisible(on: boolean): void {
@@ -49,6 +55,8 @@ export class TalentTabs {
     this.g.clear();
     L.tabs.forEach((t, i) => {
       const fill = t.id === open ? C.tabOn : C.tab;
+      // 081: the open tab's brass glows softly, as Crafting's.
+      if (t.id === open) drawGlow(this.g, t.box.x, t.box.y, t.box.w, t.box.h);
       this.g.fillStyle(colorOf(fill.color), fill.alpha).fillRect(t.box.x, t.box.y, t.box.w, t.box.h);
       if (t.id === this.hovered) this.g.fillStyle(colorOf(C.hover.color), C.hover.alpha).fillRect(t.box.x, t.box.y, t.box.w, t.box.h);
       const text = this.texts[i];

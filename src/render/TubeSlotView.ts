@@ -1,6 +1,8 @@
 import type { GameObjects, Scene } from 'phaser';
 import { colorOf } from './color';
 import { drawTablet } from './tablet';
+import { DrawKey } from './drawKey';
+import { HUD_EDGES } from '../data/hudLook';
 import { wideCardBox } from './tubeCard';
 import { DEPTHS, SPRITES, TUBE_SLOT_FRAMES, tubeSlotFrame } from '../data/assets';
 import { ammoDef } from '../data/ammo';
@@ -36,6 +38,8 @@ export class TubeSlotView {
   private readonly frame: GameObjects.Image;
   /** 070: the widened card, drawn live (a tablet and one ringed well) when the fist's label is wider than a unit. */
   private readonly wide: GameObjects.Graphics;
+  /** 081: the wide card's box as last drawn. */
+  private readonly wideKey = new DrawKey(4);
   private readonly units: Unit[];
   private shown: TubeSlotState = { ...tubeSlotBox(1), icons: [], labels: [], labelBoxes: [] };
   /** Each unit's round and box, for its tip (040); the fist has none. */
@@ -52,6 +56,11 @@ export class TubeSlotView {
       icon: fixed(addVector(scene, 0, 0, SPRITES.hudFist).setOrigin(0), DEPTHS.hud + 1),
       label: new TextLine(scene, 0, 0, DEPTHS.hud + 1, false, 'count', HUD_LAYOUT.activeScale),
     }));
+  }
+
+  /** 081: how many times the wide card has redrawn. */
+  get draws(): number {
+    return this.wideKey.draws;
   }
 
   /** The slot's screen rect, so clicks on it never fire (015). */
@@ -111,15 +120,29 @@ export class TubeSlotView {
 
   /** 070: the widened card as the one-unit frame draws it: a tablet with one dark well ringed in cyan; nothing for null. */
   private drawWide(box: ScreenBox | null): void {
+    // 081: redrawn only when the box changes.
+    if (!this.wideKey.put(box ? box.x : NaN).put(box ? box.y : NaN).put(box ? box.w : NaN).put(box ? box.h : NaN).changed()) return;
     const g = this.wide.clear();
     if (!box) return;
     const S = HUD_LAYOUT.tubeSlot;
     const W = S.wide;
+    const E = HUD_EDGES;
     drawTablet(g, box.x, box.y, box.w, box.h);
     const inset = S.wellInset;
-    const [x, y, w, h] = [box.x + inset, box.y + inset, box.w - 2 * inset, box.h - 2 * inset];
+    const x = box.x + inset;
+    const y = box.y + inset;
+    const w = box.w - 2 * inset;
+    const h = box.h - 2 * inset;
+    // 081: brass end caps like the HP bar's, so the card reads as the tube's brass.
+    g.fillGradientStyle(colorOf(E.cap.top), colorOf(E.cap.top), colorOf(E.cap.foot), colorOf(E.cap.foot), 1, 1, 1, 1);
+    g.fillRect(box.x, box.y, inset, box.h).fillRect(box.x + box.w - inset, box.y, inset, box.h);
+    // The well cut in as the carried cells': darkest at its top, a lit lip at its foot.
     g.fillGradientStyle(colorOf(W.wellTop), colorOf(W.wellTop), colorOf(W.wellBottom), colorOf(W.wellBottom), 1, 1, 1, 1).fillRect(x, y, w, h);
+    g.fillStyle(colorOf(E.well.lip.color), E.well.lip.alpha).fillRect(x + 2, y + h - 1, w - 4, 1);
     g.lineStyle(W.ringWidth, colorOf(W.ring), W.ringAlpha).strokeRoundedRect(x, y, w, h, 2);
+    // Its rim light on the top-left, and the thin cyan-glow line inside the ring.
+    g.fillStyle(colorOf(E.ring.color), E.ring.alpha).fillRect(x + 2, y, Math.round(w / 2) - 2, 1).fillRect(x, y + 2, 1, Math.round(h / 2) - 2);
+    g.lineStyle(0.5, colorOf(E.ring.inner.color), E.ring.inner.alpha).strokeRoundedRect(x + 1.5, y + 1.5, w - 3, h - 3, 1.6);
   }
 
   /** 051 (B.7): the whole slot at this alpha (the intake's slot fading in as the old one shrinks away). */

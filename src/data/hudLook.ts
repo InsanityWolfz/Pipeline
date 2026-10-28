@@ -33,14 +33,16 @@ export const TABLET = {
 
 /**
  * The HUD pieces' lit edges (081). `well`: a cell's or row's well cut into the stone, its top `top` and its foot
- * `foot`, a lit lip (`lip`) along its foot. `ring`: the cyan rings' rim light on their top-left arc. `hpFill`: a lit
+ * `foot`, a lit lip (`lip`) along its foot. `ring`: the cyan rings' rim light on their top-left arc, and the thin
+ * line inside a tube well's ring (`inner`). `cap`: the brass end caps' shading, top to foot. `hpFill`: a lit
  * top line and a dark foot line on the HP and boss fills. `xp`: the XP row's well edged in `edge` with a lit lip
  * under it, its fill's top px in `top`. `minimap`: an inner shadow `w` px along the map's top and left. `tabGlow`: a
  * soft glow round the open tab's brass stripe, `spread` px of `color` fading out.
  */
 export const HUD_EDGES = {
   well: { top: 'ink', foot: 'carve-dark', lip: { color: 'carve-light', alpha: 0.4 } },
-  ring: { color: 'cyan-glow', alpha: 0.9 },
+  ring: { color: 'cyan-glow', alpha: 0.9, inner: { color: 'cyan-glow', alpha: 0.35 } },
+  cap: { top: 'brass-light', foot: 'brass-dark' },
   hpFill: { top: { color: 'snow', alpha: 0.25 }, foot: { color: 'ink', alpha: 0.2 } },
   xp: { edge: 'ink', lip: { color: 'carve-light', alpha: 0.4 }, top: 'cyan-glow' },
   minimap: { color: 'ink', alpha: 0.35, w: 3 },

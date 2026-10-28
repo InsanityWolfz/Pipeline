@@ -1,5 +1,5 @@
 import type { GameObjects } from 'phaser';
-import { TABLET } from '../data/hudLook';
+import { HUD_EDGES, TABLET } from '../data/hudLook';
 import { hexToRgb, paletteHex } from '../data/palette';
 
 /** The few Graphics calls a tablet uses, so a test can record them. */
@@ -66,5 +66,20 @@ export function drawTablet(g: TabletGraphics, x: number, y: number, w: number, h
     const vy = foot ? y + h - arm : y;
     g.fillStyle(C.brass, alpha).fillRect(hx, hy, arm, 1).fillRect(vx, vy, 1, arm);
     g.fillStyle(C.lit, alpha).fillRect(hx, hy, lit, 1).fillRect(vx, vy, 1, lit);
+  }
+}
+
+const GLOW = numOf(rgbOf(HUD_EDGES.tabGlow.color));
+
+/**
+ * 081: a soft glow round a box (the open tab's brass): rings of `gold-trim` `spread` px out, fading outward. Drawn
+ * before the box, so it shows only round it. Allocates nothing.
+ */
+export function drawGlow(g: TabletGraphics, x: number, y: number, w: number, h: number, alpha = 1): void {
+  const G = HUD_EDGES.tabGlow;
+  for (let i = 1; i <= G.spread; i++) {
+    g.fillStyle(GLOW, (G.alpha * alpha * (G.spread - i + 1)) / G.spread);
+    g.fillRect(x - i, y - i, w + 2 * i, 1).fillRect(x - i, y + h + i - 1, w + 2 * i, 1);
+    g.fillRect(x - i, y - i + 1, 1, h + 2 * i - 2).fillRect(x + w + i - 1, y - i + 1, 1, h + 2 * i - 2);
   }
 }
