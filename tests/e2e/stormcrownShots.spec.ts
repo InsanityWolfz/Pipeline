@@ -248,7 +248,7 @@ test.describe('review screenshots (064)', () => {
     await page.evaluate((m) => window.__helpers?.walkTo((m.tx + 0.5) * 32, (m.ty - 1.5) * 32), CROWN_SPIRE.middle);
     await cameraSettled(page);
     // The breaks' sparks and the blinks' flares (all drawn in one frame, the sim stepped ahead) fade first.
-    await expect.poll(() => page.evaluate(() => (window.__GAME__?.ui().particles ?? 1) + (window.__GAME__?.ui().stormcrown.conductor.bolts ?? 1)), { timeout: 20_000 }).toBe(0);
+    await expect.poll(() => page.evaluate(() => (window.__GAME__?.ui().particles.live ?? 1) + (window.__GAME__?.ui().stormcrown.conductor.bolts ?? 1)), { timeout: 20_000 }).toBe(0);
     await page.screenshot({ path: `${SHOTS}/09-conductor-grounded.png` });
   });
 });

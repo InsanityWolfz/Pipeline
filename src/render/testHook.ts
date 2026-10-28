@@ -35,6 +35,7 @@ import type { StormcrownShown } from './StormcrownView';
 import type { ArenaDoorShown } from './ArenaDoorView';
 import type { HollowsEnemiesShown } from './hollowsEnemyArt';
 import type { EnemyBarShown } from './enemyBar';
+import type { EnemyArtUi } from './EnemyView';
 import type { Legibility, LegibilityUi } from './Legibility';
 import type { SandboxPanelState } from './SandboxPanel';
 import type { LightingShown } from './lighting/LightingView';
@@ -145,8 +146,8 @@ export interface UiState {
   /** 060: burn beats' small numbers shown since boot, and enemies drawn with flames on them now. */
   burnNumbers: number;
   enemyFlames: number;
-  /** Particles flying now (064). */
-  particles: number;
+  /** Particles flying now (064); 076: as `live`, with the death motes among them and the deaths dissolving. */
+  particles: { live: number; deathMotes: number; thrown: number; moteColors: Record<string, number>; dissolving: number };
   /** Which cursor shows (021: the menu pointer or the crosshair), its depth, and the highest depth of anything else. */
   cursor: CursorState | null;
   /** Picked-up items still sliding into the player (021). */
@@ -231,6 +232,10 @@ export interface UiState {
   hollowsEnemies: HollowsEnemiesShown;
   /** 054: each drawn enemy's health bar: whether it shows, and whether it reads immune (blue, with the shield). */
   enemyBars: EnemyBarShown[];
+  /** 076: each drawn enemy's art: family, pose, wind-up phase, reaction, squash, the frame shown and the tremble. */
+  enemyArt: EnemyArtUi[];
+  /** 076: the boot's vector bake: wall ms, texture pages, frames and the enemy frames among them. */
+  vectorBake: { ms: number; pages: number; frames: number; enemyFrames: number };
   /** 032: the waystone's menu while open (two or more claimed pylons): each row's text and box, view px; else null. */
   waystone: { text: string; x: number; y: number; w: number; h: number }[] | null;
   /** 069: an intake entrance's purge menu while open: its row's text and box, view px; else null. */

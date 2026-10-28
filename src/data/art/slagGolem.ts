@@ -1,10 +1,14 @@
-import { DEATH_POSES, type EnemyPart, type EnemyPose, type EnemyRigDef } from './enemyRig';
+import type { EnemyPart, EnemyRigDef } from './enemyRig';
+import { cinderSeam, rimOf, soot } from './enemyLook';
 import { ellipse, line, path } from './types';
 
 // The slag golem and its whelps (061, drafts for Shaun's review). The golem: a hunched lump of cooling slag, dark crust
 // over lit seams of molten cinder, a glowing core in its chest, short thick legs and long heavy fists. Its slam heaves
 // both fists up and down; as it dies it slumps and cracks apart (its split: two whelps rise from it). A whelp: a small
 // blob of the same slag, ember eyes and a lit crack, waddling on two nubs. Light from the top left; world px round the feet.
+// 076: the Forge constructs look: a soot-ash crust shaded from the top left with an ember rim, over glowing cinder
+// seams. The golem's slam sinks with its fists dragging, heaves both fists high stretched, and blazes its core at the
+// peak; the slam squashes 0.2; its slump-and-crack is its struck pose. The whelp squishes, rears up tall, trembles.
 
 const crust = { linear: [-10, -46, 12, -8] as const, stops: [{ at: 0, color: 'ash-light' }, { at: 0.5, color: 'ash' }, { at: 1, color: 'ash-dark' }] };
 const molten = { radial: [0, -26, 7] as const, stops: [{ at: 0, color: 'cinder-light' }, { at: 0.55, color: 'cinder' }, { at: 1, color: 'flame-dark' }] };
@@ -16,7 +20,7 @@ const leg = (id: string, role: 'leg-back' | 'leg-front', xs: readonly number[], 
   id,
   role,
   pivot: [xs[0] ?? 0, -10],
-  shapes: xs.map((x) => ellipse(x, -6, 5.5, 7, { fill, outline: true })),
+  shapes: xs.flatMap((x) => [ellipse(x, -6, 5.5, 7, { fill: { linear: [x - 5.5, -13, x + 5.5, 1], stops: [{ at: 0, color: fill === 'ash' ? 'ash-light' : 'ash' }, { at: 1, color: 'ash-dark' }] }, outline: true, rim: rimOf('forge') }), soot(x - 5, -5, 10, 5), ...cinderSeam([x - 2, -9, x + 1, -6], 0.5)]),
 });
 
 /** A long heavy arm of slag ending in a fist. */
@@ -25,7 +29,12 @@ const fist = (id: string, role: 'arm-back' | 'arm-front', x: number, mirror = fa
   role,
   mirror,
   pivot: [x, -34],
-  shapes: [line([x, -34, x + Math.sign(x) * 3, -18], 8, 'ash-dark', true), ellipse(x + Math.sign(x) * 3, -14, 6.5, 6, { fill: crust, outline: true }), line([x + Math.sign(x) * 1, -15, x + Math.sign(x) * 5, -12], 1, 'cinder')],
+  shapes: [
+    line([x, -34, x + Math.sign(x) * 3, -18], 8, 'ash-dark', true),
+    ...cinderSeam([x - Math.sign(x) * 0.5, -30, x + Math.sign(x) * 1.5, -24], 0.5),
+    ellipse(x + Math.sign(x) * 3, -14, 6.5, 6, { fill: crust, outline: true, rim: rimOf('forge') }),
+    ...cinderSeam([x + Math.sign(x) * 1, -15, x + Math.sign(x) * 5, -12], 0.6),
+  ],
 });
 
 /** The hunched body: the crust, lit seams across it, a dark brow over two ember eyes. */
@@ -34,10 +43,11 @@ const body = (front: boolean): EnemyPart => ({
   role: 'body',
   pivot: [0, -26],
   shapes: [
-    path('M -17 -14 Q -21 -34 -10 -44 Q 2 -50 13 -42 Q 21 -32 17 -14 Q 0 -9 -17 -14 Z', { fill: crust, outline: true }),
-    line([-12, -36, -6, -32, -9, -24], 1.2, 'cinder'),
-    line([8, -40, 11, -33, 7, -27], 1.2, 'cinder'),
-    line([-4, -18, 3, -16, 9, -19], 1.2, 'cinder'),
+    path('M -17 -14 Q -21 -34 -10 -44 Q 2 -50 13 -42 Q 21 -32 17 -14 Q 0 -9 -17 -14 Z', { fill: crust, outline: true, rim: rimOf('forge') }),
+    soot(-17, -22, 34, 10),
+    ...cinderSeam([-12, -36, -6, -32, -9, -24], 1),
+    ...cinderSeam([8, -40, 11, -33, 7, -27], 1),
+    ...cinderSeam([-4, -18, 3, -16, 9, -19], 1),
     ...(front ? [path('M -9 -41 Q 0 -45 9 -41 L 8 -38 Q 0 -41 -8 -38 Z', { fill: 'ash-dark' })] : []),
     ellipse(-6, -44, 5, 1.6, { fill: { id: 'ash-pale', alpha: 0.6 } }),
   ],
@@ -54,19 +64,12 @@ const core = (front: boolean, x = 0): EnemyPart => ({
   ],
 });
 
-/** It slumps and cracks apart as it splits, its core going dark. */
-const SPLIT_DEATH: readonly EnemyPose[] = [
-  { sink: 2, scaleY: 0.9, glow: 1 },
-  { sink: 4, scaleY: 0.75, glow: 0.7, tilt: 0.05 },
-  { sink: 6, scaleY: 0.58, glow: 0.35, alpha: 0.7 },
-  { sink: 8, scaleY: 0.45, glow: 0, alpha: 0.35 },
-];
-
 export const SLAG_GOLEM_RIG: EnemyRigDef = {
   id: 'slag-golem',
   scale: 1,
-  box: { size: [64, 64], anchor: [32, 58] },
+  box: { size: [96, 84], anchor: [48, 74] },
   hip: [0, -12],
+  tells: { windup: { part: { side: 'fist-front', down: 'fist-r', up: 'fist-r' }, at: { side: [15, -14], down: [19, -14], up: [19, -14] } } },
   views: {
     side: [shadow(18), leg('legs-far', 'leg-back', [-5], 'ash-dark'), fist('fist-back', 'arm-back', -10), body(true), core(true, 4), leg('legs-near', 'leg-front', [6], 'ash'), fist('fist-front', 'arm-front', 12)],
     down: [shadow(18), leg('legs', 'leg-back', [-8, 8], 'ash'), body(true), core(true), fist('fist-l', 'arm-back', -16), fist('fist-r', 'arm-front', 16, true)],
@@ -80,15 +83,27 @@ export const SLAG_GOLEM_RIG: EnemyRigDef = {
       { step: -2, lift: 1, bob: -0.5, lean: 0.05, glow: 0.55 },
       { step: 0, bob: 0.5, glow: 0.55 },
     ],
-    // Both fists heaved high, the core blazing.
-    windup: [{ armBack: -2.2, armFront: -2.2, lean: -0.1, bob: -2, glow: 1 }],
+    // 076: gather (it sinks with its fists dragging), coil (both fists heaved high, stretched), peak (the core
+    // blazing; render trembles it). The slam squashes 0.2.
+    windup: [
+      { armBack: 0.45, armFront: 0.45, lean: 0.1, sink: 2, squash: 0.12, glow: 0.7 },
+      { armBack: -2.5, armFront: -2.5, lean: -0.2, bob: -1, squash: -0.1, glow: 1 },
+      { armBack: -2.8, armFront: -2.8, lean: -0.26, bob: -1.5, squash: -0.13, glow: 1 },
+    ],
     swipe: [
-      { armBack: 0.5, armFront: 0.5, lean: 0.2, sink: 2, scaleY: 0.92, glow: 1 },
-      { armBack: 0.4, armFront: 0.4, lean: 0.15, sink: 1, glow: 0.8 },
+      { armBack: 0.55, armFront: 0.55, lean: 0.22, sink: 2, squash: 0.2, glow: 1 },
+      { armBack: 0.4, armFront: 0.4, lean: 0.15, sink: 1, squash: 0.1, glow: 0.8 },
     ],
     recover: [{ armBack: 0.3, armFront: 0.3, lean: 0.12, sink: 1, glow: 0.35 }],
-    hit: [{ lean: -0.1, bob: 1, glow: 0.8 }],
-    death: SPLIT_DEATH,
+    // Its crust shudders.
+    hit: [{ lean: -0.1, bob: 1, squash: 0.08, armBack: -0.2, armFront: -0.2, glow: 0.8 }],
+    // A crust plate knocked askew: it rocks back, fists flung; then settles.
+    stagger: [
+      { lean: -0.35, tilt: -0.08, armBack: -0.9, armFront: -0.6, step: -2, lift: 2, glow: 0.6 },
+      { lean: -0.1, squash: 0.08, armBack: -0.2, armFront: -0.2, glow: 0.6 },
+    ],
+    // It slumps and cracks (its whelps rise from it, the sim's), then dissolves.
+    death: [{ sink: 4, squash: 0.25, lean: 0.1, armBack: 0.6, armFront: 0.6, glow: 0.7 }],
   },
 };
 
@@ -96,7 +111,12 @@ const blob: EnemyPart = {
   id: 'body',
   role: 'body',
   pivot: [0, -7],
-  shapes: [path('M -7 -2 Q -9 -10 -3 -13 Q 3 -15 7 -10 Q 9 -4 6 -2 Q 0 0 -7 -2 Z', { fill: crust, outline: true }), line([-4, -8, -1, -6, 2, -9], 1, 'cinder'), ellipse(-3, -12, 2.5, 0.9, { fill: { id: 'ash-pale', alpha: 0.6 } })],
+  shapes: [
+    path('M -7 -2 Q -9 -10 -3 -13 Q 3 -15 7 -10 Q 9 -4 6 -2 Q 0 0 -7 -2 Z', { fill: crust, outline: true, rim: rimOf('forge') }),
+    soot(-7, -6, 14, 4.5),
+    ...cinderSeam([-4, -8, -1, -6, 2, -9], 0.8),
+    ellipse(-3, -12, 2.5, 0.9, { fill: { id: 'ash-pale', alpha: 0.6 } }),
+  ],
 };
 const nubs: EnemyPart = { id: 'nubs', role: 'leg-front', pivot: [0, -2], shapes: [ellipse(-4, -1.5, 2.5, 1.8, { fill: 'ash-dark', outline: true }), ellipse(4, -1.5, 2.5, 1.8, { fill: 'ash-dark', outline: true })] };
 const eyes = (xs: readonly number[]): EnemyPart => ({ id: 'eyes', role: 'glow', pivot: [0, -9], shapes: xs.map((x) => ellipse(x, -9.5, 1.1, 0.9, { fill: 'cinder-light', glow: { color: 'cinder', blur: 3 } })) });
@@ -106,6 +126,7 @@ export const SLAG_WHELP_RIG: EnemyRigDef = {
   scale: 1,
   box: { size: [32, 28], anchor: [16, 24] },
   hip: [0, -4],
+  tells: { windup: { part: 'body', at: { side: [0, -14], down: [0, -14], up: [0, -14] } } },
   views: {
     side: [shadow(8), nubs, blob, eyes([3, 6])],
     down: [shadow(8), nubs, blob, eyes([-2.5, 2.5])],
@@ -114,18 +135,28 @@ export const SLAG_WHELP_RIG: EnemyRigDef = {
   poses: {
     idle: [{ glow: 0.7 }],
     walk: [
-      { step: 1.5, lift: 1, bob: -1, scaleY: 1.05, glow: 0.7 },
-      { step: 0, bob: 0, scaleY: 0.95, glow: 0.7 },
-      { step: -1.5, lift: 1, bob: -1, scaleY: 1.05, glow: 0.7 },
-      { step: 0, bob: 0, scaleY: 0.95, glow: 0.7 },
+      { step: 1.5, lift: 1, bob: -0.5, scaleY: 1.015, glow: 0.7 },
+      { step: 0, bob: 0, scaleY: 0.985, glow: 0.7 },
+      { step: -1.5, lift: 1, bob: -0.5, scaleY: 1.015, glow: 0.7 },
+      { step: 0, bob: 0, scaleY: 0.985, glow: 0.7 },
     ],
-    // Drawn back, eyes blazing; then the bite, lunging.
-    windup: [{ lean: -0.2, scaleY: 0.88, glow: 1 }],
+    // 076: gather (a squish), coil (rearing up tall, leaning back), peak (taller still; render trembles it). The bite lunges.
+    windup: [
+      { squash: 0.22, glow: 0.8 },
+      { squash: -0.25, lean: -0.35, bob: -1.5, glow: 1 },
+      { squash: -0.3, lean: -0.42, bob: -2, glow: 1 },
+    ],
     swipe: [
-      { lean: 0.35, bob: -1, scaleY: 1.1, glow: 1 },
-      { lean: 0.2, glow: 0.8 },
+      { lean: 0.4, bob: -1, shift: 2, squash: -0.12, glow: 1 },
+      { lean: 0.2, squash: 0.06, glow: 0.8 },
     ],
-    hit: [{ lean: -0.25, scaleY: 0.85, glow: 0.7 }],
-    death: DEATH_POSES,
+    // A squish.
+    hit: [{ lean: -0.25, squash: 0.2, glow: 0.7 }],
+    // It tumbles back; then rolls upright.
+    stagger: [
+      { lean: -0.5, tilt: -0.5, squash: 0.1, glow: 0.5 },
+      { lean: -0.1, tilt: -0.1, squash: 0.12, glow: 0.6 },
+    ],
+    death: [{ squash: 0.3, lean: -0.2, glow: 0.2 }],
   },
 };

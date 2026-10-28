@@ -10,7 +10,12 @@ import type { OrbState } from '../sim/orbs';
 import { snipeLine } from '../sim/sniperAi';
 import type { SimState } from '../sim/state';
 import { colorOf } from './color';
-import { addVector, showFrame } from './vector/textures';
+import { addVector, showFrame, textureScale } from './vector/textures';
+import { stripIndex, tremble, windupPhase } from './enemyMotion';
+import { posedPoint } from './vector/enemyPose';
+import { SNIPER_RIG } from '../data/art/sniper';
+import { STRIP_ENDS } from '../data/enemyAnims';
+import { ENEMY_MOTION } from '../data/art/enemyMotion';
 import { destroyEmberArt, drawEmberArt, makeEmberArt, type BeamShown, type EmberArt } from './emberEnemyArt';
 import { destroyStormArt, drawStormArt, makeStormArt, type StormArt } from './stormEnemyArt';
 
@@ -75,13 +80,27 @@ export function drawHollowsArt(art: HollowsArt | undefined, sprite: GameObjects.
   if (!art?.ripple) return;
   art.ripple.setVisible(e.underground);
   if (!e.underground) return;
-  // The mound heaves while it moves, and lies still while its ring grows.
+  // The mound heaves while it moves; 076: through its wind-up it settles, swells and cracks, and rises trembling.
   const R = HOLLOWS_ENEMY_LOOK.ripple;
   const moving = Math.hypot(e.vx, e.vy) > R.minSpeed;
+  const w = def.kind === 'burrower' && e.mode === 'windup' ? rippleWindup(e.modeTicks, def.burrow.windupTicks, now) : null;
   const frame = moving ? Math.floor((now + e.id * R.phaseMs) / R.wobbleMs) % 2 : 0;
-  const name = HOLLOWS_ENEMY_SPRITES.ripple[frame] ?? HOLLOWS_ENEMY_SPRITES.ripple[0];
+  const name = w?.cracked ? HOLLOWS_ENEMY_SPRITES.rippleCracked : (HOLLOWS_ENEMY_SPRITES.ripple[frame] ?? HOLLOWS_ENEMY_SPRITES.ripple[0]);
   if (art.ripple.frame.name !== name) showFrame(art.ripple, name);
-  art.ripple.setPosition(Math.round(e.x), Math.round(e.y + R.drop)).setDepth(DEPTHS.groundFx + R.depth);
+  const base = 1 / textureScale();
+  art.ripple.setScale(base * (w?.sx ?? 1), base * (w?.sy ?? 1));
+  art.ripple.setPosition(Math.round(e.x) + (w?.dx ?? 0), Math.round(e.y + R.drop)).setDepth(DEPTHS.groundFx + R.depth);
+}
+
+/** 076: the ripple through a Burrower's wind-up: its scale, the cracked frame, and the peak's tremble. */
+export function rippleWindup(modeTicks: number, ticks: number, now: number): { sx: number; sy: number; cracked: boolean; dx: number } {
+  const W = HOLLOWS_ENEMY_LOOK.rippleWindup;
+  const phase = windupPhase(modeTicks, ticks);
+  const p = modeTicks / ticks;
+  if (phase === 'gather') return { sx: W.settle[0], sy: W.settle[1], cracked: false, dx: 0 };
+  if (phase === 'peak') return { sx: W.peak, sy: W.peak, cracked: true, dx: tremble('peak', now, false).dx };
+  const k = 1 + (W.coil - 1) * Math.min(1, (p - ENEMY_MOTION.phases.gather) / (ENEMY_MOTION.phases.peak - ENEMY_MOTION.phases.gather));
+  return { sx: k, sy: k, cracked: p >= W.crackAt, dx: 0 };
 }
 
 /** The Shardback's shield flaring brass through the wind-up, flickering, brighter as the bash nears. */
@@ -110,7 +129,7 @@ function drawLaser(g: GameObjects.Graphics, e: EnemyState, def: Extract<EnemyDef
   // Locked, it brightens and blinks: on and off every `blinkTicks` of the lock.
   const on = !locked || Math.floor((e.modeTicks - def.snipe.trackTicks) / L.blinkTicks) % 2 === 0;
   const view = e.facing === 'up' || e.facing === 'down' ? e.facing : 'side';
-  const lens = HOLLOWS_ENEMY_LOOK.lens[view];
+  const lens = lensAt(e, def, view);
   const k = e.champion ? CHAMPIONS.scale : 1;
   const x0 = e.x + lens[0] * k * (e.facing === 'left' ? -1 : 1);
   const y0 = e.y + enemyDef(e.enemyId).feetBox.h / 2 + lens[1] * k;
@@ -122,6 +141,16 @@ function drawLaser(g: GameObjects.Graphics, e: EnemyState, def: Extract<EnemyDef
   if (locked && on) g.lineStyle(L.coreWidth, colorOf(L.core), 1).lineBetween(x0, y0, line.x1, line.y1);
   g.fillStyle(color, alpha).fillCircle(line.x1, line.y1, width + L.dot);
   return { locked, on, x0, y0, x1: line.x1, y1: line.y1 };
+}
+
+/** 076: the lens as the wind-up's frame poses it (it leans into the aim and braces), world px from the feet at 1×. */
+function lensAt(e: EnemyState, def: Extract<EnemyDef, { kind: 'sniper' }>, view: 'side' | 'down' | 'up'): readonly [number, number] {
+  const at = HOLLOWS_ENEMY_LOOK.lens[view];
+  const strip = SNIPER_RIG.poses.windup ?? [];
+  const phase = windupPhase(e.modeTicks, def.snipe.windupTicks, ENEMY_MOTION.peakAt['sniper:windup']);
+  const pose = strip[stripIndex(phase, strip.length - STRIP_ENDS, 0)];
+  const part = view === 'up' ? 'housing' : 'lens';
+  return (pose && posedPoint(SNIPER_RIG, view, pose, part, at)) ?? at;
 }
 
 /** Folds one enemy's extras into what `ui()` reports. */

@@ -42,6 +42,8 @@ export interface VectorFrame {
   anchor: readonly [number, number];
   /** Draws the frame with its anchor at the canvas origin, world px. */
   draw(c: CanvasRenderingContext2D, pxPerUnit: number): void;
+  /** 076: an enemy rig's frame, for the bake's report. */
+  enemy?: true;
 }
 
 /** The pose and view an enemy anim key names: `husk-walk-side` → walk, side; `husk-death` → death, down. */
@@ -61,6 +63,7 @@ function enemyFrames(rig: EnemyRigDef): VectorFrame[] {
     if (!poses) throw new Error(`Enemy rig '${rig.id}' has no '${pose}' pose`);
     return animFrames(anim).map((name, i) => ({
       name,
+      enemy: true as const,
       size: rig.box.size,
       anchor: rig.box.anchor,
       draw: (c: CanvasRenderingContext2D, px: number) => {

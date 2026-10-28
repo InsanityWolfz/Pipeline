@@ -143,11 +143,11 @@ export class FeelView {
         j.shake('medium');
       }
     }
-    for (const d of ev.deaths) {
+    // 076: a death's motes rise off the body as it dissolves (DissolveView); its sound plays here, once each.
+    ev.deaths.forEach(() => {
       s.play(SOUNDS.enemyDeath);
-      j.burst('deathMotes', d.x, d.y);
       j.shake('small');
-    }
+    });
     for (const b of ev.bursts) {
       s.play(SOUNDS.burst);
       j.burst('embers', b.x, b.y);

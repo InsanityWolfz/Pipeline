@@ -12,7 +12,7 @@ export const FORGE_SPRITES = {
 } as const;
 
 /** Its animation set (joined into ENEMY_ANIMS): it blocks on its plating, draws its hammer back to spray, raises it high to flood, and staggers venting. */
-export const FORGE_ANIMS = { forgewright: enemyAnims('forgewright', true, ['block', 'spray', 'flood', 'vent']) } as const;
+export const FORGE_ANIMS = { forgewright: enemyAnims('forgewright', true, ['block', 'spray', 'flood', 'vent'], 1, true) } as const;
 
 export const FORGE_LOOK = {
   /** A bellows shows `patching` over the last `patchingTicks` of its patch; its small bar shows once it's hurt, `w` × `h` px, `gap` px over its box. */
