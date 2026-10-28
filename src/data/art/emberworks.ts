@@ -18,7 +18,7 @@ const ember = (y: number) => ({ radial: [0, y, 8] as const, stops: [{ at: 0, col
 const rune = (x: number, y: number): Shape => ({ ...path(`M ${x - 2} ${y - 2} L ${x} ${y + 2} L ${x + 2} ${y - 2}`, trim('cyan', 0.9)), glow: { color: 'cyan', blur: 3 } });
 
 /** A beehive kiln: a soot-dark stone footing with a ley rune, a rust-brick dome, an arched mouth glowing ember, a smoke hole. */
-const KILN: Shape[] = [
+export const KILN: Shape[] = [
   shadow(17, 4.5, -1),
   rect(-16, -12, 32, 12, 2, { fill: sootStone, outline: true }),
   path('M -15 -10 L -15 -25 Q -15 -40 0 -40 Q 15 -40 15 -25 L 15 -10 Z', { fill: brick, outline: true }),

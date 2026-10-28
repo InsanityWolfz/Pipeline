@@ -92,6 +92,11 @@ export class LightingView {
     if (this.webgl) for (let i = 0; i < POOL; i++) this.pool.push(scene.lights.addLight(0, 0, 1, 0xffffff, 0).setVisible(false));
   }
 
+  /** 077: weather lightning struck at (x, y): 074's ambient flash and rod-strike light, as a rod strike's. */
+  weatherStrike(x: number, y: number): void {
+    this.pulses.strike(x, y, settings().flashes);
+  }
+
   /** The lights placed now (intensity × the mood's scale), for the light catch. */
   get lightsNow(): readonly PlacedLight[] {
     return this.placed;

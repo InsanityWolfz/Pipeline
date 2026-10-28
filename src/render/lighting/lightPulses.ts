@@ -61,6 +61,17 @@ export class LightPulses {
     for (const s of ev.strikes) bolt(s.x, s.y);
   }
 
+  /**
+   * 077: weather lightning struck at (x, y): the ambient flash, on the same clock rod strikes set (so a weather strike
+   * and a rod strike together make one flash, never two stacked), and the rod-strike light there. Flashes off: neither.
+   */
+  strike(x: number, y: number, flashes: boolean): void {
+    if (!flashes) return;
+    this.sinceStrike = 0;
+    const R = S.rodStrike;
+    this.pulses.push({ source: 'rodStrike', x, y, radius: R.radius, color: R.color, intensity: R.intensity, ms: R.ms, age: 0 });
+  }
+
   /** The pulses alive now, fading over their life. */
   lights(): LightCandidate[] {
     return this.pulses.map((p) => ({ source: p.source, x: p.x, y: p.y, radius: p.radius, color: p.color, intensity: p.intensity * (1 - p.age / p.ms), priority: S[p.source].priority }));

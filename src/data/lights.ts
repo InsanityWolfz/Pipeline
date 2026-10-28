@@ -23,7 +23,7 @@ interface LightSource {
   /** Fires: a radius per kind, and the flicker (± share) and its rate (Hz); the kilns' and chimneys' placing. */
   readonly radii?: Readonly<Record<string, number>>;
   readonly kiln?: { readonly rise: number; readonly perTile: number; readonly max: number };
-  readonly chimney?: { readonly rises: readonly number[]; readonly intensity: number };
+  readonly chimney?: { readonly rises: readonly number[]; readonly intensity: number; readonly stumpRise: number };
   readonly flicker?: number;
   readonly flickerHz?: number;
   /** Ley lines: a light every this many tiles along a line, by tier. */
@@ -51,14 +51,14 @@ export const LIGHT_SOURCES = {
    * Fires: braziers, flaring Emberworks vents, burning ground; a ±`flicker` flicker. 074.7: the Emberworks' kiln mouths
    * and chimney tops too: a light per row of kilns side by side, `kiln.rise` px up from their feet, its radius `kiln`
    * plus `kiln.perTile` a kiln past the first (at most `kiln.max`); a light at each chimney's lip, `chimney.rises` px up
-   * by its look (the frame emberworksTiles picks).
+   * by its look (the frame emberworksTiles picks; 077: a broken stump's at its own lip, `stumpRise`).
    */
   fire: {
     color: 'cinder',
     radius: 64,
     radii: { brazier: 64, vent: 72, ground: 40, kiln: 60, chimney: 40 },
     kiln: { rise: 10, perTile: 14, max: 104 },
-    chimney: { rises: [76, 68] as const, intensity: 0.7 },
+    chimney: { rises: [76, 68] as const, intensity: 0.7, stumpRise: 36 },
     intensity: 0.9,
     priority: 2,
     tiers: LIT,
@@ -116,3 +116,17 @@ export const QUALITY_LOOK: Readonly<Record<Quality, { lights: boolean; pools: bo
  * over the ground and under the glows, fog and everything standing.
  */
 export const LIGHT_POOL = { size: 128, alpha: 0.3, maxAlpha: 0.55 } as const;
+
+/**
+ * 077: the set pieces that give light (Medium and High), placed where each piece's art says (`lightAt` in
+ * src/data/setPieces.ts): the Ley Tower's cracked crystal is a ley light (breathing with 014's glows), the Great
+ * Furnace's mouth and the Great Crucible's glow are fires (flickering ±15%). The other set pieces give none.
+ */
+/** 077: a set piece's breathing light (the Ley Tower's crystal) swings between `floor` and 1 of its intensity, on the glows' beat `stagger` beats along. */
+export const SET_PIECE_BREATHE = { floor: 0.75, stagger: 5 } as const;
+
+export const SET_PIECE_LIGHTS: Readonly<Record<string, { readonly source: 'ley' | 'fire'; readonly color: string; readonly radius: number; readonly intensity: number; readonly priority: number; readonly flicker?: boolean }>> = {
+  'ley-tower': { source: 'ley', color: 'cyan', radius: 96, intensity: 0.7, priority: 3 },
+  'great-furnace': { source: 'fire', color: 'cinder', radius: 96, intensity: 0.9, priority: 2, flicker: true },
+  'great-crucible': { source: 'fire', color: 'cinder', radius: 72, intensity: 0.8, priority: 2, flicker: true },
+};

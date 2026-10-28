@@ -76,6 +76,25 @@ export function installTestHook(flow: FlowScene): void {
       const l = live().lighting;
       if (l) l.off = off;
     },
+    worldLifeOff: (off) => live().worldLife?.setOff(off),
+    loadEntrances: act((sim, _scene, rounds: (string | null)[]) => {
+      sim.link.entrances.forEach((e, i) => {
+        const round = rounds[i] ?? null;
+        e.open = true;
+        e.ammoId = round;
+        e.count = round === null ? 0 : 999;
+      });
+    }),
+    fxOff: (off) => {
+      const scene = live();
+      if (scene.shots) scene.shots.fx.off = off;
+      if (off) scene.shots?.fx.clear();
+    },
+    trailCap: (cap) => {
+      const shots = live().shots;
+      if (shots) shots.trails.capHeld = cap;
+    },
+    strikeWeather: () => live().worldLife?.strikeNow(),
     claim: act((sim, _scene, site: string) => claim(sim, site)),
     completeObjectives: act((sim, _scene, count: number) => {
       sim.objectives = sim.objectives.map((done, i) => done || i < count);
@@ -108,7 +127,7 @@ export function installTestHook(flow: FlowScene): void {
       const scene = live();
       return scene.legibility?.summaryRows(scene.sim) ?? [];
     },
-    wanderer: () => flow.live?.playerView?.pixels() ?? null,
+    wanderer: (along?: number) => flow.live?.playerView?.pixels(along) ?? null,
     wandererClock: (ms: number | null) => {
       const view = live().playerView;
       if (view) view.pinnedMs = ms;

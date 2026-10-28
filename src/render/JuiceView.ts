@@ -8,6 +8,9 @@ import { TEXT_STYLES } from '../data/fonts';
 import { phaserStyle } from './fonts';
 import { textureScale } from './vector/textures';
 import { Particles } from './Particles';
+import { FX_PRIORITY, type FxPriority } from '../data/fxQuality';
+import type { Quality } from '../data/settings';
+import type { ParticleLedger } from './particleBudget';
 
 // Feel (014): camera shake, damage numbers and particles. The camera lead
 // toward the aim was taken out in 015 at Shaun's request.
@@ -44,11 +47,14 @@ export class JuiceView {
   cameraShakes = 0;
   /** Burn beats' small numbers shown since boot (060), for the test hook. */
   burnNumbers = 0;
+  /** 078: damage numbers shown since boot, for the hit feedback check (unchanged by the shot effects). */
+  numbers = 0;
 
-  constructor(scene: Scene) {
+  /** 078: `ledger` counts every live particle by kind; `quality` is the Graphics quality the bursts scale by. */
+  constructor(scene: Scene, ledger: ParticleLedger, quality: () => Quality) {
     this.scene = scene;
     this.camera = scene.cameras.main;
-    this.particles = new Particles(scene);
+    this.particles = new Particles(scene, ledger, quality);
     this.reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   }
 
@@ -84,9 +90,10 @@ export class JuiceView {
     this.camera.shake(shake.ms, shake.intensity, true);
   }
 
-  burst(name: keyof typeof PARTICLES, x: number, y: number, depth?: number): void {
+  /** 014's burst by name: within the effect share's room for its priority (078: `FX_PRIORITY`, or `cue` where an enemy attack plays it). */
+  burst(name: keyof typeof PARTICLES, x: number, y: number, depth?: number, priority?: FxPriority): void {
     const burst: ParticleBurst = PARTICLES[name];
-    this.particles.emit(burst, x, y, depth ?? DEPTHS.worldUi - 1);
+    this.particles.emit(burst, x, y, depth ?? DEPTHS.worldUi - 1, priority ?? FX_PRIORITY[name]);
   }
 
   /**
@@ -96,6 +103,7 @@ export class JuiceView {
   damageNumber(amount: number, x: number, y: number, onPlayer: boolean, small = false): void {
     if (small && Math.round(amount) < 1) return;
     if (small) this.burnNumbers += 1;
+    this.numbers += 1;
     const n = small ? { ...DAMAGE_NUMBERS, scale: DAMAGE_NUMBERS.scale * DAMAGE_NUMBERS.burn.scale, pop: DAMAGE_NUMBERS.pop * DAMAGE_NUMBERS.burn.scale, enemy: DAMAGE_NUMBERS.burn.color } : DAMAGE_NUMBERS;
     const now = this.scene.time.now;
     this.recent = this.recent.filter((r) => now - r.at < n.stackMs);

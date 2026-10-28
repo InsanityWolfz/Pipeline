@@ -10,7 +10,7 @@ import type { SoundView } from './SoundView';
 export function playEmberEnemies(ev: SimEvents, j: JuiceView, s: SoundView): void {
   for (const b of [...ev.moteBursts, ...ev.deathBursts]) {
     s.play(SOUNDS.moteBurst);
-    j.burst('embers', b.x, b.y - 16);
+    j.burst('embers', b.x, b.y - 16, undefined, 'cue');
     j.shake('small');
   }
   for (const d of ev.dashes) {

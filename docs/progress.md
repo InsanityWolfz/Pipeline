@@ -2,6 +2,22 @@
 
 Newest entry first. Entries before 050 are in docs/progress-archive.md.
 
+## 2026-10-28: 077 World detail, landmarks and weather
+**Changed:** on `claude/077-world-and-weather` (InsanityWolfz/Pipeline#94, stacked on 074), art pass 4 of 8, from Shaun's art interview (plan docs/plans/077-world-and-weather.md):
+- moderate world detail: flowers, rubble, plants and ruin bits per region, placed by a deterministic hash per tile, with paths and fight space kept clear;
+- three landmarks per region (Region 1: Fallen Colossus, Ley Tower, The Watcher; Hollows: Unfinished Giant, Aqueduct Head, Great Crane; Emberworks: Great Furnace, Great Crucible, Toppled Stack; Stormcrown: Storm Tower, Stormcaller, Wind Harp), each only on tiles that already block, named on hover;
+- swaying grass and trees on a fixed 2.4–3.6 s cycle (wind changes only amplitude, eased), rippling water and flowing ley;
+- weather: pollen and ley motes in Region 1, dust with gusts in the Hollows, ash and embers in the Emberworks, rain and lightning in the Stormcrown; none in the foundry, Low's counts in boss fights; lightning never strikes through the player or under the HUD.
+
+No sim change; `SAVE_VERSION` stays 22. Reviewed, including a motion check at real speed: two blocking findings fixed (plants snapped at every gust and fluttered at region borders; a per-frame walk over every chunk). `npm run check` 2749 tests; CI green. Raised for Shaun: 077.1–077.17; 077.3, 077.4, 077.12, 077.16 and 077.17 need his call.
+
+**Next:** Shaun's playtest after 074; "merge 94" after 91.
+
+**Notes:**
+- Frame times (software renderer): a Stormcrown rain fight 108 / 107 / 303 ms on Low / Medium / High; Low is no slower than the world off.
+- The shared particle budget copies 076's numbers until 076 merges; 078 turns it into one ledger.
+- `tests/e2e/feedback.spec.ts` "F in play" sits near its 30 s limit on a loaded runner (typing about 350 ms a key); older than 077, worth a fix-track change.
+
 ## 2026-10-28: 076 Enemy and boss polish
 **Changed:** on `claude/076-enemy-polish` (InsanityWolfz/Pipeline#93, stacked on 074 and 075), art pass 3 of 8, from Shaun's art interview (plan docs/plans/076-enemy-polish.md):
 - all 19 rigs (15 enemies, 4 bosses) redrawn in a family look per region: Mossbound ruins (Region 1), Quarry constructs (the Hollows), Forge constructs (the Emberworks), Storm-works (the Stormcrown); soft gradients, a rim light per family, the thin ink outline; boxes and hitboxes unchanged;
@@ -17,22 +33,6 @@ Newest entry first. Entries before 050 are in docs/progress-archive.md.
 **Notes:**
 - Boot bakes more frames: 1.13 s against main's 0.63 s at 2×, 1.92 s against 1.08 s at 3×; boot to ready 3.8 s against 3.1 s.
 - This machine draws 8–13 frames a second under load, so real-time motion strips have 11–19 cells a second.
-
-## 2026-10-27: 074 Light and region moods
-**Changed:** on `claude/074-light-and-moods` (InsanityWolfz/Pipeline#91), art pass 1 of 8, from Shaun's art interview and his pick of the "pushed vector, ley light, a mood per region" direction (docs/brainstorm/2026-10-27-art-interview.md, docs/art/style-test-2.html; plan docs/plans/074-light-and-moods.md):
-- a mood per region as data: Region 1 stays sunny; the Hollows dusky (`hollow` 0.7, `hollow-dark` fog); the Emberworks rust-dark with ash smoke and a flame wash; the Stormcrown dark (`storm-dark` 0.85) with fog and lightning flashes that obey the Flashes setting;
-- glowing things light what's near them: ley lines, crystals, pylons and springs, fires and the Emberworks' kilns and chimneys, the muzzle flash, bosses' attacks, rod lightning and blasts; the player and enemies are never darkened and only take a light's catch;
-- ground blending: soft terrain edges, worn roads, patches and cracks;
-- Settings → Graphics quality: Low (a tint, no lights), Medium (the default: soft light pools on the ground), High (per-pixel light on the ground and the props a light reaches);
-- design.md's "Camera and art" rewritten for the art pass, with Shaun's approval.
-
-`SAVE_VERSION` stays 22. Reviewed: one blocking finding fixed (on Medium, lightning didn't flash the ground), the dark moods retuned toward the approved sample, kiln fires added, altars and arena doors moved into the mood. `npm run check` 2646 tests; CI green. Raised for Shaun: 074.1–074.14; 074.5, 074.7, 074.13 and 074.14 need his call.
-
-**Next:** Shaun's playtest, trying High on his laptop; his OK on the moods, the kiln fires and Medium's light pools; "merge 91". 075 and 076 retake their region shots once this is in.
-
-**Notes:**
-- Frame times (headless software renderer, loaded machine): a Stormcrown fight 127 / 123 / 385 ms on Low / Medium / High; Low costs no more than the moods off (0.97×). High lights only what a light reaches: 29 draw calls a frame, against 218 before.
-- The sim runs fixed ticks, but under about 6 fps (`MAX_TICKS_PER_FRAME` 10) the game slows rather than skip; true on main too.
 
 ## 2026-10-27: 075 The wanderer redesign
 **Changed:** on `claude/075-wanderer-redesign` (InsanityWolfz/Pipeline#92), art pass 2 of 8, from Shaun's art interview (docs/brainstorm/2026-10-27-art-interview.md; plan docs/plans/075-wanderer-redesign.md):
@@ -50,6 +50,21 @@ Newest entry first. Entries before 050 are in docs/progress-archive.md.
 - After Shaun's first look (2026-10-28: "the walking animation is abysmal"): the walk ran at 12.2 steps a second with a 1 px hop and squash on every step; now 3.75 steps a second, a 0.4 px bob, strafing no faster, guarded by tests; a rule in .claude/rules/render.md and the reviewer's checklist now has motion judged in motion.
 - Shots spawn 12 px from the feet box's centre, while the drawn muzzle sits about 26 px forward and 19 px up; older than 075, more visible with the flash (075.10).
 
+## 2026-10-27: 074 Light and region moods
+**Changed:** on `claude/074-light-and-moods` (InsanityWolfz/Pipeline#91), art pass 1 of 8, from Shaun's art interview and his pick of the "pushed vector, ley light, a mood per region" direction (docs/brainstorm/2026-10-27-art-interview.md, docs/art/style-test-2.html; plan docs/plans/074-light-and-moods.md):
+- a mood per region as data: Region 1 stays sunny; the Hollows dusky (`hollow` 0.7, `hollow-dark` fog); the Emberworks rust-dark with ash smoke and a flame wash; the Stormcrown dark (`storm-dark` 0.85) with fog and lightning flashes that obey the Flashes setting;
+- glowing things light what's near them: ley lines, crystals, pylons and springs, fires and the Emberworks' kilns and chimneys, the muzzle flash, bosses' attacks, rod lightning and blasts; the player and enemies are never darkened and only take a light's catch;
+- ground blending: soft terrain edges, worn roads, patches and cracks;
+- Settings → Graphics quality: Low (a tint, no lights), Medium (the default: soft light pools on the ground), High (per-pixel light on the ground and the props a light reaches);
+- design.md's "Camera and art" rewritten for the art pass, with Shaun's approval.
+
+`SAVE_VERSION` stays 22. Reviewed: one blocking finding fixed (on Medium, lightning didn't flash the ground), the dark moods retuned toward the approved sample, kiln fires added, altars and arena doors moved into the mood. `npm run check` 2646 tests; CI green. Raised for Shaun: 074.1–074.14; 074.5, 074.7, 074.13 and 074.14 need his call.
+
+**Next:** Shaun's playtest, trying High on his laptop; his OK on the moods, the kiln fires and Medium's light pools; "merge 91". 075 and 076 retake their region shots once this is in.
+
+**Notes:**
+- Frame times (headless software renderer, loaded machine): a Stormcrown fight 127 / 123 / 385 ms on Low / Medium / High; Low costs no more than the moods off (0.97×). High lights only what a light reaches: 29 draw calls a frame, against 218 before.
+- The sim runs fixed ticks, but under about 6 fps (`MAX_TICKS_PER_FRAME` 10) the game slows rather than skip; true on main too.
 ## 2026-10-27: 073 Enemies only attack on screen
 **Changed:** on `claude/073-offscreen-attacks` (InsanityWolfz/Pipeline#90), from Shaun's call on 071 ("anything off the screen should de aggro") and his interview (docs/brainstorm/2026-10-27-offscreen-attacks.md; plan docs/plans/073-offscreen-attacks.md):
 - no enemy starts an attack (a wind-up, a shot, a charge, a heal beam) while off screen; held, it acts as if its cooldown weren't ready, and walks home after the 1 s leash grace as before;

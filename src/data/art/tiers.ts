@@ -68,13 +68,15 @@ function swapPaint(p: Paint, swap: Readonly<Record<string, string>>): Paint {
   return 'linear' in p ? { linear: p.linear, stops } : { radial: p.radial, stops };
 }
 
-/** A shape in a tier's colours (TIER_ART): its fill, stroke, glow and line recoloured, its opacity scaled. */
+/** A shape in a tier's colours (TIER_ART): its fill, stroke, glow, rim and line recoloured, its opacity scaled. */
 export function inTier(shape: Shape, tier: TierId): Shape {
   const { swap, alpha } = TIER_ART[tier];
   const style = {
     ...(shape.fill ? { fill: swapPaint(shape.fill, swap) } : {}),
     ...(shape.stroke ? { stroke: { ...shape.stroke, color: swapInk(shape.stroke.color, swap) } } : {}),
     ...(shape.glow ? { glow: { ...shape.glow, color: swap[shape.glow.color] ?? shape.glow.color } } : {}),
+    // 078: the redrawn bodies' rim light takes the tier's colours too.
+    ...(shape.rim ? { rim: { ...shape.rim, color: swapInk(shape.rim.color, swap) } } : {}),
     ...(alpha !== 1 ? { alpha: (shape.alpha ?? 1) * alpha } : {}),
   };
   return shape.kind === 'line' ? { ...shape, ...style, color: swapInk(shape.color, swap) } : { ...shape, ...style };

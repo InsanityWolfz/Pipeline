@@ -103,6 +103,9 @@ const viewOf = (f: Facing): 'down' | 'up' | 'side' => (f === 'up' || f === 'down
 // telegraph on the ground.
 export class EnemyView {
   private readonly drawn = new Map<number, Drawn>();
+  /** 078: hit-stop holds since boot, and the last one's length (ms), for the hit feedback check. */
+  holds = 0;
+  holdMs = 0;
   /** Scene time each frozen enemy thaws at. */
   private readonly frozenUntil = new Map<number, number>();
   /** Each enemy as last drawn, for `ui`. */
@@ -118,6 +121,8 @@ export class EnemyView {
 
   /** Hit-stop (014): holds a struck enemy's sprite still, pose and place, for `ms`. The sim runs on. */
   freeze(id: number, ms: number): void {
+    this.holds += 1;
+    this.holdMs = ms;
     this.frozenUntil.set(id, this.scene.time.now + ms);
   }
 

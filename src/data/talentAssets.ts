@@ -141,11 +141,9 @@ export const LEVEL_UP = {
 /**
  * A burning arrow (054, E.3: through a Pool with Blastfletch): its flame, drawn `tipScale` ×, sits `tipAhead` px along its flight from the
  * arrow's centre, `tipDepth` in front of the arrow, flickering by `flicker` of its size and alpha every `flickerMs` (its alpha
- * peaking at `tipAlpha`, held to 1); an ember trail runs along its last
- * `trail.points` drawn positions from the tick it caught fire (TRAIL_SHAPE's taper), with an ember `ember.r` px
- * across at every `ember.every`th point, drifting up to `ember.drift` px (each point `ember.phase` radians out of step
- * with the last) and fading toward the tail; each hit
- * flashes `flash` (from → to scale over `ms`, `lift` px up its body, `depthAbove` px in front of what it hits).
+ * peaking at `tipAlpha`, held to 1); 078: from the tick it caught fire its trail is the fire element's (AMMO_FX), embers
+ * and all; each hit flashes `flash` (from → to scale over `ms`, `lift` px up its body, `depthAbove` px in front of what
+ * it hits).
  */
 export const BURNING_LOOK = {
   tipAhead: 4,
@@ -154,8 +152,6 @@ export const BURNING_LOOK = {
   tipAlpha: 1.1,
   flicker: 0.18,
   flickerMs: 70,
-  trail: { color: 'cinder', core: 'cinder-light', points: 10, width: 3, alpha: 0.9 },
-  ember: { every: 2, r: 0.9, drift: 2.5, phase: 1.7, color: 'cinder-light', alpha: 0.9 },
   flash: { ms: 240, from: 0.6, to: 1.3, lift: 12, depthAbove: 24 },
 } as const;
 

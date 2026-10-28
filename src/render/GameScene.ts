@@ -9,8 +9,6 @@ import { clearEvents, createEvents, type SimEvents } from '../sim/events';
 import type { Command } from '../sim/input';
 import { roomById, type SimState } from '../sim/state';
 import { stepSim } from '../sim/step';
-import { ArrowView } from './ArrowView';
-import { BombView } from './BombView';
 import { BuildView } from './BuildView';
 import { Controls, NO_UI_COMMAND, type UiCommand } from './controls';
 import { CraftMenuView } from './CraftMenuView';
@@ -27,6 +25,9 @@ import { SiteMenus } from './SiteMenus';
 import { SiteView } from './SiteView';
 import { WakeView } from './WakeView';
 import { mergeEvents } from './eventLog';
+import { ParticleLedger } from './particleBudget';
+import { ShotLayer } from './fx/ShotLayer';
+import { inRoom } from './inRoom';
 import { FeelView } from './FeelView';
 import { TutorialUi } from './TutorialUi';
 import { currentFit, type ScreenFit } from './scale';
@@ -53,11 +54,10 @@ import { SilhouetteView } from './SilhouetteView';
 import { WorldLayer } from './lighting/WorldLayer';
 import { LightingView } from './lighting/LightingView';
 import { BossShow } from './bossShow';
+import { WorldLife } from './world/WorldLife';
+import { settings } from './flow/settingsStore';
 
 const FIRST_PIECE = BUILD_BAR[0] ?? '';
-
-const inRoom = <T extends { roomId: string }>(list: readonly T[], roomId: string): T[] =>
-  list.filter((o) => o.roomId === roomId);
 
 // Draws the sim and drives it in real time. Holds no game rules.
 export class GameScene extends Scene {
@@ -69,13 +69,13 @@ export class GameScene extends Scene {
   private controls?: Controls;
   roomViews?: RoomViews;
   playerView?: PlayerView;
-  arrowView?: ArrowView;
+  /** 078: the rounds in flight (ArrowView, BombView), their trails and the shot effects. */
+  shots?: ShotLayer;
   hud?: HudView;
   enemyView?: EnemyView;
   groundItemView?: GroundItemView;
   effects?: EffectsView;
   nodeView?: NodeView;
-  private bombView?: BombView;
   private foundryView?: FoundryView;
   buildView?: BuildView;
   /** 063: the Tools group, the area box and its menu. */
@@ -96,16 +96,19 @@ export class GameScene extends Scene {
   legibility?: Legibility;
   /** 070: the player's silhouette behind props. */
   silhouette?: SilhouetteView;
-  /** 074: the region's mood and light. */
+  /** 074: the region's mood and light. 077: the overworld's decor, set pieces, motion and weather. */
   lighting?: LightingView;
   /** 080: the boss intros and phase looks. */
   bossShow?: BossShow;
+  worldLife?: WorldLife;
   /** 044: the Sandbox panel (056, 057: the sandbox's controls, pop-outs there, and only there). */
   sandboxPanel?: SandboxPanel;
   /** The room on screen. It lags the player's room through a door's fade (roomFollow.ts). */
   private readonly room: RoomFollow;
   /** Events from every tick since the last draw; the sim clears its own each tick. */
   private readonly pending: SimEvents = createEvents();
+  /** 078: every live particle by kind (death motes, weather, effects), for the one particle budget. */
+  readonly ledger = new ParticleLedger();
   /** Set by the test hook: the real-time loop stops advancing the sim (the menu still opens and crafts). */
   manualStepping = false;
   /** The page's `data-game` is set (fix-playtest-ui). */
@@ -146,16 +149,17 @@ export class GameScene extends Scene {
     const occluders = new Occluders();
     // 074: the ground and props the region's mood and lights reach.
     const world = new WorldLayer();
-    this.roomViews = new RoomViews(this, occluders, world);
+    this.worldLife = new WorldLife(this, { quality: () => this.lighting?.quality ?? 'medium', flashes: () => settings().flashes, particles: () => this.feel?.juice.particles.count ?? 0, weather: (n) => this.ledger.set('weather', n), strike: (x, y) => this.lighting?.weatherStrike(x, y) }, world, occluders);
+    this.roomViews = new RoomViews(this, occluders, world, this.worldLife);
     this.foundryView = new FoundryView(this, occluders);
-    this.nodeView = new NodeView(this, occluders, world);
+    this.nodeView = new NodeView(this, occluders, world, this.worldLife.sway);
     this.groundItemView = new GroundItemView(this);
     this.enemyView = new EnemyView(this);
     this.playerView = new PlayerView(this);
     this.silhouette = new SilhouetteView(this, occluders);
     this.effects = new EffectsView(this, this.playerView.sprite, (atDark, ms, rgb) => this.sceneCameras?.fadeThrough(atDark, ms, rgb), () => this.feel?.juice.particles, (id) => this.enemyView?.lastOf(id));
-    this.arrowView = new ArrowView(this);
-    this.bombView = new BombView(this);
+    // 078: the rounds in flight, their trails and the shot effects.
+    this.shots = new ShotLayer(this, () => this.feel?.juice.particles, (id) => this.enemyView?.lastOf(id));
     this.hud = new HudView(this);
     this.buildView = new BuildView(this);
     this.blueprintUi = new BlueprintUi(this);
@@ -171,7 +175,7 @@ export class GameScene extends Scene {
     this.sandboxPanel = new SandboxPanel(this);
     this.legibility = new Legibility(this, [this.hud, this.siteMenus, this.buildView]);
     this.cursorView = new CursorView(this);
-    this.feel = new FeelView(this, (id) => this.foundryView?.dropIn(id), (id, ms) => this.enemyView?.freeze(id, ms));
+    this.feel = new FeelView(this, (id) => this.foundryView?.dropIn(id), (id, ms) => this.enemyView?.freeze(id, ms), { ledger: this.ledger, quality: () => this.lighting?.quality ?? 'medium' });
     this.bossShow = new BossShow(this, () => this.feel, () => this.lighting?.quality ?? 'medium');
     this.room.show(this.sim.roomId);
     this.draw();
@@ -284,7 +288,6 @@ export class GameScene extends Scene {
     this.hud?.update(sim, this.pending, this.game.loop.delta, this.sandboxPanel?.loadoutOut ?? 0);
     // 063: a stamp's pieces don't switch the bar's tunnel end.
     if (this.pending.stamps.length === 0) this.buildView?.placed(this.pending.places.map((p) => p.pieceId));
-    clearEvents(this.pending);
     const inFoundry = shown === FOUNDRY_ROOM;
     this.foundryView?.update(sim.foundry, inFoundry, sim.building);
     this.nodeView?.update(inRoom(sim.nodes, shown), sim.harvest, this.game.loop.delta);
@@ -297,13 +300,15 @@ export class GameScene extends Scene {
     if (this.playerView) this.silhouette?.update(this.playerView.sprite, shown === sim.roomId && sim.player.dying === 0);
     if (this.playerView && shown === sim.roomId) catches?.offer(this.playerView.sprite, sim.player.x, sim.player.y, 'player', 0);
     catches?.end();
-    this.arrowView?.update(inRoom(sim.arrows, shown));
-    this.bombView?.update(inRoom(sim.bombs, shown));
+    // 078: the rounds and shot effects (this frame's events, rounds and posed muzzle), at the Graphics quality (074).
+    this.shots?.draw(sim, this.pending, shown, this.lighting?.quality ?? 'medium', this.game.loop.delta * this.tweens.timeScale, this.playerView);
     this.site?.update(sim, shown);
     this.siteMenus?.update(sim);
     this.menu?.update(sim);
     const topOf = (id: number) => this.foundryView?.topOf(id);
     drawPointerUi(this, sim, { controls: this.controls, topOf, wakeShown: () => this.wake?.isShown ?? false, shown, inFoundry });
     this.drawnTick = sim.tick;
+    // Every view has had this frame's events (078: the shot effects play last); the next frame's start empty.
+    clearEvents(this.pending);
   }
 }

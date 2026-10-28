@@ -1,7 +1,8 @@
 import { DEATH_SIZE } from '../data/art/enemyFamilies';
 import { ENEMY_MOTION } from '../data/art/enemyMotion';
-import { DEATH_MOTES, PARTICLE_BUDGET } from '../data/juice';
+import { DEATH_MOTES } from '../data/juice';
 import type { Quality } from '../data/settings';
+import { roomFor } from './particleBudget';
 
 // 076: a death's ley motes and the dissolve's curve, pure. The count comes from the enemy's size class, a champion and
 // the Graphics quality, thinned hard to the per-death cap, the live death-mote cap and what the particle budget has
@@ -13,12 +14,15 @@ const D = ENEMY_MOTION.dissolve;
 export interface MoteRoom {
   quality: Quality;
   liveMotes: number;
+  /** `Particles`' live count: the death motes and every effect. */
   liveParticles: number;
+  /** 078: the weather (or room motes) alive, which the budget counts too. */
+  liveWeather?: number;
 }
 
-/** At most `want`, within the live death-mote cap and the particle budget's room. */
+/** At most `want`, within the live death-mote cap and the particle budget's room (078: the ledger's `roomFor`). */
 export function waveCount(want: number, r: MoteRoom): number {
-  return Math.max(0, Math.min(want, DEATH_MOTES.liveCap[r.quality] - r.liveMotes, PARTICLE_BUDGET[r.quality] - r.liveParticles));
+  return Math.max(0, Math.min(want, roomFor('death', 'cue', r.quality, { death: r.liveMotes, weather: r.liveWeather ?? 0, effect: r.liveParticles - r.liveMotes })));
 }
 
 /** How many motes a death throws in all. */

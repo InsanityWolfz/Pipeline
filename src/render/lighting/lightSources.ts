@@ -1,7 +1,8 @@
 import { TILE_SIZE } from '../../data/config';
 import { GROUND } from '../../data/art/ground';
 import { AMBIENT, GLOWS } from '../../data/juice';
-import { LIGHT_SOURCES, ROUND_LIGHTS } from '../../data/lights';
+import { LIGHT_SOURCES, ROUND_LIGHTS, SET_PIECE_BREATHE, SET_PIECE_LIGHTS } from '../../data/lights';
+import { SET_PIECES, setPieceAnchor } from '../../data/setPieces';
 import { PROPS } from '../../data/props';
 import type { Quality } from '../../data/settings';
 import { SPRING_LOOK } from '../../data/springAssets';
@@ -90,6 +91,16 @@ export function gatherLights(input: SourceInput): LightCandidate[] {
     for (const l of leyLinePoints(v, quality, PAD)) add('leyLine', l.x, l.y, S.leyLine.radius, S.leyLine.color, S.leyLine.intensity, S.leyLine.priority);
     // 074.7: the Emberworks' kiln mouths and chimney tops burn.
     for (const f of firePoints(room.rows, v, PAD)) add('fire', f.x, f.y, f.radius, S.fire.color, f.intensity * flicker(time, f.x * 0.37 + f.y), S.fire.priority);
+    // 077: the set pieces that give light (the Ley Tower's crystal breathing, the Great Furnace's and Crucible's fires).
+    for (const p of SET_PIECES) {
+      const l = SET_PIECE_LIGHTS[p.id];
+      if (!l || !p.lightAt) continue;
+      const a = setPieceAnchor(p, T);
+      const x = a.x + p.lightAt[0];
+      const y = a.y + p.lightAt[1];
+      const k = l.flicker ? flicker(time, x * 0.37 + y) : SET_PIECE_BREATHE.floor + (1 - SET_PIECE_BREATHE.floor) * breathe(time, SET_PIECE_BREATHE.stagger);
+      add(l.source, x, y, l.radius, l.color, l.intensity * k, l.priority);
+    }
   }
   // Burning ground: a cinder mote's pool, a hound's trail; the Forgewright's flood is its own (a boss attack).
   for (const pool of sim.floodPools) {

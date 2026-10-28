@@ -1,3 +1,6 @@
+import type { Quality } from './settings';
+import { WEATHER_CAP } from './weather';
+
 // Feel tuning (014): screen shake, hit-stop, particles, damage numbers, the
 // camera's lead, ambient light and motes. Render-only; nothing here touches the sim.
 
@@ -153,8 +156,17 @@ export const DEATH_MOTES = {
   bossSize: 3,
 } as const;
 
-/** 076: live particles of every kind the moderate set allows, by Graphics quality. In 076 only the death motes obey it (078 brings the rest). */
+/** 076: live particles of every kind the moderate set allows, by Graphics quality. 078: every particle obeys it, by share. */
 export const PARTICLE_BUDGET = { low: 150, medium: 300, high: 500 } as const;
+
+const shares = (q: Quality) => ({ death: DEATH_MOTES.liveCap[q], weather: WEATHER_CAP[q], effect: PARTICLE_BUDGET[q] - DEATH_MOTES.liveCap[q] - WEATHER_CAP[q] });
+
+/**
+ * 078: the budget's three fixed shares (src/render/particleBudget.ts): 076's live death-mote cap, 077's weather cap (and
+ * 014's room motes indoors), and what's left for every other effect (impacts, blasts, sparks, trail bits and 014's
+ * bursts). Derived, not a number of its own: retuning 076 or 077 retunes it. No share lends its room to another.
+ */
+export const PARTICLE_SHARES: Readonly<Record<Quality, { readonly death: number; readonly weather: number; readonly effect: number }>> = { low: shares('low'), medium: shares('medium'), high: shares('high') };
 
 /** The burst each node type gives off while worked and when a harvest lands (018). */
 export const HARVEST_BURSTS: Readonly<Record<string, keyof typeof PARTICLES>> = {
