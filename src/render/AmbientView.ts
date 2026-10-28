@@ -50,6 +50,11 @@ export class AmbientView {
     this.vignette = scene.add.image(0, 0, VIGNETTE_KEY).setOrigin(0).setScrollFactor(0).setDepth(DEPTHS.mood + 1);
   }
 
+  /** 078: the room's motes now (none in the overworld), which count under the weather's share of the particle budget. */
+  get moteCount(): number {
+    return this.motes.length;
+  }
+
   /** Sets up a room's fixed lights, motes and mood. */
   show(room: Room, extra: readonly GlowSpot[]): void {
     for (const g of this.glows) g.destroy();

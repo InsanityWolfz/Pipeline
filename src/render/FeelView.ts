@@ -25,6 +25,8 @@ import { arenaLocked } from '../sim/arenaLock';
 import { playMines } from './mineFeel';
 import { playShots, WorkFeel } from './tierFeel';
 import { HollowsEnemyFeel } from './hollowsEnemyFeel';
+import type { ParticleLedger } from './particleBudget';
+import type { Quality } from '../data/settings';
 
 // Look and feel (014), driven by what the sim did since the last draw and how
 // its state moved on: sound, shake, hit-stop, particles, numbers and light.
@@ -61,12 +63,16 @@ export class FeelView {
   /** `dropIn` bounces a just-placed piece in the foundry view; `freeze` holds a struck enemy still (hit-stop). */
   private readonly scene: Scene;
 
-  constructor(scene: Scene, dropIn: (id: number) => void, freeze: (id: number, ms: number) => void) {
+  /** 078: `fx` is the scene's particle ledger and the Graphics quality the particles scale by. */
+  private readonly ledger: ParticleLedger;
+
+  constructor(scene: Scene, dropIn: (id: number) => void, freeze: (id: number, ms: number) => void, fx: { ledger: ParticleLedger; quality: () => Quality }) {
     this.dropIn = dropIn;
     this.freeze = freeze;
     this.scene = scene;
+    this.ledger = fx.ledger;
     this.sound = new SoundView(scene);
-    this.juice = new JuiceView(scene);
+    this.juice = new JuiceView(scene, fx.ledger, fx.quality);
     this.ambient = new AmbientView(scene);
   }
 
@@ -87,6 +93,8 @@ export class FeelView {
     const fixed: GlowSpot[] = room.crystal ? [{ ...tileCentre(room.crystal.tx, room.crystal.ty), ...GLOWS.crystal }] : [];
     this.ambient.show(room, fixed);
     this.juice.particles.clear();
+    // 078: 014's room motes count under the weather's share indoors; the overworld's weather reports its own.
+    this.ledger.set('weather', this.ambient.moteCount);
     this.sound.ambience(shown);
     this.modes.clear();
   }

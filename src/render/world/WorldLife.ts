@@ -44,8 +44,10 @@ const BOLT = { glow: LIGHTNING_LOOK.glow, bolt: LIGHTNING_LOOK.color, core: LIGH
 export interface WorldLifeHooks {
   quality(): Quality;
   flashes(): boolean;
-  /** Every other live particle (014's bursts; 076's death motes when it lands), for the shared budget. */
+  /** Every other live particle (014's bursts, 076's death motes, 078's effects), for the shared budget. */
   particles(): number;
+  /** 078: the weather alive now, reported to the scene's particle ledger. */
+  weather(live: number): void;
   /** Weather lightning struck: 074's ambient flash and rod-strike light (LightingView.weatherStrike). */
   strike(x: number, y: number): void;
 }
@@ -145,6 +147,7 @@ export class WorldLife {
     const targets = this.off ? [] : layerTargets(weights, quality, fight);
     const room0 = budgetRoom(quality, this.hooks.particles(), this.weather.count());
     const dead = this.weather.step(dt, view, targets, room0, wind);
+    this.hooks.weather(this.weather.count());
     this.weatherView.draw(this.weather, dead, quality);
     this.lightning(sim, room, view, dt, { quality, flashes: this.hooks.flashes(), stormWeight: weights.storm, fight, inArena, overworld: true });
     this.report(step, pieces, beads.length, glinting.length, quality, weights, targets.reduce((n, t) => n + t.count, 0), fight, room0);

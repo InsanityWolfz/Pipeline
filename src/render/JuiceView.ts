@@ -6,6 +6,9 @@ import { TEXT_STYLES } from '../data/fonts';
 import { phaserStyle } from './fonts';
 import { textureScale } from './vector/textures';
 import { Particles } from './Particles';
+import { FX_PRIORITY, type FxPriority } from '../data/fxQuality';
+import type { Quality } from '../data/settings';
+import type { ParticleLedger } from './particleBudget';
 
 // Feel (014): camera shake, damage numbers and particles. The camera lead
 // toward the aim was taken out in 015 at Shaun's request.
@@ -32,10 +35,11 @@ export class JuiceView {
   /** Burn beats' small numbers shown since boot (060), for the test hook. */
   burnNumbers = 0;
 
-  constructor(scene: Scene) {
+  /** 078: `ledger` counts every live particle by kind; `quality` is the Graphics quality the bursts scale by. */
+  constructor(scene: Scene, ledger: ParticleLedger, quality: () => Quality) {
     this.scene = scene;
     this.camera = scene.cameras.main;
-    this.particles = new Particles(scene);
+    this.particles = new Particles(scene, ledger, quality);
     this.reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   }
 
@@ -51,9 +55,10 @@ export class JuiceView {
     this.camera.shake(s.ms, s.intensity, true);
   }
 
-  burst(name: keyof typeof PARTICLES, x: number, y: number, depth?: number): void {
+  /** 014's burst by name: within the effect share's room for its priority (078: `FX_PRIORITY`, or `cue` where an enemy attack plays it). */
+  burst(name: keyof typeof PARTICLES, x: number, y: number, depth?: number, priority?: FxPriority): void {
     const burst: ParticleBurst = PARTICLES[name];
-    this.particles.emit(burst, x, y, depth ?? DEPTHS.worldUi - 1);
+    this.particles.emit(burst, x, y, depth ?? DEPTHS.worldUi - 1, priority ?? FX_PRIORITY[name]);
   }
 
   /**

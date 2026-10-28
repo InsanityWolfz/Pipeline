@@ -27,6 +27,8 @@ import { SiteMenus } from './SiteMenus';
 import { SiteView } from './SiteView';
 import { WakeView } from './WakeView';
 import { mergeEvents } from './eventLog';
+import { ParticleLedger } from './particleBudget';
+import type { Quality } from '../data/settings';
 import { FeelView } from './FeelView';
 import { TutorialUi } from './TutorialUi';
 import { currentFit, type ScreenFit } from './scale';
@@ -105,6 +107,8 @@ export class GameScene extends Scene {
   private readonly room: RoomFollow;
   /** Events from every tick since the last draw; the sim clears its own each tick. */
   private readonly pending: SimEvents = createEvents();
+  /** 078: every live particle by kind (death motes, weather, effects), for the one particle budget. */
+  readonly ledger = new ParticleLedger();
   /** Set by the test hook: the real-time loop stops advancing the sim (the menu still opens and crafts). */
   manualStepping = false;
   /** The page's `data-game` is set (fix-playtest-ui). */
@@ -145,7 +149,7 @@ export class GameScene extends Scene {
     const occluders = new Occluders();
     // 074: the ground and props the region's mood and lights reach.
     const world = new WorldLayer();
-    this.worldLife = new WorldLife(this, { quality: () => this.lighting?.quality ?? 'medium', flashes: () => settings().flashes, particles: () => this.feel?.juice.particles.count ?? 0, strike: (x, y) => this.lighting?.weatherStrike(x, y) }, world, occluders);
+    this.worldLife = new WorldLife(this, { quality: () => this.lighting?.quality ?? 'medium', flashes: () => settings().flashes, particles: () => this.feel?.juice.particles.count ?? 0, weather: (n) => this.ledger.set('weather', n), strike: (x, y) => this.lighting?.weatherStrike(x, y) }, world, occluders);
     this.roomViews = new RoomViews(this, occluders, world, this.worldLife);
     this.foundryView = new FoundryView(this, occluders);
     this.nodeView = new NodeView(this, occluders, world, this.worldLife.sway);
@@ -171,7 +175,7 @@ export class GameScene extends Scene {
     this.sandboxPanel = new SandboxPanel(this);
     this.legibility = new Legibility(this, [this.hud, this.siteMenus, this.buildView]);
     this.cursorView = new CursorView(this);
-    this.feel = new FeelView(this, (id) => this.foundryView?.dropIn(id), (id, ms) => this.enemyView?.freeze(id, ms));
+    this.feel = new FeelView(this, (id) => this.foundryView?.dropIn(id), (id, ms) => this.enemyView?.freeze(id, ms), { ledger: this.ledger, quality: () => this.fxQuality });
     this.room.show(this.sim.roomId);
     this.draw();
 
@@ -187,6 +191,11 @@ export class GameScene extends Scene {
   }
 
   /** Matches both cameras to the backbuffer (016). Called on boot and whenever the window changes. */
+  /** 078: the Graphics quality effects draw at (the Canvas renderer runs as Low, 074). */
+  get fxQuality(): Quality {
+    return this.lighting?.quality ?? 'medium';
+  }
+
   applyFit(fit: ScreenFit): void {
     this.fit = fit;
     this.sceneCameras?.applyFit(fit);

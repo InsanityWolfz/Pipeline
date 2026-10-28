@@ -25,6 +25,22 @@ function worldZoom(g: GameScene): number {
   return main && ui ? main.zoom / ui.zoom : 1;
 }
 
+/** 064, 076, 078: the particles flying, by kind and priority, and the pool. */
+function particlesUi(g: GameScene): GameUiState['particles'] {
+  const p = g.feel?.juice.particles;
+  return {
+    live: p?.count ?? 0,
+    deathMotes: p?.deathMotes ?? 0,
+    thrown: p?.motesThrown ?? 0,
+    moteColors: p?.moteColors ?? {},
+    dissolving: g.effects?.dissolves.count ?? 0,
+    weather: g.ledger.live.weather,
+    effects: g.ledger.live.effect,
+    byPriority: p?.byPriority ?? { cue: 0, shot: 0, soft: 0 },
+    pool: { created: p?.created ?? 0 },
+  };
+}
+
 export function gameUi(g: GameScene): GameUiState {
   const main = g.cameras?.main?.worldView;
   return {
@@ -43,7 +59,7 @@ export function gameUi(g: GameScene): GameUiState {
     nodeGlow: g.nodeView?.glowing ?? [],
     shakes: [...(g.feel?.juice.shakes ?? [])],
     burnNumbers: g.feel?.juice.burnNumbers ?? 0,
-    particles: { live: g.feel?.juice.particles.count ?? 0, deathMotes: g.feel?.juice.particles.deathMotes ?? 0, thrown: g.feel?.juice.particles.motesThrown ?? 0, moteColors: g.feel?.juice.particles.moteColors ?? {}, dissolving: g.effects?.dissolves.count ?? 0 },
+    particles: particlesUi(g),
     cursor: g.cursorView?.state ?? null,
     sliding: g.groundItemView?.sliding ?? 0,
     groundItems: g.groundItemView?.shown ?? [],

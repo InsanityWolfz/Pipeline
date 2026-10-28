@@ -120,7 +120,7 @@ export class DissolveView {
   /** What is flying now, for thinning a death's motes. */
   private room(): MoteRoom {
     const p = this.particles();
-    return { quality: settings().quality, liveMotes: p?.deathMotes ?? 0, liveParticles: p?.count ?? 0 };
+    return { quality: settings().quality, liveMotes: p?.deathMotes ?? 0, liveParticles: p?.count ?? 0, liveWeather: p?.ledger.live.weather ?? 0 };
   }
 
   /** Moves every dissolve on by `deltaMs` of the tween clock. */

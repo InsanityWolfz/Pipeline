@@ -155,8 +155,11 @@ export interface UiState {
   /** 060: burn beats' small numbers shown since boot, and enemies drawn with flames on them now. */
   burnNumbers: number;
   enemyFlames: number;
-  /** Particles flying now (064); 076: as `live`, with the death motes among them and the deaths dissolving. */
-  particles: { live: number; deathMotes: number; thrown: number; moteColors: Record<string, number>; dissolving: number };
+  /**
+   * Particles flying now (064); 076: as `live`, with the death motes among them and the deaths dissolving. 078: the
+   * ledger's weather (or room motes) and effects, the live effects by priority, and the pool's objects made since boot.
+   */
+  particles: { live: number; deathMotes: number; thrown: number; moteColors: Record<string, number>; dissolving: number; weather: number; effects: number; byPriority: Record<'cue' | 'shot' | 'soft', number>; pool: { created: number } };
   /** Which cursor shows (021: the menu pointer or the crosshair), its depth, and the highest depth of anything else. */
   cursor: CursorState | null;
   /** Picked-up items still sliding into the player (021). */
