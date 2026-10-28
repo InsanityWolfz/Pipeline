@@ -12,6 +12,7 @@ import { hexToRgb, paletteHex } from '../../src/data/palette';
 import { BOMB_SPHERE } from '../../src/data/art/items';
 import { ITEM_SPRITES_VECTOR } from '../../src/data/art/items';
 import { SPRITES } from '../../src/data/assets';
+import { GEAR_PANEL } from '../../src/data/gearAssets';
 
 // 081: the polish moves nothing and shrinks nothing (rules 2 and 3), keeps every text readable on its tablet in every
 // mood (rule 4), and keeps every menu motion short (rule 5).
@@ -55,6 +56,8 @@ describe('081: menu motion', () => {
     expect(MENU_MOTION.maxMs).toBe(150);
     expect(MENU_MOTION).toMatchObject({ openMs: 120, rise: 4, hoverMs: 80, tabMs: 80, pressMs: 140 });
     expect(hudLayout.MENU_FEEDBACK.pressMs).toBe(140);
+    // The gear panel's own press flash keeps the same length.
+    expect(GEAR_PANEL.flashMs).toBe(MENU_MOTION.pressMs);
   });
 });
 

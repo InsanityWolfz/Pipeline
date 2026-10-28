@@ -3,6 +3,12 @@ import { MENU_MOTION } from '../data/hudLook';
 import { MENU_MOTION_SHOWN, OpenMotion, reducedMotion, SEEK_MS } from './menuCurves';
 import type { TextLine } from './textLine';
 
+/**
+ * The alpha a menu's container is drawn at: never quite 0, since Phaser takes no input on the children of a container
+ * at alpha 0, and a menu takes clicks from its first frame. (0.001 of a pixel shows nothing.)
+ */
+const shown = (alpha: number): number => Math.max(alpha, 0.001);
+
 /** A menu's part: a game object with a depth, or a line of text. */
 type Part = (GameObjects.GameObject & GameObjects.Components.Depth) | TextLine;
 
@@ -51,7 +57,7 @@ export class MenuMotion {
     this.stop();
     const reduced = reducedMotion();
     const look = this.open.start(reduced);
-    this.root.setAlpha(look.alpha).setY(look.rise);
+    this.root.setAlpha(shown(look.alpha)).setY(look.rise);
     const R = MENU_MOTION_SHOWN;
     R.menu = this.name;
     R.opens++;
@@ -68,7 +74,7 @@ export class MenuMotion {
   hide(): void {
     this.stop();
     const look = this.open.settle();
-    this.root.setAlpha(look.alpha).setY(look.rise);
+    this.root.setAlpha(shown(look.alpha)).setY(look.rise);
     this.layer?.setAlpha(1);
     if (MENU_MOTION_SHOWN.menu === this.name) this.report();
   }
@@ -83,20 +89,20 @@ export class MenuMotion {
       this.layer.setAlpha(1);
       return;
     }
-    this.layer.setAlpha(0);
+    this.layer.setAlpha(shown(0));
     this.tabTween = this.scene.tweens.add({ targets: this.layer, alpha: 1, duration: MENU_MOTION.tabMs, ease: 'Cubic.easeOut', onComplete: this.onTabDone }).seek(SEEK_MS);
   }
 
   private readonly onOpen = (tween: Tweens.Tween): void => {
     const look = this.open.at(tween.getValue() ?? MENU_MOTION.openMs);
-    this.root.setAlpha(look.alpha).setY(look.rise);
+    this.root.setAlpha(shown(look.alpha)).setY(look.rise);
     this.report();
   };
 
   private readonly onDone = (): void => {
     this.tween = null;
     const look = this.open.settle();
-    this.root.setAlpha(look.alpha).setY(look.rise);
+    this.root.setAlpha(shown(look.alpha)).setY(look.rise);
     this.report();
   };
 
