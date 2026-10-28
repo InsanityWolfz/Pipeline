@@ -318,3 +318,8 @@ Each plan's build notes hold the detail; these are the lasting technical choices
   - Lighting is render-only and never feeds the sim: region and ring moods, light sources and quality tiers are data (`src/data`), drawn by a lighting layer in render.
   - Characters sit in a never-darkened layer and take only a light's catch, so enemies and telegraphs stay readable in every mood.
   - Lights reach only what's near them: ground is lit in 160 px squares and props one by one only where a light reaches, which keeps draw calls low on High.
+
+- **077 world detail, landmarks and weather:**
+  - Decor and landmarks are render-only and never change collision: landmarks stand only on tiles that already block, and placement is a pure hash per tile, so the world is the same every boot.
+  - Sway keeps each plant's own cycle; wind changes only amplitude and lean, eased, so a gust or a region border never jumps a plant's phase.
+  - Weather lives in render, sized per Graphics quality tier, and never runs in the foundry or the sandbox.
