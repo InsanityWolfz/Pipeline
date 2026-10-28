@@ -2,6 +2,7 @@ import type { GameObjects, Scene } from 'phaser';
 import type { Quality } from '../data/settings';
 import type { EnemyState } from '../sim/enemies';
 import type { SimState } from '../sim/state';
+import { introShort } from '../sim/bossIntro';
 import { BossIntroView, type BossIntroShown } from './BossIntroView';
 import { BossPhaseView, type BossPhaseUi } from './BossPhaseView';
 import type { FeelView } from './FeelView';
@@ -34,7 +35,7 @@ export class BossShow {
   /** The intro's show, by intro ticks, and the phase looks over the enemies just drawn. */
   update(sim: SimState, shown: string, deltaMs: number, enemies: readonly EnemyState[], spriteOf: (id: number) => GameObjects.Sprite | undefined, cameras: SceneCameras | undefined): void {
     this.intro.update(sim, shown, deltaMs, cameras?.panShown ?? { active: false, dx: 0, dy: 0 });
-    this.phase.update(enemies, spriteOf, deltaMs);
+    this.phase.update(enemies, spriteOf, deltaMs, (e) => introShort(sim, e));
   }
 
   get ui(): Pick<BossShowUi, 'bossIntro' | 'bossPhase'> {

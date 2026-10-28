@@ -2,13 +2,15 @@ import type { GameObjects, Scene } from 'phaser';
 import { BlendModes, TintModes } from 'phaser';
 import { BOSS_PHASE_SPRITES } from '../data/arenaAssets';
 import { BOSS_PHASE_LOOK, type PhaseLayer, type PhasePart } from '../data/art/bossPhases';
-import { PARTICLE_BUDGET, type ParticleBurst } from '../data/juice';
+import type { ParticleBurst } from '../data/juice';
+import { emitWithin } from './bossBurst';
 import type { Quality } from '../data/settings';
 import type { EnemyState } from '../sim/enemies';
 import { posedPoint } from './vector/enemyPose';
 import { posedFrame } from './vector/posedFrames';
 import { showFrame, textureScale } from './vector/textures';
 import { bossPhase, type BossPhaseShown } from './bossPhase';
+import { awakeShare } from './bossIntro';
 import { colorOf } from './color';
 import { settings } from './flow/settingsStore';
 import type { JuiceView } from './JuiceView';
@@ -24,7 +26,7 @@ const FLARE_BOSSES: readonly string[] = ['forgewright', 'conductor'];
 const CALM: readonly string[] = ['calm', 'heat', 'shielded'];
 
 /** `ui().bossPhase`: each region boss's look as drawn, with whether a transition plays now. */
-export type BossPhaseUi = (BossPhaseShown & { id: number; flare: boolean })[];
+export type BossPhaseUi = (BossPhaseShown & { id: number; flare: boolean; dome: number })[];
 
 /** One boss's overlays and its clocks, ms (Infinity: nothing running). */
 interface Drawn {
@@ -55,7 +57,7 @@ export class BossPhaseView {
     this.quality = quality;
   }
 
-  update(enemies: readonly EnemyState[], spriteOf: (id: number) => GameObjects.Sprite | undefined, deltaMs: number): void {
+  update(enemies: readonly EnemyState[], spriteOf: (id: number) => GameObjects.Sprite | undefined, deltaMs: number, introShort: (e: EnemyState) => boolean): void {
     const dt = deltaMs * this.scene.tweens.timeScale;
     const live = new Set<number>();
     this.ui = [];
@@ -70,8 +72,8 @@ export class BossPhaseView {
       d.flare += dt;
       d.shield += dt;
       d.clock += dt;
-      this.draw(d, look, e, sprite, dt);
-      this.ui.push({ ...look, id: e.id, flare: d.flare < L.flare.ms || d.since < this.transitionMs(look) });
+      const dome = this.draw(d, look, e, sprite, dt, awakeShare(e.mode, e.modeTicks, e.mode === 'intro' && introShort(e)));
+      this.ui.push({ ...look, id: e.id, flare: d.flare < L.flare.ms || d.since < this.transitionMs(look), dome });
     }
     for (const [id, d] of this.drawn) {
       if (live.has(id)) continue;
@@ -124,7 +126,8 @@ export class BossPhaseView {
     }
   }
 
-  private draw(d: Drawn, look: BossPhaseShown, e: EnemyState, sprite: GameObjects.Sprite, dt: number): void {
+  /** Draws its look; returns the dome's alpha (the Conductor's; 0 for the others). `awake`: 0 dormant to 1 awake. */
+  private draw(d: Drawn, look: BossPhaseShown, e: EnemyState, sprite: GameObjects.Sprite, dt: number, awake: number): number {
     const flashes = settings().flashes;
     d.glow.clear().setDepth(sprite.depth + 0.003);
     this.drawLayer(d, look, sprite, flashes, dt);
@@ -133,7 +136,7 @@ export class BossPhaseView {
     for (const [key, img] of d.parts) if (!want.has(key)) img.setVisible(false);
     if (look.boss === 'bulwark' && look.roar) this.drawRoarRing(d, e, flashes);
     if (look.boss === 'forgewright') this.drawForge(d, look, e, sprite, flashes, dt);
-    if (look.boss === 'conductor') this.drawConductor(d, look, e, sprite, flashes);
+    return look.boss === 'conductor' ? this.drawConductor(d, look, e, sprite, flashes, awake) : 0;
   }
 
   /** The colour layer: an additive copy of the sprite's frame in the phase's tint, at its alpha (steady with Flashes off). */
@@ -159,11 +162,11 @@ export class BossPhaseView {
     showFrame(d.layer, sprite.frame.name);
     d.layer
       .setPosition(sprite.x, sprite.y)
-      .setScale(sprite.scaleX * (1 + (L.flare.scale - 1) * (flare / L.flare.alpha) * 0.1), sprite.scaleY)
+      .setScale(sprite.scaleX * (1 + L.flare.swell * (flare / L.flare.alpha)), sprite.scaleY)
       .setFlipX(sprite.flipX)
       .setTint(colorOf(layer?.color ?? 'snow'))
       .setTintMode(TintModes.FILL)
-      .setAlpha(flashes ? alpha : Math.min(alpha, 0.25))
+      .setAlpha(flashes ? alpha : Math.min(alpha, L.dimGlow))
       .setDepth(sprite.depth + 0.002)
       .setVisible(sprite.visible);
   }
@@ -200,7 +203,7 @@ export class BossPhaseView {
       const lit = look.look === 'called' && !look.enraged ? Math.min(2, Math.floor((d.since / L.bulwark.called.transitionMs) * 3)) : 2;
       frame = `${part.key}/${lit}`;
     }
-    if (part.key === BOSS_PHASE_SPRITES.halo) frame = `${part.key}/${Math.floor(d.clock / 120) % 2}`;
+    if (part.key === BOSS_PHASE_SPRITES.halo) frame = `${part.key}/${Math.floor(d.clock / L.conductor.enraged.haloFrameMs) % 2}`;
     showFrame(img, frame);
     img.setPosition(sprite.x + at[0] * flip * k, sprite.y + at[1] * k).setFlipX(sprite.flipX).setDepth(sprite.depth + 0.004).setVisible(sprite.visible);
     return 1;
@@ -211,7 +214,7 @@ export class BossPhaseView {
     const R = L.bulwark.enraged.ring;
     const k = (d.since - R.delayMs) / R.ms;
     if (k <= 0 || k >= 1) return;
-    d.glow.lineStyle(3, colorOf(R.color), (flashes ? R.alpha : 0.25) * (1 - k)).strokeEllipse(e.x, e.y - 20, R.radius * 2 * k, R.radius * 1.2 * k);
+    d.glow.lineStyle(R.width, colorOf(R.color), (flashes ? R.alpha : L.dimGlow) * (1 - k)).strokeEllipse(e.x, e.y - R.rise, R.radius * 2 * k, R.radius * 2 * R.squash * k);
   }
 
   /** The Forgewright: embers off its glowing hammer once enraged, and at white heat (Medium and High) a shimmer over its back. */
@@ -221,24 +224,26 @@ export class BossPhaseView {
       d.ember -= dt;
       if (d.ember <= 0) {
         d.ember = L.forgewright.enraged.emberMs;
-        this.burst(L.forgewright.enraged.embers, e.x + 24 * flip, e.y - 40);
+        const [ex, ey] = L.forgewright.enraged.emberAt;
+        this.burst(L.forgewright.enraged.embers, e.x + ex * flip, e.y + ey);
       }
     }
     const S = L.forgewright.shimmer;
-    if (look.heatBand === 3 && this.quality() !== 'low') {
+    if (look.heatBand === S.band && this.quality() !== 'low') {
       const wave = flashes ? Math.sin((d.clock / 1000) * S.hz * Math.PI * 2) * S.px : 0;
-      d.glow.lineStyle(1, colorOf('cinder-light'), S.alpha);
-      for (let i = 0; i < 3; i++) {
-        const y = e.y - S.rise - i * 7;
-        d.glow.lineBetween(e.x - S.w / 2 + wave, y, e.x + S.w / 2 - wave, y - 2);
+      d.glow.lineStyle(S.width, colorOf(S.color), S.alpha);
+      for (let i = 0; i < S.lines; i++) {
+        const y = e.y - S.rise - i * S.gap;
+        d.glow.lineBetween(e.x - S.w / 2 + wave, y, e.x + S.w / 2 - wave, y - S.slope);
       }
     }
   }
 
   /** The Conductor: its storm-glass dome (fading out as it breaks, back as it returns) and, grounded, arcs into the floor. */
-  private drawConductor(d: Drawn, look: BossPhaseShown, e: EnemyState, sprite: GameObjects.Sprite, flashes: boolean): void {
+  private drawConductor(d: Drawn, look: BossPhaseShown, e: EnemyState, sprite: GameObjects.Sprite, flashes: boolean, awake: number): number {
     const D = L.conductor.dome;
-    const k = look.shield ? Math.min(1, d.shield / D.returnMs) : 1 - Math.min(1, d.shield / D.breakMs);
+    // 080 review: none while it sleeps or stirs (its slack, dark look), gathering through the rise.
+    const k = awake * (look.shield ? Math.min(1, d.shield / D.returnMs) : 1 - Math.min(1, d.shield / D.breakMs));
     let dome = d.parts.get(D.key);
     if (!dome) {
       dome = this.scene.add.image(0, 0, '').setBlendMode(BlendModes.ADD);
@@ -249,22 +254,20 @@ export class BossPhaseView {
     if (look.grounded) {
       const G = L.conductor.grounded;
       const grow = Math.min(1, d.since / G.arcMs);
-      d.glow.lineStyle(1.2, colorOf(G.color), flashes ? G.alpha : 0.25);
+      d.glow.lineStyle(G.width, colorOf(G.color), flashes ? G.alpha : L.dimGlow);
       for (let i = 0; i < G.arcs; i++) {
-        const x0 = e.x + (i - 1) * 9;
-        const jag = flashes ? (Math.floor(d.clock / 90 + i) % 2 === 0 ? 3 : -3) : 2;
-        d.glow.lineBetween(x0, e.y - 6, x0 + jag, e.y - 6 + 7 * grow);
-        d.glow.lineBetween(x0 + jag, e.y - 6 + 7 * grow, x0 - jag * 0.5, e.y + 2 * grow);
+        const x0 = e.x + (i - (G.arcs - 1) / 2) * G.spacing;
+        const jag = flashes ? (Math.floor(d.clock / G.flickerMs + i) % 2 === 0 ? G.jag : -G.jag) : G.dimJag;
+        const mid = e.y + G.top + G.drop * grow;
+        d.glow.lineBetween(x0, e.y + G.top, x0 + jag, mid);
+        d.glow.lineBetween(x0 + jag, mid, x0 - jag * 0.5, e.y + G.foot * grow);
       }
     }
+    return dome.visible ? dome.alpha : 0;
   }
 
-  /** A burst at the tier's count, thinned to what PARTICLE_BUDGET has left. */
+  /** A burst at the tier's count, thinned to what PARTICLE_BUDGET has left (bossBurst.ts). */
   private burst(b: ParticleBurst, x: number, y: number): void {
-    const juice = this.juice();
-    if (!juice) return;
-    const q = this.quality();
-    const count = Math.max(0, Math.min(PARTICLE_BUDGET[q] - juice.particles.count, Math.round(b.count * L.quality[q])));
-    if (count > 0) juice.particles.emit({ ...b, count }, x, y);
+    emitWithin(this.juice()?.particles, b, L.quality, this.quality(), x, y);
   }
 }

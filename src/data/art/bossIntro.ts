@@ -41,18 +41,35 @@ export const INTRO_LOOK = {
   shortRiseFrom: 0.5,
   /** Ready's slow two-frame breathe: each frame held this many ticks. */
   breatheTicks: 40,
-  /** The rise's snap: each of its three poses eases in with a squash that settles over this many ticks. */
+  /** The rise's snap: each of its three poses arrives stretched by `riseStretch` (squash about the feet), settling over `riseSettleTicks`. */
   riseSettleTicks: 6,
+  riseStretch: -0.06,
+  /** The short intro's beat throws this share of the full beat's particles. */
+  shortBeatShare: 0.6,
+  /** Facing down, the beat's burst leaves this share of `beatAt`'s reach in front of its feet (toward the camera). */
+  beatDownShare: 0.4,
+  /**
+   * The beat's marks, ms on the tween clock: a ground ring growing from `from` by `grow` px wide (`squash` of that tall),
+   * fading from `alpha`; the Warden's hairline cracks (`count` of them, each two jagged segments out to `radii`, the
+   * outer ones `jag` px longer by turns, bent by `bend` radians, flattened by `squash`), fading over a second; the
+   * Conductor's bolt down `path` (px from its feet) onto its staff, `width` wide with a `core` of `coreColor` (none with
+   * Flashes off, when it shows at `dimGlow`).
+   */
+  marks: {
+    ring: { ms: 600, width: 2, color: 'rock-pale', alpha: 0.6, from: 24, grow: 72, squash: 0.45 },
+    cracks: { ms: 1000, width: 1, color: 'rock-dark', alpha: 0.45, count: 5, turn: 0.4, radii: [10, 20, 28], jag: [6, 5], bend: [0.18, 0.02], squash: 0.5 },
+    bolt: { ms: 180, width: 4, core: 1.5, color: 'storm-glow', coreColor: 'snow', path: [0, -260, 8, -200, -6, -160, 6, -120, 0, -96] },
+  },
   /**
    * The name card (full intro only): fades in while scaling from `scaleFrom` to 1 over `in`, holds, fades out over
-   * `out`. Its tablet is the text's width plus `pad` each side, at least `minWidth`, its top `gap` view px under the
+   * `out`, gone before the pan-out could bring a boss up under it (080.26). Its tablet is the text's width plus `pad` each side, at least `minWidth`, its top `gap` view px under the
    * boss bar's bottom; a brass rule `ruleGap` under the name, `ruleW` wide, over the arena's name.
    */
-  card: { in: [84, 96], out: [147, 165], scaleFrom: 0.9, pad: 10, padY: 6, minWidth: 160, gap: 8, ruleGap: 3, ruleW: 0.6, rule: 'brass' },
+  card: { in: [84, 96], out: [141, 147], scaleFrom: 0.9, pad: 10, padY: 6, minWidth: 160, gap: 8, ruleGap: 3, ruleW: 0.6, rule: 'brass' },
   /** The boss bar's fill runs from empty to full over these ticks (region bosses); the short intro's over all of it. */
   bar: { full: [84, 132], short: [0, 60] },
-  /** The pan (full intro only): in over `in`, held, out over `out`, smoothstep; no frame moves the camera more than `capPx` view px at 60 fps. */
-  pan: { in: [0, 24], out: [141, 165], capPx: 24 },
+  /** The pan (full intro only): in over `in`, held, out over `out`, smoothstep; no tick moves the camera more than `capPx` view px. */
+  pan: { in: [0, 24], out: [145, 165], capPx: 24 },
   bosses: {
     'pylon-warden': {
       sound: SOUNDS.wardenSlam,

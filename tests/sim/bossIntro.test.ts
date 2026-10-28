@@ -61,13 +61,16 @@ describe('080: the intro window', () => {
       s.player.y = b.y + 20;
       punch(s, 0, -1);
       blastArea(s, b.roomId, b.x, b.y, 120, 80, 'physical');
+      // A burn set going on it (only a staged one: no hit reaches it) neither ticks down nor deals anything.
       igniteEnemy(s, b, 40);
+      const burn = { burnTicks: b.burnTicks, burnDps: b.burnDps, burnNext: b.burnNext };
       const husk = createEnemy(s.nextEnemyId++, 'husk', { x: b.x + 30, y: b.y + 10 }, b.roomId);
       s.enemies.push(husk);
       chainLightning(s, husk, 60);
       run(s, 60);
       expect(b.mode).toBe('intro');
-      expect(still({ ...b, burnTicks: 0, burnDps: 0, burnNext: 0 })).toBe(still({ ...(JSON.parse(before) as EnemyState), burnTicks: 0, burnDps: 0, burnNext: 0 }));
+      expect(still(b)).toBe(still({ ...(JSON.parse(before) as EnemyState), ...burn }));
+      expect(burn.burnTicks).toBeGreaterThan(0);
       expect(b.health).toBe(enemyDef(id).maxHealth);
     });
   }

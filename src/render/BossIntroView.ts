@@ -3,7 +3,8 @@ import { BlendModes } from 'phaser';
 import { INTRO_LOOK, type BossIntroLook } from '../data/art/bossIntro';
 import { DEPTHS } from '../data/assets';
 import { enemyDef } from '../data/enemies';
-import { PARTICLE_BUDGET, type ParticleBurst } from '../data/juice';
+import type { ParticleBurst } from '../data/juice';
+import { emitWithin } from './bossBurst';
 import type { Quality } from '../data/settings';
 import { arenaOfPost } from '../sim/arenaWait';
 import type { EnemyState } from '../sim/enemies';
@@ -17,6 +18,7 @@ import type { JuiceView } from './JuiceView';
 import type { SoundView } from './SoundView';
 import { drawTablet } from './tablet';
 import { TextLine } from './textLine';
+import { UI_CAMERA } from './scale';
 
 // 080: a boss intro's show beyond the boss's own poses (enemyArt): the name card on today's stone tablet (UI camera, so
 // the shake never moves it), the beat's sound and the game's only shake (JuiceView), the stir's, rise's and beat's
@@ -30,7 +32,18 @@ export type BossIntroShown = {
   ticks: number;
   beat: IntroBeat;
   frame: number;
-  card: { shown: boolean; alpha: number; scale: number; name: string; arena: string; box: { x: number; y: number; w: number; h: number } | null };
+  /** `at` is where the card is placed (view px); `onUiCamera` whether the unshaken UI camera draws it; `uiShaking` whether that camera shakes. */
+  card: {
+    shown: boolean;
+    alpha: number;
+    scale: number;
+    name: string;
+    arena: string;
+    box: { x: number; y: number; w: number; h: number } | null;
+    at: { x: number; y: number } | null;
+    onUiCamera: boolean;
+    uiShaking: boolean;
+  };
   pan: { active: boolean; dx: number; dy: number };
 } | null;
 
@@ -42,8 +55,6 @@ interface Mark {
   age: number;
   life: number;
 }
-
-const MARK_MS = { ring: 600, cracks: 1000, bolt: 180 } as const;
 
 export class BossIntroView {
   private readonly scene: Scene;
@@ -109,24 +120,20 @@ export class BossIntroView {
       const flip = boss.facing === 'left' ? -1 : 1;
       const side = boss.facing === 'left' || boss.facing === 'right';
       const x = boss.x + (side ? look.beatAt[0] * flip : 0);
-      const y = boss.y + look.beatAt[1] + (boss.facing === 'down' ? look.beatAt[0] * 0.4 : 0);
-      this.burst(short ? { ...look.beat, count: Math.round(look.beat.count * 0.6) } : look.beat, x, y);
+      const y = boss.y + look.beatAt[1] + (boss.facing === 'down' ? look.beatAt[0] * INTRO_LOOK.beatDownShare : 0);
+      this.burst(short ? { ...look.beat, count: Math.round(look.beat.count * INTRO_LOOK.shortBeatShare) } : look.beat, x, y);
       this.sound()?.play(look.sound);
       this.juice()?.introShake(short);
-      this.live.push({ kind: 'ring', x, y, age: 0, life: MARK_MS.ring });
-      if (boss.enemyId === 'pylon-warden') this.live.push({ kind: 'cracks', x, y, age: 0, life: MARK_MS.cracks });
-      if (boss.enemyId === 'conductor') this.live.push({ kind: 'bolt', x: boss.x, y: boss.y, age: 0, life: MARK_MS.bolt });
+      const M = INTRO_LOOK.marks;
+      this.live.push({ kind: 'ring', x, y, age: 0, life: M.ring.ms });
+      if (boss.enemyId === 'pylon-warden') this.live.push({ kind: 'cracks', x, y, age: 0, life: M.cracks.ms });
+      if (boss.enemyId === 'conductor') this.live.push({ kind: 'bolt', x: boss.x, y: boss.y, age: 0, life: M.bolt.ms });
     }
   }
 
-  /** A burst at the tier's count (074), thinned to what PARTICLE_BUDGET has left. */
+  /** A burst at the tier's count (074), thinned to what PARTICLE_BUDGET has left (bossBurst.ts). */
   private burst(b: ParticleBurst, x: number, y: number): void {
-    const juice = this.juice();
-    if (!juice) return;
-    const q = this.quality();
-    const room = PARTICLE_BUDGET[q] - juice.particles.count;
-    const count = Math.max(0, Math.min(room, Math.round(b.count * INTRO_LOOK.quality[q])));
-    if (count > 0) juice.particles.emit({ ...b, count }, x, y);
+    emitWithin(this.juice()?.particles, b, INTRO_LOOK.quality, this.quality(), x, y);
   }
 
   /** The beat's marks: an expanding ring on the ground, the Warden's cracks fading over a second, the Conductor's bolt. */
@@ -135,34 +142,38 @@ export class BossIntroView {
     this.bolt.clear();
     this.live = this.live.filter((m) => (m.age += dt) < m.life);
     const flashes = settings().flashes;
+    const M = INTRO_LOOK.marks;
     for (const m of this.live) {
       const k = m.age / m.life;
       if (m.kind === 'ring') {
-        this.marks.lineStyle(2, colorOf('rock-pale'), 0.6 * (1 - k)).strokeEllipse(m.x, m.y, 24 + 72 * k, (24 + 72 * k) * 0.45);
+        const R = M.ring;
+        const w = R.from + R.grow * k;
+        this.marks.lineStyle(R.width, colorOf(R.color), R.alpha * (1 - k)).strokeEllipse(m.x, m.y, w, w * R.squash);
       } else if (m.kind === 'cracks') {
         // Hairline cracks in the ground, two jagged segments each, fading over a second.
-        this.marks.lineStyle(1, colorOf('rock-dark'), 0.45 * (1 - k));
-        for (let i = 0; i < 5; i++) {
-          const a = (i / 5) * Math.PI * 2 + 0.4;
-          const r0 = 10;
-          const r1 = 20 + (i % 2) * 6;
-          const r2 = 28 + (i % 3) * 5;
-          const pt = (r: number, da: number): [number, number] => [m.x + Math.cos(a + da) * r, m.y + Math.sin(a + da) * r * 0.5];
+        const C = M.cracks;
+        const [r0 = 0, r1 = 0, r2 = 0] = C.radii;
+        const [j1 = 0, j2 = 0] = C.jag;
+        const [b1 = 0, b2 = 0] = C.bend;
+        this.marks.lineStyle(C.width, colorOf(C.color), C.alpha * (1 - k));
+        for (let i = 0; i < C.count; i++) {
+          const a = (i / C.count) * Math.PI * 2 + C.turn;
+          const pt = (r: number, da: number): [number, number] => [m.x + Math.cos(a + da) * r, m.y + Math.sin(a + da) * r * C.squash];
           const [x0, y0] = pt(r0, 0);
-          const [x1, y1] = pt(r1, 0.18);
-          const [x2, y2] = pt(r2, 0.02);
+          const [x1, y1] = pt(r1 + (i % 2) * j1, b1);
+          const [x2, y2] = pt(r2 + (i % 3) * j2, b2);
           this.marks.lineBetween(x0, y0, x1, y1).lineBetween(x1, y1, x2, y2);
         }
       } else {
         // A violet-white bolt onto its staff from above; with Flashes off, no white core and a dim violet (042.10).
-        const pts = [0, -260, 8, -200, -6, -160, 6, -120, 0, -96];
+        const B = M.bolt;
         const alpha = flashes ? 1 - k : INTRO_LOOK.dimGlow;
-        this.bolt.lineStyle(4, colorOf('storm-glow'), alpha);
+        this.bolt.lineStyle(B.width, colorOf(B.color), alpha);
         this.bolt.beginPath();
-        for (let i = 0; i < pts.length; i += 2) this.bolt[i === 0 ? 'moveTo' : 'lineTo'](m.x + (pts[i] ?? 0), m.y + (pts[i + 1] ?? 0));
+        for (let i = 0; i < B.path.length; i += 2) this.bolt[i === 0 ? 'moveTo' : 'lineTo'](m.x + (B.path[i] ?? 0), m.y + (B.path[i + 1] ?? 0));
         this.bolt.strokePath();
         if (flashes) {
-          this.bolt.lineStyle(1.5, colorOf('snow'), 1 - k);
+          this.bolt.lineStyle(B.core, colorOf(B.coreColor), 1 - k);
           this.bolt.strokePath();
         }
       }
@@ -176,7 +187,7 @@ export class BossIntroView {
     const { alpha, scale } = cardCurve(boss.modeTicks, short);
     if (alpha <= 0) {
       this.card.setVisible(false);
-      return { shown: false, alpha: 0, scale, name, arena, box: null };
+      return { shown: false, alpha: 0, scale, name, arena, box: null, at: null, ...this.cardCamera() };
     }
     const C = INTRO_LOOK.card;
     this.name.set(name);
@@ -195,6 +206,12 @@ export class BossIntroView {
     this.back.fillStyle(colorOf(C.rule), 1).fillRect(-Math.round(ruleW / 2), ruleY, ruleW, 1);
     this.arena.moveTo(Math.round(-this.arena.width / 2), ruleY + 1 + C.ruleGap);
     this.card.setPosition(cx, cy).setScale(scale).setAlpha(alpha).setVisible(true);
-    return { shown: true, alpha, scale, name, arena, box };
+    return { shown: true, alpha, scale, name, arena, box, at: { x: this.card.x, y: this.card.y }, ...this.cardCamera() };
+  }
+
+  /** Which camera draws the card (SceneCameras routes scroll-factor-0 objects off the main one), and whether that one shakes. */
+  private cardCamera(): { onUiCamera: boolean; uiShaking: boolean } {
+    const cams = this.scene.cameras;
+    return { onUiCamera: this.card.cameraFilter === cams.main.id, uiShaking: cams.getCamera(UI_CAMERA)?.shakeEffect.isRunning ?? false };
   }
 }

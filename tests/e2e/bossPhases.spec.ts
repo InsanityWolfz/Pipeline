@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { enemyDef, type BulwarkDef, type ConductorDef, type ForgewrightDef } from '../../src/data/enemies';
-import { SHAKE_ON } from '../../src/data/juice';
+import { PARTICLE_BUDGET, SHAKE_ON } from '../../src/data/juice';
 import { CROWN_SPIRE } from '../../src/data/stormcrownSites';
 import { heatBand } from '../../src/render/bossPhase';
 import { FAN_SPOT, fanUntilVent } from './forgePage';
@@ -182,3 +182,36 @@ test('080: the same seed and commands give the same state through an intro on Lo
   expect(low).toContain('"mode":"chase"');
   expect(low).toBe(await run('high'));
 });
+
+/** Steps `n` ticks one drawn frame at a time (the player kept topped up) and gives the most live particles any frame showed. */
+async function mostLive(page: Page, n: number): Promise<number> {
+  return page.evaluate(async (count) => {
+    const g = window.__GAME__;
+    if (!g) throw new Error('no game');
+    let most = 0;
+    for (let t = 0; t < count; t++) {
+      const s = g.step(1);
+      g.setPlayerHealth(100);
+      for (let i = 0; i < 10 && (g.ui().drawnTick ?? -1) < s.tick; i++) await new Promise((r) => requestAnimationFrame(r));
+      most = Math.max(most, g.ui().particles.live);
+    }
+    return most;
+  }, n);
+}
+
+for (const tier of ['low', 'medium', 'high'] as const) {
+  test(`080: on ${tier}, an intro's and the Bulwark's phase bursts never take the live particles past the budget`, async ({ page }) => {
+    test.setTimeout(180_000);
+    await intoSandboxArena(page, 'sunken-forum');
+    await page.evaluate((q) => window.__GAME__?.setLook({ quality: q }), tier);
+    const quality = (await page.evaluate(() => window.__GAME__?.ui().lighting.quality)) ?? 'medium';
+    // Each tick drawn, through the whole intro, then the call (its burst) and the roar into enrage (its steam).
+    const intro = await mostLive(page, 170);
+    await setHealth(page, 'bulwark', Math.floor(BW.maxHealth * BW.adds.below) - 1);
+    const call = await mostLive(page, 30);
+    await setHealth(page, 'bulwark', Math.floor(BW.maxHealth * BW.enrage.below) - 1);
+    const roar = await mostLive(page, 60);
+    expect(intro).toBeGreaterThan(0);
+    expect(Math.max(intro, call, roar)).toBeLessThanOrEqual(PARTICLE_BUDGET[quality]);
+  });
+}

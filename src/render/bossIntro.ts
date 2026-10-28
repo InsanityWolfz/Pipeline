@@ -50,7 +50,19 @@ export function introSquash(beat: IntroBeat, at: number, length: number, short: 
   if (beat !== 'rise') return 0;
   const age = riseFrameAge(at, length, short);
   const n = INTRO_LOOK.riseSettleTicks;
-  return age < n ? -0.06 * (1 - age / n) : 0;
+  return age < n ? INTRO_LOOK.riseStretch * (1 - age / n) : 0;
+}
+
+/**
+ * How awake a boss looks, 0 to 1 (the Conductor's storm-glass dome, 080 review): none at its post or while it stirs,
+ * growing through the rise, full from the beat on and through its fight.
+ */
+export function awakeShare(mode: string, modeTicks: number, short: boolean): number {
+  if (mode === 'idle') return 0;
+  if (mode !== 'intro') return 1;
+  const b = introBeat(modeTicks, short);
+  if (b.beat === 'stir') return 0;
+  return b.beat === 'rise' ? (b.length > 0 ? b.at / b.length : 1) : 1;
 }
 
 /** A smooth 0 → 1 over [0, 1] (smoothstep), clamped. */

@@ -1,5 +1,6 @@
 import { BOSS_PHASE_SPRITES as S } from '../arenaAssets';
 import type { ParticleBurst } from '../juice';
+import { INTRO_LOOK } from './bossIntro';
 
 // 080: how each boss phase the sim already has shows on the body (docs/specs/080-boss-intros.md "Phase changes, as
 // drawn"): a colour layer (an additive copy of the boss's current frame, tinted, as 076's dissolve tints), glows, and
@@ -48,7 +49,7 @@ export const BOSS_PHASE_LOOK = {
         { key: S.spikes, part: 'torso', at: ALL([0, -58]) },
       ] satisfies PhasePart[],
       /** The roar's red ring: no damage and no shake; it expands to `radius` px over the roar's middle frame. */
-      ring: { color: 'danger', radius: 70, ms: 600, delayMs: 330, alpha: 0.55 },
+      ring: { color: 'danger', radius: 70, ms: 600, delayMs: 330, alpha: 0.55, width: 3, rise: 20, squash: 0.6 },
       steam: { colors: ['ash-pale', 'rock-pale'], count: 14, speed: [30, 80], angle: -Math.PI / 2, spread: Math.PI * 0.6, gravity: -50, lifeMs: [400, 800], size: 2, lift: 40 } satisfies ParticleBurst,
       /** The hunch on idle, walk and turn: a squash about the feet, its body sunk and shifted toward its facing, px. */
       hunch: { squash: 0.05, sink: 1.5, shift: 1 },
@@ -64,7 +65,7 @@ export const BOSS_PHASE_LOOK = {
     ] as readonly { readonly from: number; readonly color: string; readonly alpha: number }[],
     easeMs: 300,
     /** At 90%+ heat (Medium and High): a shimmer over its back, `rise` px up, wavering `px` at `hz`. */
-    shimmer: { rise: 64, px: 1.5, hz: 5, alpha: 0.18, w: 30, h: 26 },
+    shimmer: { band: 3, rise: 64, px: 1.5, hz: 5, alpha: 0.18, w: 30, h: 26, lines: 3, gap: 7, slope: 2, width: 1, color: 'cinder-light' },
     /** Venting: the chest plates drawn swung open. */
     vent: { parts: [{ key: S.plates, part: 'torso', at: ALL([0, -46]) }] satisfies PhasePart[] },
     /** Enraged (below half): soot fades, red-hot plate edges, the hammer glowing with embers, a flame crest on the helm. */
@@ -72,8 +73,9 @@ export const BOSS_PHASE_LOOK = {
       layer: { color: 'iron-rust', alpha: 0.09, pulseTo: 0.13, pulseMs: 700 } satisfies PhaseLayer,
       parts: [{ key: S.crest, part: 'head', at: ALL([0, -92]), add: true }] satisfies PhasePart[],
       embers: { colors: ['cinder', 'cinder-light'], count: 2, speed: [10, 30], angle: -Math.PI / 2, spread: Math.PI / 3, gravity: -40, lifeMs: [300, 600], size: 1, lift: 0 } satisfies ParticleBurst,
-      /** An ember from the hammer head every this many ms. */
+      /** An ember from the hammer head every this many ms, from `emberAt` (px from its feet, toward its facing). */
       emberMs: 140,
+      emberAt: [24, -40] as const,
     },
   },
   conductor: {
@@ -81,17 +83,21 @@ export const BOSS_PHASE_LOOK = {
     dome: { key: S.dome, rise: 54, alphaCap: 0.3, breakMs: 400, returnMs: 500 },
     shards: { colors: ['snow', 'storm-pale', 'storm-glow'], count: 18, speed: [60, 140], gravity: 120, lifeMs: [300, 600], size: 2, lift: 54 } satisfies ParticleBurst,
     /** Grounded (under 2 rods): its stance lowered, arcs from its hem into the floor, the crown's sparks dimmed. */
-    grounded: { sink: 2, arcs: 3, arcMs: 300, color: 'storm-glow', alpha: 0.6 },
+    grounded: { sink: 2, arcs: 3, arcMs: 300, color: 'storm-glow', alpha: 0.6, width: 1.2, spacing: 9, jag: 3, dimJag: 2, flickerMs: 90, top: -6, drop: 7, foot: 2 },
     /** Enraged (below half): brighter seams and eyes, the staff crackling, a halo of arcs over the crown. */
     enraged: {
       layer: { color: 'storm-glow', alpha: 0.07, pulseTo: 0.11, pulseMs: 500 } satisfies PhaseLayer,
       parts: [{ key: S.halo, part: 'hood', at: ALL([0, -102]), add: true }] satisfies PhasePart[],
+      /** The halo's two frames alternate this often, ms. */
+      haloFrameMs: 120,
     },
   },
-  /** An enrage's flare (the Forgewright's and the Conductor's): a glow swelling over the body and a burst, over `ms`. */
-  flare: { ms: 600, alpha: 0.3, scale: 1.25 },
+  /** An enrage's flare (the Forgewright's and the Conductor's): a glow swelling the body's layer by `swell` and a burst, over `ms`. */
+  flare: { ms: 600, alpha: 0.3, swell: 0.025 },
   flareBurst: { colors: ['snow'], count: 16, speed: [40, 120], gravity: -20, lifeMs: [300, 600], size: 2, lift: 40 } satisfies ParticleBurst,
   flareColors: { forgewright: ['cinder', 'cinder-light', 'gold-trim'], conductor: ['storm-glow', 'storm-pale', 'snow'] } as Readonly<Record<string, readonly string[]>>,
+  /** 042.10: with Flashes off no glow shows over this alpha (the intro's). */
+  dimGlow: INTRO_LOOK.dimGlow,
   /** Particles scale with Graphics quality (074), all inside PARTICLE_BUDGET. */
-  quality: { low: 0.5, medium: 1, high: 1.5 },
+  quality: INTRO_LOOK.quality,
 } as const;

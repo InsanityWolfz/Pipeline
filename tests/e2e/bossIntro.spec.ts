@@ -4,6 +4,7 @@ import { BOSS_LOOK } from '../../src/data/arenaAssets';
 import { BOSS_INTRO } from '../../src/data/bossIntro';
 import { enemyDef } from '../../src/data/enemies';
 import { INTRO_SHAKE } from '../../src/data/juice';
+import { INTRO_LOOK } from '../../src/data/art/bossIntro';
 import { HOLLOWS } from '../../src/data/hollows';
 import { clickRow, flowIs } from './flowPage';
 import { boot, watchErrors } from './helpers';
@@ -16,6 +17,8 @@ import { intoSandboxArena, intoShrine, SANDBOX_BOSSES, tickDrawn } from './bossI
 
 const FULL = BOSS_INTRO.fullTicks;
 const VIEW = { w: 640, h: 360 };
+/** The most the camera may move across the pan's hand-back to the follow and lift, px (it eases on by the lift and the follow's lerp). */
+const HAND_BACK = 3;
 
 /** Walks a full intro, checking the beats, card, bar, shake and pan on the way. */
 async function walkIntro(page: Page, boss: string): Promise<void> {
@@ -23,6 +26,7 @@ async function walkIntro(page: Page, boss: string): Promise<void> {
   const h = BOSS_LOOK.heights[boss] ?? BOSS_LOOK.height;
   let s = await tickDrawn(page, 1, {}, boss);
   expect(s.boss?.mode).toBe('intro');
+  if (boss === 'conductor') expect(s.phase.find((p) => p.boss === 'conductor')?.dome).toBe(0);
   expect(s.intro).toMatchObject({ boss, short: false, ticks: 1, beat: 'stir' });
   const health = s.boss?.health;
   /** Steps to intro tick `n` (its `modeTicks`), firing at the boss on the way if asked. */
@@ -45,9 +49,22 @@ async function walkIntro(page: Page, boss: string): Promise<void> {
   const shakes = s.shakes.length;
   const cams = s.cameraShakes;
   expect((await to(73)).intro?.beat).toBe('beat');
-  expect((await to(85)).intro?.beat).toBe('ready');
+  expect(s.camera.shaking).toBe(true);
   expect(s.shakes.slice(shakes)).toEqual([{ kind: 'intro', ms: INTRO_SHAKE.full.ms, intensity: INTRO_SHAKE.full.intensity, suppressed: false }]);
   expect(s.cameraShakes - cams).toBe(1);
+  // The card holds still while the world camera shakes: on to tick 90 in one step (one frame later the shake still
+  // runs), then frames drawn with no tick: the card's place is the same in each, drawn by the UI camera, unshaken.
+  expect((await to(90)).intro?.beat).toBe('ready');
+  const held: { x: number; y: number }[] = [];
+  for (let f = 0; f < 6 && s.camera.shaking; f++) {
+    expect(s.intro?.card).toMatchObject({ shown: true, onUiCamera: true, uiShaking: false });
+    if (s.intro?.card.at) held.push(s.intro.card.at);
+    s = await tickDrawn(page, 0, {}, boss);
+  }
+  expect(held.length).toBeGreaterThan(0);
+  for (const at of held) expect(at).toEqual(held[0]);
+  // 080 review: the Conductor's dome is gone while he sleeps and stirs, and gathers through his rise.
+  if (boss === 'conductor') expect(s.phase.find((p) => p.boss === 'conductor')?.dome).toBeGreaterThan(0);
   // The card: in by tick 96, the boss's name over its arena's; the region bosses' bar shows the sim's health.
   await to(97);
   expect(s.intro?.card).toMatchObject({ shown: true, alpha: 1, name: enemyDef(boss).name, arena: arena?.name });
@@ -55,16 +72,20 @@ async function walkIntro(page: Page, boss: string): Promise<void> {
   if (boss !== 'pylon-warden') expect(s.bar?.health).toBe(enemyDef(boss).maxHealth);
   await to(141);
   expect(inView()).toBe(true);
-  // The pan out hands back to the follow and its lift with no jump; the card is gone as the fight starts.
+  // The pan out hands back to the follow and its lift with no jump (each tick moving at most the pan's cap, the hand-back
+  // about none), and the card is gone before it could cover the boss.
   let last = s;
   while (last.boss?.mode === 'intro') {
     const next = await tickDrawn(page, 1, {}, boss);
-    expect(Math.abs(next.camera.y - last.camera.y), `tick ${next.intro?.ticks ?? 'fight'}`).toBeLessThanOrEqual(24);
+    expect(Math.abs(next.camera.y - last.camera.y), `tick ${next.intro?.ticks ?? 'fight'}`).toBeLessThanOrEqual(INTRO_LOOK.pan.capPx);
+    expect(Math.abs(next.camera.x - last.camera.x), `tick ${next.intro?.ticks ?? 'fight'}`).toBeLessThanOrEqual(INTRO_LOOK.pan.capPx);
+    if ((next.intro?.ticks ?? FULL) > INTRO_LOOK.card.out[1]) expect(next.intro?.card.shown ?? false).toBe(false);
     last = next;
   }
   expect(last.intro).toBeNull();
   const after = await tickDrawn(page, 2, {}, boss);
-  expect(Math.abs(after.camera.y - last.camera.y)).toBeLessThanOrEqual(24);
+  expect(Math.abs(after.camera.y - last.camera.y)).toBeLessThanOrEqual(HAND_BACK);
+  expect(Math.abs(after.camera.x - last.camera.x)).toBeLessThanOrEqual(HAND_BACK);
   expect(after.shakes.length).toBe(shakes + 1);
 }
 
