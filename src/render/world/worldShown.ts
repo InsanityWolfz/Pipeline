@@ -33,6 +33,8 @@ export interface WeatherShown {
   fading: number;
   want: number;
   room: number;
+  /** 078: what the room was worked from: the other particles alive (deaths and effects) and the weather alive, before this frame's spawns. */
+  roomFrom: { other: number; weather: number };
   /** A boss fight is on (weather at Low's counts, no lightning). */
   fight: boolean;
   wind: WeatherWind;
@@ -45,7 +47,7 @@ export interface WeatherShown {
 }
 
 export const NO_WORLD: WorldShown = { off: false, quality: 'medium', chunks: [], swayUpdated: 0, swayChunks: [], swaySample: [], swayBuilt: 0, ripples: 0, glints: 0, beads: 0, setPiecesInView: [], loops: {} };
-export const NO_WEATHER: WeatherShown = { weights: {}, layers: {}, live: 0, fading: 0, want: 0, room: 0, fight: false, wind: { strength: 0, dx: 0, dy: 0, gust: 1 }, strikes: 0, last: null, bolt: false, nextStrikeMs: 0, margin: 0 };
+export const NO_WEATHER: WeatherShown = { weights: {}, layers: {}, live: 0, fading: 0, want: 0, room: 0, roomFrom: { other: 0, weather: 0 }, fight: false, wind: { strength: 0, dx: 0, dy: 0, gust: 1 }, strikes: 0, last: null, bolt: false, nextStrikeMs: 0, margin: 0 };
 
 /** The world's report with its chunks worked out only when read (the test hook), so no frame walks every built chunk. */
 export function lazyWorld(fields: Omit<WorldShown, 'chunks'>, chunks: () => WorldShown['chunks']): WorldShown {

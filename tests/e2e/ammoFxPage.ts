@@ -36,7 +36,12 @@ export interface Seen {
   impacts: ImpactShown[];
   bend: number;
   muzzleSparks: number;
-  muzzles: { x: number; y: number; posed: { x: number; y: number } | null; angle: number }[];
+  /** Each shot's sparks: where, the rig's drawn muzzle then, the drawn colour at it, the feet, the lane, the sim's spawn. */
+  muzzles: { x: number; y: number; posed: { x: number; y: number } | null; color: [number, number, number] | null; feet: { x: number; y: number }; angle: number }[];
+  /** Each new muzzle-begun trail's first point, and the rig's drawn muzzle on that frame. */
+  starts: { x: number; y: number; posed: { x: number; y: number } | null }[];
+  /** Each frame: trails drawn for flying rounds, the tier's cap, and the rounds flying. */
+  trails: { drawn: number; cap: number; rounds: number }[];
   ends: number;
   splitFlashes: number;
   shards: number;
@@ -52,6 +57,9 @@ export function fire(page: Page, aim: readonly [number, number], frames: number,
       const kinds = new Set<string>();
       const impacts: ImpactShown[] = [];
       const muzzles: Seen['muzzles'] = [];
+      const starts: Seen['starts'] = [];
+      const trails: Seen['trails'] = [];
+      let lastStart: unknown = g.ui().ammoFx.start;
       let played = g.ui().ammoFx.played;
       let sparks = 0;
       let lastMuzzle: unknown = g.ui().ammoFx.muzzle;
@@ -62,7 +70,7 @@ export function fire(page: Page, aim: readonly [number, number], frames: number,
       const ends0 = g.ui().ammoFx.ends;
       const p0 = g.getState().player;
       for (let i = 0; i < n; i++) {
-        g.step(1, { fire: i < f, aimX: p0.x + a[0], aimY: p0.y + a[1] });
+        const sim = g.step(1, { fire: i < f, aimX: p0.x + a[0], aimY: p0.y + a[1] });
         await new Promise((r) => requestAnimationFrame(r));
         const u = g.ui();
         const fx = u.ammoFx;
@@ -72,9 +80,13 @@ export function fire(page: Page, aim: readonly [number, number], frames: number,
         played = fx.played;
         if (fx.muzzle && JSON.stringify(fx.muzzle) !== JSON.stringify(lastMuzzle)) {
           sparks += fx.muzzle.sparks;
-          muzzles.push({ x: fx.muzzle.x, y: fx.muzzle.y, posed: u.player?.muzzle ?? null, angle: fx.muzzle.angle });
+          const feet = { x: sim.player.x, y: sim.player.y };
+          muzzles.push({ x: fx.muzzle.x, y: fx.muzzle.y, posed: u.player?.muzzle ?? null, color: g.wanderer()?.muzzleColor ?? null, feet, angle: fx.muzzle.angle });
         }
         lastMuzzle = fx.muzzle;
+        if (fx.start && JSON.stringify(fx.start) !== JSON.stringify(lastStart)) starts.push({ ...fx.start, posed: u.player?.muzzle ?? null });
+        lastStart = fx.start;
+        trails.push({ drawn: fx.drawn, cap: fx.trailCap, rounds: sim.arrows.length });
         bend = Math.max(bend, fx.bend);
         splitFlashes = Math.max(splitFlashes, u.tagged.splitFlashes);
         shards = Math.max(shards, u.tagged.shards);
@@ -84,7 +96,7 @@ export function fire(page: Page, aim: readonly [number, number], frames: number,
         most.weather = Math.max(most.weather, pt.weather);
         most.total = Math.max(most.total, pt.effects + pt.deathMotes + pt.weather);
       }
-      return { kinds: [...kinds], impacts, bend, muzzleSparks: sparks, muzzles, ends: g.ui().ammoFx.ends - ends0, splitFlashes, shards, most };
+      return { kinds: [...kinds], impacts, bend, muzzleSparks: sparks, muzzles, starts, trails, ends: g.ui().ammoFx.ends - ends0, splitFlashes, shards, most };
     },
     [aim, frames, fireFor] as const,
   );

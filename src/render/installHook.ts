@@ -90,6 +90,10 @@ export function installTestHook(flow: FlowScene): void {
       if (scene.shots) scene.shots.fx.off = off;
       if (off) scene.shots?.fx.clear();
     },
+    trailCap: (cap) => {
+      const shots = live().shots;
+      if (shots) shots.trails.capHeld = cap;
+    },
     strikeWeather: () => live().worldLife?.strikeNow(),
     claim: act((sim, _scene, site: string) => claim(sim, site)),
     completeObjectives: act((sim, _scene, count: number) => {

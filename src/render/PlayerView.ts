@@ -59,6 +59,8 @@ export interface PlayerUi {
 export interface PlayerPixels {
   bounds: { w: number; h: number; left: number; top: number } | null;
   hemColor: [number, number, number] | null;
+  /** 078: the drawn colour at the tube's muzzle mark (the effects' muzzle), or null with no tube in hand. */
+  muzzleColor: [number, number, number] | null;
 }
 
 // Draws the player from sim state (016): the wanderer rig posed each frame into a
@@ -211,9 +213,9 @@ export class PlayerView {
     };
   }
 
-  /** 075: the drawn texture's box and hem colour (scans pixels, so only the test hook's `wanderer()` asks). */
+  /** 075: the drawn texture's box and hem colour (078: and the muzzle's) (scans pixels, so only the test hook's `wanderer()` asks). */
   pixels(): PlayerPixels {
-    return { bounds: this.drawnBounds(), hemColor: this.colorAt(this.marks.hem) };
+    return { bounds: this.drawnBounds(), hemColor: this.colorAt(this.marks.hem), muzzleColor: this.colorAt(this.marks.muzzle) };
   }
 
   /** The drawn colour at a point, world px from the feet. */

@@ -37,6 +37,8 @@ export interface GameTestHook {
   loadEntrances(rounds: (string | null)[]): SimSummary;
   /** 078: skips the shot effects (trails, impacts, marks, sparks), as `?fx=off` does, for the probe's A/B in one page. */
   fxOff(off: boolean): void;
+  /** 078: holds the trail cap at `cap` (null: the tier's again), so a test can fly more rounds than it allows. */
+  trailCap(cap: number | null): void;
   /** 074: skips every mood, light and fog (as `?mood=off` does), for the frame-time A/B in one page. */
   lightingOff(off: boolean): void;
   /** 077: skips plants, sway, ripples, ley flow, set-piece loops and weather (as `?world=off`); and the next weather strike now. */

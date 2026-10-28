@@ -47,6 +47,8 @@ export class TrailView {
   private readonly byKey = new Map<number, Slot>();
   private frame = 0;
   private cap = FX_QUALITY.medium.trailCap;
+  /** Test hook only: the cap held at this many trails (null: the tier's). */
+  capHeld: number | null = null;
   private time = 0;
   /** Slots whose round still flies (counted at each frame's start, then kept as slots are taken). */
   private live = 0;
@@ -67,7 +69,7 @@ export class TrailView {
   /** A new frame of points: rounds not fed one this frame start fading at `end`. */
   begin(quality: Quality): void {
     this.frame += 1;
-    this.cap = FX_QUALITY[quality].trailCap;
+    this.cap = this.capHeld ?? FX_QUALITY[quality].trailCap;
     // Pools only grow: a tier's slots are made once, as it comes in (each live slot can fade while a new one flies).
     this.pool.warm(this.cap + FX_LOOK.fadeSlots);
     this.live = this.flying();

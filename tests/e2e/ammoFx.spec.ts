@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { FX_QUALITY } from '../../src/data/fxQuality';
-import { HIT_STOP_MS, SHAKE_ON } from '../../src/data/juice';
+import { HIT_STOP_MS, PARTICLE_SHARES, SHAKE_ON } from '../../src/data/juice';
 import { SPLIT } from '../../src/data/tags';
 import { MUZZLE_OFFSET } from '../../src/data/tube';
 import { boot, watchErrors } from './helpers';
@@ -68,17 +68,35 @@ test('a homing bolt’s wake curves; a Split shows its star and Shards; a cluste
   expect(cluster.impacts.filter((i) => i.kind === 'mini-blast')).toHaveLength(4);
 });
 
-test('the sparks leave from the posed muzzle (within 1 px) down the shot’s lane; the sim’s spawn point is unchanged', async ({ page }) => {
+test('the sparks and each new trail leave from the tube’s drawn muzzle (the barrel’s cyan in the drawn wanderer), not the sim’s spawn point', async ({ page }) => {
   test.setTimeout(180_000);
   expect(MUZZLE_OFFSET).toBe(12);
   await fxSandbox(page, ['arrow', 'arrow', 'arrow', null, null], HUSK, { quality: 'medium' });
   const seen = await fire(page, [90, 30], 20, 16);
   expect(seen.muzzles.length).toBeGreaterThan(0);
+  const aim = Math.atan2(30, 90);
   for (const m of seen.muzzles) {
+    // The rig's muzzle mark is where the tube is drawn: the drawn wanderer's pixel there is the barrel's cyan (a wrong
+    // mark lands on the cape, the outline or nothing).
+    const [r, gr, b] = m.color ?? [0, 0, 0];
+    expect(gr - r, `muzzle colour ${String(m.color)}`).toBeGreaterThan(40);
+    expect(b - r, `muzzle colour ${String(m.color)}`).toBeGreaterThan(40);
     expect(m.posed).not.toBeNull();
     expect(Math.hypot(m.x - (m.posed?.x ?? 0), m.y - (m.posed?.y ?? 0))).toBeLessThanOrEqual(1);
+    // Out toward the aim from the feet and up at the tube's height, so clear of the sim's spawn (MUZZLE_OFFSET down the
+    // aim from the feet, which is unchanged).
+    expect(m.x - m.feet.x).toBeGreaterThan(6);
+    expect(m.feet.y - m.y).toBeGreaterThan(0);
+    const spawn = { x: m.feet.x + Math.cos(aim) * MUZZLE_OFFSET, y: m.feet.y + Math.sin(aim) * MUZZLE_OFFSET };
+    expect(Math.hypot(m.x - spawn.x, m.y - spawn.y)).toBeGreaterThan(8);
     // Down a lane of the volley, toward the aim (the lanes fan out about it).
-    expect(Math.abs(m.angle - Math.atan2(30, 90))).toBeLessThan(0.6);
+    expect(Math.abs(m.angle - aim)).toBeLessThan(0.6);
+  }
+  // Each new round's trail begins at the drawn muzzle of its frame.
+  expect(seen.starts.length).toBeGreaterThan(0);
+  for (const st of seen.starts) {
+    expect(st.posed).not.toBeNull();
+    expect(Math.hypot(st.x - (st.posed?.x ?? 0), st.y - (st.posed?.y ?? 0))).toBeLessThanOrEqual(1);
   }
 });
 
@@ -139,12 +157,48 @@ test('each tier’s trail cap, mark cap and scale hold, and a tier change applie
     if (q === 'low') expect(soft, q).toBe(0);
     else expect(soft, q).toBeGreaterThan(0);
   }
-  // From High to Low mid-flight: the caps drop at once.
+  // From High to Low mid-fight: the caps drop at once, and the oldest effects past Low's share go on the next frame.
+  await fxSandbox(page, ['bomb+cluster', 'bomb+cluster', 'bomb', 'bomb+cluster', 'bomb'], [['husk', 90, 0], ['husk', 100, 30], ['husk', 100, -30]], { quality: 'high' }, false);
+  const busy = await page.evaluate(async (lowShare) => {
+    const g = window.__GAME__;
+    if (!g) throw new Error('no game');
+    const p = g.getState().player;
+    let most = 0;
+    for (let i = 0; i < 120 && most <= lowShare; i++) {
+      g.step(1, { fire: true, aimX: p.x + 90, aimY: p.y });
+      await new Promise((r) => requestAnimationFrame(r));
+      most = g.ui().particles.effects;
+    }
+    return most;
+  }, PARTICLE_SHARES.low.effect);
+  expect(busy, 'High’s effects past Low’s share before the change').toBeGreaterThan(PARTICLE_SHARES.low.effect);
   await page.evaluate(() => window.__GAME__?.setLook({ quality: 'low' }));
   await page.evaluate(() => new Promise((r) => requestAnimationFrame(r)));
-  const low = await page.evaluate(() => window.__GAME__?.ui().ammoFx);
-  expect(low?.trailCap).toBe(FX_QUALITY.low.trailCap);
-  expect(low?.marks.live ?? 0).toBeLessThanOrEqual(FX_QUALITY.low.markCap);
+  const low = await page.evaluate(() => window.__GAME__?.ui());
+  expect(low?.ammoFx.trailCap).toBe(FX_QUALITY.low.trailCap);
+  expect(low?.ammoFx.marks.live ?? 0).toBeLessThanOrEqual(FX_QUALITY.low.markCap);
+  expect(low?.particles.effects ?? Infinity).toBeLessThanOrEqual(PARTICLE_SHARES.low.effect);
+  expect(low?.particles.deathMotes ?? Infinity).toBeLessThanOrEqual(PARTICLE_SHARES.low.death);
+});
+
+test('on Low, every flying round’s trail is drawn; with more rounds flying than the cap, the cap’s worth and no more', async ({ page }) => {
+  test.setTimeout(180_000);
+  // Arrows into open ground: every round in flight has a trail, its first frame bridged from the muzzle.
+  await fxSandbox(page, ['arrow', 'arrow', 'arrow', 'arrow', 'arrow'], [], { quality: 'low' });
+  const under = await fire(page, [-300, 0], 60, 50);
+  expect(Math.max(...under.trails.map((f) => f.rounds))).toBeGreaterThan(4);
+  for (const f of under.trails) {
+    expect(f.cap).toBe(FX_QUALITY.low.trailCap);
+    expect(f.drawn).toBe(Math.min(f.rounds, f.cap));
+  }
+  // Low's 24 is more than a sandbox volley flies at once: held at 4, the rounds past it fly with no trail.
+  await page.evaluate(() => window.__GAME__?.trailCap(4));
+  const over = await fire(page, [-300, 0], 60, 50);
+  await page.evaluate(() => window.__GAME__?.trailCap(null));
+  const past = over.trails.filter((f) => f.rounds > 4);
+  expect(past.length, 'frames with more rounds flying than the cap').toBeGreaterThan(5);
+  for (const f of over.trails) expect(f.drawn).toBeLessThanOrEqual(4);
+  expect(Math.max(...past.map((f) => f.drawn))).toBe(4);
 });
 
 /** Fires ley bolts for a while and returns the most soft (trail bit) particles alive at once. */
