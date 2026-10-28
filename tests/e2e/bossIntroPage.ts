@@ -14,8 +14,8 @@ export const SANDBOX_BOSSES = [
   { boss: 'conductor', arena: 'crown-spire' },
 ] as const;
 
-/** The sandbox in god mode with three arrow lanes, into an arena by its door, the intro not yet started. */
-export async function intoSandboxArena(page: Page, arena: string): Promise<void> {
+/** The sandbox in god mode with three arrow lanes, into an arena by its door, the intro not yet started (or, `keepIntro` false, stepped out). */
+export async function intoSandboxArena(page: Page, arena: string, keepIntro = true): Promise<void> {
   await bootSandbox(page);
   await hidePanel(page);
   await page.evaluate(() => {
@@ -24,7 +24,7 @@ export async function intoSandboxArena(page: Page, arena: string): Promise<void>
     g.step(1, { sandbox: { kind: 'god', on: true } });
     ['arrow', 'arrow', 'arrow', null, null].forEach((round, entrance) => g.step(1, { sandbox: { kind: 'loadout', entrance, round } }));
   });
-  await enterArena(page, { id: arena }, true);
+  await enterArena(page, { id: arena }, keepIntro);
 }
 
 /** `?playtest` with the shrine's guards and any wanderers cleared, through the Warden's door, its intro not yet started. */
