@@ -1,3 +1,4 @@
+import { BULWARK_INTRO, BULWARK_ROAR } from './bossIntroPoses';
 import type { EnemyPart, EnemyRigDef } from './enemyRig';
 import { ironBand, litEllipse, litPath, litRect, SLATE, slateLips, tone, type Tone } from './enemyLook';
 import { ellipse, flat, line, path, rect, trim, type Shape } from './types';
@@ -188,11 +189,10 @@ export const BULWARK_RIG: EnemyRigDef = {
     hit: [{ lean: -0.1, head: -0.3, bob: 1, squash: 0.05 }],
     // A shot rings off the shield: it rocks back behind it.
     block: [{ armFront: -0.18, lean: -0.08, glow: 1 }],
-    // 041: the enrage's roar, head thrown back and shaking (080 redraws it).
-    roar: [
-      { lean: -0.2, head: -0.3, bob: -3, armBack: 1.4, armFront: -0.2, glow: 1 },
-      { lean: -0.24, head: -0.4, bob: -2, armBack: 1.6, armFront: -0.24, glow: 1 },
-    ],
+    // 041: the enrage's roar; 080: a three-frame strip by its progress (rear back, roar, settle into the hunch).
+    roar: BULWARK_ROAR,
+    // 080: its intro.
+    ...BULWARK_INTRO,
     // 076: the stomp's brace: its weight onto the shield, the back foot lifted high, trembling; the stamp squashes.
     brace: [
       { lean: 0.12, armFront: 0.12, sink: 1.5, squash: 0.06, glow: 0.9 },

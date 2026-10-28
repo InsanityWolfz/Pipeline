@@ -37,3 +37,22 @@ export const BOSS_LOOK = {
   max: 96,
   easeMs: 200,
 } as const;
+
+/**
+ * 080: the boss phase looks' part sprites (src/data/art/bossPhaseParts.ts), placed on the posed rig by render: the
+ * Bulwark's shield runes (three frames, lit one by one), chipped rim, red crack and shoulder spikes; the Forgewright's
+ * open chest plates and flame crest; the Conductor's storm-glass dome and arc halo (two frames, crackling).
+ */
+export const BOSS_PHASE_SPRITES = {
+  runes: 'boss-phase-runes',
+  /** The runes' frames (one, two, three lit) and the halo's two, as frame sets. */
+  runeFrames: { key: 'boss-phase-runes', frames: 3, frameRate: 1, loop: false },
+  haloFrames: { key: 'boss-phase-halo', frames: 2, frameRate: 8, loop: true },
+  chips: 'boss-phase-chips',
+  crack: 'boss-phase-crack',
+  spikes: 'boss-phase-spikes',
+  plates: 'boss-phase-plates',
+  crest: 'boss-phase-crest',
+  dome: 'boss-phase-dome',
+  halo: 'boss-phase-halo',
+} as const;

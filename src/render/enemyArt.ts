@@ -8,6 +8,9 @@ import { bulwarkPose, conductorPose, forgePose } from './bossPoses';
 import { attacking, flinchSquash, reactionOf, staggerIndex, staggerSquash, type Reaction } from './enemyReaction';
 import { releaseSquash, RELEASE_MODES, stripIndex, tremble, windupOf, windupPhase, type WindupPhase } from './enemyMotion';
 import { STRIP_ENDS } from '../data/enemyAnims';
+import { introBeat, introFrame, introSquash } from './bossIntro';
+import { BOSS_PHASE_LOOK } from '../data/art/bossPhases';
+import { grounded } from '../sim/conductorRods';
 
 // 076: what an enemy's sprite shows this frame, from its state, its def and render's clocks: the anim to play, or a
 // strip or stagger frame to hold (a wind-up's gather, coil and peak by its progress), the squash about its feet (the
@@ -127,12 +130,22 @@ function fill(out: EnemyArtShown, pose: string, phase: WindupPhase | null, react
 /**
  * The art for this frame, written into `out` (a caller's own, kept from frame to frame; a new one without it).
  * `staggerMs` is ms since its stagger started (null for none); `now` is scene ms, which the coil's loop and the tremble
- * run on.
+ * run on. 080: `introShort` says a boss in its intro plays the short one (the sim's `introShort`).
  */
-export function enemyArt(e: EnemyState, def: EnemyDef, anims: EnemyAnims, view: View, turned: boolean, staggerMs: number | null, now: number, out?: EnemyArtShown): EnemyArtShown {
+export function enemyArt(e: EnemyState, def: EnemyDef, anims: EnemyAnims, view: View, turned: boolean, staggerMs: number | null, now: number, out?: EnemyArtShown, introShort = false): EnemyArtShown {
   const kind = kindOf(def);
   const family = kind.family;
   const o = out ?? blankArt(animOf(anims, view, 'idle'));
+  // 080: a boss asleep at its post shows its dormant pose; in its intro, the beat's pose by intro ticks.
+  if (def.boss && e.mode === 'idle') {
+    const a = ownAnim(anims, view, 'dormant');
+    if (a) return fill(o, 'dormant', null, null, 0, a, frameAt(a, 0), 0, 0, family);
+  }
+  if (def.boss && e.mode === 'intro') {
+    const b = introBeat(e.modeTicks, introShort);
+    const a = ownAnim(anims, view, b.beat);
+    if (a) return fill(o, b.beat, null, null, introSquash(b.beat, b.at, b.length, introShort), a, frameAt(a, introFrame(b.beat, b.at, b.length, introShort)), 0, 0, family);
+  }
   const base = basePose(e, def, turned);
   reactionIn.attacking = attacking(e.mode);
   reactionIn.reactable = REACTABLE.includes(base);
@@ -153,10 +166,26 @@ export function enemyArt(e: EnemyState, def: EnemyDef, anims: EnemyAnims, view: 
     return fill(o, strip.pose, phase, null, 0, stripAnim, frameAt(stripAnim, stripIndex(phase, stripAnim.frames - STRIP_ENDS, now)), t.dx, t.dy, family);
   }
   const squash = RELEASE_MODES.includes(e.mode) && !kind.still.has(e.mode) ? releaseSquash(e.modeTicks) : 0;
+  // 080: the Bulwark's roar, three frames by its progress (rear back, roar, settle into the hunch).
+  if (base === 'roar' && def.kind === 'bulwark') {
+    const a = animOf(anims, view, 'roar');
+    return fill(o, 'roar', null, null, 0, a, frameAt(a, Math.floor((e.modeTicks / def.enrage.roarTicks) * a.frames)), 0, 0, family);
+  }
   // The Conductor's storm call and rod chain release from their peak (064: one pose for both).
   if ((base === 'call' || base === 'chain') && e.mode === 'swipe') {
     const a = animOf(anims, view, base);
     return fill(o, base, null, null, squash, a, frameAt(a, 99), 0, 0, family);
   }
-  return fill(o, base, null, null, squash, animOf(anims, view, base), null, 0, 0, family);
+  // 080: the enraged Bulwark's lower, forward hunch on idle, walk and turn; the grounded Conductor's lowered stance.
+  const P = BOSS_PHASE_LOOK;
+  if (def.kind === 'bulwark' && e.enraged && HUNCHED.includes(base)) {
+    const H = P.bulwark.enraged.hunch;
+    const dir = e.facing === 'left' ? -1 : e.facing === 'right' ? 1 : 0;
+    return fill(o, base, null, null, squash + H.squash, animOf(anims, view, base), null, H.shift * dir, H.sink, family);
+  }
+  const sink = def.kind === 'conductor' && grounded(e) ? P.conductor.grounded.sink : 0;
+  return fill(o, base, null, null, squash, animOf(anims, view, base), null, 0, sink, family);
 }
+
+/** 080: poses the enraged Bulwark hunches over. */
+const HUNCHED: readonly string[] = ['idle', 'walk', 'turn'];

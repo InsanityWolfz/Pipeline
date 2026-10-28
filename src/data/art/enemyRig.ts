@@ -65,8 +65,11 @@ export interface EnemyPose {
   readonly raise?: number;
 }
 
-/** `turn`, `lob`, `throw` and `block` (034) only where an enemy has them (the Bulwark); `stun`, `dig` and `step` (035) likewise; `roar`, `brace` and `stomp` (041) the Bulwark's; `spray`, `flood` and `vent` (060) the Forgewright's; `blink`, `call` and `chain` (064) the Conductor's. */
-export type EnemyPoseName = 'idle' | 'walk' | 'windup' | 'stagger' | 'swipe' | 'recover' | 'hit' | 'death' | 'turn' | 'lob' | 'throw' | 'block' | 'stun' | 'dig' | 'step' | 'roar' | 'brace' | 'stomp' | 'spray' | 'flood' | 'vent' | 'blink' | 'call' | 'chain';
+/** `turn`, `lob`, `throw` and `block` (034) only where an enemy has them (the Bulwark); `stun`, `dig` and `step` (035) likewise; `roar`, `brace` and `stomp` (041) the Bulwark's; `spray`, `flood` and `vent` (060) the Forgewright's; `blink`, `call` and `chain` (064) the Conductor's; 080: every boss's intro (`dormant`, `stir`, `rise`, `beat`, `ready`). */
+export type EnemyPoseName = 'idle' | 'walk' | 'windup' | 'stagger' | 'swipe' | 'recover' | 'hit' | 'death' | 'turn' | 'lob' | 'throw' | 'block' | 'stun' | 'dig' | 'step' | 'roar' | 'brace' | 'stomp' | 'spray' | 'flood' | 'vent' | 'blink' | 'call' | 'chain' | IntroPoseName;
+
+/** 080: a boss's intro poses (bossIntroPoses.ts). Anim keys split on `-`, so none of these holds one. */
+export type IntroPoseName = 'dormant' | 'stir' | 'rise' | 'beat' | 'ready';
 
 export interface EnemyRigDef {
   /** The `anims` key in src/data/enemies.ts. */

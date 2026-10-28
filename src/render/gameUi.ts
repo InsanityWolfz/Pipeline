@@ -12,6 +12,7 @@ import { NO_BLUEPRINT_UI } from './BlueprintUi';
 import type { GameUiState } from './testHook';
 import { NO_LIGHTING } from './lighting/LightingView';
 import { bakeReport } from './vector/textures';
+import { NO_BOSS_SHOW } from './bossShow';
 
 // What a game scene shows, for the test hook's ui() (split from GameScene in 042). Every view may be missing (before
 // the scene is created, or on the title's blank), so each falls back to its empty value.
@@ -40,6 +41,10 @@ export function gameUi(g: GameScene): GameUiState {
     nodes: g.nodeView?.frames ?? {},
     nodeGlow: g.nodeView?.glowing ?? [],
     shakes: [...(g.feel?.juice.shakes ?? [])],
+    // 080: the intro shakes and every real shake of the world camera; the intro and the phase looks as drawn.
+    introShakes: [...(g.feel?.juice.introShakes ?? [])],
+    cameraShakes: g.feel?.juice.cameraShakes ?? 0,
+    ...(g.bossShow?.ui ?? NO_BOSS_SHOW),
     burnNumbers: g.feel?.juice.burnNumbers ?? 0,
     particles: { live: g.feel?.juice.particles.count ?? 0, deathMotes: g.feel?.juice.particles.deathMotes ?? 0, thrown: g.feel?.juice.particles.motesThrown ?? 0, dissolving: g.effects?.dissolves.count ?? 0 },
     cursor: g.cursorView?.state ?? null,

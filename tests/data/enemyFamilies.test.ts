@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { DEATH_SIZE, ENEMY_FAMILIES, familyOf } from '../../src/data/art/enemyFamilies';
 import { ENEMY_RIGS } from '../../src/data/art/enemies';
 import { WINDUP_STRIPS } from '../../src/data/art/enemyMotion';
+import { INTRO_EXTRAS } from '../../src/data/enemyAnims';
 import { ENEMY_ANIMS } from '../../src/data/assets';
 import { ENEMIES } from '../../src/data/enemies';
 import { DAYLIGHT_PALETTE } from '../../src/data/palette';
@@ -65,7 +66,8 @@ describe("the pass's frames on every rig (076)", () => {
     for (const rig of ENEMY_RIGS) {
       for (const anim of Object.values(ENEMY_ANIMS[rig.id] ?? {})) {
         if (!anim) continue;
-        frames += anim.frames;
+        // 080's boss intro poses are its own budget (tests/data/bossArt.test.ts); 076's pass is held to its own here.
+        if (!(INTRO_EXTRAS as readonly string[]).includes(poseOfAnim(rig, anim).pose)) frames += anim.frames;
         expect(rig.poses[poseOfAnim(rig, anim).pose]?.length, anim.key).toBe(anim.frames);
       }
     }

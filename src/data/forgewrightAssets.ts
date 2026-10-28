@@ -1,4 +1,4 @@
-import { enemyAnims } from './enemyAnims';
+import { enemyAnims, INTRO_EXTRAS } from './enemyAnims';
 
 // How the Forgewright reads on screen (060), beyond its rig (src/data/art/forgewright.ts): its bellows in their three
 // looks, its embers in flight, the glow of its core while it vents, its telegraphs (the slam's circle, the spray's
@@ -12,7 +12,7 @@ export const FORGE_SPRITES = {
 } as const;
 
 /** Its animation set (joined into ENEMY_ANIMS): it blocks on its plating, draws its hammer back to spray, raises it high to flood, and staggers venting. */
-export const FORGE_ANIMS = { forgewright: enemyAnims('forgewright', true, ['block', 'spray', 'flood', 'vent'], 1, true) } as const;
+export const FORGE_ANIMS = { forgewright: enemyAnims('forgewright', true, ['block', 'spray', 'flood', 'vent', ...INTRO_EXTRAS], 1, true) } as const;
 
 export const FORGE_LOOK = {
   /** A bellows shows `patching` over the last `patchingTicks` of its patch; its small bar shows once it's hurt, `w` × `h` px, `gap` px over its box. */

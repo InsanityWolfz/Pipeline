@@ -43,6 +43,7 @@ import { Legibility } from './Legibility';
 import { IDLE_HOST, type GameHost } from './flow/host';
 import { SandboxPanel } from './SandboxPanel';
 import { bossLookTarget } from './bossLook';
+import { introPan } from './bossIntro';
 import { TunnelView } from './TunnelView';
 import { drawPointerUi } from './pointerUi';
 import { RoomFollow } from './roomFollow';
@@ -51,6 +52,7 @@ import { Occluders } from './occluders';
 import { SilhouetteView } from './SilhouetteView';
 import { WorldLayer } from './lighting/WorldLayer';
 import { LightingView } from './lighting/LightingView';
+import { BossShow } from './bossShow';
 
 const FIRST_PIECE = BUILD_BAR[0] ?? '';
 
@@ -96,6 +98,8 @@ export class GameScene extends Scene {
   silhouette?: SilhouetteView;
   /** 074: the region's mood and light. */
   lighting?: LightingView;
+  /** 080: the boss intros and phase looks. */
+  bossShow?: BossShow;
   /** 044: the Sandbox panel (056, 057: the sandbox's controls, pop-outs there, and only there). */
   sandboxPanel?: SandboxPanel;
   /** The room on screen. It lags the player's room through a door's fade (roomFollow.ts). */
@@ -168,6 +172,7 @@ export class GameScene extends Scene {
     this.legibility = new Legibility(this, [this.hud, this.siteMenus, this.buildView]);
     this.cursorView = new CursorView(this);
     this.feel = new FeelView(this, (id) => this.foundryView?.dropIn(id), (id, ms) => this.enemyView?.freeze(id, ms));
+    this.bossShow = new BossShow(this, () => this.feel, () => this.lighting?.quality ?? 'medium');
     this.room.show(this.sim.roomId);
     this.draw();
 
@@ -261,7 +266,7 @@ export class GameScene extends Scene {
     // 069: build mode's zoom goes back to 1× as build mode ends.
     if (!sim.building) this.sceneCameras?.resetZoom();
     if (!this.room.fading && this.playerView) this.sceneCameras?.attuneLook(sim, this.room.shownRoomId, this.playerView.sprite);
-    this.sceneCameras?.bossLook(bossLookTarget(sim), this.game.loop.delta);
+    this.sceneCameras?.bossLook(bossLookTarget(sim), this.game.loop.delta, this.playerView && !this.room.fading ? { pan: introPan(sim, this.room.shownRoomId), followed: this.playerView.sprite } : null);
     this.effects.play(this.pending, sim.player);
     if (this.pending.identifies.length > 0) this.site?.identified();
     if (this.pending.woke) this.wake?.show(this.pending.lost, sim);
@@ -286,6 +291,7 @@ export class GameScene extends Scene {
     const catches = this.lighting?.catches;
     this.groundItemView?.update(inRoom(sim.groundItems, shown), picked, sim.player, sim, catches);
     this.enemyView?.update(inRoom(sim.enemies, shown), sim, catches);
+    this.bossShow?.update(sim, shown, this.game.loop.delta, inRoom(sim.enemies, shown), (id) => this.enemyView?.spriteOf(id), this.sceneCameras);
     // Through a door's fade the player is already in the next room; hide them until it shows.
     this.playerView?.update(sim.player, sim.tube, sim.link, wornRarity(sim), sim.hasTube, sim.tick, shown === sim.roomId);
     if (this.playerView) this.silhouette?.update(this.playerView.sprite, shown === sim.roomId && sim.player.dying === 0);

@@ -1,3 +1,4 @@
+import { WARDEN_INTRO } from './bossIntroPoses';
 import type { EnemyPart, EnemyRigDef } from './enemyRig';
 import { GUARDIAN, glowLine, litPath, litRect, mossTuft, rimOf, shade, tone, type Tone } from './enemyLook';
 import { ellipse, flat, line, path, solid } from './types';
@@ -141,6 +142,8 @@ export const WARDEN_RIG: EnemyRigDef = {
     recover: [{ armBack: -0.35, armFront: -0.35, lean: 0.22, sink: 4, scaleY: 0.94, glow: 0.4 }],
     // A small snap of the head (bosses flinch only).
     hit: [{ lean: -0.12, bob: 1, head: -0.3, headLift: 0.5, squash: 0.05 }],
+    // 080: its intro.
+    ...WARDEN_INTRO,
     // It rocks back and its fists drop; the core fades last (the dissolve's halo).
     death: [{ lean: -0.35, armBack: -0.75, armFront: -0.75, head: -0.35, sink: 2, squash: -0.08, glow: 0.35 }],
   },

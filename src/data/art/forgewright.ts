@@ -1,3 +1,4 @@
+import { FORGE_INTRO } from './bossIntroPoses';
 import { FORGE_SPRITES } from '../forgewrightAssets';
 import type { EnemyPart, EnemyRigDef } from './enemyRig';
 import { BRASS, cinderSeam, litRect, rimOf, rivets, soot, tone } from './enemyLook';
@@ -163,6 +164,8 @@ export const FORGEWRIGHT_RIG: EnemyRigDef = {
       { sink: 3, lean: 0.22, tilt: 0.07, armFront: 0.6, armBack: 0.5, squash: 0.06, glow: 0.2 },
       { sink: 4, lean: 0.18, tilt: -0.06, armFront: 0.5, armBack: 0.6, squash: 0.08, glow: 0.15 },
     ],
+    // 080: its intro.
+    ...FORGE_INTRO,
     // The hammer drops and the helm sags; its bellows dissolve with it.
     death: [{ armFront: 1.25, armBack: 0.6, head: 0.4, headLift: 3, sink: 3, squash: 0.1, lean: 0.1, glow: 0.2 }],
   },

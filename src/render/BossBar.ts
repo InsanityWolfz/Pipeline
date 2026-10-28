@@ -12,13 +12,16 @@ import { defOf } from '../sim/champions';
 import type { SimState } from '../sim/state';
 import { colorOf } from './color';
 import { TextLine } from './textLine';
+import { barAlpha, barFill } from './bossIntro';
+import { introShort } from '../sim/bossIntro';
 
 /**
  * The boss bar as drawn (034), for `ui().bossBar`: the boss's name, health and max, and whether it's enraged (041), or
  * null while none fights; 060: whether it shows the blue shield (the Forgewright's plating), and its heat gauge's fill
- * (0..1, null for a boss without one).
+ * (0..1, null for a boss without one). 080: `fill`, how much of its health the bar shows: it fills from empty during its
+ * intro (`health` is still the sim's).
  */
-export type BossBarShown = { name: string; health: number; maxHealth: number; enraged: boolean; shielded: boolean; heat: number | null } | null;
+export type BossBarShown = { name: string; health: number; maxHealth: number; enraged: boolean; shielded: boolean; heat: number | null; fill: number } | null;
 
 const B = HOLLOWS_LOOK.bossBar;
 
@@ -52,13 +55,19 @@ export class BossBar {
     const forge = forgeDefOf(boss);
     const shielded = plated(boss);
     const heat = forge ? Math.min(1, boss.heat / forge.heat.max) : null;
-    this.shown = { name: def.name, health: boss.health, maxHealth: max, enraged: boss.enraged, shielded, heat };
+    // 080: the bar fills from empty through the intro's card (the short intro's whole length).
+    const short = boss.mode === 'intro' && introShort(sim, boss);
+    const fill = boss.mode === 'intro' ? barFill(boss.modeTicks, short) : 1;
+    const alpha = boss.mode === 'intro' ? barAlpha(boss.modeTicks, short) : 1;
+    this.bar.setAlpha(alpha);
+    this.name.setAlpha(alpha);
+    this.shown = { name: def.name, health: boss.health, maxHealth: max, enraged: boss.enraged, shielded, heat, fill };
     const x = Math.round((VIEW_WIDTH - B.w) / 2);
     const g = this.bar;
     g.clear();
     g.fillStyle(colorOf(B.frame)).fillRect(x - B.border * 2, B.top - B.border * 2, B.w + B.border * 4, B.h + B.border * 4);
     g.fillStyle(colorOf(B.back)).fillRect(x - B.border, B.top - B.border, B.w + B.border * 2, B.h + B.border * 2);
-    g.fillStyle(colorOf(shielded ? ENEMY_FX.immuneBar.color : B.fill)).fillRect(x, B.top, Math.max(0, Math.round((B.w * boss.health) / max)), B.h);
+    g.fillStyle(colorOf(shielded ? ENEMY_FX.immuneBar.color : B.fill)).fillRect(x, B.top, Math.max(0, Math.round((B.w * boss.health * fill) / max)), B.h);
     this.drawShield(shielded, x);
     if (heat !== null) this.drawHeat(g, x, heat);
     this.name.set(def.name);

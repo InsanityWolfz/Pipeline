@@ -8,6 +8,8 @@ import { attuneBeat } from './attune';
 import { intakeAnchor } from './foundryLayout';
 import { UI_CAMERA, type ScreenFit } from './scale';
 import { centredBounds, stepZoom, zoomAt, type Bounds } from './zoom';
+import { INTRO_LOOK } from '../data/art/bossIntro';
+import { capped } from './bossIntro';
 
 // The scene's two cameras (016): the main one follows the world, zoomed by the
 // screen fit; the UI one draws everything with scroll factor 0 (the HUD, menus,
@@ -25,6 +27,11 @@ export class SceneCameras {
   /** 069: build mode's zoom step (BUILD_ZOOMS), and the shown room's own camera bounds. */
   private zoomStep = 0;
   private room: Bounds | null = null;
+  /** 080: the intro's pan: whether it has the camera, and where it last centred it (world px). */
+  private panning = false;
+  private panAt = { x: 0, y: 0 };
+  /** 080: the pan as `ui().bossIntro.pan` reports it: running, and the camera's offset from where the follow would put it. */
+  panShown = { active: false, dx: 0, dy: 0 };
 
   constructor(scene: Scene, fit: ScreenFit) {
     this.scene = scene;
@@ -121,11 +128,42 @@ export class SceneCameras {
   /**
    * fix-playtest-ui: eases the camera's follow `target` px up off the player (a fighting boss's bossLookTarget, 0 with
    * none), so the boss bar doesn't cover the boss. Set every frame: a restarted follow (a KO, the attune) resets it.
+   * 080: `intro` runs a full boss intro's pan first (introLook).
    */
-  bossLook(target: number, deltaMs: number): void {
+  bossLook(target: number, deltaMs: number, intro: { pan: { x: number; y: number; weight: number } | null; followed: GameObjects.GameObject & { x: number; y: number } } | null = null): void {
+    if (intro) this.introLook(intro.pan, intro.followed);
     this.lift += (target - this.lift) * (1 - Math.exp(-Math.max(0, deltaMs) / BOSS_LOOK.easeMs));
     if (Math.abs(target - this.lift) < 0.5) this.lift = target;
     this.scene.cameras.main.setFollowOffset(0, Math.round(this.lift));
+  }
+
+  /**
+   * 080: a full boss intro's pan: while `pan.weight` is above 0 the follow stops and the camera centres between where
+   * the follow (with today's boss lift) would put it and the boss's body middle (`pan`), by the weight, moving at most
+   * INTRO_LOOK.pan.capPx a frame; at 0 the follow (and the lift) take it back from exactly there, so nothing jumps. As
+   * 019's attune look does. Call before `bossLook`, which sets the follow's offset again.
+   */
+  introLook(pan: { x: number; y: number; weight: number } | null, followed: GameObjects.GameObject & { x: number; y: number }): void {
+    const main = this.scene.cameras.main;
+    const follow = this.clampedCentre({ x: followed.x, y: followed.y - Math.round(this.lift) });
+    if (pan && pan.weight > 0 && !this.looking) {
+      if (!this.panning) {
+        main.stopFollow();
+        this.panAt = follow;
+      }
+      this.panning = true;
+      const to = this.clampedCentre(pan);
+      const cap = INTRO_LOOK.pan.capPx;
+      const want = { x: follow.x + (to.x - follow.x) * pan.weight, y: follow.y + (to.y - follow.y) * pan.weight };
+      this.panAt = { x: capped(this.panAt.x, want.x, cap), y: capped(this.panAt.y, want.y, cap) };
+      main.centerOn(this.panAt.x, this.panAt.y);
+      this.panShown = { active: true, dx: Math.round(this.panAt.x - follow.x), dy: Math.round(this.panAt.y - follow.y) };
+    } else if (this.panning) {
+      this.panning = false;
+      main.centerOn(follow.x, follow.y);
+      main.startFollow(followed, true, CAMERA_LERP, CAMERA_LERP);
+      this.panShown = { active: false, dx: 0, dy: 0 };
+    }
   }
 
   /** Where the main camera's centre lands when asked to centre on `p`, kept inside its bounds. */

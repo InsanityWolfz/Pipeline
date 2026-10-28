@@ -1,3 +1,4 @@
+import type { BossShowUi } from './bossShow';
 import type { TunnelMark } from './tunnelMarks';
 import type { GroundItemShown } from './GroundItemView';
 import type { InteractPromptState } from './InteractPrompt';
@@ -111,7 +112,7 @@ export interface GameTestHook {
  * tip's piece; the minimap (017) with its markers in view px; each node's frame by node id; and the claimed
  * pylon's supply motes (018), how many have started and those on their way.
  */
-export interface UiState {
+export interface UiState extends BossShowUi {
   /** The scene has built its views and the fonts are loaded (020): before this, nothing is drawn. */
   ready: boolean;
   /** The sim tick the last drawn frame showed (-1 before one): after a step, wait until it matches the state's tick before reading what's drawn. */
@@ -141,7 +142,7 @@ export interface UiState {
   overworldChunks: string[];
   /** 074: each overworld ground chunk's bake time so far, ms. */
   groundBakeMs: readonly number[];
-  /** The camera shakes asked for since boot, oldest first (the last 50) (021). */
+  /** The camera shakes asked for since boot, oldest first (the last 50) (021; 080: `intro` and `intro-short`). */
   shakes: string[];
   /** 060: burn beats' small numbers shown since boot, and enemies drawn with flames on them now. */
   burnNumbers: number;
