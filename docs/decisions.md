@@ -333,3 +333,8 @@ Each plan's build notes hold the detail; these are the lasting technical choices
   - Enemy poses follow the sim's own wind-up progress (gather, coil, peak by share of the wind-up), so the art can't drift from timing; motion values live in `ENEMY_MOTION`, with per-attack overrides (slams take no release stretch).
   - Death motes share one capped total per death, split across a boss and its standing parts, and scale with Graphics quality.
   - Staggers count hits per sim tick, never per render frame, so slow machines see the same reactions.
+
+- **078 ammo visuals:**
+  - Ammo looks are data rows by family, element and tier, so a new ammo gets its look by adding a row.
+  - All particles (death motes, weather, effects) draw from one pooled ledger with a fixed share each per Graphics quality tier; no share borrows from another.
+  - e2e tests that wait for a screen to settle count drawn frames, never wall-clock seconds.
