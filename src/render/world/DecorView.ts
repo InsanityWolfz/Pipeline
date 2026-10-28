@@ -26,7 +26,7 @@ export interface PieceObjects {
   base: GameObjects.Image;
   loop: GameObjects.Image | null;
   sway: GameObjects.Image | null;
-  halos: { image: GameObjects.Image; alpha: number; breathe: boolean }[];
+  halos: { image: GameObjects.Image; breathe: boolean }[];
 }
 
 /** A built chunk's detail. */
@@ -132,7 +132,7 @@ export class DecorView {
       const y = a.y + def.swayAt[1];
       sway = addVector(this.scene, x, y, swayFrame).setDepth(a.y + 0.03).setVisible(this.roomShown);
       this.world?.addProp(sway);
-      this.sway.add(key, { target: sway, x, y, kind: 'vine', period: 3000, phase: 0.3 });
+      this.sway.add(key, { target: sway, x, y, kind: 'vine', period: SWAY.ivy.periodMs, phase: SWAY.ivy.phase });
     }
     const halos = (def.halos ?? []).map((h) => ({
       image: this.scene.add
@@ -142,7 +142,6 @@ export class DecorView {
         .setBlendMode(BlendModes.ADD)
         .setDepth(a.y + 0.04)
         .setVisible(this.roomShown),
-      alpha: 0.85,
       breathe: h.breathe,
     }));
     return { def, base, loop, sway, halos };

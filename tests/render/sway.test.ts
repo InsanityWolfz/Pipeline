@@ -87,6 +87,58 @@ describe('sway (077)', () => {
     expect(a).not.toBeCloseTo(b, 2);
   });
 
+  // Review: a gust or a region's blend used to change the clock's rate, so late in a session the phase jumped (−2.91° to
+  // 2.12° in a frame at a Stormcrown gust's start) or fluttered for a second across a border. The cycle is the plant's
+  // own; the wind changes only the amplitude and the lean, eased over SWAY.easeMs.
+  const lateMs = 10 * 60_000;
+  const frameMs = 1000 / 60;
+  /** The largest change of any object's angle from one frame to the next, `frames` frames from `lateMs`, the wind by frame. */
+  function largestStep(windAt: (frame: number) => { strength: number; dx: number; dy: number }, frames: number, kind: SwayKind = 'grass'): number {
+    const { stepper, byChunk } = world(40, kind);
+    const fakes = [...byChunk.values()].flat();
+    let last: number[] | null = null;
+    let most = 0;
+    for (let i = 0; i < frames; i++) {
+      stepper.step(view, lateMs + i * frameMs, windAt(i), SWAY.perFrame.high);
+      const now = fakes.map((f) => f.angle);
+      if (last) for (const [j, a] of now.entries()) most = Math.max(most, Math.abs(a - (last[j] ?? a)));
+      last = now;
+    }
+    return most;
+  }
+  /** Under a plant's own fastest swing in a frame (its amplitude and lean over its shortest cycle) plus the ease's share. */
+  const smooth = SWAY.amplitude.grass * (1 + SWAY.lean) * ((2 * Math.PI * frameMs) / SWAY.periodMs.grass[0] + (3 * frameMs) / SWAY.easeMs);
+
+  it('never jumps between frames as a gust starts and ends, late in a session (the Stormcrown’s and the Hollows’)', () => {
+    const storm = { dx: Math.SQRT1_2, dy: Math.SQRT1_2 };
+    const gusty = (base: number, mult: number) => (i: number) => ({ strength: i >= 60 && i < 120 ? base * mult : base, ...storm });
+    expect(largestStep(gusty(1.8, 1.5), 240)).toBeLessThanOrEqual(smooth);
+    expect(largestStep(gusty(1, 2.5), 240)).toBeLessThanOrEqual(smooth);
+    // The Emberworks' still air to the meadow's breeze at once (a waypoint's jump): eased, not snapped.
+    expect(largestStep((i) => ({ strength: i < 60 ? 0.5 : 1, dx: 1, dy: 0 }), 180)).toBeLessThanOrEqual(smooth);
+  });
+
+  it('never flutters crossing a region’s blend, late in a session', () => {
+    // Region 1's east breeze to the Stormcrown's strong south-east wind over 1.3 s, as walking the band.
+    const frames = Math.round(1300 / frameMs);
+    const blend = (i: number) => {
+      const k = Math.min(1, Math.max(0, (i - 30) / frames));
+      const dx = 1 - k + k * Math.SQRT1_2;
+      const dy = k * Math.SQRT1_2;
+      const len = Math.hypot(dx, dy);
+      return { strength: 1 + 0.8 * k, dx: dx / len, dy: dy / len };
+    };
+    expect(largestStep(blend, frames + 90)).toBeLessThanOrEqual(smooth);
+  });
+
+  it('keeps each plant’s own cycle (2.4–3.6 s) in any wind: the wind sets only its amplitude and lean', () => {
+    const e = { x: 4000, y: 3000, kind: 'grass' as const, period: 3000, phase: 0.25 };
+    for (const strength of [0.5, 1, 1.8, 2.7]) {
+      const w = { strength, dx: Math.SQRT1_2, dy: Math.SQRT1_2 };
+      for (const t of [lateMs, lateMs + 700, lateMs + 1900]) expect(swayAngle(e, t + e.period, w), `strength ${strength}`).toBeCloseTo(swayAngle(e, t, w), 6);
+    }
+  });
+
   it('on Low touches nothing out of view and rests what’s in view at 0, once', () => {
     const { stepper, byChunk } = world(30);
     stepper.step(view, 0, wind, 300);

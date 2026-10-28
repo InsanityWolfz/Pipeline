@@ -24,32 +24,48 @@ export const WIND: Readonly<Record<DecorRegion, Wind>> = {
 };
 
 /**
- * The sway: each plant, vine and tree turns about its foot: amplitude × wind strength (at most 1) × sin(clock × rate +
- * phase), plus a lean downwind of at most `lean` × the amplitude. A cycle takes `periodMs` (by its hash within the
- * range); the phase runs along the wind `wave` px a cycle, so gusts roll across a field. On Low nothing sways.
- * `perFrame`: at most this many objects are turned a frame (past it, in turns); `margin`: objects this far outside
- * the view (a canopy reaching in) are stepped too.
+ * The sway: each plant, vine and tree turns about its foot: amplitude × wind strength (at most `maxStrength`) ×
+ * sin(2π × clock / its cycle + phase), plus a lean downwind of at most `lean` × the amplitude. A cycle takes `periodMs`
+ * (by its hash within the range), whatever the wind: the wind (gusts and region blends) changes only the amplitude and
+ * the lean, eased over `easeMs` (review: a rate that followed the wind jumped the phase late in a session). The phase
+ * runs `wave` px a cycle along its own region's wind (fixed per plant), so gusts roll across a field. On Low nothing
+ * sways. `perFrame`: at most this many objects are turned a frame (past it, in turns); `margin`: objects this far
+ * outside the view (a canopy reaching in) are stepped too.
  */
 export const SWAY: {
   readonly amplitude: Readonly<Record<SwayKind, number>>;
   readonly periodMs: Readonly<Record<SwayKind, readonly [number, number]>>;
   readonly lean: number;
+  readonly maxStrength: number;
+  readonly easeMs: number;
   readonly wave: number;
+  readonly hashPhase: number;
   readonly perFrame: Readonly<Record<Quality, number>>;
   readonly margin: number;
   readonly bucket: number;
   readonly nodes: readonly string[];
+  readonly nodeCycle: { readonly stepMs: number; readonly steps: number; readonly phases: number };
+  readonly ivy: { readonly periodMs: number; readonly phase: number };
 } = {
   amplitude: { grass: 4, flower: 3, fern: 2.5, reed: 2.5, vine: 3, tree: 0.6 },
   periodMs: { grass: [2400, 3600], flower: [2400, 3600], fern: [2400, 3600], reed: [2400, 3600], vine: [2400, 3600], tree: [4000, 5000] },
   lean: 1 / 3,
+  maxStrength: 1,
+  /** The wind's strength and lean reach a change's 95% in this many ms. */
+  easeMs: 1000,
   wave: 260,
+  /** How much of a cycle the tile hash's phase spreads over (the rest comes from the position along the wind). */
+  hashPhase: 0.35,
   perFrame: { low: 0, medium: 300, high: 600 },
   margin: 64,
   /** The stepper keeps each chunk's objects in squares this many px across, so a frame looks only at those in view. */
   bucket: 160,
   /** Gathering nodes that sway like trees (018's tree nodes). */
   nodes: ['tree'],
+  /** A tree node's cycle: the trees' shortest plus `stepMs` × (its id mod `steps`); its phase (its id mod `phases`) / `phases`. */
+  nodeCycle: { stepMs: 140, steps: 7, phases: 10 },
+  /** The Fallen Colossus's ivy (a set piece's sway part): its cycle and phase. */
+  ivy: { periodMs: 3000, phase: 0.3 },
 };
 
 /**

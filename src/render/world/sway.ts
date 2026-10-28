@@ -1,11 +1,16 @@
-import { SWAY } from '../../data/ambient';
+import { SWAY, WIND } from '../../data/ambient';
+import { TILE_SIZE } from '../../data/config';
 import type { SwayKind } from '../../data/decor';
+import { decorRegion } from './decorPlace';
+import { toward } from './wind';
 
 // 077: the sway stepper. Each built chunk keeps its swaying objects (plants, vines, trees, tree nodes, the Colossus's
 // ivy) in squares of SWAY.bucket px; each frame only the chunks the camera's view touches are looked at, and only
 // their squares in view, and at most `cap` objects are turned (past that, in turns). Chunks out of view are never
 // touched: their objects stand as they were left. On Low (cap 0) the objects in view rest at angle 0, set once.
-// Rotation changes neither a sprite's frame nor its position, so 070's cover key never changes with it.
+// Rotation changes neither a sprite's frame nor its position, so 070's cover key never changes with it. Each object
+// keeps its own cycle; the wind it's given eases its amplitude and lean over SWAY.easeMs, so a gust or a region's blend
+// never jumps a frame (review).
 
 /** Anything that turns about its foot (a Phaser Image's setAngle). */
 export interface SwayTarget {
@@ -21,6 +26,8 @@ export interface SwayEntry {
   /** Its cycle, ms, and its own phase (0..1, from its tile's hash). */
   period: number;
   phase: number;
+  /** Where it stands along its region's wind, in cycles (worked out once, when it's filed). */
+  along?: number;
 }
 
 /** The wind where the camera is: its strength (gusts included) and the unit direction it blows toward (screen, x east, y south). */
@@ -32,8 +39,15 @@ export interface SwayWind {
 
 type View = { x: number; y: number; width: number; height: number };
 
+/** Where a point stands along its own region's wind, in cycles: fixed for a plant, so a region's blend never moves its phase. */
+export function alongWind(x: number, y: number): number {
+  const v = toward(WIND[decorRegion(Math.floor(x / TILE_SIZE), Math.floor(y / TILE_SIZE))].toward);
+  return (x * v.dx + y * v.dy) / SWAY.wave;
+}
+
 /** Files an object in its chunk's square; returns the square's list. */
 function put(map: Map<string, Map<string, SwayEntry[]>>, chunk: string, e: SwayEntry): SwayEntry[] {
+  if (e.along === undefined) e.along = alongWind(e.x, e.y);
   const buckets = map.get(chunk) ?? new Map<string, SwayEntry[]>();
   map.set(chunk, buckets);
   const b = `${Math.floor(e.x / SWAY.bucket)},${Math.floor(e.y / SWAY.bucket)}`;
@@ -43,14 +57,11 @@ function put(map: Map<string, Map<string, SwayEntry[]>>, chunk: string, e: SwayE
   return list;
 }
 
-/** A plant's angle at `timeMs` in a wind, degrees: within amplitude × (1 + SWAY.lean). */
-export function swayAngle(e: Pick<SwayEntry, 'x' | 'y' | 'kind' | 'period' | 'phase'>, timeMs: number, wind: SwayWind): number {
+/** A plant's angle at `timeMs` in a wind, degrees: within amplitude × (1 + SWAY.lean); its cycle is its own in any wind. */
+export function swayAngle(e: Pick<SwayEntry, 'x' | 'y' | 'kind' | 'period' | 'phase' | 'along'>, timeMs: number, wind: SwayWind): number {
   const amp = SWAY.amplitude[e.kind];
-  const s = Math.min(1, Math.max(0, wind.strength));
-  // A stronger wind turns them faster too (a gale shows in the rate, as the amplitude is capped).
-  const rate = 0.6 + 0.4 * Math.min(2.5, wind.strength);
-  const along = (e.x * wind.dx + e.y * wind.dy) / SWAY.wave;
-  const phi = 2 * Math.PI * ((timeMs * rate) / e.period - along + e.phase * 0.35);
+  const s = Math.min(SWAY.maxStrength, Math.max(0, wind.strength));
+  const phi = 2 * Math.PI * (timeMs / e.period - (e.along ?? alongWind(e.x, e.y)) + e.phase * SWAY.hashPhase);
   return amp * s * Math.sin(phi) + SWAY.lean * amp * s * wind.dx;
 }
 
@@ -71,6 +82,9 @@ export class SwayStepper {
   /** Chunks whose objects rest at 0 already (Low). */
   private readonly rested = new Set<string>();
   private cursor = 0;
+  /** The wind as the plants feel it: eased toward the wind given, over SWAY.easeMs. */
+  private air: SwayWind | null = null;
+  private airMs = 0;
   /** Every object turned since it was made, for tests: how often each was turned. */
   touched: WeakMap<SwayTarget, number> | null = null;
 
@@ -111,8 +125,26 @@ export class SwayStepper {
     return n;
   }
 
+  /** Eases the plants' wind toward `wind` (its strength within SWAY.maxStrength) for the time since the last frame. */
+  private ease(timeMs: number, wind: SwayWind): SwayWind {
+    const strength = Math.min(SWAY.maxStrength, Math.max(0, wind.strength));
+    const a = this.air;
+    if (!a) {
+      this.air = { strength, dx: wind.dx, dy: wind.dy };
+      this.airMs = timeMs;
+      return this.air;
+    }
+    const k = 1 - Math.exp((-3 * Math.max(0, timeMs - this.airMs)) / SWAY.easeMs);
+    this.airMs = timeMs;
+    a.strength += (strength - a.strength) * k;
+    a.dx += (wind.dx - a.dx) * k;
+    a.dy += (wind.dy - a.dy) * k;
+    return a;
+  }
+
   /** One frame: turns up to `cap` objects in `view` (plus SWAY.margin) at `timeMs`; with `cap` 0 they rest at 0. */
-  step(view: View, timeMs: number, wind: SwayWind, cap: number): SwayStep {
+  step(view: View, timeMs: number, windNow: SwayWind, cap: number): SwayStep {
+    const wind = this.ease(timeMs, windNow);
     const m = SWAY.margin;
     const x0 = view.x - m;
     const y0 = view.y - m;

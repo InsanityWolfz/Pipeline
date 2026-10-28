@@ -99,7 +99,7 @@ export class NodeView {
     // 077: a tree node sways as the grove's trees do, its glow with it.
     const unsway =
       SWAY.nodes.includes(n.nodeId) && this.sway
-        ? this.sway.addFixed({ target: { setAngle: (a: number) => [image.setAngle(a), glow.setAngle(a)] }, x: n.x, y: bottom, kind: 'tree', period: SWAY.periodMs.tree[0] + (n.id % 7) * 140, phase: (n.id % 10) / 10 })
+        ? this.sway.addFixed({ target: { setAngle: (a: number) => [image.setAngle(a), glow.setAngle(a)] }, x: n.x, y: bottom, kind: 'tree', period: SWAY.periodMs.tree[0] + (n.id % SWAY.nodeCycle.steps) * SWAY.nodeCycle.stepMs, phase: (n.id % SWAY.nodeCycle.phases) / SWAY.nodeCycle.phases })
         : undefined;
     const view: NodeSprites = { image, glow, sparkle, ...(dapple ? { dapple } : {}), ...(unsway ? { unsway } : {}) };
     this.sprites.set(n.id, view);
