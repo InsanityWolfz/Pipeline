@@ -12,7 +12,7 @@ import type { ForgeAt } from '../../src/render/foundry/runningForges';
 const room = STATIC_ROOMS.foundry;
 if (!room) throw new Error('no foundry');
 const forge = (id: number, pieceId: string, x = 300, bottom = 200): ForgeAt => ({ id, pieceId, x, bottom });
-const base = { room, time: 0, flashes: true, forges: [] as ForgeAt[], intake: null };
+const base = { room, view: { x: 0, y: -48, width: 768, height: 560 }, time: 0, flashes: true, forges: [] as ForgeAt[], intake: null };
 
 describe('the foundry’s lights (079)', () => {
   it('lights the two braziers and four torches from the room’s props, once a room', () => {
@@ -25,6 +25,12 @@ describe('the foundry’s lights (079)', () => {
     const lights = foundryLights(base);
     expect(lights.filter((l) => l.source === 'wall').length).toBe(6);
     for (const l of lights.filter((x) => x.source === 'wall')) expect(l.priority).toBe(2);
+  });
+
+  it('offers a wall light only while its pool reaches the view', () => {
+    const west = foundryLights({ ...base, view: { x: 0, y: 0, width: 300, height: 512 } }).filter((l) => l.source === 'wall');
+    expect(west.every((l) => l.x - l.radius <= 300)).toBe(true);
+    expect(west.length).toBeLessThan(6);
   });
 
   it('places a machine’s light only for the running forge machines it is given, by machine', () => {

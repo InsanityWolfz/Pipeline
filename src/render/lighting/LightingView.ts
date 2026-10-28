@@ -204,7 +204,7 @@ export class LightingView {
     const out = gatherLights({ sim, shown, view, quality, time: this.time, flashes, pulses: this.pulses, chain: conductorChain(sim, shown) });
     const room = STATIC_ROOMS[FOUNDRY_ROOM];
     if (shown !== FOUNDRY_ROOM || !room) return out;
-    return [...out, ...foundryLights({ room, time: this.time, flashes, forges: this.foundry?.onScreen() ?? [], intake: this.foundry?.intake(sim) ?? null })];
+    return [...out, ...foundryLights({ room, view, time: this.time, flashes, forges: this.foundry?.onScreen() ?? [], intake: this.foundry?.intake(sim) ?? null })];
   }
 
   get shown(): LightingShown {

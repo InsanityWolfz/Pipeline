@@ -7,7 +7,7 @@ import { propBase } from '../propBase';
 import type { LightCandidate } from './lightPick';
 
 // 079: the foundry's lights as 074's picker takes them (pure): its wall fires (every prop with a `light`, worked out
-// once a room: the braziers and the torches), the intake's mouth while it glows (1.5 × its glow, breathing and swelling
+// once a room: the braziers and the torches), each offered only while its pool reaches the view, the intake's mouth while it glows (1.5 × its glow, breathing and swelling
 // with it), and the working forge machines on screen it is given (FoundryMood's running set, never a walk over every
 // piece). Fires flicker within their ±share; a light marked steady (the coil) holds still with Flashes off.
 
@@ -49,6 +49,8 @@ const breathe = (time: number): number => (Math.sin((time / AMBIENT.glowBreatheM
 
 export interface FoundryLightInput {
   room: Room;
+  /** The camera's view: a light is offered only if its pool reaches into it (074's rule). */
+  view: { x: number; y: number; width: number; height: number };
   /** Scene ms. */
   time: number;
   flashes: boolean;
@@ -59,14 +61,15 @@ export interface FoundryLightInput {
 }
 
 export function foundryLights(input: FoundryLightInput): LightCandidate[] {
-  const { time, flashes } = input;
+  const { time, flashes, view: v } = input;
   const out: LightCandidate[] = [];
+  const near = (x: number, y: number, r: number) => x >= v.x - r && x <= v.x + v.width + r && y >= v.y - r && y <= v.y + v.height + r;
   for (const [i, w] of wallLights(input.room).entries()) {
     const l = FOUNDRY_LIGHTS.walls[w.key];
-    if (l) out.push({ source: 'wall', x: w.x, y: w.y, radius: l.radius, color: l.color, intensity: l.intensity * flicker(l, time, i * 1.9, flashes), priority: l.priority });
+    if (l && near(w.x, w.y, l.radius)) out.push({ source: 'wall', x: w.x, y: w.y, radius: l.radius, color: l.color, intensity: l.intensity * flicker(l, time, i * 1.9, flashes), priority: l.priority });
   }
   const intake = input.intake;
-  if (intake) {
+  if (intake && near(intake.x, intake.y, intake.glowRadius * FOUNDRY_LIGHTS.intake.radius)) {
     const l = FOUNDRY_LIGHTS.intake;
     out.push({ source: 'intake', x: intake.x, y: intake.y - l.rise, radius: intake.glowRadius * l.radius, color: l.color, intensity: l.intensity * (0.75 + 0.25 * breathe(time)), priority: l.priority });
   }

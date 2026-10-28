@@ -41,7 +41,8 @@ test('the foundry’s mood and lights on each tier', async ({ page }) => {
   test.setTimeout(240_000);
   const errors = watchErrors(page);
   const ids = await forgeLine(page, { layout: 'showcase' });
-  await standAt(page, 12, 8);
+  // Where the view takes in every wall light's pool (the room is 768 × 512 px, the view 640 × 360).
+  await standAt(page, 11.5, 6.5);
   await allWorking(page, ids.forges);
   for (const q of TIERS) {
     await setLook(page, { quality: q });
