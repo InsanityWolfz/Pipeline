@@ -79,18 +79,18 @@ const SURVIVAL: Shape[] = [
   ellipse(-3.4, -3.4, 1.2, 0.8, flat({ id: 'snow', alpha: 0.6 })),
 ];
 
-/** A band across the tube's barrel (081) at `t` along its axis from the breech (-5, 5) to the mouth (5, -5). */
+/** A band across the tube's barrel (081) at `t` along its axis from the breech (-4.2, 4.2) to the mouth (5, -5). */
 const band = (t: number, half: number, width: number, color: string): Shape => {
-  const cx = -5 + 10 * t;
-  const cy = 5 - 10 * t;
+  const cx = -4.2 + 9.2 * t;
+  const cy = 4.2 - 9.2 * t;
   return line([cx - half, cy - half, cx + half, cy + half], width, color, true);
 };
 
 // The Tube (081): the relic tube in three-quarter view, pointing up-right like the ammo icons: a ringed cyan barrel,
 // brass bands at the breech and a flared brass mouth. (It was side on, and read as a battery.)
 const TUBE: Shape[] = [
-  line([-5.4, 5.4, 3.4, -3.4], 5.2, 'iron', true),
-  line([-5.6, 4.6, 2.6, -3.6], 1.4, { id: 'iron-light', alpha: 0.8 }),
+  line([-4.4, 4.4, 3.4, -3.4], 5.2, 'iron', true),
+  line([-4.8, 3.8, 2.6, -3.6], 1.4, { id: 'iron-light', alpha: 0.8 }),
   band(0.05, 2.2, 1.6, 'brass'),
   band(0.2, 2.2, 1.2, 'brass-dark'),
   ...[0.42, 0.62].map((t) => ({ ...band(t, 2, 1.1, 'cyan'), glow: { color: 'cyan', blur: 1.5 } })),
