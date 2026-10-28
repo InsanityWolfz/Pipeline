@@ -42,6 +42,7 @@ import type { HudDrawsShown } from './HudView';
 import type { PlayerUi } from './PlayerView';
 import type { WeatherShown, WorldShown } from './world/worldShown';
 import type { AmmoFxShown } from './fx/ammoFxShown';
+import type { FoundryMoodShown } from './foundry/FoundryMood';
 
 export type { GameTestHook } from './gameTestHook';
 
@@ -250,6 +251,8 @@ export interface UiState extends BossShowUi {
   sandboxDrawn: boolean;
   /** 074: the region's mood and light as drawn: quality, the mood's ring and blend, the ambient and flash, lights by source, lit objects, fog layers, and light catches. */
   lighting: LightingShown;
+  /** 079: the foundry's running forges, their effects, its particles against its cap, the ley pulses and inlays, and `visited`. */
+  foundryMood: FoundryMoodShown;
   /** 081: the menus' motion (the last open, running or settled, its ms of tween time, alpha and rise; fades so far) and the HUD's redraw counts, live tweens and game objects. */
   menuMotion: MenuMotionShown;
   hudDraws: HudDrawsShown;

@@ -313,6 +313,10 @@ export const DEPTHS = {
   silhouette: 98_000,
   /** Drifting motes, over the world. */
   motes: 99_000,
+  /** 079: ley flow pulses on the foundry's inlays: over the floor, under conduits (0.2), their items and anything standing. */
+  leyPulse: 0.1,
+  /** 079: the forges' shimmer, steam and sparks: over every standing piece, under the silhouette, world UI, menus and the HUD. */
+  foundryFx: 97_500,
   /** A room's dusk tint and vignette, over the world and under the HUD. */
   mood: 500_000,
   /** The low-HP red screen edges (031), over the mood and under the HUD and menus. */

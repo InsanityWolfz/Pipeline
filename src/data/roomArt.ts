@@ -35,7 +35,8 @@ export const WALL_ALT_ONE_IN = 7;
  * far up from their tile's bottom edge, px. Looping props start at a frame picked
  * from their tile (× phaseX, × phaseY), so rows of them don't move in step.
  */
-export const PROP_LAYOUT = { wallNudge: 0.5, standingInset: 8, phaseX: 7, phaseY: 3 } as const;
+/** Props: a wall prop's depth nudge, a standing one's inset, the loop phase per tile, and (079) how far a side-wall prop sits toward the room from its tile's middle, px. */
+export const PROP_LAYOUT = { wallNudge: 0.5, standingInset: 8, phaseX: 7, phaseY: 3, sideInset: 6 } as const;
 
 /**
  * Tiled rooms show this much more wall above their top row, px (019): the camera may scroll that far up, so

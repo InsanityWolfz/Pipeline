@@ -6,6 +6,7 @@ import { PROPS, type PropDef, type PropPlacement } from '../data/props';
 import { PROP_LAYOUT, ROOM_TOP_MARGIN, WALL_SPRITES } from '../data/roomArt';
 import { TILE, type Room } from '../data/rooms';
 import { registerAnim } from './anims';
+import { propBase } from './propBase';
 import { floorFrame, wallPieces, worldTileHash } from './roomTiles';
 import { hollowsFrame } from './hollowsTiles';
 import { addVectorSprite, addVector } from './vector/textures';
@@ -24,6 +25,9 @@ export class RoomView {
   private readonly occluders: Occluders | undefined;
 
   private readonly world: WorldLayer | undefined;
+
+  /** The shown room's width, tiles (079: a side-wall prop on the east half mirrors). */
+  private width = 0;
 
   /** `occluders` (070): ruin blocks (and the block props standing in for them) can hide the player. `world` (074): floors are its ground, walls and props its props. */
   constructor(scene: Scene, occluders?: Occluders, world?: WorldLayer) {
@@ -44,6 +48,7 @@ export class RoomView {
     };
     // More wall above the top row, behind everything (019).
     const width = room.rows[0]?.length ?? 0;
+    this.width = width;
     for (let y = -TILE_SIZE; y > -ROOM_TOP_MARGIN - TILE_SIZE; y -= TILE_SIZE) {
       for (let tx = 0; tx < width; tx++) add(tx * TILE_SIZE, y, WALL_SPRITES.top).setOrigin(0).setDepth(DEPTHS.floor);
     }
@@ -101,7 +106,11 @@ export class RoomView {
     this.objects.push(sprite);
     if (def.layer === 'floor') sprite.setOrigin(0.5).setPosition(cx, bottom - TILE_SIZE / 2).setDepth(FLOOR_PROP_DEPTH);
     else if (def.layer === 'wall') sprite.setY(bottom + (def.drop ?? 0)).setDepth(bottom + PROP_LAYOUT.wallNudge);
-    else if (def.layer === 'standing') sprite.setY(bottom - PROP_LAYOUT.standingInset).setDepth(bottom - PROP_LAYOUT.standingInset);
+    // 079: on a side wall's top, nudged toward the room (the sprite reaches east; the east wall mirrors it).
+    else if (def.layer === 'side') {
+      const at = propBase(p, this.width);
+      sprite.setPosition(at.x, at.y).setFlipX(at.flip).setDepth(bottom + PROP_LAYOUT.wallNudge);
+    } else if (def.layer === 'standing') sprite.setY(bottom - PROP_LAYOUT.standingInset).setDepth(bottom - PROP_LAYOUT.standingInset);
     else {
       sprite.setDepth(bottom);
       this.occluders?.add(sprite);

@@ -19,6 +19,7 @@ import { bakeReport } from './vector/textures';
 import { NO_BOSS_SHOW } from './bossShow';
 
 import { NO_WEATHER, NO_WORLD } from './world/worldShown';
+import { NO_FOUNDRY_MOOD } from './foundry/FoundryMood';
 
 // What a game scene shows, for the test hook's ui() (split from GameScene in 042). Every view may be missing (before
 // the scene is created, or on the title's blank), so each falls back to its empty value.
@@ -97,6 +98,7 @@ export function gameUi(g: GameScene): GameUiState {
     sandbox: g.sim.sandbox ? (g.sandboxPanel?.state ?? { open: false, rows: [], keys: [], boxes: [], tabs: [], sliding: false }) : null,
     sandboxDrawn: g.sandboxPanel?.drawn ?? false,
     lighting: g.lighting?.shown ?? NO_LIGHTING,
+    foundryMood: g.foundryMood?.shown ?? NO_FOUNDRY_MOOD,
     menuMotion: { ...MENU_MOTION_SHOWN, rims: hoverRims() },
     hudDraws: { bossBar: 0, hpFill: 0, xp: 0, tubeCard: 0, ...g.hud?.draws, tweens: g.tweens?.getTweens().length ?? 0, objects: objectCount(g.children?.list ?? []) },
     ammoFx: g.shots?.fx.shown ?? NO_AMMO_FX,

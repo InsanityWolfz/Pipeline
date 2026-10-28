@@ -11,7 +11,8 @@ import type { SimEvents } from '../sim/events';
 import { pieceRect } from '../sim/pieces';
 import { roomById, type SimState } from '../sim/state';
 import { AmbientView, type GlowSpot } from './AmbientView';
-import { movingGlows } from './movingGlows';
+import { intakeGlowRadius, movingGlows } from './movingGlows';
+import { intakeAnchor } from './foundryLayout';
 import { JuiceView } from './JuiceView';
 import { SoundView } from './SoundView';
 import { playHollows, SealSound } from './hollowsFeel';
@@ -280,5 +281,16 @@ export class FeelView {
       this.workMs = 0;
       j.burst(HARVEST_BURSTS[worked.nodeId] ?? 'harvestChips', worked.x, worked.y);
     }
+  }
+
+  /** 079: the room's motes now (they count in the foundry's particle cap). */
+  get moteCount(): number {
+    return this.ambient.moteCount;
+  }
+
+  /** 079: the intake's mouth and its glow's radius while it glows (for its light), else null. */
+  intakeGlow(sim: SimState): { x: number; y: number; glowRadius: number } | null {
+    const r = intakeGlowRadius(sim, this.intakeMs > 0);
+    return r > 0 ? { ...intakeAnchor(), glowRadius: r } : null;
   }
 }

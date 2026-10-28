@@ -55,6 +55,16 @@ export function collar(edge: Edge, w = 16): Shape {
   return rect(T - 2.2, T / 2 - half, 2.2, w, 0.5, solid('brass'));
 }
 
+/** 079: the light catching a brass collar's lit (top or left) edge. */
+export function collarGlint(edge: Edge, w = 16): Shape {
+  const half = w / 2;
+  const glint = { id: 'brass-light', alpha: 0.9 };
+  if (edge === 'up') return line([T / 2 - half + 0.6, 0.4, T / 2 + half - 0.6, 0.4], 0.5, glint);
+  if (edge === 'down') return line([T / 2 - half + 0.6, T - 1.8, T / 2 + half - 0.6, T - 1.8], 0.5, glint);
+  if (edge === 'left') return line([0.4, T / 2 - half + 0.6, 0.4, T / 2 + half - 0.6], 0.5, glint);
+  return line([T - 1.8, T / 2 - half + 0.6, T - 1.8, T / 2 + half - 0.6], 0.5, glint);
+}
+
 /** A small chevron at `at`, pointing along `dir`. */
 export function chevron(at: Pt, dir: Pt, color: string, size = 2.6): Shape {
   const [x, y] = at;
@@ -68,11 +78,38 @@ export function chevron(at: Pt, dir: Pt, color: string, size = 2.6): Shape {
   return { ...line([ax ?? 0, ay ?? 0, tip[0] ?? 0, tip[1] ?? 0, bx ?? 0, by ?? 0], 1.1, color), glow: { color: 'cyan', blur: 2 } };
 }
 
-/** A trough along `pts`: its shadow, stone body and top. */
+/**
+ * 079: the trough's lit lip, a thin snow rim along its top-left edge: the trough's centre line moved out to that edge
+ * (the side up and left of the flow), kept only where that edge faces the light (a corner's turns away).
+ */
+function lip(pts: readonly Pt[], w: number): Shape[] {
+  const dirAt = (i: number): Pt => {
+    const a = pts[Math.max(0, i - 1)] ?? MID;
+    const b = pts[Math.min(pts.length - 1, i + 1)] ?? MID;
+    const len = Math.hypot(b[0] - a[0], b[1] - a[1]) || 1;
+    return [(b[0] - a[0]) / len, (b[1] - a[1]) / len];
+  };
+  const [d0x, d0y] = dirAt(0);
+  // The side of the flow facing up and left at its start, kept along it.
+  const sign = -d0y + d0x < 0 ? 1 : -1;
+  const off = w / 2 - 1.2;
+  const lit: number[] = [];
+  for (const [i, [x, y]] of pts.entries()) {
+    const [dx, dy] = dirAt(i);
+    const nx = -dy * sign;
+    const ny = dx * sign;
+    if (nx + ny > 0.2) break;
+    lit.push(x + nx * off, y + ny * off - 0.6);
+  }
+  return lit.length >= 4 ? [line(lit, 0.5, { id: 'snow', alpha: 0.4 })] : [];
+}
+
+/** A trough along `pts`: its shadow, stone body and top (079: and its lit lip). */
 export const trough = (pts: readonly Pt[], stone: string, top: string, w = 15): Shape[] => [
   line(flatPts(pts, 2), w + 2, { id: 'ground-shade', alpha: 0.3 }),
   line(flatPts(pts), w, stone, true),
   line(flatPts(pts, -0.6), w - 3.4, top),
+  ...lip(pts, w),
 ];
 
 /** The ley channel along `pts`: a dark cut, the deep crystal and a glowing core. */
@@ -91,7 +128,7 @@ const flow = (pts: readonly Pt[], frame: number): Shape[] =>
 
 function conduit(from: Edge, to: Edge, frame: number): Shape[] {
   const pts = route(from, to);
-  return [...trough(pts, 'rock', 'rock-light'), ...channel(pts), collar(from), collar(to), ...flow(pts, frame)];
+  return [...trough(pts, 'rock', 'rock-light'), ...channel(pts), collar(from), collar(to), collarGlint(from), collarGlint(to), ...flow(pts, frame)];
 }
 
 export const floorPiece = (key: string, frames: readonly (readonly Shape[])[]): VectorSprite => ({ key, size: [T, T], anchor: [0, 0], frames });
@@ -119,12 +156,14 @@ function hub(ins: readonly Edge[], outs: readonly Edge[]): Shape[] {
   return [
     ...arms.flatMap((pts) => trough(pts, 'rock', 'rock-light')),
     ...arms.flatMap((pts) => channel(pts)),
-    ...[...ins, ...outs].map((e) => collar(e)),
+    ...[...ins, ...outs].flatMap((e) => [collar(e), collarGlint(e)]),
     ...arms.map((pts) => {
       const { at, dir } = along(pts, 0.6);
       return chevron(at, dir, 'cyan-glow');
     }),
     ellipse(MID[0], MID[1], 5.2, 5.2, solid('brass')),
+    // 079: the hub's brass catching the light on its top-left.
+    path(`M ${MID[0] - 4.2} ${MID[1] + 0.6} Q ${MID[0] - 3.8} ${MID[1] - 3.8} ${MID[0] + 0.6} ${MID[1] - 4.2}`, trim({ id: 'brass-light', alpha: 0.9 }, 0.6)),
     ellipse(MID[0], MID[1], 2.4, 2.4, { fill: 'cyan', glow: { color: 'cyan', blur: 2 } }),
   ];
 }
@@ -136,7 +175,11 @@ const SPLITTERS: VectorSprite[] = (['side', 'up', 'down'] as const).map((view) =
 
 // Hoppers: a violet stone funnel on a stone footing, its brass spout toward the side it feeds.
 const standing = (key: string, h: number, shapes: readonly Shape[]): VectorSprite => ({ key, size: [T, h], anchor: [T / 2, h], frames: [shapes] });
-const footShadow = (rx: number): Shape => ellipse(0, -2, rx, 3.2, { fill: { id: 'ground-shade', alpha: 0.4 } });
+/** 079: a soft contact shadow, fading out from under its foot. */
+const footShadow = (rx: number): Shape => ellipse(0, -2, rx, 4, { fill: { radial: [0, -2, rx], stops: [{ at: 0, color: { id: 'ground-shade', alpha: 0.45 } }, { at: 1, color: { id: 'ground-shade', alpha: 0 } }] } });
+/** 079: the rim light, a 0.6 px snow line along a lit (top or left) edge. */
+const rim = (pts: readonly number[]): Shape => line(pts, 0.6, { id: 'snow', alpha: 0.55 });
+const GLINT = { id: 'brass-light', alpha: 0.9 } as const;
 
 function hopper(view: PieceView): Shape[] {
   const spout: Shape[] =
@@ -148,12 +191,15 @@ function hopper(view: PieceView): Shape[] {
   return [
     footShadow(14),
     ...(view === 'up' ? spout : []),
-    rect(-12, -14, 24, 12, 2, { fill: { linear: [0, -14, 0, -2], stops: [{ at: 0, color: 'rock-light' }, { at: 1, color: 'rock' }] }, outline: true }),
+    rect(-12, -14, 24, 12, 2, { fill: { linear: [-12, -14, 12, -2], stops: [{ at: 0, color: 'rock-light' }, { at: 1, color: 'rock' }] }, outline: true }),
+    rim([-11.4, -3.5, -11.4, -12.6, 10.6, -13.4]),
     path('M -14 -34 L 14 -34 L 6 -16 L -6 -16 Z', { fill: { linear: [0, -34, 0, -16], stops: [{ at: 0, color: 'core' }, { at: 1, color: 'core-dark' }] }, outline: true }),
+    rim([-6.3, -17, -13, -33.2]),
     path('M -9 -31 L -4.4 -18', trim({ id: 'snow', alpha: 0.35 }, 1)),
     ellipse(0, -34, 14, 3.6, solid('core')),
     ellipse(0, -33.6, 11, 2.4, flat('ink')),
     rect(-7, -17.5, 14, 2.4, 0.6, solid('brass')),
+    line([-6.2, -17.1, 6.2, -17.1], 0.5, GLINT),
     ...(view === 'up' ? [] : spout),
   ];
 }
@@ -162,9 +208,11 @@ const HOPPERS: VectorSprite[] = Object.entries(HOPPER_SPRITES).map(([view, key])
 // The crate: a rune-locked stone coffer, a lid on top for its contents' icon, brass straps and a ley lock.
 const CRATE: VectorSprite = standing(CRATE_SPRITE, 36, [
   footShadow(15),
-  rect(-14, -22, 28, 20, 2, { fill: { linear: [0, -22, 0, -2], stops: [{ at: 0, color: 'rock-light' }, { at: 1, color: 'rock' }] }, outline: true }),
+  rect(-14, -22, 28, 20, 2, { fill: { linear: [-14, -22, 14, -2], stops: [{ at: 0, color: 'rock-light' }, { at: 1, color: 'rock' }] }, outline: true }),
+  rim([-13.4, -3.5, -13.4, -20.6]),
   rect(-14, -32, 28, 11, 2, { fill: { linear: [0, -32, 0, -21], stops: [{ at: 0, color: 'rock-pale' }, { at: 1, color: 'rock-light' }] }, outline: true }),
-  ...[-9, 9].map((x) => rect(x - 1.6, -32, 3.2, 30, 0.6, solid('brass-dark'))),
+  rim([-13.4, -22.4, -13.4, -30.6, 12.6, -31.4]),
+  ...[-9, 9].flatMap((x) => [rect(x - 1.6, -32, 3.2, 30, 0.6, solid('brass-dark')), line([x - 1.1, -31.4, x - 1.1, -2.6], 0.5, GLINT)]),
   rect(-3, -15, 6, 6, 1, { fill: 'cyan', outline: true, glow: { color: 'cyan', blur: 3 } }),
   ellipse(0, -12, 1, 1, flat('ink')),
 ]);

@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 // 077: placement is a pure function of the map and its hashes, and weather, ripples and lightning come from a seeded
-// render-side stream: none of 077's files calls Math.random.
+// render-side stream: none of 077's files calls Math.random (079: nor the foundry's effects).
 
 const root = join(__dirname, '../..');
 const dir = (d: string) => readdirSync(join(root, d)).filter((f) => f.endsWith('.ts')).map((f) => join(d, f));
@@ -15,6 +15,10 @@ const FILES = [
   'src/data/weather.ts',
   'src/data/worldArtAssets.ts',
   ...readdirSync(join(root, 'src/data/art')).filter((f) => /^(decor|setPieces|worldArt)/.test(f)).map((f) => join('src/data/art', f)),
+  // 079: the foundry's heat, steam, sparks, ley pulses and lights.
+  ...dir('src/render/foundry'),
+  'src/render/lighting/foundryLights.ts',
+  'src/data/foundryFx.ts',
 ];
 
 describe('no Math.random in 077’s files', () => {

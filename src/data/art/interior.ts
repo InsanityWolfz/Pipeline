@@ -96,6 +96,28 @@ const brazier = ([tip, h, lean]: readonly [number, number, number]): Shape[] => 
   rect(-11.5, -19, 23, 1.6, 0.6, solid('brass-dark')),
 ];
 
+/**
+ * 079: the wall torch, a brass sconce on a side wall's top: a backplate on the wall (left; the east wall mirrors it), an
+ * arm out to an iron cup, and a small flame that flickers gently through four shapes (the brazier's, smaller, closer).
+ */
+const TORCH_FLAMES: readonly (readonly [tip: number, h: number, lean: number])[] = [
+  [0, 9, -0.3],
+  [0.4, 9.6, 0.3],
+  [-0.3, 9.2, 0.1],
+  [0.2, 9.8, -0.2],
+];
+const torchFlame = (h: number): Paint => ({ radial: [2, -12, h * 0.8], stops: [{ at: 0, color: 'cinder-light' }, { at: 0.55, color: 'cinder' }, { at: 1, color: 'flame-dark' }] });
+const torch = ([tip, h, lean]: readonly [number, number, number]): Shape[] => [
+  rect(-7, -16, 3, 12, 1, { fill: vertical('brass-light', 'brass-dark', -16, -4), outline: true }),
+  line([-5.6, -14.6, -5.6, -5.4], 0.5, { id: 'brass-light', alpha: 0.8 }),
+  path('M -4 -8 Q 0 -8 1.6 -10', { stroke: { color: 'brass-dark', width: 1.4 } }),
+  path('M -1.4 -12.6 L 5.4 -12.6 L 4 -9.4 L 0 -9.4 Z', { fill: vertical('iron', 'iron-dark', -12.6, -9.4), outline: true }),
+  line([-1, -12.4, 5, -12.4], 0.5, { id: 'brass-light', alpha: 0.7 }),
+  ellipse(2, -12.8, 3, 0.9, { fill: 'cinder', glow: { color: 'cinder', blur: 3 } }),
+  path(`M -0.6 -13 Q ${0.4 + lean} ${-13 - h * 0.6} ${2 + tip} ${-13 - h} Q ${3.6 + lean} ${-13 - h * 0.6} 4.6 -13 Z`, { fill: torchFlame(h), glow: { color: 'cinder', blur: 4 }, alpha: 0.95 }),
+  path(`M 1 -13 Q ${1.6 + lean * 0.5} ${-13 - h * 0.4} ${2 + tip * 0.5} ${-13 - h * 0.6} Q ${2.4 + lean * 0.5} ${-13 - h * 0.4} 3 -13 Z`, flat('cinder-light')),
+];
+
 export const INTERIOR_SPRITES_VECTOR: readonly VectorSprite[] = [
   floor(SPRITES.floor, []),
   floor(FLOOR_TILES.cracked, CRACK),
@@ -110,4 +132,5 @@ export const INTERIOR_SPRITES_VECTOR: readonly VectorSprite[] = [
   { key: SPRITES.ruinBlock, size: [T, 48], anchor: [0, 48], frames: [BLOCK] },
   { key: PROPS.banner.anim.key, size: [16, 40], anchor: [8, 40], frames: [banner(-0.8), banner(0.8)] },
   { key: PROPS.brazier.anim.key, size: [32, 44], anchor: [16, 44], frames: FLAMES.map(brazier) },
+  { key: PROPS.torch.anim.key, size: [16, 28], anchor: [8, 28], frames: TORCH_FLAMES.map(torch) },
 ];

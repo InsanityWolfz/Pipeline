@@ -34,8 +34,8 @@ const rgb = (r: number, g: number, b: number): Rgb => [Math.round(r), Math.round
 const mix = (a: Rgb, b: Rgb, t: number): Rgb => rgb(a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t);
 const lerp = (a: number, b: number, t: number): number => a + (b - a) * t;
 
-/** A region mood's looks, unblended. */
-function looks(m: RegionMood): Omit<MoodNow, 'ring' | 'outer' | 'blend'> {
+/** A region mood's looks, unblended (079: the foundry's too). */
+export function moodLooks(m: RegionMood): Omit<MoodNow, 'ring' | 'outer' | 'blend'> {
   const fog = m.fog;
   return {
     ambient: ambientRgb(m.ambient.color, m.ambient.darkness),
@@ -61,8 +61,8 @@ export function moodAt(d: number): MoodNow {
     if (d < e.radius - band || d > e.radius + band) continue;
     const t = Math.round(((d - (e.radius - band)) / (2 * band)) * MOOD_BLEND.steps) / MOOD_BLEND.steps;
     const inner = e.inner;
-    const a = looks(REGION_MOODS[inner]);
-    const b = looks(REGION_MOODS[e.outer]);
+    const a = moodLooks(REGION_MOODS[inner]);
+    const b = moodLooks(REGION_MOODS[e.outer]);
     const fogRgb = a.fog.alpha === 0 ? b.fog.rgb : b.fog.alpha === 0 ? a.fog.rgb : mix(a.fog.rgb, b.fog.rgb, t);
     return {
       ring: inner,
@@ -75,11 +75,11 @@ export function moodAt(d: number): MoodNow {
     };
   }
   const ring = ringAtDistance(d);
-  return { ring, outer: null, blend: 0, ...looks(REGION_MOODS[ring]) };
+  return { ring, outer: null, blend: 0, ...moodLooks(REGION_MOODS[ring]) };
 }
 
 /** Region 1's mood: the sandbox's (074), and the overworld's before its camera has a centre. */
-export const SUNNY_MOOD: MoodNow = { ring: 0, outer: null, blend: 0, ...looks(REGION_MOODS[0]) };
+export const SUNNY_MOOD: MoodNow = { ring: 0, outer: null, blend: 0, ...moodLooks(REGION_MOODS[0]) };
 
 /** How much of the lightning flash shows `ms` after it struck: full for `holdMs`, eased back over `easeMs`; none with Flashes off. */
 export function flashLevel(ms: number, flashes: boolean): number {

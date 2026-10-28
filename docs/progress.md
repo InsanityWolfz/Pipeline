@@ -2,6 +2,16 @@
 
 Newest entry first. Entries before 050 are in docs/progress-archive.md.
 
+## 2026-10-28: 079 The foundry's mood
+**Changed:** on `claude/079-foundry-mood` (InsanityWolfz/Pipeline#95), art pass 6 of 8 (plan docs/plans/079-foundry-mood.md):
+- the foundry as a warm, torch- and forge-lit workshop on 074's light system: an amber ambient, two braziers and four new side-wall torches, the intake's glow; smelters and kilns light the floor while they work (ember), the Tempering coil violet;
+- heat shimmer, steam and glow on working smelters and kilns, sparks and a steam burst as a craft finishes, sharing the particle ledger; ley pulses run along the floor's inlays toward the intake as it fills (the tube is quiet in the foundry, so a fill, not a shot, sends them);
+- machines and conduits keep their designs, with a light rim and soft gradients to match the pushed style; the build grid, ghosts, hover and recipe cards, purge prompts and conduit items read as before.
+
+No sim change. Built while Shaun asked for lighter runs, so its own review was the builder's motion check and the main session's look at its shots. `npm run check` 3123 tests after main's merge; CI green. Raised for Shaun: 079.1–079.11; 079.1, 079.2, 079.4 and 079.11 need his call.
+
+**Next:** Shaun's playtest; "merge 95".
+
 ## 2026-10-28: 081 HUD polish
 **Changed:** on `claude/081-hud-polish` (InsanityWolfz/Pipeline#98, stacked on 073–080; merges last), art pass 8 of 8 (plan docs/plans/081-hud-polish.md):
 - one polished stone-tablet look for every panel (stone gradient, carved inner line, lit brass corners) inside today's boxes; cut wells for the carried cells and tube card; a lit top line on the HP and XP bars; titles in pale brass;

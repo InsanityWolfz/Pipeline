@@ -28,15 +28,20 @@ export function movingGlows(sim: SimState, shown: string, swelling: boolean): Gl
       if (p.kind === 'conduit' && p.item) spots.push({ x: r.x, y: r.y, ...GLOWS.conduitItem });
     }
     // The intake glows once attuned (growing as its rings light), swelling as each item goes in.
-    const { pipeGlow } = attuneBeat(sim.link.attunePulse);
-    if (sim.link.attuned && pipeGlow > 0) {
-      const swell = sim.link.attunePulse > 0 ? pipeGlow : swelling ? GLOWS.intake.pulse : 1;
-      spots.push({ ...intakeAnchor(), color: GLOWS.intake.color, radius: GLOWS.intake.radius * swell });
-    }
+    const radius = intakeGlowRadius(sim, swelling);
+    if (radius > 0) spots.push({ ...intakeAnchor(), color: GLOWS.intake.color, radius });
   }
   if (sim.hasTube && sim.link.attuned && shown === sim.roomId) {
     // The same growing glow round the tube while its rings light.
     spots.push({ x: sim.player.x, y: sim.player.y, color: GLOWS.tube.color, radius: GLOWS.tube.radius * attuneBeat(sim.link.attunePulse).gunGlow });
   }
   return spots;
+}
+
+/** The intake's glow radius now (019): growing as its rings light once attuned, swelling as each item goes in; 0 while it doesn't glow (079: its light follows it). */
+export function intakeGlowRadius(sim: SimState, swelling: boolean): number {
+  const { pipeGlow } = attuneBeat(sim.link.attunePulse);
+  if (!sim.link.attuned || pipeGlow <= 0) return 0;
+  const swell = sim.link.attunePulse > 0 ? pipeGlow : swelling ? GLOWS.intake.pulse : 1;
+  return GLOWS.intake.radius * swell;
 }

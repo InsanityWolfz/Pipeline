@@ -1,7 +1,7 @@
 import { BlendModes, type GameObjects, type Scene } from 'phaser';
 import { DEPTHS, FX_TEXTURES } from '../data/assets';
 import { TILE_SIZE, VIEW_HEIGHT, VIEW_WIDTH } from '../data/config';
-import { AMBIENT, GLOW_TEXTURE, GLOWS, ROOM_MOOD, VIGNETTE } from '../data/juice';
+import { AMBIENT, GLOW_TEXTURE, GLOWS, VIGNETTE } from '../data/juice';
 import { INK_ID, hexToRgb, paletteHex } from '../data/palette';
 import { PROPS, type PropDef } from '../data/props';
 import type { Room } from '../data/rooms';
@@ -9,7 +9,7 @@ import { colorOf } from './color';
 import { OVERWORLD_ROOM } from '../data/overworld';
 
 // The room's air (014): soft ley light pooled around glowing things, drifting
-// motes, and a dusk tint with a vignette. Looks only.
+// motes, and a vignette. Looks only. (079: the foundry's warm tint is its mood's wash now, LightingView's.)
 
 const GLOW_KEY = FX_TEXTURES.glow;
 const VIGNETTE_KEY = FX_TEXTURES.vignette;
@@ -38,7 +38,6 @@ export class AmbientView {
   /** Glows that come and go with the sim (conduit items, the tube), redrawn each frame. */
   private live: GameObjects.Image[] = [];
   private motes: Mote[] = [];
-  private readonly tint: GameObjects.Rectangle;
   private readonly vignette: GameObjects.Image;
   private bounds = { w: 0, h: 0 };
   private time = 0;
@@ -46,7 +45,6 @@ export class AmbientView {
   constructor(scene: Scene) {
     this.scene = scene;
     makeTextures(scene);
-    this.tint = scene.add.rectangle(0, 0, VIEW_WIDTH, VIEW_HEIGHT, 0).setOrigin(0).setScrollFactor(0).setDepth(DEPTHS.mood);
     this.vignette = scene.add.image(0, 0, VIGNETTE_KEY).setOrigin(0).setScrollFactor(0).setDepth(DEPTHS.mood + 1);
   }
 
@@ -68,8 +66,6 @@ export class AmbientView {
       return glow ? [{ x: (p.tx + 0.5) * TILE_SIZE, y: (p.ty + 0.5) * TILE_SIZE, ...glow }] : [];
     });
     for (const spot of [...props, ...extra]) this.glows.push(this.glow(spot));
-    const mood = ROOM_MOOD[room.id];
-    this.tint.setFillStyle(mood ? colorOf(mood.tint) : 0, mood?.alpha ?? 0);
     // 077: in the overworld its regions' weather replaces these room-wide motes (Region 1's pollen and ley motes).
     const motes = room.id === OVERWORLD_ROOM ? 0 : AMBIENT.motes;
     for (let i = 0; i < motes; i++) this.motes.push(this.mote());

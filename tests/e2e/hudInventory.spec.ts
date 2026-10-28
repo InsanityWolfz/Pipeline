@@ -5,7 +5,7 @@ import { HEALTH_BLOCK_HEIGHT } from '../../src/data/hudPanels';
 import { OVERWORLD } from '../../src/data/overworld';
 import { FIXTURES } from '../../src/data/claims';
 import { inventoryLayout } from '../../src/render/inventoryLayout';
-import { boot, watchErrors } from './helpers';
+import { boot, frameSettled, watchErrors } from './helpers';
 import { screenPoint, state } from './foundryPage';
 
 // The HUD pass (031): the inventory panel's keys and what it reports, the pickup feed,
@@ -195,7 +195,9 @@ test('two "+ part" popups at once never overlap', async ({ page }) => {
     }
     h.walkTo(15.5 * 32, 6.5 * 32);
   });
-  // The foundry is on screen once the door's fade is over: no meadow nodes are drawn.
+  // The foundry is on screen once the door's fade is over: no meadow nodes are drawn. (079: by drawn frames, as 078's
+  // foundry-entry tests wait: the fade runs a set number of frames, and the foundry's lit frames are slower on a loaded runner.)
+  await frameSettled(page);
   await expect.poll(async () => Object.keys((await ui(page))?.nodes ?? { x: 1 }).length).toBe(0);
   // The popups are short: slow every tween so both can be seen together.
   await page.evaluate(() => window.__GAME__?.tweenSpeed(0.05));
