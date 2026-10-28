@@ -80,8 +80,8 @@ test.describe('review screenshots (077)', () => {
     await setLook(page, { quality: 'high', flashes: true });
     const tower = setPieceDef('storm-tower');
     const a = setPieceAnchor(tower, 32);
-    // North of it, so its crown sits in the middle of the view and the bolt shows coming down onto it.
-    await walkToAny(page, [{ x: a.x - 60, y: a.y - 200 }, { x: a.x + 60, y: a.y - 200 }, { x: a.x - 90, y: a.y - 120 }]);
+    // Beside it and below its crown, so the crown sits in the upper view and the bolt comes down onto it (not over the player).
+    await walkToAny(page, [{ x: a.x - 90, y: a.y - 120 }, { x: a.x + 90, y: a.y - 120 }, { x: a.x - 120, y: a.y - 90 }]);
     await page.evaluate(() => window.__GAME__?.tweenSpeed(0.02));
     await page.evaluate(async () => {
       const g = window.__GAME__;
