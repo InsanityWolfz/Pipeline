@@ -9,5 +9,8 @@ Check, in order:
 2. Architecture rules in CLAUDE.md and .claude/rules hold.
 3. Nothing beyond the spec was added; no invented design.
 4. No dead code, duplicated logic, magic numbers outside src/data.
+5. Anything that moves (animation, sway, particles, effects) is watched in motion:
+   capture about a second of frames at real game speed and judge the strip, never
+   stills alone.
 Output: a list of blocking issues and a list of suggestions, each with
 file and line. Never edit files.

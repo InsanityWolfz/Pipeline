@@ -2,14 +2,15 @@ import type { GameObjects, Scene } from 'phaser';
 import { DEPTHS } from '../../data/assets';
 import { VIEW_HEIGHT, VIEW_WIDTH } from '../../data/config';
 import { BINDINGS_PANEL, FLOW_DIM, FLOW_ROWS, MENU_ROW_W, SETTINGS_PANEL } from '../../data/flowLayout';
-import { ACTION_LABELS, BIND_ACTIONS, SANDBOX_ONLY, SETTINGS_TEXT, type Settings } from '../../data/settings';
+import { ACTION_LABELS, BIND_ACTIONS, SANDBOX_ONLY, SETTINGS_TEXT, type Quality, type Settings } from '../../data/settings';
 import { colorOf } from '../color';
 import { keyLabel } from '../keyHint';
 import { drawTablet } from '../tablet';
 import { TextLine } from '../textLine';
 import { MenuColumn, type MenuHit, type MenuRowShown, type MenuRowSpec } from './MenuColumn';
 
-// Settings (042): a 020 tablet over the title or the paused game with the volume rows (− and +), Mute, Flashes, Key
+// Settings (042): a 020 tablet over the title or the paused game with the volume rows (− and +), Mute, Flashes, Graphics
+// quality (074), Key
 // bindings, Export save, Import save, Export damaged save (when there is one) and Back. Key bindings swaps it for the
 // key list: two columns, one row per action with its key, Reset to defaults and Back.
 
@@ -20,6 +21,8 @@ export interface SettingsModel {
   notes: number;
   /** Export and Import save (and Export damaged save): hidden in the sandbox (044), which never touches the save. */
   saveRows: boolean;
+  /** 074: the Graphics quality shown; on the Canvas renderer it is Low and can't change. */
+  quality: Quality;
 }
 
 const pct = (v: number): string => `${Math.round(v * 100)}%`;
@@ -66,6 +69,7 @@ export class SettingsView {
       { id: 'effects', label: T.effects, value: pct(s.effects), stepper: true },
       { id: 'mute', label: T.mute, value: onOff(s.muted) },
       { id: 'flashes', label: T.flashes, value: onOff(s.flashes) },
+      { id: 'quality', label: T.quality, value: SETTINGS_TEXT.quality[m.quality] },
       { id: 'keys', label: T.keys },
       ...(m.saveRows ? [{ id: 'export', label: T.export, sub: SETTINGS_TEXT.notes(m.notes) }, { id: 'import', label: T.import }, ...(m.damaged ? [{ id: 'damaged', label: T.damaged }] : [])] : []),
       { id: 'back', label: T.back },

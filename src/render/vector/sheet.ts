@@ -1,9 +1,15 @@
 import { WANDERER, type WandererView } from '../../data/art/wanderer';
 import { drawWanderer, type WandererPose } from './wandererRig';
-import { sheetPoses } from './wandererPoses';
+import { sheetSections } from './wandererPoses';
 import { ENEMY_RIGS } from '../../data/art/enemies';
 import { vectorFrames } from './catalog';
 import { MACHINE_IDS } from '../../data/foundryAssets';
+import { animFrames, ENEMY_ANIMS } from '../../data/assets';
+import { ENEMY_FAMILIES } from '../../data/art/enemyFamilies';
+import { WINDUP_STRIPS } from '../../data/art/enemyMotion';
+import { ENEMIES } from '../../data/enemies';
+import type { EnemyPoseName } from '../../data/art/enemyRig';
+import { poseOfAnim } from './catalog';
 
 // The contact sheet (016, dev only): every vector sprite, pose and facing at 4×, grouped by family (020).
 
@@ -48,14 +54,15 @@ const wandererCell = (label: string, pose: WandererPose): Cell => ({
   label,
   size: WANDERER.box.size,
   anchor: WANDERER.box.anchor,
-  draw: (c, px) => drawWanderer(c, pose, px),
+  draw: (c, px) => {
+    drawWanderer(c, pose, px);
+  },
 });
 
+// 075: one section per strip of the spec's table, per view, each sampled from the motion.
 for (const view of ['side', 'down', 'up'] as const satisfies readonly WandererView[]) {
-  section(`Wanderer: ${view}`, sheetPoses(view).map((p) => wandererCell(p.label, p.pose)));
+  for (const strip of sheetSections(view)) section(`Wanderer ${view}: ${strip.title}`, strip.cells.map((c) => wandererCell(c.label, c.pose)));
 }
-const sideIdle = sheetPoses('side')[0];
-if (sideIdle) section('Wanderer: facing left', [wandererCell('idle', { ...sideIdle.pose, flip: true })]);
 
 // Grouped for review (020): each machine on its own row, then each family of sprites. A dev-only page: it groups
 // by frame-name prefixes rather than the asset tables, which is fine for a review sheet that ships in no build.
@@ -82,12 +89,30 @@ const FAMILIES: readonly [title: string, test: (name: string) => boolean][] = [
   ['HUD and menus', (n) => n.startsWith('hud-') || n.startsWith('craft-') || n.startsWith('menu-') || n === 'key-cap' || n === 'crosshair' || n === 'pointer' || n === 'objective-tick'],
 ];
 
+// 076: enemies under their family, every frame of a wind-up strip labelled with its phase.
+const enemyGroup = (rigId: string): string => {
+  const def = Object.values(ENEMIES).find((d) => d.anims === rigId);
+  const fam = def && ENEMY_FAMILIES.find((f) => f.members.includes(def.id));
+  return fam ? `${fam.name} (${fam.region}): ${rigId}` : rigId;
+};
+const phaseLabel = new Map<string, string>();
+for (const rig of ENEMY_RIGS) {
+  for (const anim of Object.values(ENEMY_ANIMS[rig.id] ?? {})) {
+    if (!anim) continue;
+    const { pose } = poseOfAnim(rig, anim);
+    const names = animFrames(anim);
+    if (WINDUP_STRIPS.includes(pose as EnemyPoseName)) names.forEach((n, i) => phaseLabel.set(n, i === 0 ? 'gather' : i === names.length - 1 ? 'peak' : 'coil'));
+    if (pose === 'stagger') names.forEach((n, i) => phaseLabel.set(n, i === 0 ? 'reel' : 'recover'));
+    if (pose === 'death') names.forEach((n) => phaseLabel.set(n, 'struck'));
+  }
+}
 const groups = new Map<string, Cell[]>();
 for (const f of vectorFrames()) {
-  const group =
-    ENEMY_RIGS.find((r) => f.name.startsWith(`${r.id}-`))?.id ?? FAMILIES.find(([, test]) => test(f.name))?.[0] ?? 'Projectiles, effects and the tube stone';
+  const rig = ENEMY_RIGS.find((r) => f.name.startsWith(`${r.id}-`));
+  const group = rig ? enemyGroup(rig.id) : (FAMILIES.find(([, test]) => test(f.name))?.[0] ?? 'Projectiles, effects and the tube stone');
   const list = groups.get(group) ?? [];
-  list.push({ label: f.name, size: f.size, anchor: f.anchor, draw: (c, px) => f.draw(c, px) });
+  const phase = phaseLabel.get(f.name);
+  list.push({ label: phase ? `${f.name} (${phase})` : f.name, size: f.size, anchor: f.anchor, draw: (c, px) => f.draw(c, px) });
   groups.set(group, list);
 }
 for (const [title, cells] of groups) section(title, cells);

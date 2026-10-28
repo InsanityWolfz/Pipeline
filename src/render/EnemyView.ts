@@ -2,26 +2,27 @@ import type { GameObjects, Scene } from 'phaser';
 import { settings } from './flow/settingsStore';
 import { BlendModes, TintModes } from 'phaser';
 import { animFrames, DEPTHS, ENEMY_ANIMS, ENEMY_FX } from '../data/assets';
-import { HUSK_RIG, RESIN } from '../data/art/husk';
-import { CORE, WARDEN_RIG } from '../data/art/warden';
-import { IDLE_SPEED } from '../data/config';
+import { RESIN } from '../data/art/husk';
+import { CORE } from '../data/art/warden';
 import { enemyDef } from '../data/enemies';
 import { CHAMPIONS } from '../data/champions';
 import { LANDMARK_LOOK, LANDMARK_SPRITES } from '../data/landmarkAssets';
 import { defOf } from '../sim/champions';
 import { TextLine } from './textLine';
+import type { CatchView } from './lighting/CatchView';
 import type { EnemyState } from '../sim/enemies';
 import type { SimState } from '../sim/state';
+import type { HitEvent } from '../sim/events';
 import type { Facing } from '../sim/player';
 import { registerAnim } from './anims';
 import { colorOf } from './color';
 import { addVector, addVectorSprite, showFrame, textureScale } from './vector/textures';
-import { BURN_FLAMES, burnFlamesFrame, CHILL_TINT, ICE_CRACK_TICKS, STAGE_SPRITES } from '../data/stageAssets';
 import { COLD } from '../data/tags';
 import { HOLLOWS_LOOK } from '../data/hollowsAssets';
-import { bulwarkPose, drawSeam, riseShown } from './bulwarkLook';
-import { forgePose } from './forgewrightLook';
-import { conductorPose } from './conductorLook';
+import { drawSeam, riseShown } from './bulwarkLook';
+import { chillTint, drawCore, drawFlames, drawIce, drawResin } from './enemyOverlays';
+import { enemyArt, type EnemyArtShown } from './enemyArt';
+import { attacking, staggeredInTick } from './enemyReaction';
 import { drawTelegraph } from './telegraphs';
 import { destroyEnemyBar, drawEnemyBar, makeEnemyBar, type EnemyBar, type EnemyBarShown } from './enemyBar';
 import { destroyHollowsArt, drawHollowsArt, makeHollowsArt, shownOf, type HollowsArt, type HollowsEnemiesShown } from './hollowsEnemyArt';
@@ -62,16 +63,38 @@ interface Drawn {
   hollows?: HollowsArt | undefined;
   /** Whether its telegraph last drew the Bulwark's back wave shaded (054). */
   waveShaded?: boolean;
+  /**
+   * 076: ms its stagger has run, or null: on the tween clock (a review shot can slow it), and held with the sprite
+   * through hit-stop and freezing. The art it showed last frame, and the frame or anim it shows.
+   */
+  staggerMs: number | null;
+  art?: EnemyArtShown;
+  shown: string;
+}
+
+/** 076: an enemy's art as `ui().enemyArt` reports it. */
+export interface EnemyArtUi {
+  id: number;
+  family: string;
+  pose: string;
+  phase: string | null;
+  reaction: string | null;
+  squash: number;
+  frame: string;
+  dx: number;
 }
 
 /** `ui()`'s enemy part before the scene has built its views. */
-export const NO_ENEMY_UI: { champions: ChampionShown[]; hollowsEnemies: HollowsEnemiesShown; enemyBars: EnemyBarShown[]; enemyFlames: number } = {
+export const NO_ENEMY_UI: { champions: ChampionShown[]; hollowsEnemies: HollowsEnemiesShown; enemyBars: EnemyBarShown[]; enemyFlames: number; enemyArt: EnemyArtUi[] } = {
   champions: [],
   hollowsEnemies: { ripples: 0, flares: 0, lasers: [], waveShades: 0, beams: [], gusts: 0 },
   enemyBars: [],
   enemyFlames: 0,
+  enemyArt: [],
 };
 
+/** No squash and no tremble: what a beam or laser starts from before its enemy's art is first worked out. */
+const STILL = { squash: 0, dx: 0, dy: 0 } as const;
 const viewOf = (f: Facing): 'down' | 'up' | 'side' => (f === 'up' || f === 'down' ? f : 'side');
 
 // Draws live enemies from sim state: the animation for their mode and facing, a
@@ -84,6 +107,8 @@ export class EnemyView {
   /** Each enemy as last drawn, for `ui`. */
   private readonly last = new Map<number, EnemyState>();
   private readonly scene: Scene;
+  /** 076: enemies a tick's hits staggered since the last draw, until `update` starts their staggers. */
+  private readonly staggered = new Set<number>();
 
   constructor(scene: Scene) {
     this.scene = scene;
@@ -95,18 +120,37 @@ export class EnemyView {
     this.frozenUntil.set(id, this.scene.time.now + ms);
   }
 
+  /** An enemy as last drawn (076: a death's dissolve reads the Forgewright's bellows off it). */
+  lastOf(id: number): EnemyState | undefined {
+    return this.last.get(id);
+  }
+
+  /** 076: one sim tick's hits (review 7: weighed per tick, never summed over a slow frame), for `update`'s staggers. */
+  react(hits: readonly HitEvent[], enemies: readonly EnemyState[]): void {
+    const of = (id: number) => {
+      const e = enemies.find((x) => x.id === id);
+      return e && { maxHealth: defOf(e).maxHealth, boss: enemyDef(e.enemyId).boss };
+    };
+    for (const id of staggeredInTick(hits, of)) this.staggered.add(id);
+  }
+
   /** `sim` for what an enemy's extras read beyond itself (035: a Sniper's laser runs to the player). */
-  update(enemies: readonly EnemyState[], sim: SimState): void {
+  update(enemies: readonly EnemyState[], sim: SimState, catcher?: CatchView): void {
     const live = new Set<number>();
     const now = this.scene.time.now;
+    const dt = this.scene.game.loop.delta * this.scene.tweens.timeScale;
     this.last.clear();
     for (const e of enemies) {
       live.add(e.id);
       this.last.set(e.id, e);
       const d = this.drawn.get(e.id) ?? this.create(e);
+      // 076: a heavy frame's hits or a punch stagger it (its hit-stop holds the start); a wind-up or an attack cuts a stagger off at once.
+      if (this.staggered.has(e.id)) d.staggerMs = -dt;
+      if (attacking(e.mode)) d.staggerMs = null;
       const until = this.frozenUntil.get(e.id);
       if (until !== undefined && now < until) {
         d.sprite.anims.pause();
+        catcher?.offer(d.sprite, d.sprite.x, d.sprite.y, 'enemy', e.id);
         continue;
       }
       if (until !== undefined) {
@@ -117,39 +161,42 @@ export class EnemyView {
       const bottom = e.y + def.feetBox.h / 2;
       const anims = ENEMY_ANIMS[def.anims];
       if (!anims) throw new Error(`Unknown enemy anims '${def.anims}'`);
-      // A champion (032) is drawn 1.5× its kind.
-      d.sprite.setScale(d.baseScale * (e.champion ? CHAMPIONS.scale : 1));
-      // An add rising (041) fades up from under the ground.
-      const up = riseShown(e);
-      d.sprite.setPosition(e.x, bottom + HOLLOWS_LOOK.addRise.sink * (1 - up)).setDepth(bottom).setFlipX(e.facing === 'left').setAlpha(up);
-      // Switch only on a change, so a one-shot swipe holds its last frame instead of restarting.
       const view = viewOf(e.facing);
       if (d.angle !== undefined && Math.abs(d.angle - e.angle) > 1e-6) d.turnUntil = now + HOLLOWS_LOOK.turnHoldMs;
       d.angle = e.angle;
-      // A shielded enemy (the Bulwark, 034; the Shardback, 035) shuffles round and rocks behind its shield on a block.
-      const pose = def.shield ? bulwarkPose(e, now < (d.turnUntil ?? 0)) : def.kind === 'forgewright' ? forgePose(e) : def.kind === 'conductor' ? conductorPose(e) : poseOf(e);
-      // Enemies without a recover pose stand idle through it.
-      // Optional poses (`recover`, and the Bulwark's extras, 034) fall back to idle where an enemy has none.
-      const anim = anims[`${pose}-${view}`] ?? anims[`idle-${view}`];
-      const key = anim.key;
-      if (d.sprite.anims.currentAnim?.key !== key) d.sprite.play(key);
+      // Freezing (029) holds the sprite, pose and all, as hit-stop does.
+      if (d.staggerMs !== null && e.frozen <= 0) d.staggerMs += dt;
+      // Review 8: written into its own art object, kept from frame to frame.
+      const art = e.frozen > 0 && d.art ? d.art : enemyArt(e, def, anims, view, now < (d.turnUntil ?? 0), d.staggerMs, now, d.art);
+      d.art = art;
+      this.show(d, art, e.frozen > 0);
+      // A champion (032) is drawn 1.5× its kind; 076: squashed about its feet.
+      const k = d.baseScale * (e.champion ? CHAMPIONS.scale : 1);
+      d.sprite.setScale(k * (1 + art.squash), k * (1 - art.squash));
+      // An add rising (041) fades up from under the ground. The peak's tremble is the sprite's own (076).
+      const up = riseShown(e);
+      d.sprite.setPosition(e.x + art.dx, bottom + HOLLOWS_LOOK.addRise.sink * (1 - up) + art.dy).setDepth(bottom).setFlipX(e.facing === 'left').setAlpha(up);
       // 042.10: with Flashes off the white hit flash becomes a short, dim tint.
       if (e.flash > 0 && settings().flashes) d.sprite.setTint(colorOf(ENEMY_FX.flashColor)).setTintMode(TintModes.FILL);
       else if (e.flash > 0) d.sprite.setTint(colorOf(ENEMY_FX.dimFlashColor)).setTintMode(TintModes.MULTIPLY);
       else if (e.blockFlash > 0) d.sprite.setTint(colorOf(HOLLOWS_LOOK.block.color)).setTintMode(TintModes.MULTIPLY);
       else if (e.chill > 0 || e.frozen > 0) d.sprite.setTint(chillTint(e.frozen > 0 ? COLD.stacksToFreeze : e.chill)).setTintMode(TintModes.MULTIPLY);
       else d.sprite.clearTint();
-      this.drawIce(d, e, bottom);
-      this.drawFlames(d, e, bottom, now);
-      const top = bottom - d.sprite.displayHeight * d.sprite.originY;
+      drawIce(this.scene, d, e, bottom);
+      drawFlames(this.scene, d, e, bottom, now);
+      // 076: the bar and labels sit on its unsquashed height, so they don't bob.
+      const top = bottom - d.sprite.height * d.baseScale * (e.champion ? CHAMPIONS.scale : 1) * d.sprite.originY;
       drawEnemyBar(this.scene, d.bar, e, top);
       if (d.champion) this.drawChampion(d.champion, e, bottom, top, now);
       d.waveShaded = drawTelegraph(d.telegraph, e);
-      drawHollowsArt(d.hollows, d.sprite, e, def, sim, now);
-      if (d.overlay && e.enemyId === RESIN.enemyId) this.drawResin(d.overlay, e, bottom, view, now);
-      if (d.overlay && e.enemyId === CORE.enemyId) this.drawCore(d.overlay, e, bottom, view, now);
+      drawHollowsArt(d.hollows, d.sprite, e, def, sim, now, d.art ?? STILL);
+      if (d.overlay && e.enemyId === RESIN.enemyId) drawResin(d.overlay, e, bottom, view, now);
+      if (d.overlay && e.enemyId === CORE.enemyId) drawCore(d.overlay, e, bottom, view, now);
       if (d.overlay && def.kind === 'bulwark') drawSeam(d.overlay, e, bottom, view, now);
+      // 074: a light near its feet catches on it, as posed this frame.
+      catcher?.offer(d.sprite, e.x, bottom, 'enemy', e.id);
     }
+    this.staggered.clear();
     for (const [id, d] of this.drawn) {
       if (live.has(id)) continue;
       this.frozenUntil.delete(id);
@@ -177,6 +224,8 @@ export class EnemyView {
       telegraph: this.scene.add.graphics().setDepth(DEPTHS.groundFx),
       bar: makeEnemyBar(this.scene, e.id),
       hollows: makeHollowsArt(this.scene, enemyDef(e.enemyId)),
+      staggerMs: null,
+      shown: '',
     };
     if (e.champion) {
       // The glow sits under the ground decals (telegraphs) and the body, so both stay readable (032).
@@ -192,71 +241,43 @@ export class EnemyView {
     return d;
   }
 
-  /** Frozen (029): encased in ice, the casing cracking over its last ticks; hidden otherwise. */
-  private drawIce(d: Drawn, e: EnemyState, bottom: number): void {
-    if (e.frozen <= 0) {
-      d.ice?.setVisible(false);
+  /** Plays its anim, or holds its strip or stagger frame (076), changing only on a change so a one-shot swipe holds its last frame. */
+  private show(d: Drawn, art: EnemyArtShown, held: boolean): void {
+    if (held) {
+      d.sprite.anims.pause();
       return;
     }
-    const big = enemyDef(e.enemyId).boss;
-    const cracked = e.frozen <= ICE_CRACK_TICKS;
-    const frame = big ? (cracked ? STAGE_SPRITES.iceCaseLargeCracked : STAGE_SPRITES.iceCaseLarge) : cracked ? STAGE_SPRITES.iceCaseCracked : STAGE_SPRITES.iceCase;
-    d.ice ??= addVector(this.scene, 0, 0, frame);
-    if (d.ice.frame.name !== frame) showFrame(d.ice, frame);
-    d.ice.setVisible(true).setPosition(e.x, bottom).setDepth(bottom + DEPTHS.overlayNudge);
-  }
-
-  /** Burning (060): flames lick round it, flickering out of step from enemy to enemy, bigger on a boss; hidden otherwise. */
-  private drawFlames(d: Drawn, e: EnemyState, bottom: number, now: number): void {
-    if (e.burnTicks <= 0) {
-      d.flames?.setVisible(false);
+    if (art.frame !== null) {
+      if (d.shown !== art.frame) {
+        d.sprite.anims.stop();
+        showFrame(d.sprite, art.frame);
+        d.shown = art.frame;
+      }
       return;
     }
-    const frame = burnFlamesFrame(Math.floor((now + e.id * BURN_FLAMES.phaseMs) / BURN_FLAMES.frameMs));
-    d.flames ??= addVector(this.scene, 0, 0, frame).setAlpha(BURN_FLAMES.alpha);
-    if (d.flames.frame.name !== frame) showFrame(d.flames, frame);
-    const k = enemyDef(e.enemyId).boss ? BURN_FLAMES.big : 1;
-    d.flames.setVisible(true).setScale(d.baseScale * k * (e.champion ? CHAMPIONS.scale : 1)).setPosition(e.x, bottom).setDepth(bottom + DEPTHS.overlayNudge);
-  }
-
-  /** A slow drop of resin falling from the binding, and a glint on the bead; out of step from Husk to Husk. Hidden from behind. */
-  private drawResin(g: GameObjects.Graphics, e: EnemyState, bottom: number, view: 'down' | 'up' | 'side', now: number): void {
-    g.clear();
-    if (view === 'up') return;
-    const k = HUSK_RIG.scale;
-    const x = e.x + RESIN.blob[0] * k * (e.facing === 'left' ? -1 : 1);
-    const y = bottom + RESIN.blob[1] * k;
-    g.setDepth(bottom + DEPTHS.overlayNudge);
-    const { glint: gl, drop } = RESIN;
-    const glint = (Math.sin(((now + e.id * RESIN.phase.glint) / RESIN.glintMs) * Math.PI * 2) + 1) / 2;
-    g.fillStyle(colorOf(gl.color), glint * gl.alpha).fillCircle(x + gl.at[0] * k, y + gl.at[1] * k, gl.r);
-    const t = (now + e.id * RESIN.phase.drip) % RESIN.dripMs;
-    if (t >= RESIN.fallMs) return;
-    const p = t / RESIN.fallMs;
-    g.fillStyle(colorOf(drop.color), 1 - p).fillEllipse(x + drop.at[0] * k, y + drop.at[1] * k + RESIN.fallPx * p * p, drop.size[0], drop.size[1]);
-  }
-
-  /** A halo round the Warden's chest core: a faint glow at rest, pulsing hard through the wind-up. Hidden from behind. */
-  private drawCore(g: GameObjects.Graphics, e: EnemyState, bottom: number, view: 'down' | 'up' | 'side', now: number): void {
-    g.clear();
-    if (view === 'up') return;
-    const k = WARDEN_RIG.scale;
-    const x = e.x + (view === 'side' ? CORE.side * (e.facing === 'left' ? -1 : 1) : CORE.at[0]) * k;
-    const y = bottom + CORE.at[1] * k;
-    const pulse = e.mode === 'windup' ? (Math.sin((now / CORE.pulseMs) * Math.PI * 2) + 1) / 2 : 0;
-    g.setDepth(bottom + DEPTHS.overlayNudge);
-    g.fillStyle(colorOf(CORE.haloColor), CORE.rest + (CORE.peak - CORE.rest) * pulse).fillCircle(x, y, CORE.halo * k * (1 + CORE.swell * pulse));
+    if (d.shown !== art.anim.key || !d.sprite.anims.isPlaying) {
+      if (d.shown === art.anim.key && d.sprite.anims.isPaused) d.sprite.anims.resume();
+      else d.sprite.play(art.anim.key);
+      d.shown = art.anim.key;
+    }
   }
 
   /** What the test hook's `ui()` reads here: the champions (032), Region 2's four's extras (035) and the bars (054). */
-  get ui(): { champions: ChampionShown[]; hollowsEnemies: HollowsEnemiesShown; enemyBars: EnemyBarShown[]; enemyFlames: number } {
+  get ui(): typeof NO_ENEMY_UI {
     const hollowsEnemies: HollowsEnemiesShown = { ripples: 0, flares: 0, lasers: [], waveShades: 0, beams: [], gusts: 0 };
     for (const [id, d] of this.drawn) {
       if (this.last.has(id)) shownOf(id, this.last.get(id) as EnemyState, d.hollows, hollowsEnemies);
       if (d.waveShaded && d.telegraph.visible) hollowsEnemies.waveShades += 1;
     }
     const enemyFlames = [...this.drawn.values()].filter((d) => d.flames?.visible === true).length;
-    return { champions: this.champions, hollowsEnemies, enemyBars: [...this.drawn.values()].map((d) => ({ ...d.bar.shown })), enemyFlames };
+    return { champions: this.champions, hollowsEnemies, enemyBars: [...this.drawn.values()].map((d) => ({ ...d.bar.shown })), enemyFlames, enemyArt: this.art };
+  }
+
+  /** 076: each enemy's art as drawn: family, pose, wind-up phase, reaction, squash, frame and tremble. */
+  get art(): EnemyArtUi[] {
+    return [...this.drawn.entries()].flatMap(([id, d]) =>
+      d.art ? [{ id, family: d.art.family, pose: d.art.pose, phase: d.art.phase, reaction: d.art.reaction, squash: d.art.squash, frame: d.sprite.frame.name, dx: d.art.dx }] : [],
+    );
   }
 
   /** The champions on show (032), for the test hook. */
@@ -278,21 +299,4 @@ export class EnemyView {
     c.kind.moveTo(Math.round(e.x - c.kind.width / 2), kindY);
     c.name.moveTo(Math.round(e.x - c.name.width / 2), kindY - L.gap - c.name.lineHeight);
   }
-}
-
-/** A chilled enemy's multiply tint (029): white toward the chill colour, deeper per stack. */
-function chillTint(stacks: number): number {
-  const k = Math.min(1, stacks * CHILL_TINT.perStack);
-  const to = colorOf(CHILL_TINT.color);
-  const mix = (shift: number): number => Math.round(255 + (((to >> shift) & 0xff) - 255) * k) << shift;
-  return mix(16) | mix(8) | mix(0);
-}
-
-function poseOf(e: EnemyState): 'idle' | 'walk' | 'windup' | 'swipe' | 'recover' | 'hit' | 'stun' | 'dig' | 'step' {
-  if (e.flash > 0 && e.mode !== 'windup' && e.mode !== 'swipe') return 'hit';
-  // 035: a Charger dazed by a wall, a Burrower digging in, a Sniper stepping out of cover.
-  if (e.mode === 'stun' || e.mode === 'dig') return e.mode;
-  if (e.mode === 'peek') return 'step';
-  if (e.mode === 'windup' || e.mode === 'swipe' || e.mode === 'recover') return e.mode;
-  return Math.hypot(e.vx, e.vy) >= IDLE_SPEED ? 'walk' : 'idle';
 }

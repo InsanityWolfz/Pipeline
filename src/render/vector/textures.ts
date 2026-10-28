@@ -15,6 +15,10 @@ const PAGE = 2048;
 
 let bakeScale = 1;
 const anchors = new Map<string, { ox: number; oy: number }>();
+/** 076: what the boot's bake took: wall ms, texture pages and frames (enemy frames among them), for the test hook. */
+const baked = { ms: 0, pages: 0, frames: 0, enemyFrames: 0 };
+
+export const bakeReport = (): Readonly<typeof baked> => baked;
 
 /** Texels per world px of the baked frames. */
 export function textureScale(): number {
@@ -24,6 +28,7 @@ export function textureScale(): number {
 /** Draws every vector frame at `screenScale` (backbuffer px per world px) and registers them. Once per game. */
 export function bakeVectors(scene: Scene, screenScale: number): void {
   if (scene.textures.exists(VECTOR_KEY)) return;
+  const start = performance.now();
   bakeScale = Math.min(MAX_TEXTURE_SCALE, Math.max(1, Math.ceil(screenScale)));
   const frames = vectorFrames();
   const sizes = frames.map((f) => [Math.ceil(f.size[0] * bakeScale), Math.ceil(f.size[1] * bakeScale)] as const);
@@ -57,6 +62,7 @@ export function bakeVectors(scene: Scene, screenScale: number): void {
     texture.add(f.name, at.page, at.x, at.y, size[0], size[1]);
     anchors.set(f.name, { ox: f.anchor[0] / f.size[0], oy: f.anchor[1] / f.size[1] });
   });
+  Object.assign(baked, { ms: Math.round(performance.now() - start), pages: pages.length, frames: frames.length, enemyFrames: frames.filter((f) => f.enemy).length });
 }
 
 /** Shows `frame` on `obj`, at the texture's scale and with the frame's anchor as its origin. */

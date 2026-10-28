@@ -145,8 +145,8 @@ export type { EnemyAnim, EnemyAnims, ExtraPose } from './enemyAnims';
 export const ENEMY_ANIMS: Readonly<Record<string, EnemyAnims>> = {
   husk: enemyAnims('husk'),
   wisp: enemyAnims('wisp'),
-  warden: enemyAnims('warden', true),
-  bulwark: enemyAnims('bulwark', true, ['turn', 'lob', 'throw', 'block', 'roar', 'brace', 'stomp']),
+  warden: enemyAnims('warden', true, [], 1, true),
+  bulwark: enemyAnims('bulwark', true, ['turn', 'lob', 'throw', 'block', 'roar', 'brace', 'stomp'], 1, true),
   ...HOLLOWS_ENEMY_ANIMS,
   ...FORGE_ANIMS,
   ...CONDUCTOR_ANIMS,
@@ -202,9 +202,6 @@ export const ENEMY_FX = {
    * `color`, with the shield icon (`w` x `h` px) `gap` px left of the bar, centred on it, `depth` over the world's UI.
    */
   immuneBar: { color: 'water', icon: { w: 7, h: 8, gap: 1, depth: 0.5 } },
-  /** A corpse lingers this long after its death animation, then fades over `corpseFadeMs`. */
-  corpseLingerMs: 600,
-  corpseFadeMs: 600,
 } as const;
 
 /**
@@ -245,7 +242,7 @@ export const KO_FADE_MS = 250;
 export const GROUND_ITEM_LIFT = 3;
 
 /** Textures drawn at runtime (014): the soft glow and the vignette; the low-HP edges (031), white to be tinted. */
-export const FX_TEXTURES = { glow: 'fx-glow', vignette: 'fx-vignette', lowHp: 'fx-low-hp' } as const;
+export const FX_TEXTURES = { glow: 'fx-glow', vignette: 'fx-vignette', lowHp: 'fx-low-hp', fog: 'fx-fog', lightPool: 'fx-light-pool' } as const;
 
 /** Render depths. World sprites sort by the bottom of their footprint (px); these sit around that. */
 export const DEPTHS = {
@@ -275,6 +272,10 @@ export const DEPTHS = {
   supplyLine: 99_990,
   /** Soft ley light pooled on the floor (014), over shadows and under anything standing. */
   glow: 0.25,
+  /** 074: Medium's light pools on the ground, under the glows. */
+  lightPool: 0.2,
+  /** 074: the region's fog, hugging the ground: over the glows, under the ground decals (telegraphs) and anything standing. */
+  fog: 0.3,
   /** 070: the player's silhouette while hidden behind a prop, over every prop and under the world's UI and motes. */
   silhouette: 98_000,
   /** Drifting motes, over the world. */

@@ -14,6 +14,7 @@ import { colorOf } from './color';
 import { addVector, addVectorSprite } from './vector/textures';
 import { PLAYER_SILHOUETTE } from '../data/silhouette';
 import type { Occluders } from './occluders';
+import type { WorldLayer } from './lighting/WorldLayer';
 import { drawBolts } from './hollowsEnemyArt';
 import { enemyDef } from '../data/enemies';
 
@@ -41,8 +42,11 @@ export class SiteView {
 
   private readonly occluders: Occluders | undefined;
 
-  /** `occluders` (070): the bench can hide the player. */
-  constructor(scene: Scene, occluders?: Occluders) {
+  private readonly world: WorldLayer | undefined;
+
+  /** `occluders` (070): the bench can hide the player. `world` (074): pylons and fixtures take the region's mood and lights. */
+  constructor(scene: Scene, occluders?: Occluders, world?: WorldLayer) {
+    this.world = world;
     this.scene = scene;
     this.occluders = occluders;
     registerAnim(scene, PYLON_SPRITES.activating);
@@ -71,7 +75,9 @@ export class SiteView {
     for (const at of here) {
       let sprite = this.pylons.get(at.site);
       if (!sprite) {
-        sprite = addVectorSprite(this.scene, 0, 0, PYLON_SPRITES.off).setOrigin(0.5, 1);
+        // Where it stands from the start, so the world layer files it by its place (074 review).
+        sprite = addVectorSprite(this.scene, (at.tx + 0.5) * TILE_SIZE, (at.ty + 1) * TILE_SIZE, PYLON_SPRITES.off).setOrigin(0.5, 1);
+        this.world?.addProp(sprite);
         this.pylons.set(at.site, sprite);
       }
       const x = (at.tx + 0.5) * TILE_SIZE;
@@ -104,6 +110,7 @@ export class SiteView {
         sprite = addVectorSprite(this.scene, x, bottom, fixtureFrame(def.kind)).setOrigin(0.5, 1).setDepth(bottom);
         if (def.kind === 'waystone') sprite.play(FIXTURE_SPRITES.waystone.key);
         if (PLAYER_SILHOUETTE.fixtures.includes(def.kind)) this.occluders?.add(sprite);
+        this.world?.addProp(sprite);
         this.fixtures.set(f.id, sprite);
       }
       sprite.setVisible(true);
