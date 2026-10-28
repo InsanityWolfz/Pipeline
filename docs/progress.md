@@ -3,7 +3,7 @@
 Newest entry first. Entries before 050 are in docs/progress-archive.md.
 
 ## 2026-10-28: Session end: the art pass merged
-**Changed:** 072, 073 and the whole art pass (074–081) merged; 071 dropped for 073; fixes: keep-items-before-foundry (#89), the Conductor's intro beat (#99), and e2e tests that timed the game on the wall clock (#100: game-clock and frame-based waits, Playwright's waits sized for CI's slower renderer, weather off in the mote-colour test). The art pass was combined on 081's branch and merged as one PR (#98), which marked 086–097's PRs merged.
+**Changed:** 072, 073 and the whole art pass (074–081) merged; 071 dropped for 073; fixes: keep-items-before-foundry (#89), the Conductor's intro beat (#99), and e2e tests that timed the game on the wall clock (#100: game-clock and frame-based waits, Playwright's waits sized for CI's slower renderer, weather off in the mote-colour test). The art pass was combined on 081's branch and merged as one PR (#98), which marked PRs 86, 90–94, 96 and 97 merged.
 
 **Next:** Shaun plays the whole game on main (`?playtest`) and answers docs/open-calls.md; then pick the next thing: a performance pass (a new game's first ~4 s run slow while the art warms up), one cheap AI playtest of the new art, or new content (Region 5, a final boss, the post-game modifiers from design.md).
 
