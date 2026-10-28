@@ -2,19 +2,30 @@ import { SPRITES, TUBE_SLOT_FRAMES } from '../assets';
 import { TUTORIAL_SPRITES } from '../foundryAssets';
 import { BUILD_BAR_LAYOUT, BUILD_PULSE, CRAFT_MENU_LAYOUT, HUD_LAYOUT, PICKER_LAYOUT, tubeSlotWidth } from '../hudLayout';
 import { HP_BAR, HUD_HEALTH_LAYOUT, INVENTORY_GRID } from '../hudPanels';
+import { BOSS_BAR_FRAME, HUD_EDGES, TABLET } from '../hudLook';
 import { ellipse, flat, line, path, rect, solid, trim, type Paint, type Shape, type VectorSprite } from './types';
 
 // The HUD and menus (020): rune-carved stone tablets with brass corners, dark
 // wells for icons and counts, and the tube slot ringed in cyan like the tube.
+// 081: one tablet look shared with the live panels (a carved inner line, brass lit at
+// its top-left ends), wells cut into the stone, and rims lit from the top left.
 // Fixed-size pieces are drawn here at the sizes the layouts were built round;
 // panels that change size are drawn live with the same look (render/tablet.ts,
 // TABLET in hudLayout). Drawn from the top-left.
 
 const vertical = (top: string, bottom: string, y0: number, y1: number): Paint => ({ linear: [0, y0, 0, y1], stops: [{ at: 0, color: top }, { at: 1, color: bottom }] });
 
-/** A brass corner bracket at (x, y), its arms pointing along (dx, dy). */
-const corner = (x: number, y: number, dx: number, dy: number, arm: number): Shape =>
-  ({ ...line([x + dx * arm, y, x, y, x, y + dy * arm], 1.6, 'brass', true) });
+/** A brass corner bracket at (x, y), its arms pointing along (dx, dy); 081: each arm lit at its top-left end, as light falls from the top left. */
+const corner = (x: number, y: number, dx: number, dy: number, arm: number): Shape[] => {
+  const lit = Math.min(TABLET.lit, arm);
+  const hx = dx > 0 ? x : x - arm;
+  const vy = dy > 0 ? y : y - arm;
+  return [
+    line([x + dx * arm, y, x, y, x, y + dy * arm], 1.6, 'brass', true),
+    line([hx, y, hx + lit, y], 0.9, TABLET.brassLit),
+    line([x, vy, x, vy + lit], 0.9, TABLET.brassLit),
+  ];
+};
 
 /** A stone tablet w x h: ink edge, carved stone, a lit top bevel, and brass corners. `runes` cuts a rune course along its top. */
 export function tablet(w: number, h: number, opts: { runes?: boolean; corners?: boolean } = {}): Shape[] {
@@ -29,32 +40,59 @@ export function tablet(w: number, h: number, opts: { runes?: boolean; corners?: 
     rect(0, 0, w, h, 2, { fill: vertical('carve', 'carve-dark', 0, h), outline: true }),
     line([2, 1.2, w - 2, 1.2], 0.8, { id: 'carve-light', alpha: 0.9 }),
     line([2, h - 1.2, w - 2, h - 1.2], 0.8, { id: 'mortar', alpha: 0.9 }),
+    // 081: a thin line carved in round the face, so the edge reads as cut.
+    ...(w > 8 && h > 8 ? [rect(TABLET.inner.inset + 0.5, TABLET.inner.inset + 0.5, w - 2 * TABLET.inner.inset - 1, h - 2 * TABLET.inner.inset - 1, 1.2, { stroke: { color: { id: TABLET.inner.color, alpha: TABLET.inner.alpha }, width: 0.6 } })] : []),
     ...runes,
-    ...(opts.corners === false ? [] : [corner(1.4, 1.4, 1, 1, arm), corner(w - 1.4, 1.4, -1, 1, arm), corner(1.4, h - 1.4, 1, -1, arm), corner(w - 1.4, h - 1.4, -1, -1, arm)]),
+    ...(opts.corners === false ? [] : [...corner(1.4, 1.4, 1, 1, arm), ...corner(w - 1.4, 1.4, -1, 1, arm), ...corner(1.4, h - 1.4, 1, -1, arm), ...corner(w - 1.4, h - 1.4, -1, -1, arm)]),
   ];
 }
 
-/** A dark carved well inside a tablet. */
-const well = (x: number, y: number, w: number, h: number): Shape => rect(x, y, w, h, 1.6, { fill: vertical('ink', 'carve-dark', y, y + h), stroke: { color: 'mortar', width: 0.6 } });
+/** A dark well cut into a tablet (081): darkest under its top edge, which casts a shadow in, and a lit lip along its foot. */
+const W = HUD_EDGES.well;
+const well = (x: number, y: number, w: number, h: number): Shape[] => [
+  rect(x, y, w, h, 1.6, { fill: vertical(W.top, W.foot, y, y + h), stroke: { color: 'mortar', width: 0.6 } }),
+  line([x + 1.4, y + 0.9, x + w - 1.4, y + 0.9], 1, { id: W.top, alpha: 0.7 }),
+  line([x + 1.6, y + h - 0.5, x + w - 1.6, y + h - 0.5], 0.8, { id: W.lip.color, alpha: W.lip.alpha }),
+];
 
-/** A cyan ring like the tube's, round a well. */
-const ring = (x: number, y: number, w: number, h: number, width: number, alpha: number, blur: number): Shape =>
-  rect(x, y, w, h, 2.4, { stroke: { color: { id: 'cyan', alpha }, width }, glow: { color: 'cyan-glow', blur } });
+/** A cyan ring like the tube's, round a well; 081: a cyan-glow rim light on its top-left arc. */
+const ring = (x: number, y: number, w: number, h: number, width: number, alpha: number, blur: number): Shape[] => [
+  rect(x, y, w, h, 2.4, { stroke: { color: { id: 'cyan', alpha }, width }, glow: { color: 'cyan-glow', blur } }),
+  path(`M ${x} ${y + h / 2} L ${x} ${y + 2.4} Q ${x} ${y} ${x + 2.4} ${y} L ${x + w / 2} ${y}`, trim({ id: HUD_EDGES.ring.color, alpha: HUD_EDGES.ring.alpha }, width * 0.6)),
+];
+
+/** A brass rivet with a lit point, top left. */
+const rivet = (x: number, y: number, r: number): Shape[] => [ellipse(x, y, r, r, solid('brass')), ellipse(x - r * 0.35, y - r * 0.35, r * 0.4, r * 0.4, flat('brass-light'))];
+
+/** A brass end cap like the HP bar's, `w` wide and `h` tall at x. */
+const cap = (x: number, w: number, h: number): Shape => rect(x, 0, w, h, 1.4, { fill: vertical('brass-light', 'brass-dark', 0, h), outline: true });
 
 const sprite = (key: string, size: readonly [number, number], shapes: readonly Shape[]): VectorSprite => ({ key, size, anchor: [0, 0], frames: [shapes] });
 
 // The tube slot (025): a tablet a little bigger than a hotbar cell, with a dark well per round it shows,
 // each ringed in cyan like the tube. One frame per count of rounds, up to one per intake entrance.
 const UNIT = { w: HUD_LAYOUT.tubeSlot.w, h: HUD_LAYOUT.tubeSlot.h, step: HUD_LAYOUT.tubeSlot.w + HUD_LAYOUT.gap, inset: HUD_LAYOUT.tubeSlot.wellInset } as const;
-const tubeSlot = (n: number): Shape[] => [
-  ...tablet(tubeSlotWidth(n), UNIT.h),
-  ...Array.from({ length: n }, (_, i) => [
-    well(i * UNIT.step + UNIT.inset, UNIT.inset, UNIT.w - 2 * UNIT.inset, UNIT.h - 2 * UNIT.inset),
-    ring(i * UNIT.step + UNIT.inset, UNIT.inset, UNIT.w - 2 * UNIT.inset, UNIT.h - 2 * UNIT.inset, 1.2, 0.85, 2),
-  ]).flat(),
-  // Brass studs between the wells, so a volley reads as one slot.
-  ...Array.from({ length: n - 1 }, (_, i) => ellipse((i + 1) * UNIT.step - HUD_LAYOUT.gap / 2, UNIT.h / 2, 1.1, 1.1, solid('brass'))),
-];
+const tubeSlot = (n: number): Shape[] => {
+  const ww = UNIT.w - 2 * UNIT.inset;
+  const wh = UNIT.h - 2 * UNIT.inset;
+  return [
+    ...tablet(tubeSlotWidth(n), UNIT.h),
+    // 081: brass end caps like the HP bar's, so the card reads as the tube's brass.
+    cap(0, UNIT.inset, UNIT.h),
+    cap(tubeSlotWidth(n) - UNIT.inset, UNIT.inset, UNIT.h),
+    ...Array.from({ length: n }, (_, i) => {
+      const x = i * UNIT.step + UNIT.inset;
+      return [
+        ...well(x, UNIT.inset, ww, wh),
+        ...ring(x, UNIT.inset, ww, wh, 1.2, 0.85, 2),
+        // 081: a thin cyan-glow line inside each ring.
+        rect(x + 1.4, UNIT.inset + 1.4, ww - 2.8, wh - 2.8, 1.6, { stroke: { color: { id: 'cyan-glow', alpha: 0.35 }, width: 0.5 } }),
+      ];
+    }).flat(),
+    // Brass rivets between the wells (081: lit at a point), so a volley reads as one slot.
+    ...Array.from({ length: n - 1 }, (_, i) => rivet((i + 1) * UNIT.step - HUD_LAYOUT.gap / 2, UNIT.h / 2, 1.1)).flat(),
+  ];
+};
 
 // The fist (16x16, round its centre like the item icons): a rust leather glove curled shut, knuckles to the
 // top, the thumb folded across the front, a brass cuff at the wrist, lit from the top left, on a soft shadow.
@@ -76,8 +114,8 @@ const FIST: Shape[] = [
 ];
 
 // A hotbar cell (24x28, also the build bar's): a small tablet with a well, and the cyan ring that marks the selected one.
-const AMMO_CELL: Shape[] = [...tablet(24, 28), well(3, 3, 18, 22)];
-const AMMO_SELECT: Shape[] = [ring(2, 2, 20, 24, 1.6, 1, 3)];
+const AMMO_CELL: Shape[] = [...tablet(24, 28), ...well(3, 3, 18, 22)];
+const AMMO_SELECT: Shape[] = ring(2, 2, 20, 24, 1.6, 1, 3);
 
 // The HP bar (031, 152x20): a carved stone frame with brass end caps and studs, a lit top bevel and a rune course
 // cut along its foot, round the dark well the fill is drawn in (HUD_HEALTH_LAYOUT.fill).
@@ -85,10 +123,25 @@ const HP = HUD_HEALTH_LAYOUT;
 const HEALTH: Shape[] = [
   rect(0, 0, HP.frame.w, HP.frame.h, 3, { fill: vertical('carve', 'carve-dark', 0, HP.frame.h), outline: true }),
   line([4, 1.3, HP.frame.w - 4, 1.3], 0.8, { id: 'carve-light', alpha: 0.9 }),
-  well(HP.fill.x - 1, HP.fill.y - 1, HP.fill.w + 2, HP.fill.h + 2),
-  ...[0, HP.frame.w - 3].map((x) => rect(x, 0, 3, HP.frame.h, 1.4, { fill: vertical('brass-light', 'brass-dark', 0, HP.frame.h), outline: true })),
+  ...well(HP.fill.x - 1, HP.fill.y - 1, HP.fill.w + 2, HP.fill.h + 2),
+  ...[0, HP.frame.w - 3].map((x) => cap(x, 3, HP.frame.h)),
   ...[1.5, HP.frame.w - 1.5].map((x) => ellipse(x, HP.frame.h / 2, 0.8, 0.8, solid('gold-trim'))),
-  ...Array.from({ length: Math.floor((HP.frame.w - 24) / 16) }, (_, i) => path(`M ${12 + i * 16} ${HP.frame.h - 2.4} L ${14 + i * 16} ${HP.frame.h - 1.2} L ${16 + i * 16} ${HP.frame.h - 2.4}`, trim('carve', 0.6))),
+  // The rune course along its foot, cut a little deeper (081): a dark groove with a lit lower lip.
+  ...Array.from({ length: Math.floor((HP.frame.w - 24) / 16) }, (_, i) => [
+    path(`M ${12 + i * 16} ${HP.frame.h - 2.4} L ${14 + i * 16} ${HP.frame.h - 1.2} L ${16 + i * 16} ${HP.frame.h - 2.4}`, trim('carve-dark', 0.8)),
+    path(`M ${12 + i * 16} ${HP.frame.h - 1.9} L ${14 + i * 16} ${HP.frame.h - 0.7} L ${16 + i * 16} ${HP.frame.h - 1.9}`, trim({ id: 'carve-light', alpha: 0.4 }, 0.4)),
+  ]).flat(),
+];
+
+// 081: the boss bar's frame (034's outer box, 244x10) in the HP bar's look: carved stone, brass end caps and studs,
+// and the well the fill is drawn in, 2 px in.
+const BB = BOSS_BAR_FRAME;
+const BOSS_BAR: Shape[] = [
+  rect(0, 0, BB.w, BB.h, 2, { fill: vertical('carve', 'carve-dark', 0, BB.h), outline: true }),
+  ...well(BB.inset - 1, BB.inset - 1, BB.w - 2 * BB.inset + 2, BB.h - 2 * BB.inset + 2),
+  cap(0, 3, BB.h),
+  cap(BB.w - 3, 3, BB.h),
+  ...[1.5, BB.w - 1.5].map((x) => ellipse(x, BB.h / 2, 0.7, 0.7, solid('gold-trim'))),
 ];
 
 // Its healing glow (031): soft cyan rings just outside the frame, faded in while the player heals (030).
@@ -128,9 +181,10 @@ const PANEL_TITLE = INVENTORY_GRID.title;
 const CRAFT_PANEL: Shape[] = tablet(CRAFT_MENU_LAYOUT.width, CRAFT_MENU_LAYOUT.height, { runes: true });
 const ROW = { w: PICKER_LAYOUT.rowWidth, h: PICKER_LAYOUT.rowHeight } as const;
 const RECIPE_ROW = { w: CRAFT_MENU_LAYOUT.rowWidth, h: CRAFT_MENU_LAYOUT.rowHeight } as const;
-const row = (r: { w: number; h: number }, rim: Shape[]): Shape[] => [well(0.5, 0.5, r.w - 1, r.h - 1), ...rim];
+const row = (r: { w: number; h: number }, rim: Shape[]): Shape[] => [...well(0.5, 0.5, r.w - 1, r.h - 1), ...rim];
+// 081: the hover rim lit at its top-left (cyan-glow), its glow at blur 3.
 const hoverRim = (r: { w: number; h: number }): Shape[] => [
-  ring(0.5, 0.5, r.w - 1, r.h - 1, 1, 0.9, 2),
+  ...ring(0.5, 0.5, r.w - 1, r.h - 1, 1, 0.9, 3),
   rect(2, 2, r.w - 4, r.h - 4, 1.4, { fill: { id: 'cyan', alpha: 0.08 } }),
 ];
 // The press flash lies over a row, so it's only a rim and a faint wash: what's in the row shows through.
@@ -205,6 +259,7 @@ export const HUD_SPRITES_VECTOR: readonly VectorSprite[] = [
   sprite(SPRITES.hudAmmoCell, [24, 28], AMMO_CELL),
   sprite(SPRITES.hudAmmoSelect, [24, 28], AMMO_SELECT),
   sprite(SPRITES.hudHealth, [HP.frame.w, HP.frame.h], HEALTH),
+  sprite(SPRITES.hudBossBar, [BB.w, BB.h], BOSS_BAR),
   sprite(SPRITES.hudHealthGlow, [HP.frame.w + 2 * G.pad, HP.frame.h + 2 * G.pad], HEALTH_GLOW),
   sprite(SPRITES.hudShield, [HP.shield.w, HP.shield.h], SHIELD),
   sprite(SPRITES.hudWarn, [8, 8], WARN),

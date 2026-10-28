@@ -79,12 +79,24 @@ const SURVIVAL: Shape[] = [
   ellipse(-3.4, -3.4, 1.2, 0.8, flat({ id: 'snow', alpha: 0.6 })),
 ];
 
-// The Tube: the relic tube side on, brass bands and cyan rings, its mouth to the right.
+/** A band across the tube's barrel (081) at `t` along its axis from the breech (-5, 5) to the mouth (5, -5). */
+const band = (t: number, half: number, width: number, color: string): Shape => {
+  const cx = -5 + 10 * t;
+  const cy = 5 - 10 * t;
+  return line([cx - half, cy - half, cx + half, cy + half], width, color, true);
+};
+
+// The Tube (081): the relic tube in three-quarter view, pointing up-right like the ammo icons: a ringed cyan barrel,
+// brass bands at the breech and a flared brass mouth. (It was side on, and read as a battery.)
 const TUBE: Shape[] = [
-  rect(-6.6, -2.8, 12, 5.6, 2.6, { fill: { linear: [0, -2.8, 0, 2.8], stops: [{ at: 0, color: 'iron-light' }, { at: 1, color: 'iron-dark' }] }, outline: true }),
-  rect(-7.2, -3.4, 3, 6.8, 1, solid('brass')),
-  ...[-2, 1].map((x) => ({ ...rect(x, -3, 1.2, 6, 0.5, flat('cyan')), glow: { color: 'cyan', blur: 1.5 } })),
-  ellipse(5.4, 0, 1.2, 2.4, flat('ink')),
+  line([-5.4, 5.4, 3.4, -3.4], 5.2, 'iron', true),
+  line([-5.6, 4.6, 2.6, -3.6], 1.4, { id: 'iron-light', alpha: 0.8 }),
+  band(0.05, 2.2, 1.6, 'brass'),
+  band(0.2, 2.2, 1.2, 'brass-dark'),
+  ...[0.42, 0.62].map((t) => ({ ...band(t, 2, 1.1, 'cyan'), glow: { color: 'cyan', blur: 1.5 } })),
+  path('M 1.6 -4.4 L 2.4 -7.6 L 7.6 -2.4 L 4.4 -1.6 Z', { fill: { linear: [2, -7, 7, -2], stops: [{ at: 0, color: 'brass-light' }, { at: 1, color: 'brass-dark' }] }, outline: true }),
+  path('M 3 -7 L 7 -3 L 6.4 -2.8 L 2.8 -6.4 Z', flat('ink')),
+  { ...line([3.2, -6.4, 6.4, -3.2], 0.5, 'cyan-glow'), glow: { color: 'cyan', blur: 2 } },
 ];
 
 // Blastfletch: an arrow through a cinder burst.

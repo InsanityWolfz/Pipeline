@@ -54,6 +54,8 @@ export const SPRITES = {
   itemShadow: 'item-shadow',
   /** The HP bar's carved frame (031: bottom-left, larger), its healing glow, the shield by the armor value and the at-risk mark. */
   hudHealth: 'hud-health',
+  /** 081: the boss bar's baked frame, in the HP bar's look. */
+  hudBossBar: 'hud-boss-bar',
   hudHealthGlow: 'hud-health-glow',
   hudShield: 'hud-shield',
   hudWarn: 'hud-warn',

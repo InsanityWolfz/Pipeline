@@ -1,9 +1,10 @@
 import { roundTier } from '../tags';
 import { TIER_ARMED, TIER_PROJECTILES, TIER_SPRITES, type TierSprite } from '../tierAssets';
 import type { TierId } from '../tiers';
+import { casingShell } from './items';
 import { MINE_SPRITES_VECTOR } from './mines';
 import { VECTOR_SPRITES } from './sprites';
-import { ellipse, flat, line, path, rect, solid, trim, type Ink, type Paint, type Shape, type VectorSprite } from './types';
+import { ellipse, flat, line, path, solid, trim, type Ink, type Paint, type Shape, type VectorSprite } from './types';
 
 // 062's art, in the 020 style. A tiered round's icon and its look in flight are its stone round's, recoloured by a
 // palette swap (TIER_ART): steel takes the iron palette's darker metal with a bright sheen along it, glass a clear
@@ -108,12 +109,10 @@ const STEEL_ARROWHEAD: Shape[] = [
   { ...line([5, -5.6, -1.6, -1.6], 0.5, { id: 'snow', alpha: 0.85 }), glow: { color: 'rock-pale', blur: 1 } },
 ];
 
-// The steel casing: the bomb's sphere in dark steel, a riveted band, and the sheen.
+// The steel casing (081): the casing's open shell in dark steel, with its sheen.
 const STEEL_CASING: Shape[] = [
-  ellipse(-0.6, 1.4, 5.4, 5.4, { fill: { radial: [-2, -0.6, 6], stops: [{ at: 0, color: 'iron-light' }, { at: 0.5, color: 'iron' }, { at: 1, color: 'iron-dark' }] }, outline: true }),
-  rect(-5.8, 0.6, 10.4, 1.6, 0.8, flat('iron-dark')),
-  ...[-3.6, -0.6, 2.4].map((x) => ellipse(x, 1.4, 0.5, 0.4, flat('brass-light'))),
-  ellipse(-2.6, -1.6, 1.6, 0.8, { fill: { id: 'snow', alpha: 0.75 } }),
+  ...casingShell(['iron-light', 'iron', 'iron-dark'], { id: 'snow', alpha: 0.85 }),
+  ...[-4.6, -1.8, 1].map((x) => ellipse(x, 4.4, 0.45, 0.4, flat('brass-light'))),
 ];
 
 // The steel plate: the riveted sheet in dark steel, the vein glinting, the sheen along its top edge.
