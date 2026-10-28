@@ -9,6 +9,7 @@ import type { BurstEvent, HitEvent } from '../../sim/events';
 //    burst within CLUSTER.distance + 2 px;
 // 4. an enemy hit (not a punch, a burn's beat or an arc): the straight round whose path this frame passed nearest the
 //    hurtbox's centre, within its half-size + 8 px; a round hits an enemy once, so each (round, enemy) pair matches once;
+//    it plays where that path meets the hurtbox's near side;
 // 5. a straight round that vanished with no hit: its end, one frame's travel past its last drawn point;
 // 6. no match: the element's fallback.
 
@@ -37,8 +38,11 @@ export interface MatchEvents {
   bombletBursts: readonly BurstEvent[];
 }
 
-/** A struck enemy's hurtbox: its centre `offsetY` from the feet, and how near a round's path must pass (half-size + 8). */
-export type Reach = (enemyId: number) => { offsetY: number; r: number } | null;
+/**
+ * A struck enemy's hurtbox: its centre `offsetY` from the feet, how near a round's path must pass (`r`: half-size + 8),
+ * and its half-size, so the impact plays where the path meets its near side (not hidden at its middle).
+ */
+export type Reach = (enemyId: number) => { offsetY: number; r: number; half: number } | null;
 
 /** A cluster bomb's burst, for its bomblets. */
 export interface ClusterAt {
@@ -92,10 +96,14 @@ export function matchImpacts(tracks: readonly Track[], ev: MatchEvents, reach: R
       if (d <= r && (!best || d < best.d)) best = { t, d, u };
     }
     if (!best) return { kind: 'fallback' };
-    const { t, u } = best;
+    const { t, u, d } = best;
     used.add(`${t.id}:${h.id}`);
     hitTracks.add(t.id);
-    return { kind: 'round', ammoId: t.ammoId, trackId: t.id, x: t.x0 + (t.x - t.x0) * u, y: t.y0 + (t.y - t.y0) * u, dx: t.dx, dy: t.dy };
+    // Back along the path from its nearest point to where it meets the hurtbox's near side (never before last frame's point).
+    const len = Math.hypot(t.x - t.x0, t.y - t.y0);
+    const back = len > 0 ? Math.min(u, Math.sqrt(Math.max(0, (box?.half ?? 0) ** 2 - d * d)) / len) : 0;
+    const at = u - back;
+    return { kind: 'round', ammoId: t.ammoId, trackId: t.id, x: t.x0 + (t.x - t.x0) * at, y: t.y0 + (t.y - t.y0) * at, dx: t.dx, dy: t.dy };
   });
   const bursts = ev.bursts.map((b) => lobAt(tracks, 'lob', b, true));
   const mines = ev.mineBursts.map((b) => lobAt(tracks, 'mine', b, false));

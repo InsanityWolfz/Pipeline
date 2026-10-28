@@ -12,15 +12,15 @@ const hit = (id: number, x: number, y = 100, extra: Partial<Extract<HitEvent, { 
 const burst = (x: number, y: number): BurstEvent => ({ x, y, radius: 48, damageType: 'physical' });
 const none: MatchEvents = { hits: [], bursts: [], mineBursts: [], bombletBursts: [] };
 /** Every enemy's hurtbox: centred on its feet, 10 px round, so a round within 18 px of the feet may have hit it. */
-const reach = () => ({ offsetY: 0, r: 18 });
+const reach = () => ({ offsetY: 0, r: 18, half: 10 });
 
 describe('matchImpacts (078)', () => {
   it('matches a piercing arrow through three enemies to the arrow, each hit once', () => {
     const tracks = [straight(1, 'arrow+steel', 100, 160), straight(2, 'ley-bolt', 0, 5, 300)];
     const m = matchImpacts(tracks, { ...none, hits: [hit(7, 110), hit(8, 130), hit(9, 150)] }, reach, []);
     expect(m.hits.map((h) => (h.kind === 'round' ? h.ammoId : h.kind))).toEqual(['arrow+steel', 'arrow+steel', 'arrow+steel']);
-    // The point on its path nearest each enemy, along its flight.
-    expect(m.hits.map((h) => (h.kind === 'round' ? [h.x, h.dx] : null))).toEqual([[110, 1], [130, 1], [150, 1]]);
+    // Where its path meets each enemy's near side (10 px before its middle), along its flight.
+    expect(m.hits.map((h) => (h.kind === 'round' ? [h.x, h.dx] : null))).toEqual([[100, 1], [120, 1], [140, 1]]);
     expect(m.ends).toEqual([]);
   });
 
@@ -71,7 +71,7 @@ describe('matchImpacts (078)', () => {
   });
 
   it('measures from the hurtbox’s centre, its half-size + 8 px', () => {
-    const tall = () => ({ offsetY: -20, r: 20 });
+    const tall = () => ({ offsetY: -20, r: 20, half: 12 });
     const tracks = [straight(1, 'arrow', 0, 100, 82)];
     expect(matchImpacts(tracks, { ...none, hits: [hit(1, 50, 100)] }, tall, []).hits[0]?.kind).toBe('round');
     expect(matchImpacts(tracks, { ...none, hits: [hit(1, 50, 140)] }, tall, []).hits[0]?.kind).toBe('fallback');

@@ -9,7 +9,7 @@ import { roundFx, type RoundLook } from './roundFx';
 
 // 078: every round's trail ribbon, from pooled slots: each a fixed ring of drawn points, cut to its trail's length
 // when drawn, tapering from the round to nothing. Two Graphics at `shotTrail` (a Graphics has one blend mode: plain,
-// and additive for ley and lightning on Medium and High), cleared and redrawn once a frame, so trails lie under the
+// and additive for the core and edge of ley and lightning on Medium and High), cleared and redrawn once a frame, so trails lie under the
 // telegraphs and everything standing. Capped by tier; a round past the cap flies with no trail. A slot is kept
 // until its round ends and its trail fades. Lightning crackles and fire flickers, unless Flashes is off.
 
@@ -129,7 +129,8 @@ export class TrailView {
 
   private draw(s: Slot, q: (typeof FX_QUALITY)[Quality], flashes: boolean): void {
     const t = s.look.trail;
-    const g = t.additive && q.additive ? this.additive : this.normal;
+    // The colour lies flat (so a ley ribbon stays cyan on sunlit ground); a glowing trail's core and edge add light.
+    const glow = t.additive && q.additive ? this.additive : this.normal;
     const fade = s.fade < 0 ? 1 : s.fade / FX_LOOK.fadeMs;
     // Fire flickers ±flicker, smoothly (two slow waves, not a per-frame reroll); none with Flashes off.
     const flicker = flashes && t.flicker > 0 ? 1 + t.flicker * Math.sin(this.time / 70 + s.phase) * Math.sin(this.time / 113 + s.phase * 2) : 1;
@@ -144,6 +145,7 @@ export class TrailView {
       const color = colorOf(pass === 0 ? (t.edge ?? t.color) : pass === 1 ? t.color : t.core);
       const width = t.width * (pass === 0 ? FX_LOOK.edge : pass === 1 ? 1 : FX_LOOK.core) * flicker;
       const alpha = t.alpha * fade * (pass === 0 ? FX_LOOK.edgeAlpha : 1);
+      const g = pass === 1 ? this.normal : glow;
       let ax = s.ring.x(0);
       let ay = s.ring.y(0);
       for (let i = 1; i < n; i++) {

@@ -171,11 +171,11 @@ export class ShotFxView {
   }
 
   /** A struck enemy's hurtbox: its centre's height over its feet and how near a round's path must pass (half-size + 8). */
-  private reach(id: number): { offsetY: number; r: number } | null {
+  private reach(id: number): { offsetY: number; r: number; half: number } | null {
     const e = this.lastOf(id);
     if (!e) return null;
     const hb = defOf(e).hurtbox;
-    return { offsetY: hb.offsetY, r: Math.max(hb.w, hb.h) / 2 + 8 };
+    return { offsetY: hb.offsetY, r: Math.max(hb.w, hb.h) / 2 + 8, half: hb.w / 2 };
   }
 
   /** The round's muzzle sparks from the drawn muzzle down its lane (its new track's flight, else the shot's line from the player). */
