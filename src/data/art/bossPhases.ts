@@ -31,7 +31,7 @@ export const BOSS_PHASE_LOOK = {
   bulwark: {
     /** Called (`addsRisen`, its adds risen below half): its veins brighten cyan, runes lit across the shield, its rim chipped. */
     called: {
-      layer: { color: 'cyan-glow', alpha: 0.12 } satisfies PhaseLayer,
+      layer: { color: 'cyan-glow', alpha: 0.06 } satisfies PhaseLayer,
       parts: [
         { key: S.runes, part: 'shield', at: { side: [22, -35], down: [0, -35], up: [0, -35] }, views: ['side', 'down'], add: true },
         { key: S.chips, part: 'shield', at: { side: [22, -60], down: [0, -60], up: [0, -60] } },
@@ -42,7 +42,7 @@ export const BOSS_PHASE_LOOK = {
     },
     /** Enraged (`enraged`, below 30%): veins `danger`, a red rim, the shield split, shoulder spikes, a lower hunch. */
     enraged: {
-      layer: { color: 'danger', alpha: 0.16, pulseTo: 0.24, pulseMs: 900 } satisfies PhaseLayer,
+      layer: { color: 'danger', alpha: 0.08, pulseTo: 0.13, pulseMs: 900 } satisfies PhaseLayer,
       parts: [
         { key: S.crack, part: 'shield', at: { side: [22, -35], down: [0, -35], up: [0, -35] }, add: true },
         { key: S.spikes, part: 'torso', at: ALL([0, -58]) },
@@ -57,10 +57,10 @@ export const BOSS_PHASE_LOOK = {
   forgewright: {
     /** Its seams by heat band (`heat / max`): each band's tint and glow; the bands ease in over `easeMs`. */
     bands: [
-      { from: 0, color: 'flame-dark', alpha: 0.05 },
-      { from: 0.25, color: 'cinder', alpha: 0.1 },
-      { from: 0.5, color: 'cinder-light', alpha: 0.15 },
-      { from: 0.9, color: 'snow', alpha: 0.22 },
+      { from: 0, color: 'flame-dark', alpha: 0.02 },
+      { from: 0.25, color: 'cinder', alpha: 0.05 },
+      { from: 0.5, color: 'cinder-light', alpha: 0.08 },
+      { from: 0.9, color: 'snow', alpha: 0.12 },
     ] as readonly { readonly from: number; readonly color: string; readonly alpha: number }[],
     easeMs: 300,
     /** At 90%+ heat (Medium and High): a shimmer over its back, `rise` px up, wavering `px` at `hz`. */
@@ -69,7 +69,7 @@ export const BOSS_PHASE_LOOK = {
     vent: { parts: [{ key: S.plates, part: 'torso', at: ALL([0, -46]) }] satisfies PhasePart[] },
     /** Enraged (below half): soot fades, red-hot plate edges, the hammer glowing with embers, a flame crest on the helm. */
     enraged: {
-      layer: { color: 'iron-rust', alpha: 0.16, pulseTo: 0.22, pulseMs: 700 } satisfies PhaseLayer,
+      layer: { color: 'iron-rust', alpha: 0.09, pulseTo: 0.13, pulseMs: 700 } satisfies PhaseLayer,
       parts: [{ key: S.crest, part: 'head', at: ALL([0, -92]), add: true }] satisfies PhasePart[],
       embers: { colors: ['cinder', 'cinder-light'], count: 2, speed: [10, 30], angle: -Math.PI / 2, spread: Math.PI / 3, gravity: -40, lifeMs: [300, 600], size: 1, lift: 0 } satisfies ParticleBurst,
       /** An ember from the hammer head every this many ms. */
@@ -84,12 +84,12 @@ export const BOSS_PHASE_LOOK = {
     grounded: { sink: 2, arcs: 3, arcMs: 300, color: 'storm-glow', alpha: 0.6 },
     /** Enraged (below half): brighter seams and eyes, the staff crackling, a halo of arcs over the crown. */
     enraged: {
-      layer: { color: 'storm-glow', alpha: 0.14, pulseTo: 0.2, pulseMs: 500 } satisfies PhaseLayer,
+      layer: { color: 'storm-glow', alpha: 0.07, pulseTo: 0.11, pulseMs: 500 } satisfies PhaseLayer,
       parts: [{ key: S.halo, part: 'hood', at: ALL([0, -102]), add: true }] satisfies PhasePart[],
     },
   },
   /** An enrage's flare (the Forgewright's and the Conductor's): a glow swelling over the body and a burst, over `ms`. */
-  flare: { ms: 600, alpha: 0.45, scale: 1.25 },
+  flare: { ms: 600, alpha: 0.3, scale: 1.25 },
   flareBurst: { colors: ['snow'], count: 16, speed: [40, 120], gravity: -20, lifeMs: [300, 600], size: 2, lift: 40 } satisfies ParticleBurst,
   flareColors: { forgewright: ['cinder', 'cinder-light', 'gold-trim'], conductor: ['storm-glow', 'storm-pale', 'snow'] } as Readonly<Record<string, readonly string[]>>,
   /** Particles scale with Graphics quality (074), all inside PARTICLE_BUDGET. */

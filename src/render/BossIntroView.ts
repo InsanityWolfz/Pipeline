@@ -140,12 +140,18 @@ export class BossIntroView {
       if (m.kind === 'ring') {
         this.marks.lineStyle(2, colorOf('rock-pale'), 0.6 * (1 - k)).strokeEllipse(m.x, m.y, 24 + 72 * k, (24 + 72 * k) * 0.45);
       } else if (m.kind === 'cracks') {
-        this.marks.lineStyle(1.5, colorOf('ink'), 0.7 * (1 - k));
-        for (let i = 0; i < 6; i++) {
-          const a = (i / 6) * Math.PI * 2 + 0.4;
-          const r0 = 8;
-          const r1 = 30 + (i % 2) * 10;
-          this.marks.lineBetween(m.x + Math.cos(a) * r0, m.y + Math.sin(a) * r0 * 0.5, m.x + Math.cos(a + 0.15) * r1, m.y + Math.sin(a + 0.15) * r1 * 0.5);
+        // Hairline cracks in the ground, two jagged segments each, fading over a second.
+        this.marks.lineStyle(1, colorOf('rock-dark'), 0.45 * (1 - k));
+        for (let i = 0; i < 5; i++) {
+          const a = (i / 5) * Math.PI * 2 + 0.4;
+          const r0 = 10;
+          const r1 = 20 + (i % 2) * 6;
+          const r2 = 28 + (i % 3) * 5;
+          const pt = (r: number, da: number): [number, number] => [m.x + Math.cos(a + da) * r, m.y + Math.sin(a + da) * r * 0.5];
+          const [x0, y0] = pt(r0, 0);
+          const [x1, y1] = pt(r1, 0.18);
+          const [x2, y2] = pt(r2, 0.02);
+          this.marks.lineBetween(x0, y0, x1, y1).lineBetween(x1, y1, x2, y2);
         }
       } else {
         // A violet-white bolt onto its staff from above; with Flashes off, no white core and a dim violet (042.10).

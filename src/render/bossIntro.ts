@@ -119,10 +119,10 @@ export function introNow(sim: SimState, shown: string): { boss: EnemyState; shor
   return boss ? { boss, short: introShort(sim, boss) } : null;
 }
 
-/** The pan's focus (the boss's body middle: its feet raised by half its drawn height, BOSS_LOOK) and weight, or null. */
-export function introPan(sim: SimState, shown: string): { x: number; y: number; weight: number } | null {
+/** The pan's focus (the boss's body middle: its feet raised by half its drawn height, BOSS_LOOK), weight and intro tick, or null. */
+export function introPan(sim: SimState, shown: string): { x: number; y: number; weight: number; ticks: number } | null {
   const now = introNow(sim, shown);
   if (!now) return null;
   const h = BOSS_LOOK.heights[now.boss.enemyId] ?? BOSS_LOOK.height;
-  return { x: now.boss.x, y: now.boss.y - h / 2, weight: panWeight(now.boss.modeTicks, now.short) };
+  return { x: now.boss.x, y: now.boss.y - h / 2, weight: panWeight(now.boss.modeTicks, now.short), ticks: now.boss.modeTicks };
 }

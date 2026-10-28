@@ -32,7 +32,7 @@ interface ArenaDoorSpots {
   in: { tx: number; ty: number };
 }
 
-function installArenaDoors(arenas: ArenaDoorSpots[], intro: { fullTicks: number; shortTicks: number }): void {
+function installArenaDoors({ arenas, intro }: { arenas: ArenaDoorSpots[]; intro: { fullTicks: number; shortTicks: number } }): void {
   const h = window.__helpers;
   const g = () => {
     const game = window.__GAME__;
@@ -74,7 +74,7 @@ export async function installArenaHelpers(page: Page): Promise<void> {
     const side = Math.sign(a.door.leaveTo.ty - mid.ty);
     return { id: a.id, boss: a.boss, out: a.door.leaveTo, by: { tx: mid.tx, ty: mid.ty + side }, in: { tx: mid.tx, ty: mid.ty - side } };
   });
-  await page.addInitScript(([s, i]) => installArenaDoors(s, i), [spots, { fullTicks: BOSS_INTRO.fullTicks, shortTicks: BOSS_INTRO.shortTicks }] as const);
+  await page.addInitScript(installArenaDoors, { arenas: spots, intro: { fullTicks: BOSS_INTRO.fullTicks, shortTicks: BOSS_INTRO.shortTicks } });
 }
 
 /** Into a boss arena by E at its door (the in-page `enterArena`). */

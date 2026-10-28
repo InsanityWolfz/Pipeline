@@ -30,6 +30,7 @@ export class SceneCameras {
   /** 080: the intro's pan: whether it has the camera, and where it last centred it (world px). */
   private panning = false;
   private panAt = { x: 0, y: 0 };
+  private panTicks = 0;
   /** 080: the pan as `ui().bossIntro.pan` reports it: running, and the camera's offset from where the follow would put it. */
   panShown = { active: false, dx: 0, dy: 0 };
 
@@ -130,7 +131,7 @@ export class SceneCameras {
    * none), so the boss bar doesn't cover the boss. Set every frame: a restarted follow (a KO, the attune) resets it.
    * 080: `intro` runs a full boss intro's pan first (introLook).
    */
-  bossLook(target: number, deltaMs: number, intro: { pan: { x: number; y: number; weight: number } | null; followed: GameObjects.GameObject & { x: number; y: number } } | null = null): void {
+  bossLook(target: number, deltaMs: number, intro: { pan: { x: number; y: number; weight: number; ticks: number } | null; followed: GameObjects.GameObject & { x: number; y: number } } | null = null): void {
     if (intro) this.introLook(intro.pan, intro.followed);
     this.lift += (target - this.lift) * (1 - Math.exp(-Math.max(0, deltaMs) / BOSS_LOOK.easeMs));
     if (Math.abs(target - this.lift) < 0.5) this.lift = target;
@@ -140,20 +141,24 @@ export class SceneCameras {
   /**
    * 080: a full boss intro's pan: while `pan.weight` is above 0 the follow stops and the camera centres between where
    * the follow (with today's boss lift) would put it and the boss's body middle (`pan`), by the weight, moving at most
-   * INTRO_LOOK.pan.capPx a frame; at 0 the follow (and the lift) take it back from exactly there, so nothing jumps. As
+   * INTRO_LOOK.pan.capPx a tick; at 0 the follow (and the lift) take it back from exactly there, so nothing jumps. As
    * 019's attune look does. Call before `bossLook`, which sets the follow's offset again.
    */
-  introLook(pan: { x: number; y: number; weight: number } | null, followed: GameObjects.GameObject & { x: number; y: number }): void {
+  introLook(pan: { x: number; y: number; weight: number; ticks: number } | null, followed: GameObjects.GameObject & { x: number; y: number }): void {
     const main = this.scene.cameras.main;
     const follow = this.clampedCentre({ x: followed.x, y: followed.y - Math.round(this.lift) });
     if (pan && pan.weight > 0 && !this.looking) {
       if (!this.panning) {
         main.stopFollow();
         this.panAt = follow;
+        // The pan starts from the intro's first tick (its weight is 0 there).
+        this.panTicks = Math.min(1, pan.ticks - 1);
       }
       this.panning = true;
       const to = this.clampedCentre(pan);
-      const cap = INTRO_LOOK.pan.capPx;
+      // At most capPx a tick (one tick a frame at 60 fps); a slow frame that ran several ticks moves that many caps.
+      const cap = INTRO_LOOK.pan.capPx * Math.max(1, pan.ticks - this.panTicks);
+      this.panTicks = pan.ticks;
       const want = { x: follow.x + (to.x - follow.x) * pan.weight, y: follow.y + (to.y - follow.y) * pan.weight };
       this.panAt = { x: capped(this.panAt.x, want.x, cap), y: capped(this.panAt.y, want.y, cap) };
       main.centerOn(this.panAt.x, this.panAt.y);

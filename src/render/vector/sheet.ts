@@ -67,6 +67,7 @@ for (const view of ['side', 'down', 'up'] as const satisfies readonly WandererVi
 // Grouped for review (020): each machine on its own row, then each family of sprites. A dev-only page: it groups
 // by frame-name prefixes rather than the asset tables, which is fine for a review sheet that ships in no build.
 const FAMILIES: readonly [title: string, test: (name: string) => boolean][] = [
+  ['Boss phase parts (080): the Bulwark’s runes, chipped rim, red crack and spikes; the Forgewright’s plates and crest; the Conductor’s dome and halo', (n) => n.startsWith('boss-phase-')],
   ...MACHINE_IDS.map((id): [string, (n: string) => boolean] => [`Machine: ${id} (idle, jammed, working)`, (n) => n.startsWith(`machine-${id}-`)]),
   ['The storm tier (066): stormsteel, storm glass, the stormsteel parts, every storm round, in flight and armed', (n) => /^(item-stormsteel|item-storm-glass|icon-[a-z-]*-(stormsteel|storm-glass)|arrow-stormsteel|bomb-stormsteel|landmine-stormsteel|landmine-armed-stormsteel|ley-bolt-storm-glass)/.test(n)],
   ['Material tiers (062): ley-steel, ley glass, the steel parts, every steel and glass round, in flight and armed', (n) => /^(item-ley-steel|item-ley-glass|item-steel-|icon-[a-z-]*-(steel|glass)|arrow-steel|bomb-steel|landmine-steel|landmine-armed-steel|ley-bolt-glass)/.test(n)],
