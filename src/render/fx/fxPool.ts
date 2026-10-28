@@ -37,6 +37,14 @@ export class Pool<T> {
   releaseAll(): void {
     while (this.live.length > 0) this.release(this.live.length - 1);
   }
+
+  /** Makes objects up to `n` in all (a tier's high-water mark) at once, so a fight later makes none. */
+  warm(n: number): void {
+    while (this.created < n) {
+      this.free.push(this.make());
+      this.created += 1;
+    }
+  }
 }
 
 /** A trail's drawn points, newest first: a fixed ring of `FX_LOOK.points`. */
@@ -115,6 +123,14 @@ export class MarkRing<T> {
     }
     this.live.push(m);
     return m;
+  }
+
+  /** Makes marks up to `n` in all (the tier's cap) at once. */
+  warm(n: number): void {
+    while (this.created < n) {
+      this.free.push(this.make());
+      this.created += 1;
+    }
   }
 
   /** A mark faded out: its slot is free again. */

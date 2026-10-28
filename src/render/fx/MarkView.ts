@@ -1,7 +1,7 @@
 import { BlendModes, type GameObjects, type Scene } from 'phaser';
 import type { FlashFx, MarkFx, ShockFx } from '../../data/ammoFx';
 import { DEPTHS, SHOT_FX_TEXTURES } from '../../data/assets';
-import { FX_QUALITY } from '../../data/fxQuality';
+import { FX_LOOK, FX_QUALITY } from '../../data/fxQuality';
 import type { Quality } from '../../data/settings';
 import { colorOf } from '../color';
 import { textureScale } from '../vector/textures';
@@ -59,7 +59,7 @@ export class MarkView {
   private readonly shocks: Pool<Shock>;
   private readonly flashes: Pool<Flash>;
   private readonly unit: number;
-  private cap = FX_QUALITY.medium.markCap;
+  private cap = 0;
 
   constructor(scene: Scene) {
     makeShotTextures(scene);
@@ -72,8 +72,13 @@ export class MarkView {
 
   /** A tier's mark cap applies at once: the oldest marks past it go. */
   setQuality(quality: Quality): void {
+    if (this.cap === FX_QUALITY[quality].markCap) return;
     this.cap = FX_QUALITY[quality].markCap;
     for (const m of this.marks.trim(this.cap)) m.image.setVisible(false);
+    // Pools only grow: a tier's marks, shock rings and flashes are made once, as it comes in.
+    this.marks.warm(this.cap);
+    this.shocks.warm(FX_LOOK.shockRings);
+    this.flashes.warm(FX_LOOK.flashes);
   }
 
   /** A mark at a ground point: `radius` px for a blast's (`perRadius`), else its own size. */
@@ -95,6 +100,7 @@ export class MarkView {
 
   /** A shock ring on the ground growing to `radius` px, its core ring in the tier's colour (or none for stone). */
   shock(look: ShockFx & { core: string | null }, x: number, y: number, radius: number): void {
+    if (this.shocks.live.length >= FX_LOOK.shockRings) return;
     const s = this.shocks.take();
     s.ms = 0;
     s.life = look.ms;
@@ -108,6 +114,7 @@ export class MarkView {
 
   /** A flash at a point (already lifted to its height) at `depth`, turned to `angle` (the tick lies along the flight); additive by tier. */
   flash(look: FlashFx, x: number, y: number, depth: number, angle: number, additive: boolean, scale = 1): void {
+    if (this.flashes.live.length >= FX_LOOK.flashes) return;
     const f = this.flashes.take();
     f.ms = 0;
     f.look = look;

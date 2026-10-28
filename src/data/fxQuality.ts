@@ -102,6 +102,8 @@ export const FX_QUALITY: Readonly<Record<Quality, FxQuality>> = {
 export const FX_LOOK = {
   points: 24,
   fadeMs: 120,
+  /** Slots kept beyond the tier's cap for trails still fading after their rounds ended. */
+  fadeSlots: 24,
   tail: 0.4,
   core: 1 / 3,
   edge: 2.4,

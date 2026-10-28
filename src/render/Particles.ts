@@ -96,8 +96,8 @@ export class Particles {
     const s = PARTICLE_SHARES[this.quality()];
     const want = s.death + s.effect;
     if (want <= this.warmed) return;
-    const taken = Math.max(0, want - this.pool.created);
-    for (let i = 0; i < taken; i++) this.pool.take();
+    let taken = 0;
+    for (; this.pool.created < want; taken++) this.pool.take();
     for (let i = 0; i < taken; i++) this.pool.release(this.pool.live.length - 1);
     this.warmed = want;
   }
