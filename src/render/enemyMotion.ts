@@ -70,9 +70,13 @@ export function tremble(phase: WindupPhase | null, nowMs: number, boss: boolean)
   return { dx: px * Math.sin(a), dy: px * 0.5 * Math.cos(a * 1.5) };
 }
 
-/** The release snap `ticks` (1 on its first) into an attack: a stretch settling to nothing over 4 ticks. */
-export function releaseSquash(ticks: number): number {
+/**
+ * The release snap `ticks` (1 on its first) into an attack: a stretch settling to nothing over 4 ticks. With `key`
+ * (`enemyId:mode`), none for a slam or stomp (`ENEMY_MOTION.release.none`), whose baked impact squash lands as drawn.
+ */
+export function releaseSquash(ticks: number, key?: string): number {
   if (ticks < 1 || ticks > M.release.ticks) return 0;
+  if (key !== undefined && M.release.none.includes(key)) return 0;
   return M.release.squash * (1 - (ticks - 1) / M.release.ticks);
 }
 

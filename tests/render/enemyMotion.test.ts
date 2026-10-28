@@ -3,7 +3,10 @@ import { ENEMY_MOTION as M } from '../../src/data/art/enemyMotion';
 import { ENEMIES } from '../../src/data/enemies';
 import { SNIPER } from '../../src/data/hollowsEnemies';
 import { createEnemy } from '../../src/sim/enemies';
-import { peakStart, releaseSquash, stripIndex, stripsOf, tremble, windupOf, windupPhase, type WindupPhase } from '../../src/render/enemyMotion';
+import { ENEMY_ANIMS } from '../../src/data/assets';
+import { ENEMY_RIGS } from '../../src/data/art/enemies';
+import { enemyArt } from '../../src/render/enemyArt';
+import { peakStart, RELEASE_MODES, releaseSquash, stripIndex, stripsOf, tremble, windupOf, windupPhase, type WindupPhase } from '../../src/render/enemyMotion';
 
 // 076: every attack's wind-up is a strip of gather, coil and peak, picked by the wind-up's progress, so it fills the
 // sim's wind-up exactly however long it is; the peak trembles; the attack's first frames stretch and settle.
@@ -87,5 +90,37 @@ describe('wind-up phases (076)', () => {
     expect(releaseSquash(3)).toBeGreaterThan(releaseSquash(2));
     expect(releaseSquash(M.release.ticks + 1)).toBe(0);
     expect(releaseSquash(40)).toBe(0);
+  });
+
+  it("never stretches a slam's or a stomp's impact frame, so its baked squash lands (review 1)", () => {
+    // Every release an enemy can show: where the pose it shows on the release's first tick is baked squashed (an
+    // impact), render adds no stretch and the frame lands squashed; elsewhere the stretch plays.
+    let slams = 0;
+    for (const def of Object.values(ENEMIES)) {
+      const rig = ENEMY_RIGS.find((r) => r.id === def.anims);
+      const anims = ENEMY_ANIMS[def.anims];
+      if (!rig || !anims) throw new Error(def.id);
+      for (const mode of RELEASE_MODES) {
+        const e = createEnemy(1, def.id, { x: 0, y: 0 }, 'x');
+        e.mode = mode as typeof e.mode;
+        e.modeTicks = 1;
+        const art = enemyArt(e, def, anims, 'side', false, null, 0);
+        const baked = rig.poses[art.pose as keyof typeof rig.poses]?.[0]?.squash ?? 0;
+        if (baked >= 0.12) {
+          slams += 1;
+          expect(art.squash, `${def.id}:${mode}`).toBe(0);
+          expect(baked + art.squash, `${def.id}:${mode}`).toBeGreaterThan(0.1);
+        }
+      }
+    }
+    // The Warden's and the golem's slams, the Bulwark's pound and stomp, the Forgewright's three hammer blows.
+    expect(slams).toBeGreaterThanOrEqual(7);
+    const husk = createEnemy(1, 'husk', { x: 0, y: 0 }, 'x');
+    husk.mode = 'swipe';
+    husk.modeTicks = 1;
+    const huskDef = ENEMIES.husk;
+    const huskAnims = ENEMY_ANIMS.husk;
+    if (!huskDef || !huskAnims) throw new Error('husk');
+    expect(enemyArt(husk, huskDef, huskAnims, 'side', false, null, 0).squash).toBeCloseTo(M.release.squash, 5);
   });
 });

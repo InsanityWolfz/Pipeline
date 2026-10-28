@@ -4,11 +4,9 @@ import { ENEMY_MOTION } from '../data/art/enemyMotion';
 import { IDLE_SPEED } from '../data/config';
 import type { EnemyDef } from '../data/enemies';
 import type { EnemyState } from '../sim/enemies';
-import { bulwarkPose } from './bulwarkLook';
-import { conductorPose } from './conductorLook';
+import { bulwarkPose, conductorPose, forgePose } from './bossPoses';
 import { attacking, flinchSquash, reactionOf, staggerIndex, staggerSquash, type Reaction } from './enemyReaction';
 import { releaseSquash, RELEASE_MODES, stripIndex, tremble, windupOf, windupPhase, type WindupPhase } from './enemyMotion';
-import { forgePose } from './forgewrightLook';
 import { STRIP_ENDS } from '../data/enemyAnims';
 
 // 076: what an enemy's sprite shows this frame, from its state, its def and render's clocks: the anim to play, or a
@@ -77,7 +75,7 @@ export function enemyArt(e: EnemyState, def: EnemyDef, anims: EnemyAnims, view: 
     const t = tremble(phase, now, def.boss);
     return { pose: strip.pose, phase, reaction: null, squash: 0, ...hold(strip.pose, stripIndex(phase, stripAnim.frames - STRIP_ENDS, now)), dx: t.dx, dy: t.dy, family };
   }
-  const squash = RELEASE_MODES.includes(e.mode) ? releaseSquash(e.modeTicks) : 0;
+  const squash = RELEASE_MODES.includes(e.mode) ? releaseSquash(e.modeTicks, `${def.id}:${e.mode}`) : 0;
   // The Conductor's storm call and rod chain release from their peak (064: one pose for both).
   if ((base === 'call' || base === 'chain') && e.mode === 'swipe') return { pose: base, phase: null, reaction: null, squash, ...hold(base, 99), dx: 0, dy: 0, family };
   return { pose: base, phase: null, reaction: null, squash, anim: anim(base), frame: null, dx: 0, dy: 0, family };

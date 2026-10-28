@@ -12,18 +12,6 @@ import { colorOf } from './color';
 // the rod chain's red lines between neighbouring standing rods. The storm call's circles and the lightning itself are
 // ConductorView's.
 
-export type ConductorPose = 'idle' | 'windup' | 'swipe' | 'recover' | 'hit' | 'blink' | 'call' | 'chain';
-
-/** Its pose for its attack and mode. */
-export function conductorPose(e: EnemyState): ConductorPose {
-  if (e.conductor.blinkTo >= 0) return 'blink';
-  if (e.conductor.attack >= 0 && e.mode === 'recover') return 'recover';
-  if (e.conductor.attack === 0 && (e.mode === 'windup' || e.mode === 'swipe')) return e.mode;
-  if (e.conductor.attack === 1 && (e.mode === 'windup' || e.mode === 'swipe')) return 'call';
-  if (e.conductor.attack === 2 && (e.mode === 'windup' || e.mode === 'swipe')) return 'chain';
-  return e.flash > 0 ? 'hit' : 'idle';
-}
-
 /** A red band along a segment, `width` px across, filled out from its start to `k` (0..1) of its length. */
 function band(g: GameObjects.Graphics, s: { x0: number; y0: number; x1: number; y1: number }, width: number, k: number, alpha: number, fillAlpha: number): void {
   const color = colorOf(ENEMY_FX.telegraphColor);
