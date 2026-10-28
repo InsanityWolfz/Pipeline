@@ -167,6 +167,11 @@ export const STATIC_ROOMS: Readonly<Record<string, Room>> = {
       { propId: 'brazier', tx: 20, ty: 0 },
       { propId: 'banner', tx: 8, ty: 0 },
       { propId: 'banner', tx: 16, ty: 0 },
+      // 079: four brass wall torches on the side walls, clear of the door and the fixtures.
+      { propId: 'torch', tx: 0, ty: 4 },
+      { propId: 'torch', tx: 0, ty: 11 },
+      { propId: 'torch', tx: 23, ty: 6 },
+      { propId: 'torch', tx: 23, ty: 13 },
     ],
     doorways: [{ tx: 23, ty: 8, to: 'overworld', toDoor: 0 }],
   },

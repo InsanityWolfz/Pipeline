@@ -13,7 +13,7 @@ import { GHOST, HARVEST_BAR, TABLET } from '../../src/data/hudLayout';
 import { MINIMAP } from '../../src/data/minimap';
 import { ENEMIES } from '../../src/data/enemies';
 import { ENTRANCE_GAUGE_COLORS, INTAKE_LOOK } from '../../src/data/art/intake';
-import { AMBIENT, DAMAGE_NUMBERS, GLOWS, HARVEST_BURSTS, HARVEST_WORK, PARTICLES, ROOM_MOOD } from '../../src/data/juice';
+import { AMBIENT, DAMAGE_NUMBERS, GLOWS, HARVEST_BURSTS, HARVEST_WORK, PARTICLES } from '../../src/data/juice';
 import { DAYLIGHT_PALETTE } from '../../src/data/palette';
 import { FIRE_SOUNDS, ROOM_AMBIENCE, SOUNDS, WINDUP_SOUNDS } from '../../src/data/sounds';
 import { BASE_FAMILY } from '../../src/data/roundKeywords';
@@ -62,6 +62,10 @@ describe('props', () => {
         else if (layer === 'wall') {
           expect(at(p.tx, p.ty), where).toBe(TILE.wall);
           expect(at(p.tx, p.ty + 1), where).toBe(TILE.floor);
+        } else if (layer === 'side') {
+          // 079: on a side wall's top, floor beside it on the room's side.
+          expect(at(p.tx, p.ty), where).toBe(TILE.wall);
+          expect([at(p.tx - 1, p.ty), at(p.tx + 1, p.ty)], where).toContain(TILE.floor);
         } else {
           expect(at(p.tx, p.ty), where).toBe(TILE.floor);
           for (const b of busy) expect(b.tx === p.tx && b.ty === p.ty, where).toBe(false);
@@ -86,7 +90,6 @@ describe('feel and sound references', () => {
     const ids = [
       ...Object.values(PARTICLES).flatMap((p) => p.colors),
       ...Object.values(GLOWS).map((g) => g.color),
-      ...Object.values(ROOM_MOOD).map((m) => m.tint),
       DAMAGE_NUMBERS.enemy,
       DAMAGE_NUMBERS.player,
       DAMAGE_NUMBERS.outline,
@@ -146,7 +149,7 @@ describe('feel and sound references', () => {
   });
 
   it('key moods and ambience by real rooms, fire sounds by real ammo, and wind-ups by real enemy kinds', () => {
-    for (const roomId of [...Object.keys(ROOM_MOOD), ...Object.keys(ROOM_AMBIENCE)]) expect(WORLD[roomId], roomId).toBeDefined();
+    for (const roomId of Object.keys(ROOM_AMBIENCE)) expect(WORLD[roomId], roomId).toBeDefined();
     for (const room of Object.keys(WORLD)) expect(ROOM_AMBIENCE[room], room).toBeDefined();
     for (const ammoId of Object.keys(BASE_FAMILY)) expect(FIRE_SOUNDS[ammoId], ammoId).toBeDefined();
     const kinds = new Set(Object.values(ENEMIES).map((e) => e.kind));

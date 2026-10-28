@@ -1,4 +1,4 @@
-import { LIGHT_BUDGET, LIGHT_SOURCES, ROUND_LIGHTS, type LightSourceId } from '../../data/lights';
+import { FOUNDRY_LIGHTS, LIGHT_BUDGET, LIGHT_SOURCES, ROUND_LIGHTS, type LightSourceId } from '../../data/lights';
 import type { Quality } from '../../data/settings';
 
 // 074: which lights the scene places. Phaser's own cull keeps the lights nearest the camera's centre and ignores
@@ -16,7 +16,12 @@ export interface LightCandidate {
   priority: number;
 }
 
-const tiersOf = (source: LightSourceId): readonly Quality[] => (source === 'round' ? ROUND_LIGHTS.tiers : LIGHT_SOURCES[source].tiers);
+const tiersOf = (source: LightSourceId): readonly Quality[] => {
+  if (source === 'round') return ROUND_LIGHTS.tiers;
+  // 079: the foundry's own sources (its wall fires, the intake, working forge machines).
+  if (source === 'wall' || source === 'intake' || source === 'forge') return FOUNDRY_LIGHTS.tiers;
+  return LIGHT_SOURCES[source].tiers;
+};
 
 /** The lights to place on `quality`, best first. */
 export function pickLights(candidates: readonly LightCandidate[], quality: Quality, centre: { x: number; y: number }): LightCandidate[] {

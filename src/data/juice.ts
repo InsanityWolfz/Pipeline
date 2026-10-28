@@ -215,14 +215,6 @@ export const GLOWS = {
 /** While attuning (019), the tube's glow and then the intake's grow from nothing to this times their radius as their rings light, then settle. */
 export const ATTUNE_GLOW_SWELL = 2.2;
 
-/**
- * The tint over a room (a palette id and alpha): the foundry's warm forge glow over the sandstone (020), kept until 079.
- * 074: outside, the region's mood (src/data/moods.ts) washes the screen instead; the sandbox takes Region 1's.
- */
-export const ROOM_MOOD: Readonly<Record<string, { tint: string; alpha: number }>> = {
-  foundry: { tint: 'flame-dark', alpha: 0.1 },
-};
-
 /** The vignette: edge darkness, and where the darkening starts (fraction of the corner distance). */
 export const VIGNETTE = { alpha: 0.55, inner: 0.45 } as const;
 

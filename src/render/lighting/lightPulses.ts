@@ -1,4 +1,4 @@
-import { LIGHT_SOURCES, type LightSourceId } from '../../data/lights';
+import { type FoundryLightSource, LIGHT_SOURCES, type LightSourceId } from '../../data/lights';
 import type { SimEvents } from '../../sim/events';
 import type { LightCandidate } from './lightPick';
 
@@ -6,7 +6,7 @@ import type { LightCandidate } from './lightPick';
 // Conductor's attacks), fading out over their life; the face glow's flare after a shot; when lightning last struck
 // (the ambient flash); and the Forgewrights venting now. With Flashes off, no event places a flash of light.
 
-type PulseSource = Exclude<LightSourceId, 'round'>;
+type PulseSource = Exclude<LightSourceId, 'round' | FoundryLightSource>;
 
 interface Pulse {
   source: PulseSource;

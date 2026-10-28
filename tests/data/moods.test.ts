@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest';
 import { LIGHTNING_FLASH, MOOD_BLEND, MOOD_EDGES, REGION_MOODS } from '../../src/data/moods';
-import { ROOM_MOOD } from '../../src/data/juice';
 import { hexToRgb, paletteHex } from '../../src/data/palette';
 import { WORLD_SHAPE } from '../../src/data/worldShape';
 
@@ -33,7 +32,6 @@ describe('region moods (074)', () => {
       expect(m.wash.alpha).toBeLessThanOrEqual(0.06);
     }
     expect(isPaletteId(LIGHTNING_FLASH.color)).toBe(true);
-    expect(isPaletteId(ROOM_MOOD.foundry?.tint ?? '')).toBe(true);
   });
 
   // 074 review: the dark regions retuned toward the approved "Ley-lit" card (docs/art/style-test-2.html): dusky, not pale haze.

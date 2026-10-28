@@ -61,6 +61,20 @@ export const REGION_MOODS: Readonly<Record<Ring, RegionMood>> = {
 };
 
 /**
+ * 079: the foundry's mood, a warm torch- and forge-lit workshop: amber air (about #f7cb9b) dim enough for its fires to
+ * read, far brighter than the Hollows; a light warm wash (the ambient carries the warmth, so it is under 074's cap); no
+ * fog, so the build grid stays crisp. LightingView uses it whenever the foundry is shown.
+ */
+export const FOUNDRY_MOOD: RegionMood = {
+  name: 'foundry',
+  ambient: { color: 'resin', darkness: 0.55 },
+  wash: { color: 'flame-dark', alpha: 0.05 },
+  fog: null,
+  lights: { ley: 'cyan', fire: 'cinder', accent: 'brass-light' },
+  lightScale: 1,
+};
+
+/**
  * The mood follows the camera's centre and blends over `tiles` each side of a region's edge, so walking between regions
  * has no hard cut. `steps`: the blend is quantised to this many steps across a band, so the props' mood tint is set
  * again only a few times on the way across, never every frame.

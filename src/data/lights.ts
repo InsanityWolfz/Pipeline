@@ -69,7 +69,10 @@ export const LIGHT_SOURCES = {
   leyLine: { color: 'cyan', radius: 40, intensity: 0.5, priority: 3, tiers: LIT, every: { medium: 6, high: 3 } },
 } as const satisfies Record<string, LightSource>;
 
-export type LightSourceId = keyof typeof LIGHT_SOURCES | 'round';
+/** 079: the foundry's own sources: its wall fires (braziers and torches), the intake's mouth, and working forge machines. */
+export type FoundryLightSource = 'wall' | 'intake' | 'forge';
+
+export type LightSourceId = keyof typeof LIGHT_SOURCES | 'round' | FoundryLightSource;
 
 /** Rounds in flight (High only): ley bolts cyan, fire, cold and lightning rounds their type's colour; plain arrows and bombs none. */
 export const ROUND_LIGHTS = {
@@ -128,3 +131,39 @@ export const SET_PIECE_LIGHTS: Readonly<Record<string, { readonly source: 'ley' 
   'great-furnace': { source: 'fire', color: 'cinder', radius: 96, intensity: 0.9, priority: 2, flicker: true },
   'great-crucible': { source: 'fire', color: 'cinder', radius: 72, intensity: 0.8, priority: 2, flicker: true },
 };
+
+/** 079: one of the foundry's lights: colour (palette id), radius px, intensity, ± flicker share at `flickerHz`, priority. */
+export interface FoundryLight {
+  readonly color: string;
+  readonly radius: number;
+  readonly intensity: number;
+  readonly flicker: number;
+  readonly flickerHz: number;
+  readonly priority: number;
+  /** How far above its point it sits, px (a machine's fire over its feet, a torch's flame over its tile's middle). */
+  readonly rise: number;
+  /** Steady with Flashes off (the coil's lightning); a fire still flickers within ±15% (074.3). */
+  readonly steadyWithoutFlashes?: boolean;
+}
+
+/**
+ * 079: the foundry's lights (Medium and High, through 074's picker and budget). The room's own fires and the intake
+ * are priority 2, so its look stays steady however many forges run; working forge machines on screen fill the rest of
+ * the budget at priority 3, nearest the camera's centre first.
+ * - `walls`: by a prop's `light` key (src/data/props.ts): the two braziers (074's `fire.brazier`) and the four torches.
+ * - `intake`: the pipe's mouth, its radius 1.5 × the intake's glow (`GLOWS.intake`), breathing and swelling with it.
+ * - `machines`: by machine id, only while working and on screen.
+ */
+export const FOUNDRY_LIGHTS = {
+  tiers: LIT,
+  walls: {
+    brazier: { color: 'cinder', radius: 64, intensity: 0.9, flicker: 0.15, flickerHz: 7, priority: 2, rise: 0 },
+    torch: { color: 'cinder', radius: 48, intensity: 0.8, flicker: 0.15, flickerHz: 7, priority: 2, rise: 0 },
+  } as Readonly<Record<string, FoundryLight>>,
+  intake: { color: 'cyan-glow', radius: 1.5, intensity: 0.7, flicker: 0, flickerHz: 0, priority: 2, rise: 0 } as FoundryLight,
+  machines: {
+    smelter: { color: 'cinder', radius: 56, intensity: 0.9, flicker: 0.15, flickerHz: 7, priority: 3, rise: 10 },
+    kiln: { color: 'cinder', radius: 56, intensity: 0.9, flicker: 0.15, flickerHz: 7, priority: 3, rise: 9 },
+    'tempering-coil': { color: 'storm-glow', radius: 40, intensity: 0.7, flicker: 0.15, flickerHz: 11, priority: 3, rise: 12, steadyWithoutFlashes: true },
+  } as Readonly<Record<string, FoundryLight>>,
+} as const;
