@@ -46,4 +46,5 @@ describe('the cursor (021)', () => {
 });
 
 /** The arrow and shaft icons' data before 021, which it must not change. */
-const PINNED = { arrow: 'ab196929', flying: '277b7ec8', shaft: '375001b6' };
+// 078 redrew the arrow in flight in the pushed look (its spec's "Projectile bodies"); the icons stay as they were.
+const PINNED = { arrow: 'ab196929', flying: '9db71294', shaft: '375001b6' };

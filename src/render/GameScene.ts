@@ -21,11 +21,17 @@ import { GroundItemView } from './GroundItemView';
 import { HoverView } from './HoverView';
 import { HudView } from './HudView';
 import { NodeView } from './NodeView';
-import { bodyLook, PlayerView } from './PlayerView';
+import { PlayerView } from './PlayerView';
+import { wornRarity } from '../sim/worn';
 import { SiteMenus } from './SiteMenus';
 import { SiteView } from './SiteView';
 import { WakeView } from './WakeView';
 import { mergeEvents } from './eventLog';
+import { ParticleLedger } from './particleBudget';
+import { TrailView } from './fx/TrailView';
+import { ShotFxView } from './fx/ShotFxView';
+import { drawShots } from './fx/drawShots';
+import type { Quality } from '../data/settings';
 import { FeelView } from './FeelView';
 import { TutorialUi } from './TutorialUi';
 import { currentFit, type ScreenFit } from './scale';
@@ -48,6 +54,10 @@ import { RoomFollow } from './roomFollow';
 import { BlueprintUi } from './BlueprintUi';
 import { Occluders } from './occluders';
 import { SilhouetteView } from './SilhouetteView';
+import { WorldLayer } from './lighting/WorldLayer';
+import { LightingView } from './lighting/LightingView';
+import { WorldLife } from './world/WorldLife';
+import { settings } from './flow/settingsStore';
 
 const FIRST_PIECE = BUILD_BAR[0] ?? '';
 
@@ -65,6 +75,9 @@ export class GameScene extends Scene {
   roomViews?: RoomViews;
   playerView?: PlayerView;
   arrowView?: ArrowView;
+  /** 078: the trails and the shot effects. */
+  trails?: TrailView;
+  shotFx?: ShotFxView;
   hud?: HudView;
   enemyView?: EnemyView;
   groundItemView?: GroundItemView;
@@ -91,12 +104,17 @@ export class GameScene extends Scene {
   legibility?: Legibility;
   /** 070: the player's silhouette behind props. */
   silhouette?: SilhouetteView;
+  /** 074: the region's mood and light. 077: the overworld's decor, set pieces, motion and weather. */
+  lighting?: LightingView;
+  worldLife?: WorldLife;
   /** 044: the Sandbox panel (056, 057: the sandbox's controls, pop-outs there, and only there). */
   sandboxPanel?: SandboxPanel;
   /** The room on screen. It lags the player's room through a door's fade (roomFollow.ts). */
   private readonly room: RoomFollow;
   /** Events from every tick since the last draw; the sim clears its own each tick. */
   private readonly pending: SimEvents = createEvents();
+  /** 078: every live particle by kind (death motes, weather, effects), for the one particle budget. */
+  readonly ledger = new ParticleLedger();
   /** Set by the test hook: the real-time loop stops advancing the sim (the menu still opens and crafts). */
   manualStepping = false;
   /** The page's `data-game` is set (fix-playtest-ui). */
@@ -135,22 +153,29 @@ export class GameScene extends Scene {
     this.events.on(MENU_HOVER_EVENT, () => this.feel?.sound.play(SOUNDS.menuHover));
     // 070: the props that can hide the player, for its silhouette.
     const occluders = new Occluders();
-    this.roomViews = new RoomViews(this, occluders);
+    // 074: the ground and props the region's mood and lights reach.
+    const world = new WorldLayer();
+    this.worldLife = new WorldLife(this, { quality: () => this.lighting?.quality ?? 'medium', flashes: () => settings().flashes, particles: () => this.feel?.juice.particles.count ?? 0, weather: (n) => this.ledger.set('weather', n), strike: (x, y) => this.lighting?.weatherStrike(x, y) }, world, occluders);
+    this.roomViews = new RoomViews(this, occluders, world, this.worldLife);
     this.foundryView = new FoundryView(this, occluders);
-    this.nodeView = new NodeView(this, occluders);
+    this.nodeView = new NodeView(this, occluders, world, this.worldLife.sway);
     this.groundItemView = new GroundItemView(this);
     this.enemyView = new EnemyView(this);
     this.playerView = new PlayerView(this);
     this.silhouette = new SilhouetteView(this, occluders);
-    this.effects = new EffectsView(this, this.playerView.sprite, (atDark, ms, rgb) => this.sceneCameras?.fadeThrough(atDark, ms, rgb));
-    this.arrowView = new ArrowView(this);
+    this.effects = new EffectsView(this, this.playerView.sprite, (atDark, ms, rgb) => this.sceneCameras?.fadeThrough(atDark, ms, rgb), () => this.feel?.juice.particles, (id) => this.enemyView?.lastOf(id));
+    // 078: every trail ribbon (fed by ArrowView), and the shot effects (impacts, blasts, ends, sparks, marks).
+    this.trails = new TrailView(this);
+    this.arrowView = new ArrowView(this, this.trails);
+    this.shotFx = new ShotFxView(this, this.trails, () => this.feel?.juice.particles, (id) => this.enemyView?.lastOf(id));
     this.bombView = new BombView(this);
     this.hud = new HudView(this);
     this.buildView = new BuildView(this);
     this.blueprintUi = new BlueprintUi(this);
     this.tunnelView = new TunnelView(this);
     this.hover = new HoverView(this);
-    this.site = new SiteView(this, occluders);
+    this.site = new SiteView(this, occluders, world);
+    this.lighting = new LightingView(this, world);
     this.siteMenus = new SiteMenus(this);
     this.wake = new WakeView(this);
     this.tutorial = new TutorialUi(this);
@@ -159,7 +184,7 @@ export class GameScene extends Scene {
     this.sandboxPanel = new SandboxPanel(this);
     this.legibility = new Legibility(this, [this.hud, this.siteMenus, this.buildView]);
     this.cursorView = new CursorView(this);
-    this.feel = new FeelView(this, (id) => this.foundryView?.dropIn(id), (id, ms) => this.enemyView?.freeze(id, ms));
+    this.feel = new FeelView(this, (id) => this.foundryView?.dropIn(id), (id, ms) => this.enemyView?.freeze(id, ms), { ledger: this.ledger, quality: () => this.fxQuality });
     this.room.show(this.sim.roomId);
     this.draw();
 
@@ -175,6 +200,11 @@ export class GameScene extends Scene {
   }
 
   /** Matches both cameras to the backbuffer (016). Called on boot and whenever the window changes. */
+  /** 078: the Graphics quality effects draw at (the Canvas renderer runs as Low, 074). */
+  get fxQuality(): Quality {
+    return this.lighting?.quality ?? 'medium';
+  }
+
   applyFit(fit: ScreenFit): void {
     this.fit = fit;
     this.sceneCameras?.applyFit(fit);
@@ -240,6 +270,8 @@ export class GameScene extends Scene {
     // fix-build-inventory-respawn: a move key held through the death doesn't carry the player out of the foundry.
     if (this.sim.events.woke) this.controls?.holdMoveThroughWake();
     mergeEvents(this.pending, this.sim.events);
+    // 076: each tick's hits, for the enemies' staggers (weighed per tick, review 7).
+    this.enemyView?.react(this.sim.events.hits, this.sim.enemies);
     this.host.afterTick(this.sim);
   }
 
@@ -258,6 +290,7 @@ export class GameScene extends Scene {
     const shown = this.room.shownRoomId;
     this.feel?.update(sim, this.pending, shown, this.game.loop.delta);
     this.roomViews?.update(sim, this.pending, shown, this.game.loop.delta);
+    this.lighting?.update(sim, this.pending, shown, this.game.loop.delta);
     // 051: the fixed HUD boxes the waypoint arrow keeps clear of.
     const mapBox = this.roomViews?.mapBox;
     const hudBoxes = [...(this.hud?.fixedBoxes ?? []), ...(mapBox ? [mapBox] : [])];
@@ -268,22 +301,26 @@ export class GameScene extends Scene {
     this.hud?.update(sim, this.pending, this.game.loop.delta, this.sandboxPanel?.loadoutOut ?? 0);
     // 063: a stamp's pieces don't switch the bar's tunnel end.
     if (this.pending.stamps.length === 0) this.buildView?.placed(this.pending.places.map((p) => p.pieceId));
-    clearEvents(this.pending);
     const inFoundry = shown === FOUNDRY_ROOM;
     this.foundryView?.update(sim.foundry, inFoundry, sim.building);
     this.nodeView?.update(inRoom(sim.nodes, shown), sim.harvest, this.game.loop.delta);
-    this.groundItemView?.update(inRoom(sim.groundItems, shown), picked, sim.player, sim);
-    this.enemyView?.update(inRoom(sim.enemies, shown), sim);
+    const catches = this.lighting?.catches;
+    this.groundItemView?.update(inRoom(sim.groundItems, shown), picked, sim.player, sim, catches);
+    this.enemyView?.update(inRoom(sim.enemies, shown), sim, catches);
     // Through a door's fade the player is already in the next room; hide them until it shows.
-    this.playerView?.update(sim.player, sim.tube, sim.link, bodyLook(sim), sim.hasTube, shown === sim.roomId);
+    this.playerView?.update(sim.player, sim.tube, sim.link, wornRarity(sim), sim.hasTube, sim.tick, shown === sim.roomId);
     if (this.playerView) this.silhouette?.update(this.playerView.sprite, shown === sim.roomId && sim.player.dying === 0);
-    this.arrowView?.update(inRoom(sim.arrows, shown));
-    this.bombView?.update(inRoom(sim.bombs, shown));
+    if (this.playerView && shown === sim.roomId) catches?.offer(this.playerView.sprite, sim.player.x, sim.player.y, 'player', 0);
+    catches?.end();
+    // 078: the rounds and the shot effects, which need this frame's events, rounds and posed muzzle.
+    drawShots({ trails: this.trails, arrows: this.arrowView, bombs: this.bombView, shotFx: this.shotFx, player: this.playerView }, sim, this.pending, shown, this.fxQuality, this.game.loop.delta * this.tweens.timeScale);
     this.site?.update(sim, shown);
     this.siteMenus?.update(sim);
     this.menu?.update(sim);
     const topOf = (id: number) => this.foundryView?.topOf(id);
     drawPointerUi(this, sim, { controls: this.controls, topOf, wakeShown: () => this.wake?.isShown ?? false, shown, inFoundry });
     this.drawnTick = sim.tick;
+    // Every view has had this frame's events (078: the shot effects play last); the next frame's start empty.
+    clearEvents(this.pending);
   }
 }

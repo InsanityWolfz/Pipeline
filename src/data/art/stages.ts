@@ -160,9 +160,9 @@ function roundIcon(round: string): VectorSprite {
 }
 
 /** A Shard in flight (029), pointing right: a small ley crystal (054: bigger and brighter, so a star shot reads). */
+/** 078: a ley sliver lit from the top left with a pale rim; its streak is its trail (AMMO_FX), no longer baked in. */
 const SHARD: Shape[] = [
-  { ...line([-8, 0, -1, 0], 1.6, { id: 'cyan', alpha: 0.6 }), glow: { color: 'cyan', blur: 3 } },
-  path('M 5 0 L -0.4 -2.2 L -2.4 0 L -0.4 2.2 Z', { fill: 'cyan-glow', outline: true, glow: { color: 'cyan', blur: 4 } }),
+  path('M 5 0 L -0.4 -2.2 L -2.4 0 L -0.4 2.2 Z', { fill: { radial: [0.4, -0.5, 4], stops: [{ at: 0, color: 'cyan-glow' }, { at: 1, color: 'cyan' }] }, outline: true, glow: { color: 'cyan', blur: 4 }, rim: { color: 'snow', width: 0.5, offset: 0.45 } }),
   ellipse(1, -0.5, 1, 0.5, flat('snow')),
 ];
 

@@ -25,6 +25,8 @@ import { arenaLocked } from '../sim/arenaLock';
 import { playMines } from './mineFeel';
 import { playShots, WorkFeel } from './tierFeel';
 import { HollowsEnemyFeel } from './hollowsEnemyFeel';
+import type { ParticleLedger } from './particleBudget';
+import type { Quality } from '../data/settings';
 
 // Look and feel (014), driven by what the sim did since the last draw and how
 // its state moved on: sound, shake, hit-stop, particles, numbers and light.
@@ -61,12 +63,16 @@ export class FeelView {
   /** `dropIn` bounces a just-placed piece in the foundry view; `freeze` holds a struck enemy still (hit-stop). */
   private readonly scene: Scene;
 
-  constructor(scene: Scene, dropIn: (id: number) => void, freeze: (id: number, ms: number) => void) {
+  /** 078: `fx` is the scene's particle ledger and the Graphics quality the particles scale by. */
+  private readonly ledger: ParticleLedger;
+
+  constructor(scene: Scene, dropIn: (id: number) => void, freeze: (id: number, ms: number) => void, fx: { ledger: ParticleLedger; quality: () => Quality }) {
     this.dropIn = dropIn;
     this.freeze = freeze;
     this.scene = scene;
+    this.ledger = fx.ledger;
     this.sound = new SoundView(scene);
-    this.juice = new JuiceView(scene);
+    this.juice = new JuiceView(scene, fx.ledger, fx.quality);
     this.ambient = new AmbientView(scene);
   }
 
@@ -87,6 +93,8 @@ export class FeelView {
     const fixed: GlowSpot[] = room.crystal ? [{ ...tileCentre(room.crystal.tx, room.crystal.ty), ...GLOWS.crystal }] : [];
     this.ambient.show(room, fixed);
     this.juice.particles.clear();
+    // 078: 014's room motes count under the weather's share indoors; the overworld's weather reports its own.
+    this.ledger.set('weather', this.ambient.moteCount);
     this.sound.ambience(shown);
     this.modes.clear();
   }
@@ -131,9 +139,8 @@ export class FeelView {
       } else if (h.target === 'enemy') {
         if (!h.melee) s.play(SOUNDS.hit);
         s.play(SOUNDS.enemyHurt, SOUND_LEVELS.under);
-        // 060: a fire hit throws rising sparks, as a cold one throws frost.
-        // 064: a lightning hit spits pale cyan sparks.
-        j.burst(h.damageType === 'cold' ? 'hitCold' : h.damageType === 'fire' ? 'hitFire' : h.damageType === 'lightning' ? 'hitLightning' : 'hitPhysical', h.x, h.y);
+        // 078: a round's hit plays its impact (ShotFxView, by the round that made it); a punch keeps 014's burst.
+        if (h.melee) j.burst('hitPhysical', h.x, h.y);
         j.damageNumber(h.damage, h.x, h.y, false);
         this.freeze(h.id, HIT_STOP_MS);
       } else {
@@ -143,16 +150,16 @@ export class FeelView {
         j.shake('medium');
       }
     }
-    for (const d of ev.deaths) {
+    // 076: a death's motes rise off the body as it dissolves (DissolveView); its sound plays here, once each.
+    ev.deaths.forEach(() => {
       s.play(SOUNDS.enemyDeath);
-      j.burst('deathMotes', d.x, d.y);
       j.shake('small');
-    }
-    for (const b of ev.bursts) {
+    });
+    // 078: a burst's blast (debris, smoke, shock ring, scorch) is ShotFxView's; its sound and shake request stay.
+    ev.bursts.forEach(() => {
       s.play(SOUNDS.burst);
-      j.burst('embers', b.x, b.y);
       j.shake('medium');
-    }
+    });
     if (ev.ko) {
       s.play(SOUNDS.playerKo);
       j.shake('big');

@@ -9,6 +9,7 @@ import { LANDMARK_LIST } from '../../data/landmarks';
 import type { TileRect } from '../../data/tiles';
 import { bearingOf, fromCentre, WORLD_SHAPE } from '../../data/worldShape';
 import { inkCss } from '../vector/draw';
+import { softPool } from './groundBlend';
 
 // The Emberworks' ground (060), painted into the overworld's ground chunks over the grass: warm ash in slabs with
 // cinder specks, rust glow pooling, cracks and now and then a glinting cyan vein; ash terraces as raised cut steps;
@@ -136,7 +137,8 @@ export function paintEmberworks(
     }
     fill(c, G.base, 1, () => c.rect(x - 0.5, y - 0.5, T + 1, T + 1));
     if (hash % G.patchEvery === 0) fill(c, G.patch, G.patchAlpha, () => c.roundRect(x + 2 + ((hash >>> 3) % 6), y + 3 + ((hash >>> 5) % 6), 16 + ((hash >>> 9) % 10), 11 + ((hash >>> 11) % 6), 3));
-    if (hash % G.glowEvery === 2) fill(c, G.glow, G.glowAlpha, () => c.ellipse(x + 16, y + 18, 13, 7, 0, 0, Math.PI * 2));
+    // 074: the glow pooling fades out at its edge (a hard-edged pool read as a dot under the dark mood).
+    if (hash % G.glowEvery === 2) softPool(c, x + 16, y + 18, 13, 7, G.glow, G.glowAlpha);
     if (hash % G.crackEvery === 1) line(c, [x + 4, y + 8 + (hash % 9), x + 14, y + 12, x + 22 + (hash % 6), y + 9], 0.8, G.crack, 0.45);
     if (hash % G.speckEvery === 0) fill(c, G.speck, G.speckAlpha, () => c.ellipse(x + 4 + ((hash >>> 6) % 24), y + 4 + ((hash >>> 10) % 24), 0.9, 0.9, 0, 0, Math.PI * 2));
     if (hash % G.veinEvery === 3) {

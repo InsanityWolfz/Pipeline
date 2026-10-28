@@ -11,6 +11,9 @@ import { nodeFrame } from './nodeStages';
 import { addVector, showFrame } from './vector/textures';
 import { PLAYER_SILHOUETTE } from '../data/silhouette';
 import type { Occluders } from './occluders';
+import type { WorldLayer } from './lighting/WorldLayer';
+import { SWAY } from '../data/ambient';
+import type { SwayStepper } from './world/sway';
 
 interface NodeSprites {
   image: GameObjects.Image;
@@ -18,6 +21,8 @@ interface NodeSprites {
   /** 051 (B.4): the pale outline behind a harvestable node, and its glint. */
   glow: GameObjects.Image;
   sparkle: GameObjects.Image;
+  /** 077: a tree node's place in the sway, let go when it goes. */
+  unsway?: () => void;
 }
 
 // Draws gathering nodes (018) at their use or regrow stage, sorted by the bottom
@@ -42,8 +47,14 @@ export class NodeView {
 
   private readonly occluders: Occluders | undefined;
 
-  /** `occluders` (070): trees can hide the player. */
-  constructor(scene: Scene, occluders?: Occluders) {
+  private readonly world: WorldLayer | undefined;
+
+  private readonly sway: SwayStepper | undefined;
+
+  /** `occluders` (070): trees can hide the player. `world` (074): nodes take the region's mood and lights. `sway` (077): tree nodes sway like trees. */
+  constructor(scene: Scene, occluders?: Occluders, world?: WorldLayer, sway?: SwayStepper) {
+    this.sway = sway;
+    this.world = world;
     this.scene = scene;
     this.occluders = occluders;
     this.bar = scene.add.graphics().setDepth(DEPTHS.worldUi);
@@ -70,6 +81,7 @@ export class NodeView {
     for (const [id, v] of this.sprites) {
       if (live.has(id)) continue;
       for (const o of [v.image, v.glow, v.sparkle, v.dapple]) o?.destroy();
+      v.unsway?.();
       this.sprites.delete(id);
     }
     this.drawBar(nodes, harvest);
@@ -78,12 +90,18 @@ export class NodeView {
   private create(n: NodeState, frame: string, bottom: number): NodeSprites {
     const image = addVector(this.scene, n.x, bottom, frame);
     if (PLAYER_SILHOUETTE.nodes.includes(n.nodeId)) this.occluders?.add(image);
+    this.world?.addProp(image);
     const glow = addVector(this.scene, n.x, bottom, frame).setTint(colorOf(NODE_GLOW.color)).setTintMode(TintModes.FILL);
     const sparkle = addVector(this.scene, n.x, bottom, SPRITES.nodeSparkle).setVisible(false);
     const d = NODE_DAPPLE;
     const dapple =
       n.nodeId === d.nodeId ? this.scene.add.ellipse(n.x, bottom - d.rise, d.rx * 2, d.ry * 2, colorOf(d.color), d.alpha).setDepth(DEPTHS.shadow) : undefined;
-    const view = dapple ? { image, glow, sparkle, dapple } : { image, glow, sparkle };
+    // 077: a tree node sways as the grove's trees do, its glow with it.
+    const unsway =
+      SWAY.nodes.includes(n.nodeId) && this.sway
+        ? this.sway.addFixed({ target: { setAngle: (a: number) => [image.setAngle(a), glow.setAngle(a)] }, x: n.x, y: bottom, kind: 'tree', period: SWAY.periodMs.tree[0] + (n.id % SWAY.nodeCycle.steps) * SWAY.nodeCycle.stepMs, phase: (n.id % SWAY.nodeCycle.phases) / SWAY.nodeCycle.phases })
+        : undefined;
+    const view: NodeSprites = { image, glow, sparkle, ...(dapple ? { dapple } : {}), ...(unsway ? { unsway } : {}) };
     this.sprites.set(n.id, view);
     return view;
   }

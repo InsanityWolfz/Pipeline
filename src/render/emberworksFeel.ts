@@ -42,7 +42,7 @@ function playForge(ev: SimEvents, j: JuiceView, s: SoundView): void {
   }
   for (const v of ev.vents) {
     s.play(SOUNDS.ventHiss);
-    j.burst('embers', v.x, v.y - 40);
+    j.burst('embers', v.x, v.y - 40, undefined, 'cue');
     j.shake('medium');
   }
   for (const sl of ev.slams) {

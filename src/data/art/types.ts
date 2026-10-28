@@ -35,6 +35,11 @@ export interface ShapeStyle {
   readonly glow?: { readonly color: string; readonly blur: number };
   /** Opacity of the whole shape, 0..1. */
   readonly alpha?: number;
+  /**
+   * 075: a static rim light from the top left: render clips to the shape and strokes its own path shifted down and
+   * right by `offset`, so a band of `color`, `width` wide, shows along its top and left edges only. Shape units.
+   */
+  readonly rim?: { readonly color: Ink; readonly width: number; readonly offset: number };
 }
 
 export type Shape = ShapeStyle &
@@ -84,6 +89,7 @@ export function inksOf(shape: Shape): string[] {
   if (shape.fill) paint(shape.fill);
   if (shape.stroke) ink(shape.stroke.color);
   if (shape.glow) ids.push(shape.glow.color);
+  if (shape.rim) ink(shape.rim.color);
   if (shape.kind === 'line') ink(shape.color);
   return ids;
 }

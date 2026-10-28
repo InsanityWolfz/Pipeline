@@ -11,9 +11,13 @@ import { paintEmberworks } from './emberworksGround';
 import { paintStormcrown } from './stormcrownGround';
 import { isPlateau } from './plateau';
 import { pathStrokes } from './pathStrokes';
-import { regionAt } from '../../data/hollows';
+import { paintBlend, paintPatches } from './groundBlend';
+import { paintCircleEdge } from './circleEdge';
+import { paintPathWear } from './pathWear';
+import { paintScatter } from '../world/scatter';
+import { inHollows, regionAt } from '../../data/hollows';
 import { COURTYARD } from '../../data/roads';
-import { fromCentre } from '../../data/worldShape';
+import { fromCentre, WORLD_SHAPE } from '../../data/worldShape';
 
 // The overworld's ground (017), drawn once into chunk textures: grass with lighter
 // and darker patches, sun dapple under the groves, worn paving in the ruins, dirt
@@ -91,7 +95,7 @@ function frost(c: CanvasRenderingContext2D, each: (fn: (tx: number, ty: number, 
 }
 
 /** Draws the ground under the world rectangle (x0, y0, w, h), with tiles a margin around it so blobs cross chunk edges seamlessly. */
-export function drawGround(c: CanvasRenderingContext2D, room: Room, x0: number, y0: number, w: number, h: number, pxPerUnit: number): void {
+export function drawGround(c: CanvasRenderingContext2D, room: Room, x0: number, y0: number, w: number, h: number, pxPerUnit: number, blend = true, scatter = true): void {
   const symbol = (tx: number, ty: number): string | undefined => room.rows[ty]?.[tx];
   const margin = 3;
   const tx0 = Math.max(0, Math.floor(x0 / T) - margin);
@@ -108,7 +112,8 @@ export function drawGround(c: CanvasRenderingContext2D, room: Room, x0: number, 
   each((tx, ty, hash) => {
     const [x, y] = centre({ tx, ty });
     if (symbol(tx, ty) === TILE.tree) ellipse(c, x, y + 4, 22, 14, GROUND.forest, 0.5);
-    else if (hash % GROUND.patchEvery === 0) {
+    // 074: none by Region 1's edge, whose band is repainted along the circle (circleEdge.ts) and would cut a patch square.
+    else if (hash % GROUND.patchEvery === 0 && (!blend || Math.abs(fromCentre(tx, ty) - WORLD_SHAPE.region1) > 2.5)) {
       const r = GROUND.patchRadius[0] + (hash >>> 8) % (GROUND.patchRadius[1] - GROUND.patchRadius[0]);
       ellipse(c, x + ((hash >>> 4) % 24) - 12, y, r, r * 0.55, (hash >>> 12) % 2 ? GROUND.patchDark : GROUND.patchLight, 0.6);
     }
@@ -119,6 +124,14 @@ export function drawGround(c: CanvasRenderingContext2D, room: Room, x0: number, 
   paintEmberworks(c, each, symbol, (tx, ty) => isPlateau(room, tx, ty));
   // 064: the Stormcrown's slate past the Emberworks' cliff edge.
   paintStormcrown(c, each, symbol, (tx, ty) => isPlateau(room, tx, ty));
+  // 074: soft edges between grounds, broad patches and cracks with a lit lip, under the paths, ponds and ley lines.
+  const plateau = (tx: number, ty: number) => isPlateau(room, tx, ty);
+  const paved = (tx: number, ty: number) => inRect(OVERWORLD.shrine.area, tx, ty) || fromCentre(tx, ty) <= COURTYARD.radius;
+  if (blend) {
+    paintCircleEdge(c, x0, y0, w, h, inHollows);
+    paintPatches(c, x0, y0, w, h, symbol, plateau);
+    paintBlend(c, each, symbol, plateau, paved);
+  }
   // Sun dapple where the groves meet open grass.
   each((tx, ty, hash) => {
     if (symbol(tx, ty) !== TILE.floor || hash % GROUND.dappleEvery !== 0) return;
@@ -128,7 +141,6 @@ export function drawGround(c: CanvasRenderingContext2D, room: Room, x0: number, 
     ellipse(c, x, y, 18, 7, GROUND.sun, 0.55);
   });
   // Worn paving: the shrine site's floor and the courtyard round the stairs (053: the roads' hub, a circle).
-  const paved = (tx: number, ty: number) => inRect(OVERWORLD.shrine.area, tx, ty) || fromCentre(tx, ty) <= COURTYARD.radius;
   each((tx, ty, hash) => {
     if (!paved(tx, ty) || hash % GROUND.pavingGapEvery === 0) return;
     const s = symbol(tx, ty);
@@ -144,12 +156,16 @@ export function drawGround(c: CanvasRenderingContext2D, room: Room, x0: number, 
   // Dirt paths, two tiles wide along their polylines: every edge, then every road's dirt over them (059: joins read
   // as one shape).
   for (const s of pathStrokes(room.terrain?.paths ?? [])) polyline(c, s.pts, s.width, s.color);
+  // 074: worn: a trodden centre, the ground creeping in at the edges, pebbles.
+  if (blend) paintPathWear(c, room.terrain?.paths ?? [], { x0, y0, w, h }, symbol, plateau);
   each((tx, ty, hash) => {
     if (symbol(tx, ty) !== TILE.path || hash % 3 !== 0) return;
     const [x, y] = centre({ tx, ty });
     ellipse(c, x + ((hash >>> 5) % 20) - 10, y + ((hash >>> 9) % 14) - 7, 2.2, 1.4, GROUND.pathFleck);
   });
   frost(c, each);
+  // 077: the regions' ground scatter, over the ground and its blending, under the landmarks' ground, ponds and ley seams.
+  if (scatter) paintScatter(c, room, tx0, ty0, tx1, ty1, pxPerUnit);
   paintLandmarks(c, each, symbol);
   // Ponds: a sandy rim, the shallows, deep water, and the light on it.
   for (const p of room.terrain?.ponds ?? []) {

@@ -1,4 +1,5 @@
 import { BlendModes, type GameObjects, type Scene } from 'phaser';
+import type { WorldLayer } from './lighting/WorldLayer';
 import { DEPTHS } from '../data/assets';
 import { TILE_SIZE } from '../data/config';
 import { EMBERWORKS } from '../data/emberworks';
@@ -56,10 +57,12 @@ export class EmberworksView {
   private time = 0;
   private shownState: EmberworksShown = NO_EMBERWORKS_SHOWN;
 
-  constructor(scene: Scene) {
+  /** `world` (074 review): the altar takes the region's mood and lights. */
+  constructor(scene: Scene, world?: WorldLayer) {
     this.curtain = new RingCurtain(scene);
     const a = ANVIL_HALL.altar;
     this.altar = addVector(scene, (a.tx + 0.5) * T, (a.ty + 1) * T, HOLLOWS_SPRITES.altar.dim).setDepth((a.ty + 1) * T).setVisible(false);
+    world?.addProp(this.altar);
     this.summon = scene.add.graphics().setDepth(DEPTHS.groundFx).setBlendMode(BlendModes.ADD).setVisible(false);
     this.forge = new ForgewrightView(scene);
   }

@@ -1,3 +1,4 @@
+import { updateSettings } from './flow/settingsStore';
 import { heldPart, NO_COMMAND, type Command } from '../sim/input';
 import { withUi } from './menuRequests';
 import { createSim, type SimState } from '../sim/state';
@@ -70,6 +71,26 @@ export function installTestHook(flow: FlowScene): void {
     tweenSpeed: (scale) => {
       live().tweens.timeScale = scale;
     },
+    setLook: (look) => updateSettings(look),
+    lightingOff: (off) => {
+      const l = live().lighting;
+      if (l) l.off = off;
+    },
+    worldLifeOff: (off) => live().worldLife?.setOff(off),
+    loadEntrances: act((sim, _scene, rounds: (string | null)[]) => {
+      sim.link.entrances.forEach((e, i) => {
+        const round = rounds[i] ?? null;
+        e.open = true;
+        e.ammoId = round;
+        e.count = round === null ? 0 : 999;
+      });
+    }),
+    fxOff: (off) => {
+      const scene = live();
+      if (scene.shotFx) scene.shotFx.off = off;
+      if (off) scene.shotFx?.clear();
+    },
+    strikeWeather: () => live().worldLife?.strikeNow(),
     claim: act((sim, _scene, site: string) => claim(sim, site)),
     completeObjectives: act((sim, _scene, count: number) => {
       sim.objectives = sim.objectives.map((done, i) => done || i < count);
@@ -101,6 +122,11 @@ export function installTestHook(flow: FlowScene): void {
     summaryRows: () => {
       const scene = live();
       return scene.legibility?.summaryRows(scene.sim) ?? [];
+    },
+    wanderer: () => flow.live?.playerView?.pixels() ?? null,
+    wandererClock: (ms: number | null) => {
+      const view = live().playerView;
+      if (view) view.pinnedMs = ms;
     },
     passable: () => {
       const sim = live().sim;

@@ -145,8 +145,8 @@ export type { EnemyAnim, EnemyAnims, ExtraPose } from './enemyAnims';
 export const ENEMY_ANIMS: Readonly<Record<string, EnemyAnims>> = {
   husk: enemyAnims('husk'),
   wisp: enemyAnims('wisp'),
-  warden: enemyAnims('warden', true),
-  bulwark: enemyAnims('bulwark', true, ['turn', 'lob', 'throw', 'block', 'roar', 'brace', 'stomp']),
+  warden: enemyAnims('warden', true, [], 1, true),
+  bulwark: enemyAnims('bulwark', true, ['turn', 'lob', 'throw', 'block', 'roar', 'brace', 'stomp'], 1, true),
   ...HOLLOWS_ENEMY_ANIMS,
   ...FORGE_ANIMS,
   ...CONDUCTOR_ANIMS,
@@ -202,9 +202,6 @@ export const ENEMY_FX = {
    * `color`, with the shield icon (`w` x `h` px) `gap` px left of the bar, centred on it, `depth` over the world's UI.
    */
   immuneBar: { color: 'water', icon: { w: 7, h: 8, gap: 1, depth: 0.5 } },
-  /** A corpse lingers this long after its death animation, then fades over `corpseFadeMs`. */
-  corpseLingerMs: 600,
-  corpseFadeMs: 600,
 } as const;
 
 /**
@@ -244,8 +241,25 @@ export const KO_FADE_MS = 250;
 /** A ground item's sprite bottom sits this far below its ground point, so it rests on its shadow, px. */
 export const GROUND_ITEM_LIFT = 3;
 
+export { AMBIENT_FRAMES, PLANT_FRAMES, SCATTER_FRAMES, SET_PIECE_FRAMES, VARIANT_FRAMES, WEATHER_TEXTURES } from './worldArtAssets';
+
 /** Textures drawn at runtime (014): the soft glow and the vignette; the low-HP edges (031), white to be tinted. */
-export const FX_TEXTURES = { glow: 'fx-glow', vignette: 'fx-vignette', lowHp: 'fx-low-hp' } as const;
+export const FX_TEXTURES = { glow: 'fx-glow', vignette: 'fx-vignette', lowHp: 'fx-low-hp', fog: 'fx-fog', lightPool: 'fx-light-pool' } as const;
+
+/** 078: the shot effects' textures, white, drawn at boot to be tinted: a mark's soft blot, a splash's ring, a frost rime, a shock ring, a flash's ring, tick and star, a particle's square. */
+export const SHOT_FX_TEXTURES = {
+  blot: 'fx-shot-blot',
+  splash: 'fx-shot-splash',
+  rime: 'fx-shot-rime',
+  shock: 'fx-shot-shock',
+  ring: 'fx-shot-ring',
+  tick: 'fx-shot-tick',
+  star: 'fx-shot-star',
+  /** A particle: a small crisp disc, a soft puff for smoke and mist, and 076's square death mote. */
+  dot: 'fx-shot-dot',
+  puff: 'fx-shot-puff',
+  square: 'fx-shot-square',
+} as const;
 
 /** Render depths. World sprites sort by the bottom of their footprint (px); these sit around that. */
 export const DEPTHS = {
@@ -255,6 +269,10 @@ export const DEPTHS = {
   shadow: 0,
   /** Ground decals like the swipe telegraph, above shadows. */
   groundFx: 0.5,
+  /** 078: the player's shots' ground marks (scorch, rime, ley splash, shock rings): over the fog, under the trails and telegraphs. */
+  shotMark: 0.35,
+  /** 078: every trail ribbon and everything a shot leaves lingering (smoke, mist, flakes, embers, motes): under the telegraphs and anything standing. */
+  shotTrail: 0.45,
   /** Nudge that puts a tutorial seal just in front of its door. */
   tubeNudge: 0.01,
   /** Nudge that puts an overlay (a Husk's resin, the Warden's core, the ice on a frozen enemy) just in front of the enemy it's on. */
@@ -275,6 +293,14 @@ export const DEPTHS = {
   supplyLine: 99_990,
   /** Soft ley light pooled on the floor (014), over shadows and under anything standing. */
   glow: 0.25,
+  /** 074: Medium's light pools on the ground, under the glows. */
+  lightPool: 0.2,
+  /** 074: the region's fog, hugging the ground: over the glows, under the ground decals (telegraphs) and anything standing. */
+  fog: 0.3,
+  /** 077: plants, flat in depth: over the ground and glows, under the fog, telegraphs, items and anything standing. */
+  decor: 0.27,
+  /** 077: the weather, over everything standing (and the silhouette), under the supply line's motes, bars, names and the HUD. */
+  weather: 98_500,
   /** 070: the player's silhouette while hidden behind a prop, over every prop and under the world's UI and motes. */
   silhouette: 98_000,
   /** Drifting motes, over the world. */

@@ -198,8 +198,6 @@ export const READOUT_LAYOUT = {
 export const MENU_MAX_ROWS = 10;
 export const MENU_COLUMN_GAP = 8;
 
-/** Palette tints on the player's body for the worn body piece's weight (010); Featherplate (036) shows no slow tint. */
-export const ARMOR_TINTS = { light: 'leaf-light', heavy: 'rock', feather: 'leaf-light' } as const;
 
 /**
  * World names on mouse-over (015). Things without a tile (enemies, nodes, ground
@@ -217,6 +215,8 @@ export const HOVER_NAME = {
   /** A ley line (018) hovers within this many px of its seam, and names itself this far above the cursor. */
   leyLine: 8,
   leyLineRise: 14,
+  /** 077: a set piece is hovered over the middle share of its drawn box's width (its edges are often air). */
+  setPieceWidth: 0.8,
   /** The description line (018) sits this far under the name, px. */
   descriptionGap: 2,
   gap: 4,

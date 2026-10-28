@@ -30,7 +30,7 @@ interface Rig {
 }
 
 /** A bellows' look: broken, patching over its last ticks, else whole. */
-const lookOf = (patch: number): ForgeShown['bellows'][number] => (patch <= 0 ? 'whole' : patch <= L.bellows.patchingTicks ? 'patching' : 'broken');
+export const bellowsLook = (patch: number): ForgeShown['bellows'][number] => (patch <= 0 ? 'whole' : patch <= L.bellows.patchingTicks ? 'patching' : 'broken');
 
 // The Forgewright's pieces beyond its rig (060): its two bellows standing off its sides, square to its facing (whole,
 // broken and slack, or stitched with glowing brass as they patch), joined to it by brass hoses, each with a small health
@@ -92,7 +92,7 @@ export class ForgewrightView {
     hoses.setDepth(bottom - 1);
     const looks = e.bellows.map((b, i) => {
       const at = bellowsPoint(e, def, i);
-      const look = lookOf(b.patch);
+      const look = bellowsLook(b.patch);
       const sprite = rig.bellows[i];
       if (sprite) {
         const frame = FORGE_SPRITES.bellows[look];
