@@ -3,6 +3,8 @@ status: approved
 
 Approved by Shaun in chat, 2026-10-27, with the whole art pass (074–081); its plan is pre-approved.
 
+Plan pre-approved by Shaun in chat, 2026-10-27. Plan: docs/plans/079-foundry-mood.md.
+
 Drafted from Shaun's art-pass interview (docs/brainstorm/2026-10-27-art-interview.md, answers 4, 5, 15, 17, 22, 27 and 28) and his calls on 079 that day. This is art spec 6 of 8, built in order after 074–078. Shaun asked for no sample pages first ("Just build it"); he reviews the result at the playtest.
 
 ## Goal
