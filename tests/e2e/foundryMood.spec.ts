@@ -75,7 +75,8 @@ test('the foundry’s mood and lights on each tier', async ({ page }) => {
 
 test('heat follows each forge’s status and the screen; the coil gets light and sparks, no heat', async ({ page }) => {
   test.setTimeout(240_000);
-  const ids = await forgeLine(page, { layout: 'showcase' });
+  // Ten crafts' supply a forge, so the Smelter runs dry soon.
+  const ids = await forgeLine(page, { layout: 'showcase', per: 10 });
   const [smelter, kiln] = ids.forges as [number, number];
   await standAt(page, 12, 8);
   await allWorking(page, [smelter, kiln, ids.coil]);
@@ -96,7 +97,13 @@ test('heat follows each forge’s status and the screen; the coil gets light and
   await expect.poll(async () => (await runFrames(page, 2, 2)).length && (await lighting(page)).placed.some((p) => p.source === 'forge' && p.color === 'storm-glow')).toBe(true);
   // Starved: the Smelter runs its hoppers dry; within a frame of the change its heat and light go.
   await expect.poll(async () => {
-    await page.evaluate(() => window.__GAME__?.step(30));
+    await page.evaluate((id) => {
+      const g = window.__GAME__;
+      for (let t = 0; t < 600; t++) {
+        const p = g?.step(1).foundry.pieces.find((x) => x.id === id);
+        if (p?.kind !== 'machine' || p.status !== 'working') return;
+      }
+    }, smelter);
     return statusOf(page, smelter);
   }, { timeout: 120_000 }).not.toBe('working');
   const after = (await runFrames(page, 1, 0)).at(-1) as FoundryMoodShown;
