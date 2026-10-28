@@ -32,6 +32,8 @@ export class Particles {
   private readonly scene: Scene;
   private readonly live: Particle[] = [];
   private motes = 0;
+  /** 076: death motes thrown since boot, for tests (a peak count misses waves a slow runner lets expire). */
+  private thrown = 0;
 
   constructor(scene: Scene) {
     this.scene = scene;
@@ -72,12 +74,18 @@ export class Particles {
       if (o.add) rect.setBlendMode(BlendModes.ADD);
       this.live.push({ rect, x: m.x, y: m.y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed, gravity: o.gravity, age: 0, life: between(o.lifeMs), mote: true });
       this.motes += 1;
+      this.thrown += 1;
     }
   }
 
   /** 076: death motes flying now. */
   get deathMotes(): number {
     return this.motes;
+  }
+
+  /** 076: death motes thrown since boot. */
+  get motesThrown(): number {
+    return this.thrown;
   }
 
   update(deltaMs: number): void {

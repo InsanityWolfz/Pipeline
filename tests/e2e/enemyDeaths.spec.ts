@@ -99,11 +99,14 @@ test('Low throws half the motes of Medium, High half again', async ({ page }) =>
   const thrown: Record<string, number> = {};
   for (const q of ['low', 'medium', 'high'] as const) {
     await sandbox(page, q);
-    // Slowed on the tween clock, every wave of the one death is still flying when the last is thrown, however slowly
-    // a loaded runner draws High.
+    // Slowed on the tween clock, so the death's waves are thrown over several seconds of real time and each frame's
+    // jump stays short, however slowly a loaded runner draws High.
     await page.evaluate(() => window.__GAME__?.tweenSpeed(0.1));
+    const before = await page.evaluate(() => window.__GAME__?.ui().particles.thrown ?? 0);
     await spawnAndKill(page, ['husk'], [[60, 0]]);
-    thrown[q] = (await watch(page, 60_000, true)).motes;
+    await watch(page, 60_000, true);
+    // Counted as thrown, not as flying at once: a runner that stalls can let the first wave expire before the last.
+    thrown[q] = (await page.evaluate(() => window.__GAME__?.ui().particles.thrown ?? 0)) - before;
   }
   expect(thrown).toEqual({ low: DEATH_MOTES.count.medium / 2, medium: DEATH_MOTES.count.medium, high: DEATH_MOTES.count.medium * 1.5 });
 });
