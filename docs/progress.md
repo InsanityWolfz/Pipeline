@@ -15,6 +15,7 @@ Newest entry first. Entries before 050 are in docs/progress-archive.md.
 
 **Notes:**
 - The region review shots show today's daylight, not 074's moods; retake them on whichever of 074 and 075 merges second (075.1).
+- After Shaun's first look (2026-10-28: "the walking animation is abysmal"): the walk ran at 12.2 steps a second with a 1 px hop and squash on every step; now 3.75 steps a second, a 0.4 px bob, strafing no faster, guarded by tests; a rule in .claude/rules/render.md and the reviewer's checklist now has motion judged in motion.
 - Shots spawn 12 px from the feet box's centre, while the drawn muzzle sits about 26 px forward and 19 px up; older than 075, more visible with the flash (075.10).
 
 ## 2026-10-26: 070 Handling and clarity
