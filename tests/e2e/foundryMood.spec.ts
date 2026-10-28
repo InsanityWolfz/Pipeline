@@ -234,6 +234,8 @@ test('bounded work: 60 pieces and no forge working costs the effects nothing', a
 
 /** The columns line built from one fixed tick, run 1,800 ticks: its getState(). */
 async function runLine(page: Page, look: Quality | 'off'): Promise<string> {
+  // The mouse stays where the page last left it across reloads, and the sim aims at it: hold it, and aim, the same each run.
+  await page.mouse.move(640, 360);
   await forgeLine(page, { units: 4, per: 30, intake: true, start: 900 });
   await page.evaluate((l) => {
     const g = window.__GAME__;
@@ -245,7 +247,7 @@ async function runLine(page: Page, look: Quality | 'off'): Promise<string> {
     const g = window.__GAME__;
     if (!g) throw new Error('no game');
     for (let i = 0; i < 1800; i += 6) {
-      g.step(6);
+      g.step(6, { aimX: 0, aimY: 0 });
       await new Promise((r) => requestAnimationFrame(r));
     }
     return JSON.stringify(g.getState());
