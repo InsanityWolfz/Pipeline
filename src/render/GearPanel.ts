@@ -12,6 +12,7 @@ import { drawTablet } from './tablet';
 import { TextLine } from './textLine';
 import type { TipHit } from './tipTypes';
 import { addVector } from './vector/textures';
+import { MenuMotion } from './MenuMotion';
 import { benchGuide, type BenchGuide } from './benchGuide';
 import { TUTORIAL_SPRITES } from '../data/foundryAssets';
 import { GUIDED_LOOK } from '../data/hudLayout';
@@ -71,6 +72,8 @@ export class GearPanel {
   isOpen = false;
   tab: GearSlot = 'body';
   private first = 0;
+  /** 081: the open's fade and rise. */
+  private readonly motion: MenuMotion;
 
   constructor(scene: Scene) {
     this.scene = scene;
@@ -88,10 +91,14 @@ export class GearPanel {
     this.empty = text('body').setFill(P.colors.dim);
     this.totals = [text('body'), text('body')];
     this.arrow = image(TUTORIAL_SPRITES.marker, d + 3).setOrigin(0.5, 1).setRotation(-Math.PI / 2);
+    const cells = this.cells.flatMap((c) => [c.frame, c.icon, c.slot, c.armor, c.name]);
+    const rows = this.rows.flatMap((r) => [r.frame, r.icon, r.name, r.detail, r.affixes, r.rule]);
+    this.motion = new MenuMotion(scene, 'gear', d - 1).adopt([this.g, this.arrow, this.title, this.button, this.empty, ...this.tabs, ...this.totals, ...cells, ...rows]);
     this.setVisible(false);
   }
 
   open(): void {
+    if (!this.isOpen) this.motion.show();
     this.isOpen = true;
     this.tab = 'body';
     this.first = 0;
@@ -103,6 +110,7 @@ export class GearPanel {
   }
 
   close(): void {
+    this.motion.hide();
     this.isOpen = false;
     this.shown = null;
     this.setVisible(false);

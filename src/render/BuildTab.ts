@@ -62,6 +62,11 @@ export class BuildTab {
     }
   }
 
+  /** 081: its parts, for the T panel's motion (the chips' labels come and go with their chips). */
+  get parts(): (GameObjects.Graphics | GameObjects.Image | TextLine)[] {
+    return [this.g, ...this.headers, ...this.rows.flatMap((r) => [r.icon, r.name, r.damage, r.rate, r.sources])];
+  }
+
   /** The row under a view point lights (020). */
   pointAt(x: number, y: number): void {
     this.hovered = this.shown ? (this.layout.rows.find((r) => inBox(r.box, x, y))?.round ?? null) : null;

@@ -11,6 +11,8 @@ import type { GameScene } from './GameScene';
 import { NO_BLUEPRINT_UI } from './BlueprintUi';
 import type { GameUiState } from './testHook';
 import { NO_LIGHTING } from './lighting/LightingView';
+import type { GameObjects } from 'phaser';
+import { MENU_MOTION_SHOWN } from './menuCurves';
 
 // What a game scene shows, for the test hook's ui() (split from GameScene in 042). Every view may be missing (before
 // the scene is created, or on the title's blank), so each falls back to its empty value.
@@ -66,5 +68,14 @@ export function gameUi(g: GameScene): GameUiState {
     sandbox: g.sim.sandbox ? (g.sandboxPanel?.state ?? { open: false, rows: [], keys: [], boxes: [], tabs: [], sliding: false }) : null,
     sandboxDrawn: g.sandboxPanel?.drawn ?? false,
     lighting: g.lighting?.shown ?? NO_LIGHTING,
+    menuMotion: { ...MENU_MOTION_SHOWN },
+    hudDraws: { bossBar: 0, hpFill: 0, xp: 0, tubeCard: 0, ...g.hud?.draws, tweens: g.tweens?.getTweens().length ?? 0, objects: objectCount(g.children?.list ?? []) },
   };
+}
+
+/** 081: every game object in the scene, containers' children counted. */
+function objectCount(list: readonly GameObjects.GameObject[]): number {
+  let n = 0;
+  for (const o of list) n += 1 + ('list' in o && Array.isArray(o.list) ? objectCount(o.list as GameObjects.GameObject[]) : 0);
+  return n;
 }

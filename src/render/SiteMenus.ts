@@ -45,12 +45,12 @@ export class SiteMenus {
   private purgeAt: number | null = null;
 
   constructor(scene: Scene) {
-    this.pylon = new ChoiceMenu(scene);
+    this.pylon = new ChoiceMenu(scene, 'pylon');
     this.bench = new GearPanel(scene);
-    this.waystone = new ChoiceMenu(scene);
+    this.waystone = new ChoiceMenu(scene, 'waystone');
     this.restore = new RestorePanel(scene);
     this.offering = new RestorePanel(scene, offeringModel);
-    this.purge = new ChoiceMenu(scene);
+    this.purge = new ChoiceMenu(scene, 'purge');
   }
 
   private get menus(): readonly ChoiceMenu<unknown>[] {

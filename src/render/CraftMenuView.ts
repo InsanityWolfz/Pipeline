@@ -8,7 +8,8 @@ import { canCraft, craftHeld, craftKnown, type CraftStores } from '../sim/crafti
 import { colorOf } from './color';
 import { craftPanelAt, craftTabBoxes, craftTabRows, rowNameXs } from './craftMenuLayout';
 import { flashRow, RowHover, type RowFrames } from './menuFeedback';
-import { drawTablet } from './tablet';
+import { drawGlow, drawTablet } from './tablet';
+import { MenuMotion } from './MenuMotion';
 import { TextLine } from './textLine';
 import { addVector } from './vector/textures';
 
@@ -84,10 +85,13 @@ export class CraftMenuView {
   /** The title card's tablet, and the tabs' tablets. */
   private readonly card: GameObjects.Graphics;
   private readonly tabBacks: GameObjects.Graphics;
+  /** 081: the open's fade and rise, and the tab fade over the rows. */
+  private readonly motion: MenuMotion;
 
   constructor(scene: Scene, onCraft: (recipeId: string, max: boolean) => void) {
     const L = CRAFT_MENU_LAYOUT;
     this.hover = new RowHover(scene, RECIPE_ROW_FRAMES);
+    this.motion = new MenuMotion(scene, 'craft', DEPTHS.menu);
     const add = (x: number, y: number, frame: string, depth: number = DEPTHS.menu): GameObjects.Image => {
       const image = addVector(scene, x, y, frame).setOrigin(0).setScrollFactor(0).setDepth(depth);
       this.objects.push(image);
@@ -134,6 +138,7 @@ export class CraftMenuView {
         parts.push(add(outX, iconY, itemDef(recipe.output.itemId).icon, DEPTHS.menu + 2));
         const made = text(outX + L.output.textX, line.y + L.output.madeY);
         made.set(`+${recipe.output.count}`);
+        this.motion.adopt([frame, ...parts, ...inputs.flatMap((i) => [i.text, i.name]), made], this.motion.tabLayer(DEPTHS.menu + 1));
         const row: Row = {
           recipeId: line.id,
           tab,
@@ -146,6 +151,7 @@ export class CraftMenuView {
           outputName: name(recipe.output.itemId, outX, line.y),
         };
         const names = [...inputs.map((input, i) => ({ line: input.name, iconX: L.input.x + i * L.input.step })), { line: row.outputName, iconX: L.output.x }];
+        this.motion.adopt([row.owned, row.outputName], this.motion.tabLayer(DEPTHS.menu + 1));
         rowNameXs(names.map((n) => ({ iconX: n.iconX, w: n.line.width }))).forEach((x, i) => names[i]?.line.moveTo(line.x + x, line.y + L.labelY));
         frame.on('pointerdown', (pointer: Input.Pointer) => {
           if (!this.open || this.tab !== row.tab || !canCraft(this.known, row.recipeId)) return;
@@ -159,6 +165,8 @@ export class CraftMenuView {
         this.rows.push(row);
       }
     }
+    // The panel, the title card and the tabs (the rows are in the tab layer already).
+    this.motion.adopt([...this.objects.filter((o) => !o.parentContainer), this.card, this.tabBacks, ...this.lines.filter((l) => !l.obj.parentContainer)]);
     this.setOpen(false);
   }
 
@@ -215,18 +223,23 @@ export class CraftMenuView {
   /** Opens a tab by index (the test hook and clicks). */
   showTab(i: number): void {
     if (i < 0 || i >= CRAFT_TABS.length) return;
+    if (this.open && i !== this.tab) this.motion.switchTab();
     this.tab = i;
     this.hover.set(-1);
+    this.hover.close();
     this.update(this.known);
   }
 
   setOpen(open: boolean): void {
+    // 081: opening fades it in and up (input live from the first frame); closing is instant.
+    if (open && !this.open) this.motion.show();
+    if (!open) this.motion.hide();
     this.open = open;
     for (const o of this.objects) o.setVisible(open);
     this.card.setVisible(open);
     this.tabBacks.setVisible(open);
     for (const l of this.lines) l.setVisible(open);
-    if (!open) this.hover.set(-1);
+    if (!open) this.hover.close();
     // Hide unknown recipes straight away, not a frame later.
     this.update(this.known);
   }
@@ -250,7 +263,12 @@ export class CraftMenuView {
       view?.name.setVisible(shown).setAlpha(i === this.tab ? 1 : L.tabClosedAlpha);
       if (!shown) continue;
       drawTablet(this.tabBacks, t.x, t.y, t.w, t.h, i === this.tab ? 1 : L.tabClosedAlpha);
-      if (i === this.tab) this.tabBacks.fillStyle(colorOf(L.tabOpen), 1).fillRect(t.x + t.w - L.tabStripe.w, t.y + L.tabStripe.inset, L.tabStripe.w, t.h - 2 * L.tabStripe.inset);
+      if (i !== this.tab) continue;
+      // The open tab's brass stripe, with a soft gold glow (081).
+      const sx = t.x + t.w - L.tabStripe.w;
+      const sy = t.y + L.tabStripe.inset;
+      drawGlow(this.tabBacks, sx, sy, L.tabStripe.w, t.h - 2 * L.tabStripe.inset);
+      this.tabBacks.fillStyle(colorOf(L.tabOpen), 1).fillRect(sx, sy, L.tabStripe.w, t.h - 2 * L.tabStripe.inset);
     }
     for (const [i, r] of this.rows.entries()) {
       const shown = r.tab === this.tab && craftKnown(sim, r.recipeId);
@@ -273,7 +291,7 @@ export class CraftMenuView {
       for (const t of [r.made, r.owned, r.outputName]) t.setAlpha(textAlpha);
       for (const p of r.parts) p.setAlpha(alpha);
       r.frame.setAlpha(alpha);
-      r.frame.setFrame(this.hover.frame(i, affordable));
+      this.hover.paint(i, r.frame, affordable);
     }
   }
 }

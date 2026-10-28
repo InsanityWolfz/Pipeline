@@ -9,12 +9,13 @@ import { clickAmount } from './menuRequests';
 import type { CrateState, HopperState } from '../sim/pieces';
 import type { SimState } from '../sim/state';
 import type { ScreenBox } from './bottomHud';
-import { drawCell, drawScrollBar, makeCell, type CellView } from './gridCells';
+import { cellParts, drawCell, drawScrollBar, makeCell, type CellView } from './gridCells';
 import { cellAt, inventoryLayout, type GridLayout } from './inventoryLayout';
 import { containerSlots, gearLine, inventorySlots, type GridAction, type Held, type InventoryShown, type ShownSlot, type SlotShown } from './inventoryRows';
 
 export type { InventoryShown } from './inventoryRows';
 import { drawTablet } from './tablet';
+import { MenuMotion } from './MenuMotion';
 import { TextLine } from './textLine';
 import type { TipHit } from './tipTypes';
 import { addVector } from './vector/textures';
@@ -59,6 +60,8 @@ export class InventoryPanel {
   private readonly cells: CellView[];
   private readonly boxCells: CellView[];
   private readonly stashCells: CellView[];
+  /** 081: the open's fade and rise. */
+  private readonly motion: MenuMotion;
 
   constructor(scene: Scene) {
     const text = (style: 'body' | 'display' | 'title' = 'body') => new TextLine(scene, 0, 0, DEPTHS.menu + 2, false, style);
@@ -72,6 +75,7 @@ export class InventoryPanel {
     this.cells = Array.from({ length: G.cols * G.rows }, () => makeCell(scene));
     this.boxCells = Array.from({ length: G.container.cols }, () => makeCell(scene));
     this.stashCells = Array.from({ length: G.cols * G.stash.rows }, () => makeCell(scene));
+    this.motion = new MenuMotion(scene, 'inventory', DEPTHS.menu).adopt([this.back, this.title, this.titleText, this.sortText, this.name, this.invName, ...this.footLines, ...[...this.cells, ...this.boxCells, ...this.stashCells].flatMap(cellParts)]);
     this.draw();
   }
 
@@ -90,6 +94,8 @@ export class InventoryPanel {
   }
 
   private openAs(mode: InventoryShown['mode'], id: number | null = null): void {
+    if (mode === null) this.motion.hide();
+    else if (this.mode === null) this.motion.show();
     this.mode = mode;
     this.containerId = id;
     this.press = null;

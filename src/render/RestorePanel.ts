@@ -6,6 +6,7 @@ import { RESEARCH_ICONS, RESTORE_PANEL } from '../data/researchAssets';
 import type { SimState } from '../sim/state';
 import { inRect, type ScreenRect } from './foundryLayout';
 import { flashRow, RowHover } from './menuFeedback';
+import { MenuMotion } from './MenuMotion';
 import { restorePanelLayout } from './researchLayout';
 import { restorePanelModel, type RestorePanelModel } from './researchRows';
 
@@ -49,6 +50,8 @@ export class RestorePanel {
   private readonly modelOf: PanelModelOf;
   /** The node whose panel is open (or 034's altar), or null. */
   nodeId: string | null = null;
+  /** 081: the open's fade and rise. */
+  private readonly motion: MenuMotion;
 
   constructor(scene: Scene, modelOf: PanelModelOf = restorePanelModel) {
     this.scene = scene;
@@ -67,6 +70,8 @@ export class RestorePanel {
     this.row = image(L.restore.x, L.restore.y, SPRITES.craftRow, DEPTHS.menu);
     this.rowIcon = image(L.restore.x + P.restore.iconX, L.restore.y + P.restore.iconY, RESEARCH_ICONS.schematic, DEPTHS.menu + 1);
     this.rowText = new TextLine(scene, L.restore.x + P.restore.textX, L.restore.y + P.restore.textY, DEPTHS.menu + 2);
+    this.motion = new MenuMotion(scene, modelOf === restorePanelModel ? 'restore' : 'offering', DEPTHS.menu - 1);
+    this.motion.adopt([this.tablet, this.costRow, this.row, this.rowIcon, ...this.icons, this.name, this.effect, this.rowText, ...this.counts]);
     this.setShown(false);
   }
 
@@ -89,10 +94,12 @@ export class RestorePanel {
   }
 
   open(nodeId: string): void {
+    if (this.nodeId === null) this.motion.show();
     this.nodeId = nodeId;
   }
 
   close(): void {
+    this.motion.hide();
     this.nodeId = null;
     this.model = null;
     this.setShown(false);
@@ -142,12 +149,12 @@ export class RestorePanel {
     });
     this.rowText.set(m.action).setAlpha(m.enabled ? 1 : L.greyTextAlpha);
     for (const o of [this.row, this.rowIcon]) o.setAlpha(m.enabled ? 1 : L.greyAlpha);
-    this.row.setFrame(this.hover.frame(0, m.enabled));
+    this.hover.paint(0, this.row, m.enabled);
   }
 
   private setShown(on: boolean): void {
     for (const o of [this.tablet, this.costRow, this.row, this.rowIcon, ...this.icons]) o.setVisible(on);
     for (const t of [this.name, this.effect, this.rowText, ...this.counts]) t.setVisible(on);
-    if (!on) this.hover.set(-1);
+    if (!on) this.hover.close();
   }
 }

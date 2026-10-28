@@ -9,6 +9,7 @@ import { flashRow, RowHover } from './menuFeedback';
 import { drawTablet } from './tablet';
 import { TextLine } from './textLine';
 import { addVector } from './vector/textures';
+import { MenuMotion } from './MenuMotion';
 
 /** What a click on the pause menu asks for. */
 export type PauseAction = (typeof PAUSE_ROWS)[number];
@@ -24,6 +25,8 @@ export class PauseMenuView {
   private readonly texts: TextLine[] = [];
   private readonly hover: RowHover;
   private open = true;
+  /** 081: the open's fade and rise. */
+  private readonly motion: MenuMotion;
 
   constructor(scene: Scene) {
     this.scene = scene;
@@ -50,6 +53,7 @@ export class PauseMenuView {
     text(0, cardY + P.card.noteY, P.note, 'body', true);
     this.rows = rects.map((r) => fixed(addVector(scene, r.x, r.y, SPRITES.craftRow).setOrigin(0), DEPTHS.menu));
     for (const [i, r] of rects.entries()) text(r.x + P.label.x, r.y + P.label.y, P.rows[PAUSE_ROWS[i] ?? 'resume'], 'display');
+    this.motion = new MenuMotion(scene, 'pause', DEPTHS.menu - 2).adopt([this.dim, this.panel, ...this.rows, ...this.texts]);
     this.setOpen(false);
   }
 
@@ -59,10 +63,12 @@ export class PauseMenuView {
 
   setOpen(open: boolean): void {
     if (open === this.open) return;
+    if (open) this.motion.show();
+    else this.motion.hide();
     this.open = open;
     for (const o of [this.dim, this.panel, ...this.rows]) o.setVisible(open);
     for (const t of this.texts) t.setVisible(open);
-    if (!open) this.hover.set(-1);
+    if (!open) this.hover.close();
   }
 
   /** While open, the whole screen is the menu: no press reaches the world. */
@@ -74,7 +80,7 @@ export class PauseMenuView {
   pointAt(x: number, y: number): void {
     const i = this.open ? pauseRows().findIndex((r) => inRect(r, x, y)) : -1;
     if (!this.hover.set(i)) return;
-    for (const [k, row] of this.rows.entries()) row.setFrame(this.hover.frame(k));
+    for (const [k, row] of this.rows.entries()) this.hover.paint(k, row);
   }
 
   /** What a click at a screen point asks for, flashing its row; null off the rows. */
