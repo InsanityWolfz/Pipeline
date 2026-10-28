@@ -58,6 +58,7 @@ import { WorldLayer } from './lighting/WorldLayer';
 import { LightingView } from './lighting/LightingView';
 import { WorldLife } from './world/WorldLife';
 import { settings } from './flow/settingsStore';
+import { FoundryMood } from './foundry/FoundryMood';
 
 const FIRST_PIECE = BUILD_BAR[0] ?? '';
 
@@ -107,6 +108,8 @@ export class GameScene extends Scene {
   /** 074: the region's mood and light. 077: the overworld's decor, set pieces, motion and weather. */
   lighting?: LightingView;
   worldLife?: WorldLife;
+  /** 079: the foundry's heat, steam, sparks and ley pulses, and its running forge machines. */
+  foundryMood?: FoundryMood;
   /** 044: the Sandbox panel (056, 057: the sandbox's controls, pop-outs there, and only there). */
   sandboxPanel?: SandboxPanel;
   /** The room on screen. It lags the player's room through a door's fade (roomFollow.ts). */
@@ -157,7 +160,8 @@ export class GameScene extends Scene {
     const world = new WorldLayer();
     this.worldLife = new WorldLife(this, { quality: () => this.lighting?.quality ?? 'medium', flashes: () => settings().flashes, particles: () => this.feel?.juice.particles.count ?? 0, weather: (n) => this.ledger.set('weather', n), strike: (x, y) => this.lighting?.weatherStrike(x, y) }, world, occluders);
     this.roomViews = new RoomViews(this, occluders, world, this.worldLife);
-    this.foundryView = new FoundryView(this, occluders);
+    this.foundryMood = new FoundryMood(this, { ledger: this.ledger, quality: () => this.fxQuality, flashes: () => settings().flashes, off: () => this.lighting?.off ?? false, motes: () => this.feel?.moteCount ?? 0 });
+    this.foundryView = new FoundryView(this, occluders, world, this.foundryMood.forges);
     this.nodeView = new NodeView(this, occluders, world, this.worldLife.sway);
     this.groundItemView = new GroundItemView(this);
     this.enemyView = new EnemyView(this);
@@ -175,7 +179,7 @@ export class GameScene extends Scene {
     this.tunnelView = new TunnelView(this);
     this.hover = new HoverView(this);
     this.site = new SiteView(this, occluders, world);
-    this.lighting = new LightingView(this, world);
+    this.lighting = new LightingView(this, world, { onScreen: () => this.foundryMood?.onScreen() ?? [], intake: (sim) => this.feel?.intakeGlow(sim) ?? null });
     this.siteMenus = new SiteMenus(this);
     this.wake = new WakeView(this);
     this.tutorial = new TutorialUi(this);
@@ -303,6 +307,7 @@ export class GameScene extends Scene {
     if (this.pending.stamps.length === 0) this.buildView?.placed(this.pending.places.map((p) => p.pieceId));
     const inFoundry = shown === FOUNDRY_ROOM;
     this.foundryView?.update(sim.foundry, inFoundry, sim.building);
+    this.foundryMood?.update(sim, this.pending, shown, this.game.loop.delta);
     this.nodeView?.update(inRoom(sim.nodes, shown), sim.harvest, this.game.loop.delta);
     const catches = this.lighting?.catches;
     this.groundItemView?.update(inRoom(sim.groundItems, shown), picked, sim.player, sim, catches);

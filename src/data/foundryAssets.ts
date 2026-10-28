@@ -260,3 +260,16 @@ export const TUTORIAL_LAYOUT = {
   shimmerAlpha: [0.6, 1] as const,
   shimmerMs: 900,
 } as const;
+
+/**
+ * 079: the foundry's heat and ley flow frames (src/data/art/foundryFx.ts): the heat shimmer's 4-frame loop (rising soft
+ * ribbons, white-hot to ember, drawn additively over a working forge's top), the steam puff and the spark (white, tinted
+ * per particle), the lit inlay rune with its halo, and the ley bead with its short trail.
+ */
+export const FOUNDRY_FX_FRAMES = {
+  shimmer: loop('foundry-shimmer', 4, 8),
+  steam: 'foundry-steam',
+  spark: 'foundry-spark',
+  rune: 'foundry-inlay-lit',
+  bead: 'foundry-bead',
+} as const;

@@ -18,10 +18,11 @@ export interface HousingPoint {
 /**
  * Heat: which machines run hot; the glow (014's halo) at the fire, breathing with the working loop; the shimmer (a baked
  * 4-frame additive loop, `fps`, over the housing's top, its start frame from the piece id) by tier; the steam's vent.
+ * The glow's alpha swings between `glow.alpha` once a working loop (gently: the loop is half a second).
  */
 export const HEAT = {
   machines: ['smelter', 'kiln'] as readonly string[],
-  glow: { color: 'cinder', radius: 20, alpha: [0.45, 0.85] as const },
+  glow: { color: 'cinder', radius: 20, alpha: [0.6, 0.8] as const },
   /** Where the fire is, by machine: the Smelter's window, the kiln's mouth. */
   fire: { smelter: { x: -3, rise: 10 }, kiln: { x: 0, rise: 9 } } as Readonly<Record<string, HousingPoint>>,
   shimmer: { frames: 4, fps: 8, alpha: { low: 0, medium: 0.18, high: 0.25 } as ByTier, at: { x: 0, rise: 44 } as HousingPoint },

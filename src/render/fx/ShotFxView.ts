@@ -3,6 +3,7 @@ import { AMMO_FX, type FxBurst } from '../../data/ammoFx';
 import { DEPTHS } from '../../data/assets';
 import { TILE_SIZE } from '../../data/config';
 import { FX_QUALITY, MACHINE_SPARKS } from '../../data/fxQuality';
+import { SPARKS } from '../../data/foundryFx';
 import { PARTICLES } from '../../data/juice';
 import { FEET_BOX } from '../../data/player';
 import { FOUNDRY_ROOM } from '../../data/rooms';
@@ -263,8 +264,9 @@ export class ShotFxView {
     p.emitFx(b, x, y, DEPTHS.shotTrail, angle, 'trailBits', false);
   }
 
-  /** 4 sparks from a machine's window as it finishes a craft (`craftPuff` still plays). */
+  /** 4 sparks from a machine's window as it finishes a craft (`craftPuff` still plays). 079: the forges' are FoundryMood's. */
   private machineSparks(p: Particles, sim: SimState, id: number, pieceId: string): void {
+    if (SPARKS.machines.includes(pieceId)) return;
     const colors = machineSparkColors(pieceId);
     const piece = sim.foundry.pieces.find((x) => x.id === id);
     if (!colors || !piece) return;

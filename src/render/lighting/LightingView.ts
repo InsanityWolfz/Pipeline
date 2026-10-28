@@ -3,8 +3,8 @@ import { DEPTHS } from '../../data/assets';
 import { TILE_SIZE, VIEW_HEIGHT, VIEW_WIDTH } from '../../data/config';
 import { LIGHT_BUDGET, LIGHT_Z, QUALITY_LOOK, type LightSourceId } from '../../data/lights';
 import { OVERWORLD_ROOM } from '../../data/overworld';
-import { LIGHTNING_FLASH } from '../../data/moods';
-import { FOUNDRY_ROOM } from '../../data/rooms';
+import { FOUNDRY_MOOD, LIGHTNING_FLASH, REGION_MOODS } from '../../data/moods';
+import { FOUNDRY_ROOM, STATIC_ROOMS } from '../../data/rooms';
 import type { Quality } from '../../data/settings';
 import { WORLD_SHAPE } from '../../data/worldShape';
 import type { SimEvents } from '../../sim/events';
@@ -17,14 +17,18 @@ import { PoolView } from './PoolView';
 import { conductorChain, gatherLights } from './lightSources';
 import { LightPulses } from './lightPulses';
 import type { PlacedLight } from './lightCatch';
-import { pickLights } from './lightPick';
-import { flashLevel, moodAt, rgbInt, SUNNY_MOOD, withFlash, type MoodNow, type Rgb } from './mood';
+import { pickLights, type LightCandidate } from './lightPick';
+import { flashLevel, moodAt, moodLooks, rgbInt, SUNNY_MOOD, withFlash, type MoodNow, type Rgb } from './mood';
+import { foundryLights } from './foundryLights';
+import type { ForgeAt } from '../foundry/runningForges';
 import type { WorldLayer } from './WorldLayer';
 
 // 074: the region's light. Each frame: the mood where the camera's centre stands (blended at region edges), the
 // lightning flash, the screen wash and fog; the world layer lit by the scene's lights or tinted with the ambient as the
 // Graphics quality says (re-set over the registry only on a change); and the lights picked for this frame placed from a
-// pool of 16 made once. The foundry keeps its own warm tint (AmbientView) with no lights until 079. Looks only.
+// pool of 16 made once. 079: the foundry takes its own mood (FOUNDRY_MOOD: warm resin air, a light wash, no fog) and
+// places its own lights (its wall fires, the intake, working forge machines on screen); with the mood off it keeps
+// only the room's wash, its own tint as 014's was. Looks only.
 
 /** What `ui().lighting` reports. */
 export interface LightingShown {
@@ -34,6 +38,8 @@ export interface LightingShown {
   renderer: 'webgl' | 'canvas';
   /** `?mood=off` (dev): every mood, light and fog skipped. */
   off: boolean;
+  /** 079: the mood's name (a region's, or `foundry`). */
+  mood: string;
   ring: number;
   outer: number | null;
   blend: number;
@@ -57,9 +63,18 @@ export interface LightingShown {
   catches: CatchShown[];
 }
 
-export const NO_LIGHTING: LightingShown = { quality: 'medium', setting: 'medium', renderer: 'webgl', off: false, ring: 0, outer: null, blend: 0, ambient: [255, 255, 255], flash: 0, wash: 0, lights: {}, placed: [], lit: 0, tint: null, groundTint: null, fog: 0, pools: 0, applied: 0, catches: [] };
+export const NO_LIGHTING: LightingShown = { quality: 'medium', setting: 'medium', renderer: 'webgl', off: false, mood: 'sunny', ring: 0, outer: null, blend: 0, ambient: [255, 255, 255], flash: 0, wash: 0, lights: {}, placed: [], lit: 0, tint: null, groundTint: null, fog: 0, pools: 0, applied: 0, catches: [] };
 
 const POOL = LIGHT_BUDGET.high;
+
+/** 079: the foundry's mood as drawn (no blend: it is one room). */
+const FOUNDRY_NOW: MoodNow = { ring: 0, outer: null, blend: 0, ...moodLooks(FOUNDRY_MOOD) };
+
+/** 079: what the foundry's lights read from the rest of the scene. */
+export interface FoundryLightHooks {
+  onScreen(): ForgeAt[];
+  intake(sim: SimState): { x: number; y: number; glowRadius: number } | null;
+}
 
 export class LightingView {
   private readonly scene: Scene;
@@ -79,9 +94,13 @@ export class LightingView {
   private placed: PlacedLight[] = [];
   private report: LightingShown = NO_LIGHTING;
 
-  constructor(scene: Scene, world: WorldLayer) {
+  /** 079: the foundry's running forge machines on screen and its intake's glow, for their lights. */
+  private readonly foundry: FoundryLightHooks | undefined;
+
+  constructor(scene: Scene, world: WorldLayer, foundry?: FoundryLightHooks) {
     this.scene = scene;
     this.world = world;
+    this.foundry = foundry;
     // `?mood=off` (dev only) skips every mood, light and fog, for the frame-time A/B.
     this.off = import.meta.env.DEV && new URLSearchParams(window.location.search).get('mood') === 'off';
     this.webgl = scene.sys.renderer.type === WEBGL;
@@ -121,10 +140,10 @@ export class LightingView {
     const here = shown === sim.roomId;
     this.pulses.update(events, deltaMs, flashes, here, view);
     const foundry = shown === FOUNDRY_ROOM;
-    const mood: MoodNow = shown === OVERWORLD_ROOM ? moodAt(Math.hypot(view.centerX / TILE_SIZE - WORLD_SHAPE.centre.tx - 0.5, view.centerY / TILE_SIZE - WORLD_SHAPE.centre.ty - 0.5)) : SUNNY_MOOD;
-    const moody = !this.off && !foundry;
-    // The wash (014's mood tint): the region's, or none in the foundry, whose own warm tint AmbientView keeps.
-    const wash = foundry ? null : this.off ? SUNNY_MOOD.wash : mood.wash;
+    const mood: MoodNow = shown === OVERWORLD_ROOM ? moodAt(Math.hypot(view.centerX / TILE_SIZE - WORLD_SHAPE.centre.tx - 0.5, view.centerY / TILE_SIZE - WORLD_SHAPE.centre.ty - 0.5)) : foundry ? FOUNDRY_NOW : SUNNY_MOOD;
+    const moody = !this.off;
+    // The wash (014's mood tint): the region's; the foundry keeps its own with the mood off (the room's tint, as 014's).
+    const wash = this.off && !foundry ? SUNNY_MOOD.wash : mood.wash;
     this.wash.setFillStyle(wash ? rgbInt(wash.rgb) : 0, wash?.alpha ?? 0);
     this.fog.update(view, moody ? look.fog : 0, mood.fog, deltaMs);
     const flash = moody && look.flash ? flashLevel(this.pulses.sinceStrike, flashes) : 0;
@@ -137,7 +156,7 @@ export class LightingView {
     if (perPixel) this.scene.lights.enable().setAmbientColor(rgbInt(withFlash(mood.ambient, flash)));
     else if (this.webgl) this.scene.lights.disable();
     this.world.apply(moody ? { litGround: perPixel && look.litGround, litProps: perPixel && look.litProps, tint } : { litGround: false, litProps: false, tint: null });
-    const picked = lights ? pickLights(gatherLights({ sim, shown, view, quality, time: this.time, flashes, pulses: this.pulses, chain: conductorChain(sim, shown) }), quality, { x: view.centerX, y: view.centerY }) : [];
+    const picked = lights ? pickLights(this.candidates(sim, shown, quality, flashes), quality, { x: view.centerX, y: view.centerY }) : [];
     this.placed = picked.map((l) => ({ x: l.x, y: l.y, radius: l.radius, color: l.color, intensity: l.intensity * mood.lightScale, source: l.source }));
     this.world.lightChunks(this.placed, moody ? tint : null, view);
     this.world.lightProps(perPixel ? this.placed : [], view);
@@ -160,6 +179,7 @@ export class LightingView {
       setting: settings().quality,
       renderer: this.webgl ? 'webgl' : 'canvas',
       off: this.off,
+      mood: foundry ? FOUNDRY_MOOD.name : REGION_MOODS[mood.ring].name,
       ring: mood.ring,
       outer: mood.outer,
       blend: mood.blend,
@@ -176,6 +196,15 @@ export class LightingView {
       applied: this.world.applied,
       catches: [],
     };
+  }
+
+  /** Every light that could be placed this frame: 074's sources, and in the foundry its own (079). */
+  private candidates(sim: SimState, shown: string, quality: Quality, flashes: boolean): LightCandidate[] {
+    const view = this.scene.cameras.main.worldView;
+    const out = gatherLights({ sim, shown, view, quality, time: this.time, flashes, pulses: this.pulses, chain: conductorChain(sim, shown) });
+    const room = STATIC_ROOMS[FOUNDRY_ROOM];
+    if (shown !== FOUNDRY_ROOM || !room) return out;
+    return [...out, ...foundryLights({ room, time: this.time, flashes, forges: this.foundry?.onScreen() ?? [], intake: this.foundry?.intake(sim) ?? null })];
   }
 
   get shown(): LightingShown {

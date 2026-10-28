@@ -17,7 +17,7 @@ import {
   type PieceView,
 } from '../data/foundryAssets';
 import { itemDef } from '../data/items';
-import { pieceDef } from '../data/pieces';
+import { isFlatKind, pieceDef } from '../data/pieces';
 import { facingVector } from '../sim/direction';
 import { pieceRect, type FoundryState, type PieceState } from '../sim/pieces';
 import type { Facing } from '../sim/player';
@@ -27,6 +27,8 @@ import { arrowSpots, conduitLook, pieceIcon } from './foundryLayout';
 import { TextLine } from './textLine';
 import { addVector, addVectorSprite, textureScale } from './vector/textures';
 import type { Occluders } from './occluders';
+import type { WorldLayer } from './lighting/WorldLayer';
+import type { RunningForges } from './foundry/runningForges';
 import { riderAt, splitterLook, tunnelLook, tunnelRiderAt } from './flatPieces';
 
 export const viewOf = (f: Facing): PieceView => (f === 'up' || f === 'down' ? f : 'side');
@@ -89,11 +91,18 @@ export class FoundryView {
   private readonly dropping = new Set<number>();
 
   private readonly occluders: Occluders | undefined;
+  private readonly world: WorldLayer | undefined;
+  private readonly forges: RunningForges | undefined;
 
-  /** `occluders` (070): machines can hide the player. */
-  constructor(scene: Scene, occluders?: Occluders) {
+  /**
+   * `occluders` (070): machines can hide the player. 079: `world`, the world layer the pieces' bodies join (the mood's
+   * tint or light, set as a piece is made and on a look change); `forges`, the running set each machine's status feeds.
+   */
+  constructor(scene: Scene, occluders?: Occluders, world?: WorldLayer, forges?: RunningForges) {
     this.scene = scene;
     this.occluders = occluders;
+    this.world = world;
+    this.forges = forges;
     for (const views of Object.values(MACHINE_SPRITES)) for (const v of Object.values(views)) registerAnim(scene, v.working);
     for (const anim of [...Object.values(CONDUIT_ANIMS), ...Object.values(CONDUIT_CORNERS)]) registerAnim(scene, anim);
     registerAnim(scene, STATUS_MARKERS.working);
@@ -114,6 +123,7 @@ export class FoundryView {
       for (const o of [d.body, d.icon, ...d.arrows, d.marker, d.markerIcon]) o?.destroy();
       d.count?.set('');
       this.drawn.delete(id);
+      this.forges?.remove(id);
     }
   }
 
@@ -173,6 +183,10 @@ export class FoundryView {
       d.icon.setPosition(r.x, bottom - FOUNDRY_LAYOUT.contentsRise).setDepth(bottom + FOUNDRY_LAYOUT.onTopNudge);
       d.count = new TextLine(this.scene, r.x, bottom, bottom + 2 * FOUNDRY_LAYOUT.onTopNudge, true, 'count');
     }
+    // 079: the body takes the foundry's mood (flat pieces lie at one depth, so lit ones batch together); the icon,
+    // arrows, marker and count stay in the readability layer.
+    if (isFlatKind(p.kind)) this.world?.addFlat(d.body);
+    else this.world?.addProp(d.body);
     this.drawn.set(p.id, d);
     return d;
   }
@@ -212,6 +226,8 @@ export class FoundryView {
   private drawMachine(p: Extract<PieceState, { kind: 'machine' }>, d: Drawn): void {
     // The mechanism moves while working, stands still while idle or starved, and jams (stuck, shaking) while blocked.
     const look = machineLook(p.pieceId, viewOf(p.facing));
+    const r = pieceRect(p);
+    this.forges?.observe(p, { x: r.x, bottom: r.y + r.h / 2 });
     const still = p.status === 'blocked' ? look.jammed : look.idle;
     if (p.status === 'working') d.body.play(look.working.key, true);
     else if (d.body.anims.isPlaying || d.body.frame.name !== still) d.body.stop().setFrame(still);

@@ -15,6 +15,7 @@ import { NO_AMMO_FX } from './fx/ShotFxView';
 import { bakeReport } from './vector/textures';
 
 import { NO_WEATHER, NO_WORLD } from './world/worldShown';
+import { NO_FOUNDRY_MOOD } from './foundry/FoundryMood';
 
 // What a game scene shows, for the test hook's ui() (split from GameScene in 042). Every view may be missing (before
 // the scene is created, or on the title's blank), so each falls back to its empty value.
@@ -87,6 +88,7 @@ export function gameUi(g: GameScene): GameUiState {
     sandbox: g.sim.sandbox ? (g.sandboxPanel?.state ?? { open: false, rows: [], keys: [], boxes: [], tabs: [], sliding: false }) : null,
     sandboxDrawn: g.sandboxPanel?.drawn ?? false,
     lighting: g.lighting?.shown ?? NO_LIGHTING,
+    foundryMood: g.foundryMood?.shown ?? NO_FOUNDRY_MOOD,
     ammoFx: g.shotFx?.shown ?? NO_AMMO_FX,
     hitFeedback: { numbers: g.feel?.juice.numbers ?? 0, holds: g.enemyView?.holds ?? 0, holdMs: g.enemyView?.holdMs ?? 0 },
     vectorBake: { ...bakeReport() },

@@ -283,6 +283,25 @@ export class FeelView {
     }
   }
 
+  /** 079: the room's motes now (they count in the foundry's particle cap). */
+  get moteCount(): number {
+    return this.ambient.moteCount;
+  }
+
+  /** The intake's glow radius now (019): growing as its rings light once attuned, swelling as each item goes in; 0 while it doesn't glow. */
+  intakeGlowRadius(sim: SimState): number {
+    const { pipeGlow } = attuneBeat(sim.link.attunePulse);
+    if (!sim.link.attuned || pipeGlow <= 0) return 0;
+    const swell = sim.link.attunePulse > 0 ? pipeGlow : this.intakeMs > 0 ? GLOWS.intake.pulse : 1;
+    return GLOWS.intake.radius * swell;
+  }
+
+  /** 079: the intake's mouth and its glow's radius while it glows (for its light), else null. */
+  intakeGlow(sim: SimState): { x: number; y: number; glowRadius: number } | null {
+    const r = this.intakeGlowRadius(sim);
+    return r > 0 ? { ...intakeAnchor(), glowRadius: r } : null;
+  }
+
   /** Lights that move or come and go: live veins, claimed pylons, items on conduits, the intake and the tube. */
   private movingGlows(sim: SimState, shown: string): GlowSpot[] {
     const spots: GlowSpot[] = [];
@@ -295,11 +314,8 @@ export class FeelView {
         if (p.kind === 'conduit' && p.item) spots.push({ x: r.x, y: r.y, ...GLOWS.conduitItem });
       }
       // The intake glows once attuned (growing as its rings light), swelling as each item goes in.
-      const { pipeGlow } = attuneBeat(sim.link.attunePulse);
-      if (sim.link.attuned && pipeGlow > 0) {
-        const swell = sim.link.attunePulse > 0 ? pipeGlow : this.intakeMs > 0 ? GLOWS.intake.pulse : 1;
-        spots.push({ ...intakeAnchor(), color: GLOWS.intake.color, radius: GLOWS.intake.radius * swell });
-      }
+      const radius = this.intakeGlowRadius(sim);
+      if (radius > 0) spots.push({ ...intakeAnchor(), color: GLOWS.intake.color, radius });
     }
     if (sim.hasTube && sim.link.attuned && shown === sim.roomId) {
       // The same growing glow round the tube while its rings light.

@@ -44,6 +44,7 @@ import type { PlayerPixels, PlayerUi } from './PlayerView';
 
 import type { WeatherShown, WorldShown } from './world/worldShown';
 import type { AmmoFxShown } from './fx/ShotFxView';
+import type { FoundryMoodShown } from './foundry/FoundryMood';
 
 export interface GameTestHook {
   /** The live game's summary; null on the title (042). */
@@ -316,6 +317,8 @@ export interface UiState {
   sandboxDrawn: boolean;
   /** 074: the region's mood and light as drawn: quality, the mood's ring and blend, the ambient and flash, lights by source, lit objects, fog layers, and light catches. */
   lighting: LightingShown;
+  /** 079: the foundry's running forges, their effects, its particles against its cap, the ley pulses and inlays, and `visited`. */
+  foundryMood: FoundryMoodShown;
 }
 
 /** ui() without the flow's part: what a GameScene reports. */

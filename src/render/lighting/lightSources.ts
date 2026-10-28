@@ -73,7 +73,8 @@ export function gatherLights(input: SourceInput): LightCandidate[] {
   // Braziers and any other prop that glows with fire; ley-coloured props glow as ley.
   for (const [i, prop] of (room.props ?? []).entries()) {
     const glow = PROPS[prop.propId].glow;
-    if (!glow) continue;
+    // 079: a prop with its own light (the foundry's braziers and torches) is the foundry's (foundryLights.ts).
+    if (!glow || PROPS[prop.propId].light) continue;
     const x = (prop.tx + 0.5) * T;
     const y = (prop.ty + 0.5) * T;
     if (glow.color === S.fire.color) add('fire', x, y, S.fire.radii.brazier, S.fire.color, S.fire.intensity * flicker(time, i), S.fire.priority);
