@@ -57,6 +57,7 @@ No sim change; `SAVE_VERSION` stays 22. Reviewed, including a motion check at re
 **Next:** Shaun's playtest after 074 and 075; "merge 93" after 91 and 92.
 
 **Notes:**
+- After review: ground telegraphs got a 0.9-alpha `danger` rim and a fill strengthening to 0.85 at the peak, because 074's redness check sat at 25.3 against its floor of 25 on Region 1 grass once 077's detail was in; now 69.6 there and 70–93 elsewhere.
 - Boot bakes more frames: 1.13 s against main's 0.63 s at 2×, 1.92 s against 1.08 s at 3×; boot to ready 3.8 s against 3.1 s.
 - This machine draws 8–13 frames a second under load, so real-time motion strips have 11–19 cells a second.
 
