@@ -40,6 +40,7 @@ function particlesUi(g: GameScene): GameUiState['particles'] {
     deathMotes: p?.deathMotes ?? 0,
     thrown: p?.motesThrown ?? 0,
     dissolving: g.effects?.dissolves.count ?? 0,
+    dissolveDoneMs: g.effects?.dissolves.lastDoneMs ?? -1,
     weather: g.ledger.live.weather,
     effects: g.ledger.live.effect,
     byPriority: p?.byPriority ?? { cue: 0, shot: 0, soft: 0 },

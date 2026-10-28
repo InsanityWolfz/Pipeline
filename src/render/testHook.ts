@@ -98,7 +98,7 @@ export interface UiState extends BossShowUi {
    * Particles flying now (064); 076: as `live`, with the death motes among them and the deaths dissolving; 077: `live` counts the weather too. 078: the
    * ledger's weather (or room motes) and effects, the live effects by priority, and the pool's objects made since boot.
    */
-  particles: { live: number; deathMotes: number; thrown: number; dissolving: number; weather: number; effects: number; byPriority: Record<'cue' | 'shot' | 'soft', number>; pool: { created: number } };
+  particles: { live: number; deathMotes: number; thrown: number; dissolving: number; dissolveDoneMs: number; weather: number; effects: number; byPriority: Record<'cue' | 'shot' | 'soft', number>; pool: { created: number } };
   /** Which cursor shows (021: the menu pointer or the crosshair), its depth, and the highest depth of anything else. */
   cursor: CursorState | null;
   /** Picked-up items still sliding into the player (021). */
