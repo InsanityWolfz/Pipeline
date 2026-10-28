@@ -7,6 +7,7 @@ import { enemyDef } from '../data/enemies';
 import { HOLLOWS_LOOK } from '../data/hollowsAssets';
 import type { EnemyState } from '../sim/enemies';
 import { colorOf } from './color';
+import { fillAt, rimStyle } from './telegraphLook';
 import { drawCrackedCircle } from './crackedCircle';
 
 // How the Bulwark reads on screen (034), for EnemyView: its pose (the extras it has:
@@ -82,9 +83,12 @@ export function drawStomp(g: GameObjects.Graphics, e: EnemyState): void {
   g.fillStyle(color, P.alpha);
   g.slice(e.x, e.y, def.stomp.radius, angle - half, angle + half, false);
   g.fillPath();
-  g.fillStyle(color, P.fillAlpha);
+  g.fillStyle(color, fillAt(P.fillAlpha, progress));
   g.slice(e.x, e.y, def.stomp.radius * progress, angle - half, angle + half, false);
   g.fillPath();
+  rimStyle(g);
+  g.slice(e.x, e.y, def.stomp.radius, angle - half, angle + half, false);
+  g.strokePath();
 }
 
 /** Its back wave building (041.16): its rear arc shaded red (054) under ripples running out to the arc's edge as the wind-up runs. Whether it drew the shade, for `ui()`. */
@@ -100,9 +104,12 @@ export function drawWave(g: GameObjects.Graphics, e: EnemyState): boolean {
   g.fillStyle(color, W.shadeAlpha);
   g.slice(e.x, e.y, def.wave.radius, angle - half, angle + half, false);
   g.fillPath();
-  g.fillStyle(color, W.fillAlpha);
+  g.fillStyle(color, fillAt(W.fillAlpha, progress));
   g.slice(e.x, e.y, def.wave.radius * progress, angle - half, angle + half, false);
   g.fillPath();
+  rimStyle(g);
+  g.slice(e.x, e.y, def.wave.radius, angle - half, angle + half, false);
+  g.strokePath();
   for (let i = 0; i < W.rings; i++) {
     // Each ripple runs out ahead of the one before it; all lie on the edge as the wave breaks.
     const r = def.wave.radius * Math.min(1, progress * (1 + i / W.rings));
@@ -138,7 +145,8 @@ export function drawPound(g: GameObjects.Graphics, e: EnemyState): void {
   const progress = Math.min(1, e.modeTicks / windupsOf(e, def).pound);
   const color = colorOf(P.color);
   g.fillStyle(color, P.alpha).fillCircle(e.x, e.y, def.pound.radius);
-  g.fillStyle(color, P.fillAlpha).fillCircle(e.x, e.y, def.pound.radius * progress);
+  g.fillStyle(color, fillAt(P.fillAlpha, progress)).fillCircle(e.x, e.y, def.pound.radius * progress);
+  rimStyle(g).strokeCircle(e.x, e.y, def.pound.radius);
   // 041.12: a roll won't save from it, so it wears a second ring.
   if (def.pound.rollProof) {
     const R = HOLLOWS_LOOK.rollProof;
