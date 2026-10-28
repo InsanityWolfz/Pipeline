@@ -2,6 +2,20 @@
 
 Newest entry first. Entries before 050 are in docs/progress-archive.md.
 
+## 2026-10-28: 081 HUD polish
+**Changed:** on `claude/081-hud-polish` (InsanityWolfz/Pipeline#98, stacked on 073–080; merges last), art pass 8 of 8 (plan docs/plans/081-hud-polish.md):
+- one polished stone-tablet look for every panel (stone gradient, carved inner line, lit brass corners) inside today's boxes; cut wells for the carried cells and tube card; a lit top line on the HP and XP bars; titles in pale brass;
+- the boss bar framed like the HP bar, the same size, redrawing only on a change (080's intro fill included);
+- five icons redrawn that read wrong: the casings (were the bomb), unidentified armour, rimestone, and the Tube talent (read as a battery);
+- menu motion: open 120 ms (fade, and a 4 px rise that's visual only; Crafting fades without it), hover and tabs 80 ms, press 140 ms, close instant; never blocks input; follows the system's reduced-motion setting.
+
+No sim change. Reviewed, with a motion check at 60 fps: two blocking findings fixed (the hover snapped out and blinked dark between rows; 081 was stacked only on 074, so its tests and the boss bar would break as 075–080 merged). `npm run check` 3055 tests; CI green. Raised for Shaun: 081.1–081.10; 081.1 and 081.2 need his call.
+
+**Next:** Shaun's playtest; "merge 98" last, after 96, 97 and 95.
+
+**Notes:**
+- GameScene.ts is 314 lines after the 078 and 080 merges (081.10); split it next time it grows.
+
 ## 2026-10-28: 080 Boss intros and phases
 **Changed:** on `claude/080-boss-intros` (InsanityWolfz/Pipeline#97, stacked on 073 and 074–076), art pass 7 of 8 (plan docs/plans/080-boss-intros.md):
 - a 2.75 s intro per boss when the player first stands inside its arena: dormant, stir, rise, one beat with the only screen shake in the game (300 ms, world camera only, off with "Flashes and shake" or reduced motion), then a name card on the stone tablet; the Warden stands and slams, the Bulwark hauls its shield from the floor, the Forgewright's cold forge kindles, the Conductor draws a bolt to its staff; a short pan in and out;

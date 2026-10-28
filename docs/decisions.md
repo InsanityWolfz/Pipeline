@@ -341,3 +341,7 @@ Each plan's build notes hold the detail; these are the lasting technical choices
   - The intro is a sim mode (`intro`), not a pause: the world keeps stepping while the boss and its posted enemies are skipped and immune and the player's damage is guarded, so the fight that follows is unchanged tick for tick.
   - Screen shake exists only in boss intros, on the world camera, behind the "Flashes and shake" setting and reduced motion; the HUD and name card sit on the UI camera.
   - Boss phases are drawn from existing sim flags only; render never decides a phase.
+
+- **081 HUD polish:**
+  - Every panel draws through one tablet look (data), so a new panel, 080's name card included, gets it for free.
+  - Menu motion is short, never blocks input, and starts menus at a near-zero alpha, since Phaser 4 skips input on containers at alpha 0.
