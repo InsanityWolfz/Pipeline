@@ -45,9 +45,10 @@ export interface Mote {
   color: string;
 }
 
-/** The particle textures' widths in world px (shotTextures.ts), and a particle's drawn width per unit of its size. */
+/** The particle textures' widths in world px (shotTextures.ts), and a dot's drawn width per unit of its size (a square is its size). */
 const DOT_PX = 4;
 const PUFF_PX = 8;
+const SQUARE_PX = 2;
 const DOT_SIZE = 1.25;
 
 const between = (r: readonly [number, number]): number => r[0] + Math.random() * (r[1] - r[0]);
@@ -117,10 +118,11 @@ export class Particles {
   }
 
   /** One particle from the pool, or none when the kind has no room. */
-  private spawn(kind: ParticleKind, priority: FxPriority, color: string, x: number, y: number, depth: number, size: number, add: boolean, puff = false): Particle {
+  private spawn(kind: ParticleKind, priority: FxPriority, color: string, x: number, y: number, depth: number, size: number, add: boolean, look: 'dot' | 'puff' | 'square' = 'dot'): Particle {
     const p = this.pool.take();
-    p.unit = (puff ? PUFF_PX : DOT_PX) * textureScale();
-    p.rect.setTexture(puff ? SHOT_FX_TEXTURES.puff : SHOT_FX_TEXTURES.dot);
+    // 076's death motes stay its crisp squares (`size` px across); everything else is a round dot or a soft puff.
+    p.unit = (look === 'puff' ? PUFF_PX : look === 'square' ? SQUARE_PX * DOT_SIZE : DOT_PX) * textureScale();
+    p.rect.setTexture(look === 'puff' ? SHOT_FX_TEXTURES.puff : look === 'square' ? SHOT_FX_TEXTURES.square : SHOT_FX_TEXTURES.dot);
     p.kind = kind;
     p.priority = priority;
     p.x = x;
@@ -165,7 +167,7 @@ export class Particles {
     const n = Math.min(fxCount(Math.round(b.count * scale), q, impact), this.ledger.room('effect', priority, q));
     const aim = AIM[b.aim ?? 'round'];
     for (let i = 0; i < n; i++) {
-      const p = this.spawn('effect', priority, b.colors[Math.floor(Math.random() * b.colors.length)] ?? 'snow', x, y - (b.lift ?? 0), depth, b.size, add, b.role === 'smoke');
+      const p = this.spawn('effect', priority, b.colors[Math.floor(Math.random() * b.colors.length)] ?? 'snow', x, y - (b.lift ?? 0), depth, b.size, add, b.role === 'smoke' ? 'puff' : 'dot');
       const a = aim === null ? Math.random() * Math.PI * 2 : aim + (b.aim === 'flight' ? angle : 0) + (Math.random() - 0.5) * (b.cone ?? 0);
       const speed = between(b.speed);
       p.vx = Math.cos(a) * speed;
@@ -183,7 +185,7 @@ export class Particles {
   emitMotes(motes: readonly Mote[], o: { speed: readonly [number, number]; gravity: number; lifeMs: readonly [number, number]; size: number; add: boolean; depth: number }): void {
     this.warm();
     for (const m of motes) {
-      const p = this.spawn('death', 'cue', m.color, m.x, m.y, o.depth, o.size, o.add);
+      const p = this.spawn('death', 'cue', m.color, m.x, m.y, o.depth, o.size, o.add, 'square');
       const angle = Math.random() * Math.PI * 2;
       const speed = between(o.speed);
       p.vx = Math.cos(angle) * speed;

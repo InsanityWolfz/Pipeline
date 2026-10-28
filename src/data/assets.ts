@@ -255,9 +255,10 @@ export const SHOT_FX_TEXTURES = {
   ring: 'fx-shot-ring',
   tick: 'fx-shot-tick',
   star: 'fx-shot-star',
-  /** A particle: a small crisp disc, and a soft puff for smoke and mist. */
+  /** A particle: a small crisp disc, a soft puff for smoke and mist, and 076's square death mote. */
   dot: 'fx-shot-dot',
   puff: 'fx-shot-puff',
+  square: 'fx-shot-square',
 } as const;
 
 /** Render depths. World sprites sort by the bottom of their footprint (px); these sit around that. */

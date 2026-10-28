@@ -88,6 +88,7 @@ export function makeShotTextures(scene: Scene): void {
     c.fillStyle = g;
     c.fillRect(0, 0, 4, 4);
   });
+  make(SHOT_FX_TEXTURES.square, 2, 2, (c) => c.fillRect(0, 0, 2, 2));
   make(SHOT_FX_TEXTURES.puff, 8, 8, (c) => {
     const g = c.createRadialGradient(4, 4, 0, 4, 4, 4);
     g.addColorStop(0, 'rgba(255,255,255,0.9)');
