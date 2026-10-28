@@ -11,6 +11,17 @@ export const SHAKE = {
   big: { ms: 320, intensity: 0.014 },
 } as const;
 
+/**
+ * 080: the only screen shake the game makes, once per boss intro, on its beat's first tick, on the world camera only
+ * (Shaun, 2026-10-27: "the only time a screen shake makes sense is like during a boss spawn animation"). Off with
+ * Flashes off (the "Flashes and shake" row) or a system asking for reduced motion. `SHAKE_ON` stays false for 014's.
+ * About ±3.8 px across and ±2.2 px down at 640×360 for the full intro.
+ */
+export const INTRO_SHAKE = {
+  full: { ms: 300, intensity: 0.006 },
+  short: { ms: 200, intensity: 0.004 },
+} as const;
+
 /** Hit-stop: how long a struck enemy's sprite holds still, ms (about 3 frames at 60 Hz). */
 export const HIT_STOP_MS = 50;
 
@@ -70,7 +81,6 @@ export const PARTICLES = {
   // Rime flaking off a cluster as it's worked (029).
   harvestRime: { colors: ['foam', 'snow', 'water-light'], count: 12, speed: [30, 90], gravity: 160, lifeMs: [350, 600], size: 2, lift: 14 },
   hitPlayer: { colors: ['cinder', 'flame-dark', 'snow'], count: 12, speed: [40, 120], gravity: 180, lifeMs: [200, 360], size: 2, lift: 14 },
-  deathMotes: { colors: ['cyan', 'cyan-glow', 'cyan-deep'], count: 26, speed: [10, 50], gravity: -70, lifeMs: [600, 1100], size: 2, lift: 10 },
   embers: { colors: ['cinder-light', 'cinder', 'gold-trim', 'flame-dark'], count: 44, speed: [30, 120], gravity: -45, lifeMs: [500, 1100], size: 3 },
   footDust: { colors: ['dirt-light', 'dirt'], count: 2, speed: [6, 18], gravity: -10, lifeMs: [200, 320], size: 1 },
   rollDust: { colors: ['dirt-light', 'dirt', 'rock-pale'], count: 4, speed: [10, 35], gravity: -15, lifeMs: [250, 420], size: 2 },
@@ -120,6 +130,31 @@ export const PARTICLES = {
   bashSpark: { colors: ['brass-light', 'brass', 'hollow-pale'], count: 14, speed: [40, 110], gravity: 120, lifeMs: [200, 380], size: 2, lift: 14 },
   boltFlash: { colors: ['danger', 'cinder-light', 'snow'], count: 10, speed: [30, 90], gravity: 40, lifeMs: [120, 260], size: 2, lift: 30 },
 } as const satisfies Record<string, ParticleBurst>;
+
+/**
+ * 076: the ley motes a death dissolves into (src/render/deathMotes.ts): a count by the enemy's size class
+ * (DEATH_SIZE), ×`champion` for a champion, ×`perEnemy` for some (the cinder mote's own burst plays too), ×the
+ * Graphics quality's scale, thinned to the per-death cap, the live death-mote cap and what PARTICLE_BUDGET has left.
+ * They rise from random points of the hurtbox in the family's colours, additive on Medium and High.
+ */
+export const DEATH_MOTES = {
+  count: { small: 10, medium: 16, large: 24, boss: 60 },
+  champion: 1.5,
+  perEnemy: { 'cinder-mote': 0.5 } as Readonly<Record<string, number>>,
+  quality: { low: 0.5, medium: 1, high: 1.5 },
+  perDeathCap: { low: 30, medium: 60, high: 90 },
+  liveCap: { low: 60, medium: 120, high: 200 },
+  additive: { low: false, medium: true, high: true },
+  speed: [10, 40] as const,
+  gravity: -60,
+  lifeMs: [700, 1200] as const,
+  bossLifeMs: [1000, 1800] as const,
+  size: 2,
+  bossSize: 3,
+} as const;
+
+/** 076: live particles of every kind the moderate set allows, by Graphics quality. In 076 only the death motes obey it (078 brings the rest). */
+export const PARTICLE_BUDGET = { low: 150, medium: 300, high: 500 } as const;
 
 /** The burst each node type gives off while worked and when a harvest lands (018). */
 export const HARVEST_BURSTS: Readonly<Record<string, keyof typeof PARTICLES>> = {

@@ -7,6 +7,8 @@ import { defOf } from '../sim/champions';
 import type { EnemyState } from '../sim/enemies';
 import type { SimState } from '../sim/state';
 import { colorOf } from './color';
+import { KILN_TENDER_RIG } from '../data/art/kilnTender';
+import { shownPoint, type SpriteLook } from './shownPoint';
 
 // What the Emberworks' enemies (061) show beyond their sprite and ground telegraph, for EnemyView (through
 // hollowsEnemyArt.ts): a cinder mote swelling with its wind-up; a kiln-tender's beam in the kiln's orange from its
@@ -34,23 +36,27 @@ export function makeEmberArt(scene: Scene, def: EnemyDef): EmberArt | undefined 
 }
 
 /** Shows the extras for this frame. */
-export function drawEmberArt(art: EmberArt, sprite: GameObjects.Sprite, e: EnemyState, def: EnemyDef, sim: SimState, now: number): void {
+export function drawEmberArt(art: EmberArt, sprite: GameObjects.Sprite, e: EnemyState, def: EnemyDef, sim: SimState, now: number, look: SpriteLook): void {
   // The mote swells as its burst nears.
-  if (def.kind === 'mote' && e.mode === 'windup') sprite.setScale(sprite.scaleX * (1 + EMBER_ENEMY_LOOK.swell.grow * Math.min(1, e.modeTicks / def.swell.windupTicks)));
-  if (def.kind === 'tender' && art.light) art.beam = drawBeam(art.light, e, sim, now);
+  if (def.kind === 'mote' && e.mode === 'windup') {
+    const k = 1 + EMBER_ENEMY_LOOK.swell.grow * Math.min(1, e.modeTicks / def.swell.windupTicks);
+    sprite.setScale(sprite.scaleX * k, sprite.scaleY * k);
+  }
+  if (def.kind === 'tender' && art.light) art.beam = drawBeam(art.light, e, sim, now, sprite.frame.name, look);
 }
 
 /** The beam from its nozzle to its target, and the target's glow while it channels; null when it isn't beaming. */
-function drawBeam(g: GameObjects.Graphics, e: EnemyState, sim: SimState, now: number): BeamShown | null {
+function drawBeam(g: GameObjects.Graphics, e: EnemyState, sim: SimState, now: number, frame: string, look: SpriteLook): BeamShown | null {
   g.clear();
   if (e.beamTarget < 0 || (e.mode !== 'windup' && e.mode !== 'swipe')) return null;
   const t = sim.enemies.find((o) => o.id === e.beamTarget);
   if (!t || t.roomId !== e.roomId) return null;
   const view = e.facing === 'up' || e.facing === 'down' ? e.facing : 'side';
   const k = e.champion ? CHAMPIONS.scale : 1;
-  const nz = B.nozzle[view];
-  const x0 = e.x + nz[0] * k * (e.facing === 'left' ? -1 : 1);
-  const y0 = e.y + defOf(e).feetBox.h / 2 + nz[1] * k;
+  // 076: from the nozzle as the sprite shows it: the frame it holds, its squash and its tremble.
+  const nz = shownPoint(KILN_TENDER_RIG, view, frame, 'nozzle', B.nozzle[view], look, e.facing === 'left' ? -1 : 1, k);
+  const x0 = e.x + nz[0];
+  const y0 = e.y + defOf(e).feetBox.h / 2 + nz[1];
   const tdef = defOf(t);
   const x1 = t.x;
   const y1 = t.y + tdef.hurtbox.offsetY;

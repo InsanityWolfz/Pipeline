@@ -21,6 +21,8 @@ export interface EnemyPart extends Part {
   readonly role: EnemyRole;
   /** Arm turns are mirrored (the right arm of a front or back view). */
   readonly mirror?: boolean;
+  /** 076: a glow part (eyes, runes) that rides the head's turn and lift instead of the body's. */
+  readonly follows?: 'head';
 }
 
 /** One frame's pose. Every field is optional; missing ones rest at 0 (or 1 for `alpha`, `scaleY`, `glow`). */
@@ -44,10 +46,30 @@ export interface EnemyPose {
   readonly alpha?: number;
   readonly glow?: number;
   readonly charge?: number;
+  /**
+   * 076: squash about the feet (as 075's): positive squashes, negative stretches. Height scales by (1 − squash) and
+   * width by (1 + squash), so the feet stay planted.
+   */
+  readonly squash?: number;
+  /** 076: the head's own turn about its pivot (the view's first head part's), radians (positive tips toward the facing), and its lift, px (negative is up). Every head part, and glow parts that follow it, turn together. */
+  readonly head?: number;
+  readonly headLift?: number;
+  /** 076: the legs' own turns about their pivots, radians (a leg kicked up in a stagger, legs folding in a death). */
+  readonly legBack?: number;
+  readonly legFront?: number;
+  /** 076: the body (everything but the legs and ground) shifted toward the facing, px: a lunge, a recoil. */
+  readonly shift?: number;
+  /** 076: the arms drawn apart, px: the back arm moved back (or left) and the front arm forward (or right); negative draws them together. */
+  readonly spread?: number;
+  /** 076: both arms (and what they hold: a shield, a hammer, a staff) raised, px. */
+  readonly raise?: number;
 }
 
-/** `turn`, `lob`, `throw` and `block` (034) only where an enemy has them (the Bulwark); `stun`, `dig` and `step` (035) likewise; `roar`, `brace` and `stomp` (041) the Bulwark's; `spray`, `flood` and `vent` (060) the Forgewright's; `blink`, `call` and `chain` (064) the Conductor's. */
-export type EnemyPoseName = 'idle' | 'walk' | 'windup' | 'swipe' | 'recover' | 'hit' | 'death' | 'turn' | 'lob' | 'throw' | 'block' | 'stun' | 'dig' | 'step' | 'roar' | 'brace' | 'stomp' | 'spray' | 'flood' | 'vent' | 'blink' | 'call' | 'chain';
+/** `turn`, `lob`, `throw` and `block` (034) only where an enemy has them (the Bulwark); `stun`, `dig` and `step` (035) likewise; `roar`, `brace` and `stomp` (041) the Bulwark's; `spray`, `flood` and `vent` (060) the Forgewright's; `blink`, `call` and `chain` (064) the Conductor's; 080: every boss's intro (`dormant`, `stir`, `rise`, `beat`, `ready`). */
+export type EnemyPoseName = 'idle' | 'walk' | 'windup' | 'stagger' | 'swipe' | 'recover' | 'hit' | 'death' | 'turn' | 'lob' | 'throw' | 'block' | 'stun' | 'dig' | 'step' | 'roar' | 'brace' | 'stomp' | 'spray' | 'flood' | 'vent' | 'blink' | 'call' | 'chain' | IntroPoseName;
+
+/** 080: a boss's intro poses (bossIntroPoses.ts). Anim keys split on `-`, so none of these holds one. */
+export type IntroPoseName = 'dormant' | 'stir' | 'rise' | 'beat' | 'ready';
 
 export interface EnemyRigDef {
   /** The `anims` key in src/data/enemies.ts. */
@@ -59,14 +81,15 @@ export interface EnemyRigDef {
   /** The body leans about this point, style px from the feet. */
   readonly hip: readonly [number, number];
   readonly views: Readonly<Record<'side' | 'down' | 'up', readonly EnemyPart[]>>;
-  /** Frames for each pose; a pose's anim plays these in order. `recover` only where the enemy has one. */
+  /**
+   * Frames for each pose; a pose's anim plays these in order. `recover` only where the enemy has one. 076: a wind-up
+   * strip (WINDUP_STRIPS: `windup` and the bosses' other attacks) is gather, coil (1 or 2 frames) and peak, shown by
+   * the wind-up's progress; `stagger` is reel and recover (not for bosses); `death` is the one struck frame.
+   */
   readonly poses: Readonly<Partial<Record<EnemyPoseName, readonly EnemyPose[]>>>;
+  /**
+   * 076: the part each wind-up strip throws (claw, fist, hammer, staff, plate, head) and a point on it, style px in
+   * the part's own coordinates, per view: its coil and peak carry it well clear of where it rests, so the tell reads.
+   */
+  readonly tells?: Readonly<Partial<Record<EnemyPoseName, { readonly part: string | Readonly<Record<'side' | 'down' | 'up', string>>; readonly at: Readonly<Record<'side' | 'down' | 'up', readonly [number, number]>> }>>>;
 }
-
-/** Four death frames shared by every enemy: sink, squash, tip and fade. */
-export const DEATH_POSES: readonly EnemyPose[] = [
-  { sink: 1, scaleY: 0.92, tilt: 0.1, alpha: 1, glow: 0.6 },
-  { sink: 3, scaleY: 0.78, tilt: 0.28, alpha: 0.85, glow: 0.3 },
-  { sink: 5, scaleY: 0.62, tilt: 0.45, alpha: 0.6, glow: 0.1 },
-  { sink: 7, scaleY: 0.5, tilt: 0.55, alpha: 0.3, glow: 0 },
-];

@@ -1,5 +1,5 @@
 // Asset keys. Render code loads and draws by these keys, never string literals.
-import { enemyAnims, type EnemyAnims } from './enemyAnims';
+import { enemyAnims, INTRO_EXTRAS, type EnemyAnims } from './enemyAnims';
 import { HOLLOWS_ENEMY_ANIMS } from './hollowsEnemyAssets';
 import { FORGE_ANIMS } from './forgewrightAssets';
 import { CONDUCTOR_ANIMS } from './conductorAssets';
@@ -147,8 +147,8 @@ export type { EnemyAnim, EnemyAnims, ExtraPose } from './enemyAnims';
 export const ENEMY_ANIMS: Readonly<Record<string, EnemyAnims>> = {
   husk: enemyAnims('husk'),
   wisp: enemyAnims('wisp'),
-  warden: enemyAnims('warden', true),
-  bulwark: enemyAnims('bulwark', true, ['turn', 'lob', 'throw', 'block', 'roar', 'brace', 'stomp']),
+  warden: enemyAnims('warden', true, INTRO_EXTRAS, 1, true),
+  bulwark: enemyAnims('bulwark', true, ['turn', 'lob', 'throw', 'block', 'roar', 'brace', 'stomp', ...INTRO_EXTRAS], 1, true),
   ...HOLLOWS_ENEMY_ANIMS,
   ...FORGE_ANIMS,
   ...CONDUCTOR_ANIMS,
@@ -204,9 +204,6 @@ export const ENEMY_FX = {
    * `color`, with the shield icon (`w` x `h` px) `gap` px left of the bar, centred on it, `depth` over the world's UI.
    */
   immuneBar: { color: 'water', icon: { w: 7, h: 8, gap: 1, depth: 0.5 } },
-  /** A corpse lingers this long after its death animation, then fades over `corpseFadeMs`. */
-  corpseLingerMs: 600,
-  corpseFadeMs: 600,
 } as const;
 
 /**

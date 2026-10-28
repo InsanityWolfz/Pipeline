@@ -36,6 +36,8 @@ export type Bot = (s: SimState, b: EnemyState) => Parameters<typeof run>[2];
 /** Runs a fight for up to `limit` ticks, the bot choosing each tick's command. */
 export function fight(seed: number, limit: number, bot: Bot): Fight {
   const { s, b } = forum(160, seed);
+  // 080: the intro the helper stepped out (2.75 s) counts toward the fight's length, from walking in.
+  const intro = s.tick;
   decentBuild(s);
   lines(s, 'bomb', 'arrow');
   const max = playerStats(s).maxHealth;
@@ -46,11 +48,11 @@ export function fight(seed: number, limit: number, bot: Bot): Fight {
     if (Math.abs(angleDiff(b.angle, Math.atan2(s.player.y - b.y, s.player.x - b.x))) > Math.PI / 2) behind += 1;
     run(s, 1, bot(s, b));
     taken += takenThisTick(s);
-    const end = (won: boolean, ko: boolean): Fight => ({ won, ko, ticks: t, taken, share: shareOf(taken, max), behind });
+    const end = (won: boolean, ko: boolean): Fight => ({ won, ko, ticks: t + intro, taken, share: shareOf(taken, max), behind });
     if (s.bossDefeats.length > 0) return end(true, false);
     if (s.player.dying > 0) return end(false, true);
   }
-  return { won: false, ko: false, ticks: limit, taken, share: shareOf(taken, max), behind };
+  return { won: false, ko: false, ticks: limit + intro, taken, share: shareOf(taken, max), behind };
 }
 
 /** Damage taken as a share of max health, to two places. */

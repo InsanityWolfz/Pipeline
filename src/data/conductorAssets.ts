@@ -1,4 +1,4 @@
-import { enemyAnims } from './enemyAnims';
+import { enemyAnims, INTRO_EXTRAS } from './enemyAnims';
 
 // How the Conductor reads on screen (064), beyond its rig (src/data/art/conductor.ts): its six arena rods in their
 // three looks with small bars, the flash on the rod a blink's warning names, the blink's flare out and in, its
@@ -11,7 +11,7 @@ export const CONDUCTOR_SPRITES = {
 } as const;
 
 /** Its animation set (joined into ENEMY_ANIMS): it gathers before a blink, raises its staff to call the storm, and spreads its arms to run the rod chain. */
-export const CONDUCTOR_ANIMS = { conductor: enemyAnims('conductor', true, ['blink', 'call', 'chain']) } as const;
+export const CONDUCTOR_ANIMS = { conductor: enemyAnims('conductor', true, ['blink', 'call', 'chain', ...INTRO_EXTRAS], 1, true) } as const;
 
 export const CONDUCTOR_LOOK = {
   /** A rod shows `regrowing` over the last `regrowingTicks` of its regrowth; its small bar shows once it's hurt, `w` × `h` px, `gap` px over its box. */

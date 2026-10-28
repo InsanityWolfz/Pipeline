@@ -21,7 +21,8 @@ import { createConductor, type ConductorState } from './conductorRods';
  * `lob` and `throw` (034): the Bulwark rearing back, then holding the throw. 035: `stun`, a Charger dazed by a wall;
  * `dig`, a Burrower digging in; `peek`, a Sniper stepping out of cover to a clear line. 041: the Bulwark's `roar` as it
  * enrages, and its rear stomp's `stomp-windup`, `stomp` and `stomp-recover`. 060: the Forgewright's ember spray
- * (`spray-windup`, `spray`), its Forge Flood (`flood-windup`, `flood`) and its `vent` stagger.
+ * (`spray-windup`, `spray`), its Forge Flood (`flood-windup`, `flood`) and its `vent` stagger. 080: `intro`, a boss
+ * and its arena's posted enemies held still and untargetable while its fight opens (bossIntro.ts).
  */
 export type EnemyMode =
   | 'idle'
@@ -43,7 +44,8 @@ export type EnemyMode =
   | 'spray'
   | 'flood-windup'
   | 'flood'
-  | 'vent';
+  | 'vent'
+  | 'intro';
 
 export interface EnemyState extends Knockable {
   id: number;
@@ -274,20 +276,21 @@ export function damageEnemy(
 }
 
 /**
- * Immune (054): nothing can damage it now — a Burrower underground (035), an add still rising (041). A shield's front
- * isn't immunity (it can be hit from behind). Render draws its bar blue with a shield while it holds.
+ * Immune (054): nothing can damage it now — a Burrower underground (035), an add still rising (041), a boss or a
+ * posted enemy in its intro (080). A shield's front isn't immunity (it can be hit from behind). Render draws its bar
+ * blue with a shield while it holds.
  */
-export const immune = (e: Pick<EnemyState, 'underground' | 'rising'>): boolean => e.underground || e.rising > 0;
+export const immune = (e: Pick<EnemyState, 'underground' | 'rising' | 'mode'>): boolean => e.underground || e.rising > 0 || e.mode === 'intro';
 
 /**
  * Whether shots, punches and bursts can reach its body: whenever it isn't immune (054), and (068) not the Conductor in
  * its blink-in window. Shots pass through either, as through a burrowed enemy; its parts (the Conductor's rods) still
  * take hits while it's only blinking in (combat.ts, blast.ts, melee.ts ask `immune` for those).
  */
-export const targetable = (e: Pick<EnemyState, 'underground' | 'rising' | 'conductor'>): boolean => !immune(e) && e.conductor.blinkIn <= 0;
+export const targetable = (e: Pick<EnemyState, 'underground' | 'rising' | 'mode' | 'conductor'>): boolean => !immune(e) && e.conductor.blinkIn <= 0;
 
-/** It passes through other enemies (035): a Burrower underground, a Charger mid-charge (061: a hound mid-dash; 065: a hawk mid-dive), an add rising (041). Separation leaves it be. */
-export const passesThrough = (e: EnemyState): boolean => e.underground || e.rising > 0 || (e.mode === 'swipe' && LANE_RUNNERS.includes(defOf(e).kind));
+/** It passes through other enemies (035): a Burrower underground, a Charger mid-charge (061: a hound mid-dash; 065: a hawk mid-dive), an add rising (041), anything in its intro (080). Separation leaves it be. */
+export const passesThrough = (e: EnemyState): boolean => e.underground || e.rising > 0 || e.mode === 'intro' || (e.mode === 'swipe' && LANE_RUNNERS.includes(defOf(e).kind));
 
 const LANE_RUNNERS: readonly string[] = ['charger', 'hound', 'hawk'];
 

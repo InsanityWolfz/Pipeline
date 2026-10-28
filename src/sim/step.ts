@@ -26,6 +26,7 @@ import { stepIntakeRates } from './intakeRates';
 import { checkKo } from './health';
 import { stepHealing } from './healing';
 import { stepEnemies } from './enemyAi';
+import { stepIntros } from './bossIntro';
 import { NO_COMMAND, type Command } from './input';
 import { stepPlayer } from './movement';
 import { slowScale } from './slow';
@@ -96,6 +97,8 @@ export function stepSim(state: SimState, input: Command = NO_COMMAND): void {
   stepCacheRearm(state);
   // Before enemies act, so a Bulwark bomb thrown this tick starts its fuse at 0 (034; its fuseTicks keep the word).
   stepEnemyBombs(state);
+  // 080: boss intros start, run and end just before the enemies act, so an intro's end is its boss's wake tick.
+  stepIntros(state);
   stepEnemies(state, bodies);
   stepNodes(state.nodes, state.events.rodStrikes);
   // Before the tube, so fire this tick cancels a harvest in progress.

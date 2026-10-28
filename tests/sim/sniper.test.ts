@@ -200,10 +200,10 @@ describe('the Sniper construct', () => {
 
   it('paints and hits a player standing in the top of a rock\'s tile, above its footprint (059)', () => {
     const s = arena();
-    // The meadow's rock at (72, 34), open ground above it; the Sniper six tiles north.
+    // The meadow's rock at (72, 34), open ground above it; the Sniper five tiles north (073: on screen, so it may fire).
     const rock = homeTile(72, 34);
     movePlayer(s, rock.x, rock.y - 8);
-    const e = placeSniper(s, rock.x, at(72, 28).y);
+    const e = placeSniper(s, rock.x, at(72, 29).y);
     run(s, 1);
     expect(e.mode).toBe('windup');
     expect(snipeOf(s)?.phase).toBe('tracking');

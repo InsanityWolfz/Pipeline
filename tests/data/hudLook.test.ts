@@ -22,14 +22,25 @@ const plain = (m: Record<string, unknown>) => JSON.parse(JSON.stringify(Object.f
 
 describe('081: layout and sizes as on main', () => {
   it("keeps every box, size, gap and wrap width in the HUD's layout files", () => {
-    const layout = plain(hudLayout);
-    delete layout.MENU_FEEDBACK;
-    expect(layout).toEqual(MAIN.hudLayout);
-    expect(plain(hudPanels)).toEqual(MAIN.hudPanels);
-    expect(plain(flowLayout)).toEqual(MAIN.flowLayout);
-    expect(JSON.parse(JSON.stringify(MINIMAP))).toEqual(MAIN.minimap);
-    expect(JSON.parse(JSON.stringify(FOUNDRY_MAP))).toEqual(MAIN.foundryMap);
-    expect(JSON.parse(JSON.stringify(HOLLOWS_LOOK.bossBar))).toEqual(MAIN.bossBar);
+    // The layout constants rule 2 names, each as on main: later specs may add a field (077's HOVER_NAME.setPieceWidth)
+    // or drop a constant that isn't layout (075's ARMOR_TINTS), but no box, size, gap or wrap width moves.
+    const L = MAIN.hudLayout ?? {};
+    const P = MAIN.hudPanels ?? {};
+    const pinned: [string, unknown, unknown][] = [
+      ...(['HARVEST_BAR', 'ITEM_ICON_SIZE', 'HUD_LAYOUT', 'CRAFT_MENU_LAYOUT', 'BUILD_BAR_LAYOUT', 'BUILD_PULSE', 'PICKER_LAYOUT', 'READOUT_LAYOUT', 'MENU_MAX_ROWS', 'MENU_COLUMN_GAP', 'HOVER_NAME', 'WORLD_NAMES', 'PAUSE_MENU'] as const).map(
+        (k): [string, unknown, unknown] => [k, plain(hudLayout)[k], L[k]],
+      ),
+      ...(['HUD_HEALTH_LAYOUT', 'HEALTH_BLOCK_WIDTH', 'HEALTH_BLOCK_HEIGHT', 'HP_BAR', 'INVENTORY_GRID', 'PICKUP_FEED', 'FOOTER_LINES'] as const).map((k): [string, unknown, unknown] => [k, plain(hudPanels)[k], P[k]]),
+      ...Object.keys(MAIN.flowLayout ?? {}).map((k): [string, unknown, unknown] => [`flow ${k}`, plain(flowLayout)[k], MAIN.flowLayout?.[k]]),
+      ['MINIMAP', JSON.parse(JSON.stringify(MINIMAP)), MAIN.minimap],
+      ['FOUNDRY_MAP', JSON.parse(JSON.stringify(FOUNDRY_MAP)), MAIN.foundryMap],
+      ['bossBar', JSON.parse(JSON.stringify(HOLLOWS_LOOK.bossBar)), MAIN.bossBar],
+    ];
+    for (const [name, live, main] of pinned) {
+      expect(main, `${name} on main`).toBeDefined();
+      if (typeof main === 'object' && main !== null) expect(live, name).toMatchObject(main);
+      else expect(live, name).toBe(main);
+    }
   });
 
   it('keeps every text style at its size, weight, line height and outline', () => {

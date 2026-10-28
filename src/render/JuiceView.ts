@@ -1,6 +1,8 @@
 import type { Cameras, Scene } from 'phaser';
 import { DEPTHS } from '../data/assets';
 import { DAMAGE_NUMBERS, PARTICLES, SHAKE, SHAKE_ON, type ParticleBurst } from '../data/juice';
+import { introShake } from './bossIntro';
+import { settings } from './flow/settingsStore';
 import { paletteHex } from '../data/palette';
 import { TEXT_STYLES } from '../data/fonts';
 import { phaserStyle } from './fonts';
@@ -12,6 +14,14 @@ import { Particles } from './Particles';
 // Render-only: the sim never waits on any of it.
 
 export type ShakeSize = keyof typeof SHAKE;
+
+/** 080: an intro's shake as logged: full or short, its length and strength, and whether the setting stopped it. */
+export interface IntroShakeLog {
+  kind: 'intro' | 'intro-short';
+  ms: number;
+  intensity: number;
+  suppressed: boolean;
+}
 
 const SHAKE_ORDER: readonly ShakeSize[] = ['small', 'medium', 'big'];
 
@@ -28,7 +38,10 @@ export class JuiceView {
   /** Recent damage numbers, so ones landing together stack instead of overlapping. */
   private recent: { x: number; y: number; at: number }[] = [];
   /** Every shake asked for, oldest first, up to SHAKE_LOG_MAX: the test hook reports it (021). */
-  readonly shakes: ShakeSize[] = [];
+  readonly shakes: (ShakeSize | IntroShakeLog['kind'])[] = [];
+  /** 080: every intro shake asked for, suppressed or not, and how many times the world camera really shook. */
+  readonly introShakes: IntroShakeLog[] = [];
+  cameraShakes = 0;
   /** Burn beats' small numbers shown since boot (060), for the test hook. */
   burnNumbers = 0;
 
@@ -48,7 +61,27 @@ export class JuiceView {
     if (running && SHAKE_ORDER.indexOf(size) < SHAKE_ORDER.indexOf(running)) return;
     const s = SHAKE[size];
     this.shaking = { size, until: now + s.ms };
+    this.cameraShakes += 1;
     this.camera.shake(s.ms, s.intensity, true);
+  }
+
+  /**
+   * 080: a boss intro's beat, the only shake the game makes: on the world camera only (the UI camera holds the card,
+   * the bar and the HUD still). None with Flashes off ("Flashes and shake") or a system asking for reduced motion,
+   * logged as suppressed either way.
+   */
+  introShake(short: boolean): void {
+    const kind = short ? 'intro-short' : 'intro';
+    const shake = introShake(short, settings().flashes, this.reducedMotion);
+    const look = shake ?? introShake(short, true, false) ?? { ms: 0, intensity: 0 };
+    this.shakes.push(kind);
+    if (this.shakes.length > SHAKE_LOG_MAX) this.shakes.shift();
+    this.introShakes.push({ kind, ms: look.ms, intensity: look.intensity, suppressed: shake === null });
+    if (this.introShakes.length > SHAKE_LOG_MAX) this.introShakes.shift();
+    if (!shake) return;
+    this.cameraShakes += 1;
+    this.shaking = null;
+    this.camera.shake(shake.ms, shake.intensity, true);
   }
 
   burst(name: keyof typeof PARTICLES, x: number, y: number, depth?: number): void {

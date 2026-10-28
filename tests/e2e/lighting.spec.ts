@@ -300,7 +300,9 @@ test('a telegraph reads as red in the Stormcrown as in Region 1', async ({ page 
     await toRegion(page, region);
     const [id] = await spawnPack(page, ['husk'], 26);
     if (id === undefined) throw new Error('no husk');
-    await stepUntil(page, id, 'windup', 12);
+    // 076: read late in the wind-up, its fill most of the way out: early on the arc is a faint wash that isn't red over
+    // Region 1's grass, and this box used to find its red in the old wanderer's rust robe (075 dressed it in cobalt).
+    await stepUntil(page, id, 'windup', 32);
     await drawn(page);
     const px = await pixels(page, await page.screenshot(), { x: Math.round(size.width / 2 - 10 * k), y: Math.round(size.height / 2 - 60 * k), w: Math.round(90 * k), h: Math.round(100 * k) });
     // The reddest tenth of the box: the telegraph's own red, however dark the ground under it.

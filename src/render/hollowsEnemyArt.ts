@@ -10,7 +10,11 @@ import type { OrbState } from '../sim/orbs';
 import { snipeLine } from '../sim/sniperAi';
 import type { SimState } from '../sim/state';
 import { colorOf } from './color';
-import { addVector, showFrame } from './vector/textures';
+import { addVector, showFrame, textureScale } from './vector/textures';
+import { tremble, windupPhase } from './enemyMotion';
+import { shownPoint, type SpriteLook } from './shownPoint';
+import { SNIPER_RIG } from '../data/art/sniper';
+import { ENEMY_MOTION } from '../data/art/enemyMotion';
 import { destroyEmberArt, drawEmberArt, makeEmberArt, type BeamShown, type EmberArt } from './emberEnemyArt';
 import { destroyStormArt, drawStormArt, makeStormArt, type StormArt } from './stormEnemyArt';
 
@@ -66,22 +70,36 @@ export function makeHollowsArt(scene: Scene, def: EnemyDef): HollowsArt | undefi
 }
 
 /** Shows the extras for this frame; hides the body while it's under the ground. */
-export function drawHollowsArt(art: HollowsArt | undefined, sprite: GameObjects.Sprite, e: EnemyState, def: EnemyDef, sim: SimState, now: number): void {
+export function drawHollowsArt(art: HollowsArt | undefined, sprite: GameObjects.Sprite, e: EnemyState, def: EnemyDef, sim: SimState, now: number, look: SpriteLook): void {
   sprite.setVisible(!e.underground);
-  if (art?.ember) drawEmberArt(art.ember, sprite, e, def, sim, now);
+  if (art?.ember) drawEmberArt(art.ember, sprite, e, def, sim, now, look);
   if (art?.storm) drawStormArt(art.storm, e, def);
   if (art?.light && def.kind === 'shardback') drawFlare(art.light, e, def.bash.windupTicks, now);
-  if (art?.light && def.kind === 'sniper') art.laser = drawLaser(art.light, e, def, sim);
+  if (art?.light && def.kind === 'sniper') art.laser = drawLaser(art.light, e, sim, sprite.frame.name, look);
   if (!art?.ripple) return;
   art.ripple.setVisible(e.underground);
   if (!e.underground) return;
-  // The mound heaves while it moves, and lies still while its ring grows.
+  // The mound heaves while it moves; 076: through its wind-up it settles, swells and cracks, and rises trembling.
   const R = HOLLOWS_ENEMY_LOOK.ripple;
   const moving = Math.hypot(e.vx, e.vy) > R.minSpeed;
+  const w = def.kind === 'burrower' && e.mode === 'windup' ? rippleWindup(e.modeTicks, def.burrow.windupTicks, now) : null;
   const frame = moving ? Math.floor((now + e.id * R.phaseMs) / R.wobbleMs) % 2 : 0;
-  const name = HOLLOWS_ENEMY_SPRITES.ripple[frame] ?? HOLLOWS_ENEMY_SPRITES.ripple[0];
+  const name = w?.cracked ? HOLLOWS_ENEMY_SPRITES.rippleCracked : (HOLLOWS_ENEMY_SPRITES.ripple[frame] ?? HOLLOWS_ENEMY_SPRITES.ripple[0]);
   if (art.ripple.frame.name !== name) showFrame(art.ripple, name);
-  art.ripple.setPosition(Math.round(e.x), Math.round(e.y + R.drop)).setDepth(DEPTHS.groundFx + R.depth);
+  const base = 1 / textureScale();
+  art.ripple.setScale(base * (w?.sx ?? 1), base * (w?.sy ?? 1));
+  art.ripple.setPosition(Math.round(e.x) + (w?.dx ?? 0), Math.round(e.y + R.drop)).setDepth(DEPTHS.groundFx + R.depth);
+}
+
+/** 076: the ripple through a Burrower's wind-up: its scale, the cracked frame, and the peak's tremble. */
+export function rippleWindup(modeTicks: number, ticks: number, now: number): { sx: number; sy: number; cracked: boolean; dx: number } {
+  const W = HOLLOWS_ENEMY_LOOK.rippleWindup;
+  const phase = windupPhase(modeTicks, ticks);
+  const p = modeTicks / ticks;
+  if (phase === 'gather') return { sx: W.settle[0], sy: W.settle[1], cracked: false, dx: 0 };
+  if (phase === 'peak') return { sx: W.peak, sy: W.peak, cracked: true, dx: tremble('peak', now, false).dx };
+  const k = 1 + (W.coil - 1) * Math.min(1, (p - ENEMY_MOTION.phases.gather) / (ENEMY_MOTION.phases.peak - ENEMY_MOTION.phases.gather));
+  return { sx: k, sy: k, cracked: p >= W.crackAt, dx: 0 };
 }
 
 /** The Shardback's shield flaring brass through the wind-up, flickering, brighter as the bash nears. */
@@ -101,7 +119,9 @@ function drawFlare(g: GameObjects.Graphics, e: EnemyState, windupTicks: number, 
 const LASER_DEPTH = DEPTHS.motes - 1;
 
 /** The laser from its lens (per view, flipped facing left, scaled for a champion) to the end of its sight line, which never runs through a solid. */
-function drawLaser(g: GameObjects.Graphics, e: EnemyState, def: Extract<EnemyDef, { kind: 'sniper' }>, sim: SimState): LaserShown | null {
+function drawLaser(g: GameObjects.Graphics, e: EnemyState, sim: SimState, frame: string, look: SpriteLook): LaserShown | null {
+  const def = enemyDef(e.enemyId);
+  if (def.kind !== 'sniper') return null;
   g.clear();
   const line = snipeLine(sim, e, def);
   if (!line) return null;
@@ -110,10 +130,11 @@ function drawLaser(g: GameObjects.Graphics, e: EnemyState, def: Extract<EnemyDef
   // Locked, it brightens and blinks: on and off every `blinkTicks` of the lock.
   const on = !locked || Math.floor((e.modeTicks - def.snipe.trackTicks) / L.blinkTicks) % 2 === 0;
   const view = e.facing === 'up' || e.facing === 'down' ? e.facing : 'side';
-  const lens = HOLLOWS_ENEMY_LOOK.lens[view];
+  // 076: from the lens as the sprite shows it: the wind-up frame it holds, its squash and its tremble.
   const k = e.champion ? CHAMPIONS.scale : 1;
-  const x0 = e.x + lens[0] * k * (e.facing === 'left' ? -1 : 1);
-  const y0 = e.y + enemyDef(e.enemyId).feetBox.h / 2 + lens[1] * k;
+  const lens = shownPoint(SNIPER_RIG, view, frame, view === 'up' ? 'housing' : 'lens', HOLLOWS_ENEMY_LOOK.lens[view], look, e.facing === 'left' ? -1 : 1, k);
+  const x0 = e.x + lens[0];
+  const y0 = e.y + def.feetBox.h / 2 + lens[1];
   const color = colorOf(ENEMY_FX.telegraphColor);
   const width = locked ? L.lockedWidth : L.width;
   const alpha = locked ? (on ? L.lockedAlpha : L.alpha * L.dim) : L.alpha;

@@ -314,7 +314,19 @@ Each plan's build notes hold the detail; these are the lasting technical choices
   - Render-side checks that read pixels (the silhouette) cache on everything that can change the answer, including each prop's current frame, and look only at a spatial bucket round the player, never every prop each frame.
   - A craft max always carries `batches` on its one craft event (even for one batch); a plain click carries none, so the feed tells them apart.
 
+- **073 enemies only attack on screen:**
+  - Whether an enemy may start an attack is one shared sim rule (`mayStart`, `aiCommon.ts`), checked beside the cooldown, so a new enemy kind inherits it; "on screen" is the same feet-in-view box that waking uses.
+  - Boss arenas override it: anything standing in an arena with the player follows the boss's wake and leash rules (`inArenaWithPlayer`, `arenaWait.ts`).
 - **074 light and region moods:**
   - Lighting is render-only and never feeds the sim: region and ring moods, light sources and quality tiers are data (`src/data`), drawn by a lighting layer in render.
   - Characters sit in a never-darkened layer and take only a light's catch, so enemies and telegraphs stay readable in every mood.
   - Lights reach only what's near them: ground is lit in 160 px squares and props one by one only where a light reaches, which keeps draw calls low on High.
+- **075 the wanderer redesign:**
+  - What the body shows of gear is a sim fact (`wornRarity`, the highest rarity worn), read by render; the rig never decides rarity.
+  - Pose timings read the sim's own durations (`ROLL_TICKS`, `PLAYER_HIT_FX.poseTicks`); every other motion number lives in `WANDERER_MOTION`, so a timing change can't leave the art out of step.
+  - Rig parts are baked to textures at boot and cached per view, so drawing allocates nothing per frame.
+
+- **076 enemy and boss polish:**
+  - Enemy poses follow the sim's own wind-up progress (gather, coil, peak by share of the wind-up), so the art can't drift from timing; motion values live in `ENEMY_MOTION`, with per-attack overrides (slams take no release stretch).
+  - Death motes share one capped total per death, split across a boss and its standing parts, and scale with Graphics quality.
+  - Staggers count hits per sim tick, never per render frame, so slow machines see the same reactions.

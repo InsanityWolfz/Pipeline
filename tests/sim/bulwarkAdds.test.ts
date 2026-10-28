@@ -9,6 +9,7 @@ import type { SimState } from '../../src/sim/state';
 import { summarize } from '../../src/sim/summary';
 import { tileCentre } from '../../src/sim/tiles';
 import { die, fireAt, hold, movePlayer, run, runUntil } from './fight';
+import { runIntro } from './introKit';
 import { DEF, forum, START } from './forum';
 
 // The Bulwark's adds (041.6): the first time in a fight its health drops below half, a
@@ -99,6 +100,7 @@ describe('the adds', () => {
     expect(addsOf(s)).toEqual([]);
     expect(b.addsRisen).toBe(false);
     movePlayer(s, START.x, START.y + 160);
+    runIntro(s);
     run(s, 1);
     b.health = HALF;
     run(s, 1);
@@ -145,6 +147,7 @@ describe('the adds', () => {
     if (!again) throw new Error('no summoned Bulwark');
     expect(again.addsRisen).toBe(false);
     movePlayer(s, START.x, START.y + 160);
+    runIntro(s);
     run(s, 1);
     again.health = HALF;
     run(s, 1);

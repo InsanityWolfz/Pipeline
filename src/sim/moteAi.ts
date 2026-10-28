@@ -1,5 +1,5 @@
 import type { MoteDef } from '../data/emberworksEnemies';
-import { engage, hold, inAggroBox, leash, startWindup, toward } from './aiCommon';
+import { engage, hold, inAggroBox, leash, mayStart, startWindup, toward } from './aiCommon';
 import type { EnemyState } from './enemies';
 import { layPool } from './floodPools';
 import { damagePlayer } from './health';
@@ -32,7 +32,7 @@ export function moteThink(state: SimState, e: EnemyState, def: MoteDef): [number
   if (home) return home;
   const dx = p.x - e.x;
   const dy = p.y - e.y;
-  if (e.roomId === state.roomId && Math.hypot(dx, dy) <= swell.triggerRange) {
+  if (mayStart(state, e) && Math.hypot(dx, dy) <= swell.triggerRange) {
     startWindup(e, def, dx, dy);
     return [0, 0];
   }

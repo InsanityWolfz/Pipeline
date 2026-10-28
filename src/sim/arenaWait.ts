@@ -20,3 +20,8 @@ export function arenaWaits(state: Pick<SimState, 'player' | 'roomId'>, e: Pick<E
   const arena = arenaOfPost(e);
   return arena !== undefined && !(state.roomId === e.roomId && playerInside(state, arena));
 }
+
+/** 073.5: true while this enemy's feet are on an arena's floor (in a room it stands in) and the player is inside that same arena. */
+export function inArenaWithPlayer(state: Pick<SimState, 'player' | 'roomId'>, e: Pick<EnemyState, 'roomId' | 'x' | 'y'>): boolean {
+  return ARENAS.some((a) => a.rooms.includes(e.roomId) && insideTiles(a.inside, e.x, e.y) && state.roomId === e.roomId && playerInside(state, a));
+}

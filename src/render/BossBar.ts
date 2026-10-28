@@ -14,13 +14,16 @@ import { colorOf } from './color';
 import { TextLine } from './textLine';
 import { DrawKey } from './drawKey';
 import { HUD_EDGES } from '../data/hudLook';
+import { barAlpha, barFill } from './bossIntro';
+import { introShort } from '../sim/bossIntro';
 
 /**
  * The boss bar as drawn (034), for `ui().bossBar`: the boss's name, health and max, and whether it's enraged (041), or
  * null while none fights; 060: whether it shows the blue shield (the Forgewright's plating), and its heat gauge's fill
- * (0..1, null for a boss without one).
+ * (0..1, null for a boss without one). 080: `fill`, how much of its health the bar shows: it fills from empty during its
+ * intro (`health` is still the sim's).
  */
-export type BossBarShown = { name: string; health: number; maxHealth: number; enraged: boolean; shielded: boolean; heat: number | null } | null;
+export type BossBarShown = { name: string; health: number; maxHealth: number; enraged: boolean; shielded: boolean; heat: number | null; fill: number } | null;
 
 const B = HOLLOWS_LOOK.bossBar;
 /** 081's lit lines, made once. */
@@ -38,7 +41,8 @@ export class BossBar {
   private readonly bar: GameObjects.Graphics;
   private readonly name: TextLine;
   private icon?: GameObjects.Image;
-  private readonly key = new DrawKey(7);
+  private readonly key = new DrawKey(5);
+  private readonly record: NonNullable<BossBarShown> = { name: '', health: 0, maxHealth: 0, enraged: false, shielded: false, heat: null, fill: 1 };
   shown: BossBarShown = null;
 
   constructor(scene: Scene) {
@@ -66,24 +70,40 @@ export class BossBar {
     const forge = forgeDefOf(boss);
     const shielded = plated(boss);
     const heat = forge ? Math.min(1, boss.heat / forge.heat.max) : null;
+    // 080: the bar fills from empty and fades in through the intro's card (the short intro's whole length).
+    const short = boss.mode === 'intro' && introShort(sim, boss);
+    const fill = boss.mode === 'intro' ? barFill(boss.modeTicks, short) : 1;
+    const alpha = boss.mode === 'intro' ? barAlpha(boss.modeTicks, short) : 1;
+    this.frame.setAlpha(alpha);
+    this.bar.setAlpha(alpha);
+    this.name.setAlpha(alpha);
+    // What the bar draws, kept in one record (081: no object a frame), heat at its real value.
+    const r = this.record;
+    r.name = enemyDef(boss.enemyId).name;
+    r.health = boss.health;
+    r.maxHealth = max;
+    r.enraged = boss.enraged;
+    r.shielded = shielded;
+    r.heat = heat;
+    r.fill = fill;
+    this.shown = r;
     const H = FORGE_LOOK.heat;
     const heatW = heat === null ? -1 : Math.round((B.w - 2 * H.inset) * heat);
     const full = heat !== null && heat >= 1 && Math.floor(this.scene.time.now / H.pulseMs) % 2 === 0;
-    const changed = this.key.put(boss.id).put(boss.health).put(max).put(shielded).put(heatW).put(full).put(boss.enraged).changed();
+    const w = Math.max(0, Math.round((B.w * boss.health * fill) / max));
+    // 081: redrawn only when what it draws changes: the boss, the fill's width (080's intro fill included), the shield, the heat.
+    const changed = this.key.put(boss.id).put(w).put(shielded).put(heatW).put(full).changed();
     this.setVisible(true);
     if (!changed) return;
-    const def = enemyDef(boss.enemyId);
-    this.shown = { name: def.name, health: boss.health, maxHealth: max, enraged: boss.enraged, shielded, heat };
     const x = Math.round((VIEW_WIDTH - B.w) / 2);
     this.frame.setPosition(x - B.border * 2, B.top - B.border * 2);
     const g = this.bar.clear();
-    const w = Math.max(0, Math.round((B.w * boss.health) / max));
     g.fillStyle(colorOf(shielded ? ENEMY_FX.immuneBar.color : B.fill)).fillRect(x, B.top, w, B.h);
     g.fillStyle(LIT.top, HUD_EDGES.hpFill.top.alpha).fillRect(x, B.top, w, 1);
     g.fillStyle(LIT.foot, HUD_EDGES.hpFill.foot.alpha).fillRect(x, B.top + B.h - 1, w, 1);
     this.drawShield(shielded, x);
     if (heat !== null) this.drawHeat(g, x, heatW, full);
-    this.name.set(def.name);
+    this.name.set(r.name);
     this.name.moveTo(Math.round((VIEW_WIDTH - this.name.width) / 2), B.top - B.nameGap - B.border * 2 - this.name.lineHeight);
   }
 
