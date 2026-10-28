@@ -243,4 +243,28 @@ test.describe('review screenshots (075)', () => {
     await strip(page, [...roll, ...hit], '07-roll-hit-4x.png', 288);
     await strip(page, ko, '08-ko-4x.png', 288);
   });
+
+  // 075.13 (Shaun, 2026-10-28: "He's taking a million steps a second"): one second of walking and of strafing while
+  // firing, a frame every other 60 Hz tick, with the cadence measured from the stride's phase.
+  for (const [file, mode] of [['09-walk-cadence.png', 'walk'], ['10-strafe-cadence.png', 'strafe']] as const) {
+    test(`a second of ${mode === 'walk' ? 'walking' : 'strafing while firing'}, frame by frame, with its cadence`, async ({ page }) => {
+      test.setTimeout(120_000);
+      await page.setViewportSize({ width: 1280, height: 720 });
+      await boot(page, '?start=field&attuned');
+      const cmd = mode === 'strafe' ? '{ moveX: 1, use: true, aimX: p.x + 300, aimY: p.y - 14 }' : '{ moveX: 1, aimX: p.x + 300, aimY: p.y - 14 }';
+      await step(page, 20, '{ aimX: p.x + 300, aimY: p.y - 14 }');
+      await step(page, 12, cmd);
+      const crops: Crop[] = [];
+      const first = await page.evaluate(() => ({ stride: window.__GAME__?.ui().player?.stride ?? 0, x: window.__GAME__?.getState().player.x ?? 0 }));
+      for (let i = 0; i < 30; i++) {
+        await step(page, 2, cmd);
+        crops.push(await crop(page, `${((i * 2) / 60).toFixed(2)} s`, 48));
+      }
+      const last = await page.evaluate(() => ({ stride: window.__GAME__?.ui().player?.stride ?? 0, x: window.__GAME__?.getState().player.x ?? 0 }));
+      const stepsPerSecond = ((last.stride - first.stride) / Math.PI) * (60 / 60);
+      expect(stepsPerSecond).toBeLessThanOrEqual(4.5);
+      crops[0] = { ...crops[0], label: `${mode}: ${stepsPerSecond.toFixed(2)} steps/s, ${(last.x - first.x).toFixed(0)} px/s · 0.00 s` } as Crop;
+      await strip(page, crops, file, 96);
+    });
+  }
 });

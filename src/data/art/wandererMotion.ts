@@ -1,5 +1,7 @@
-// How the arcane ranger moves (075): snappy and exaggerated, poses snapping in fast and settling with a small
-// overshoot, contacts squashing and releases stretching. Starting values, tuned by eye. Style px, radians and 60 Hz
+// How the arcane ranger moves (075): snappy and exaggerated for actions (firing, the roll, the hit), poses snapping in
+// fast and settling with a small overshoot, contacts squashing and releases stretching; locomotion is a calm,
+// purposeful jog (075.13, after Shaun's playtest, 2026-10-28: the first build stepped 12 times a second and bounced on
+// every step). Starting values, tuned by eye. Style px, radians and 60 Hz
 // frames (one sim tick each); `squash` is positive for a squash and negative for a stretch. Render-only: nothing here
 // changes a sim timing, so anticipation is folded into each action's opening frames.
 
@@ -7,35 +9,41 @@ export const WANDERER_MOTION = {
   /** One 60 Hz frame, ms. */
   frameMs: 1000 / 60,
   run: {
-    /** Stride radians per world px moved (016's), so the feet don't slide: half a cycle is one step. */
-    radPerPx: 0.32,
+    /**
+     * Stride radians per world px moved: half a cycle is one step, so a step is 32 px and walk speed (120 px/s) takes
+     * about 3.75 steps a second (075.13: it was 0.32, about 12). The short legs can't reach 32 px, so the planted foot
+     * slides a little; in this 3/4 view that reads better than frantic legs.
+     */
+    radPerPx: Math.PI / 32,
+    /** Each foot reaches this far (style px) ahead of and behind the hip through its stance. */
+    reach: 9.5,
     /** The passing knee bends up to this far; the trailing foot kicks this far back as it lifts. */
-    kneeBend: 0.9,
-    kickBack: 2.6,
-    /** The body bobs this far, lowest `lag` radians of stride after each contact, squashing there and stretching at passing. */
-    bob: 1.5,
+    kneeBend: 0.75,
+    kickBack: 1.8,
+    /** The body bobs this far (style px), lowest `lag` radians of stride after each contact, squashing a touch there and stretching at passing. */
+    bob: 0.6,
     lag: 0.35,
-    contactSquash: 0.06,
-    passingStretch: 0.04,
+    contactSquash: 0.012,
+    passingStretch: 0.008,
     /** The side view leans this far into the run. */
-    lean: 0.12,
+    lean: 0.08,
     /** The stride eases in over this many frames as a move starts. */
-    startFrames: 5,
+    startFrames: 8,
   },
   /**
    * The cape trails to `run` radians at full speed, plus a flap; its tails swing `tail` of the flap a quarter cycle
    * behind and `tailTrail` of the trail; the hood's tail `hood` of the flap and `hoodTrail` of the trail. Strafing, the
    * cape trails `strafeTrail` as far and flaps in the shot's wind at `wind` radians a ms.
    */
-  cape: { run: 0.35, flap: 0.07, tail: 0.6, hood: 0.7, tailTrail: 0.18, hoodTrail: 0.5, strafeTrail: 0.4, wind: 0.02 },
+  cape: { run: 0.35, flap: 0.035, tail: 0.6, hood: 0.7, tailTrail: 0.18, hoodTrail: 0.5, strafeTrail: 0.4, wind: 0.006 },
   /** The skirt's flaps swing `share` of the angle to their foot, over `reach` px down from the hip. */
   skirt: { share: 0.5, reach: 20 },
-  /** The tank rides this far up and down a quarter of the bob's cycle behind the body, squashing as it lands. */
-  tank: { bob: 1.2, squash: 0.08 },
-  /** Moving while firing: a braced strafe at this share of the stride and bob, stepping twice as often so the feet stay planted. */
-  strafe: { stride: 0.5, bob: 0.5, flap: 0.14 },
-  /** As a stride ends: one settle, a squash over `frames` then rest, while the feet step home. */
-  stop: { squash: 0.04, frames: 8 },
+  /** The tank rides this far up and down a quarter of the bob's cycle behind the body, squashing a touch as it lands. */
+  tank: { bob: 0.5, squash: 0.012 },
+  /** Moving while firing: a braced strafe at this share of the stride and bob, at the walk's own rate per px (so, slower than it walks, never faster). */
+  strafe: { stride: 0.6, bob: 0.5, flap: 0.06 },
+  /** As a stride ends: one gentle settle, a squash over `frames` then rest, while the feet step home. */
+  stop: { squash: 0.015, frames: 8 },
   brace: {
     /** On the first frame of firing: a quick dip `dip` px deep over `dipFrames`. */
     dipFrames: 3,

@@ -82,7 +82,7 @@ export class PlayerClocks {
     }
     // Side on, walking against the facing strides backward.
     const back = i.facing === 'left' ? p.vx > 0 : i.facing === 'right' ? p.vx < 0 : false;
-    if (moving) this.stride += Math.min(i.moved, M.maxStep) * strideRate(heavy) * (back ? -1 : 1);
+    if (moving) this.stride += Math.min(i.moved, M.maxStep) * strideRate() * (back ? -1 : 1);
     this.flow += i.dtMs * (heavy ? FEEL.flow.firing : FEEL.flow.idle);
     const view: WandererView = i.facing === 'up' || i.facing === 'down' ? i.facing : 'side';
     return {

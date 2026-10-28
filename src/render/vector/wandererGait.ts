@@ -3,15 +3,12 @@ import { WANDERER_MOTION } from '../../data/art/wandererMotion';
 import type { FootPose } from './wandererPose';
 
 // The run cycle (075): where the feet go, how the body bobs and squashes, and how the tank rides, at a stride phase.
-// Pure. Keyed to distance: each foot is planted through its stance and moves back exactly as the body moves on, so
-// it never slides; through its swing it kicks back, lifts and swings through with the knee bent.
+// Pure. Keyed to distance (a calm jog, 075.13): each foot sweeps back steadily through its stance, `reach` either side
+// of the hip; through its swing it kicks back, lifts and swings through with the knee bent.
 
 const M = WANDERER_MOTION.run;
 const R = WANDERER.rig;
 const TAU = Math.PI * 2;
-
-/** Half a step's length, style px: the ground the body covers in half a cycle (π radians) at `radPerPx`. */
-export const HALF_STEP = Math.PI / M.radPerPx / 2 / WANDERER.scale;
 
 export interface Gait {
   feet: { far: FootPose; near: FootPose };
@@ -60,7 +57,7 @@ export function legAt(p: number, s: number, kneeScale = 1): { x: number; y: numb
  * `bobScale` of the bob. Side on the feet stride along x; facing down or up they lift in turn where they stand.
  */
 export function gaitAt(view: WandererView, phase: number, amount: number, stance: number, scale = 1, bobScale = 1): Gait {
-  const s = HALF_STEP * scale;
+  const s = M.reach * scale;
   const wave = Math.cos(2 * (wrap(phase) - M.lag));
   const bob = M.bob * bobScale * amount * (0.5 + 0.5 * wave);
   const squash = amount * bobScale * (wave > 0 ? M.contactSquash * wave : M.passingStretch * wave);
