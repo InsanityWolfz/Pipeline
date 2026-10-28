@@ -246,11 +246,12 @@ export class WorldLife {
       loops: Object.fromEntries(this.loops),
     }, chunks);
     const layers: Record<string, number> = {};
-    for (const p of this.weather.particles) layers[p.layer] = (layers[p.layer] ?? 0) + 1;
+    for (const p of this.weather.particles) if (p.fadeLeft === null) layers[p.layer] = (layers[p.layer] ?? 0) + 1;
     this.shownWeather = {
       weights,
       layers,
-      live: this.weather.count(),
+      live: this.weather.live(),
+      fading: this.weather.count() - this.weather.live(),
       want,
       room,
       fight,

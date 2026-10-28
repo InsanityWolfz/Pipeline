@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { TILE_SIZE } from '../../src/data/config';
 import { OVERWORLD, OVERWORLD_ROOM } from '../../src/data/overworld';
 import { SET_PIECES, setPieceAnchor } from '../../src/data/setPieces';
-import { WEATHER, WEATHER_BUDGET, WEATHER_CAP, WEATHER_LIGHTNING, WEATHER_MARGIN } from '../../src/data/weather';
+import { WEATHER, WEATHER_BUDGET, WEATHER_CAP, WEATHER_LIGHTNING, WEATHER_MARGIN, WEATHER_MOTION } from '../../src/data/weather';
 import { createRng } from '../../src/sim/rng';
 import { WORLD } from '../../src/sim/world';
 import { moodAt } from '../../src/render/lighting/mood';
@@ -83,6 +83,39 @@ describe('weather (077)', () => {
     const far = { ...view, x: view.x + 5000 };
     for (let i = 0; i < 200; i++) m.step(16, far, t, 1000, east);
     for (const p of m.particles) expect(p.x).toBeGreaterThanOrEqual(far.x - WEATHER_MARGIN - 1);
+  });
+
+  it('fades the particles over a layer’s target out (a tier change, a crossfade) instead of cutting them (review)', () => {
+    const m = new WeatherModel(createRng(5));
+    const weights = weatherWeights(moodAt(125));
+    const high = layerTargets(weights, 'high', false);
+    m.step(16, view, high, 1000, east);
+    const before = m.count();
+    const low = layerTargets(weights, 'low', false);
+    const want = low.reduce((n, x) => n + x.count, 0);
+    expect(before).toBeGreaterThan(want);
+    const dead = m.step(16, view, low, 1000, east);
+    // None cut for being over: only those at the end of their lives, or drifted out of the view and its margin, die.
+    const out = (p: { x: number; y: number }) => p.x < view.x - WEATHER_MARGIN || p.x > view.x + view.width + WEATHER_MARGIN || p.y < view.y - WEATHER_MARGIN || p.y > view.y + view.height + WEATHER_MARGIN;
+    expect(dead.filter((p) => p.age < p.life && !out(p))).toEqual([]);
+    expect(dead.length).toBeLessThan(before - want);
+    expect(m.live()).toBe(want);
+    expect(m.count()).toBeGreaterThan(want);
+    const over = m.particles.filter((p) => p.fadeLeft !== null);
+    const layer = (p: (typeof over)[number]) => WEATHER[p.region].layers.find((l) => l.id === p.layer);
+    m.step(WEATHER_MOTION.overMs / 2, view, low, 1000, east);
+    // Halfway through its fade a particle shows at half the alpha it would have.
+    const halfway = over.filter((p) => m.particles.includes(p));
+    expect(halfway.length).toBeGreaterThan(0);
+    for (const p of halfway) {
+      const l = layer(p);
+      if (!l) throw new Error(p.layer);
+      expect(WeatherModel.alpha(p, l)).toBeCloseTo(WeatherModel.alpha({ ...p, fadeLeft: null }, l) * ((p.fadeLeft ?? 0) / WEATHER_MOTION.overMs), 9);
+      expect(p.fadeLeft).toBeLessThan(WEATHER_MOTION.overMs * 0.6);
+    }
+    m.step(WEATHER_MOTION.overMs / 2 + 1, view, low, 1000, east);
+    expect(m.particles.filter((p) => p.fadeLeft !== null)).toEqual([]);
+    expect(m.count()).toBeLessThanOrEqual(want);
   });
 
   it('replays the same from the same seed and frames', () => {

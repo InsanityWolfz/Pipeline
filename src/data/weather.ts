@@ -85,6 +85,32 @@ export const WEATHER_BUDGET: { readonly particles: Readonly<Record<Quality, numb
   deathMotes: { low: 60, medium: 120, high: 200 },
 };
 
+/**
+ * How weather particles move and fade (render only). Rising layers drift downwind at `riseDrift` × their speed;
+ * falling ones at `fallDrift` × it × the wind's strength (at most `fallMaxStrength`). Drifting and falling particles
+ * sway across the wind at `swayRate` radians a second, `swayDrift` (drifting) or `swayFall` (falling) px/s across it
+ * and `swayAlong` of that along it. A particle fades in over the first `fadeIn` of its life and out over the last
+ * `fadeOut`; a flickering one at `flickerRate` radians a ms, its seed × `flickerSeed` apart; in a region's crossfade
+ * its alpha is × min(1, `weightFloor` + its region's weight). Particles over their layer's target (a crossfade, a
+ * tier change) fade out over `overMs` (review: not cut at once). A field's first lives spread over `spreadLife` of a life.
+ */
+export const WEATHER_MOTION = {
+  riseDrift: 0.35,
+  fallDrift: 0.7,
+  fallMaxStrength: 1.5,
+  swayRate: 1.7,
+  swayDrift: 3,
+  swayFall: 6,
+  swayAlong: 0.5,
+  fadeIn: 0.15,
+  fadeOut: 0.2,
+  flickerRate: 0.03,
+  flickerSeed: 20,
+  weightFloor: 0.4,
+  overMs: 400,
+  spreadLife: 0.6,
+} as const;
+
 /** Particles spawn over the view plus this many px each side, and are recycled once past it. */
 export const WEATHER_MARGIN = 32;
 

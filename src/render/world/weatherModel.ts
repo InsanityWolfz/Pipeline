@@ -1,16 +1,21 @@
 import { DECOR_REGIONS, type DecorRegion } from '../../data/decor';
 import type { Ring } from '../../data/ringScale';
 import type { Quality } from '../../data/settings';
-import { WEATHER, WEATHER_BUDGET, WEATHER_CAP, WEATHER_MARGIN, type WeatherLayer } from '../../data/weather';
+import { WEATHER, WEATHER_BUDGET, WEATHER_CAP, WEATHER_MARGIN, WEATHER_MOTION, type WeatherLayer } from '../../data/weather';
 import { nextFloat, type RngState } from '../../sim/rng';
 
 // 077: the weather as a pure model (render only): each region's weight in 074's mood blend, the layers' target counts
 // by tier (Low's in a boss fight), the shared particle budget's gate, and the particles themselves: spawned over the
 // view plus WEATHER_MARGIN, moved by the wind, and recycled at the upwind edge once they drift out, so the cost
 // follows the count, not the map. Every value a particle gets comes from the render-side stream, so the same seed and
-// frames replay the same. WeatherView draws it.
+// frames replay the same. Particles over their layer's target fade out over WEATHER_MOTION.overMs (review). WeatherView
+// draws it.
 
 type View = { x: number; y: number; width: number; height: number };
+const M = WEATHER_MOTION;
+
+/** Every layer by `region/id`, for a fading particle whose region left the blend. */
+const LAYERS = new Map<string, WeatherLayer>(DECOR_REGIONS.flatMap((r) => WEATHER[r].layers.map((l) => [`${r}/${l.id}`, l] as const)));
 
 /** The region a danger ring's mood belongs to. */
 export const regionOfRing = (ring: Ring | number): DecorRegion => (ring <= 2 ? 'meadow' : ring === 3 ? 'hollows' : ring === 4 ? 'ember' : 'storm');
@@ -73,6 +78,8 @@ export interface WeatherParticle {
   seed: number;
   /** Its region's weight when it spawned (scales its alpha in a crossfade). */
   weight: number;
+  /** Ms left of its fade-out once over its layer's target; null while it counts. */
+  fadeLeft: number | null;
 }
 
 /** The wind the weather moves in: its strength (gusts included) and the unit direction it blows toward. */
@@ -92,9 +99,9 @@ function velocity(layer: WeatherLayer, speed: number, wind: WeatherWind): { vx: 
     case 'drift':
       return { vx: wind.dx * speed, vy: wind.dy * speed };
     case 'rise':
-      return { vx: wind.dx * speed * 0.35, vy: -speed };
+      return { vx: wind.dx * speed * M.riseDrift, vy: -speed };
     case 'fall':
-      return { vx: wind.dx * speed * 0.7 * Math.min(1.5, wind.strength), vy: speed };
+      return { vx: wind.dx * speed * M.fallDrift * Math.min(M.fallMaxStrength, wind.strength), vy: speed };
     case 'rain': {
       const a = ((layer.slant ?? 0) * Math.PI) / 180;
       return { vx: Math.sin(a) * Math.sign(wind.dx || 1) * speed, vy: Math.cos(a) * speed };
@@ -132,6 +139,7 @@ export class WeatherModel {
       color: L.colors[Math.floor(nextFloat(this.rng) * L.colors.length)] ?? L.colors[0] ?? 'snow',
       seed: nextFloat(this.rng),
       weight: t.weight,
+      fadeLeft: null,
     };
   }
 
@@ -151,9 +159,10 @@ export class WeatherModel {
   }
 
   /**
-   * One frame of `dt` ms in `view`: ages and moves the particles, kills the old (and those past their layer's target),
-   * recycles those that drifted out at the upwind edge, and spawns toward each layer's target while the budget's
-   * `room` lasts. Returns the particles that died this frame (so the view frees what drew them).
+   * One frame of `dt` ms in `view`: ages and moves the particles, kills the old, fades out those past their layer's
+   * target, recycles those that drifted out at the upwind edge (a fading one dies there), and spawns toward each
+   * layer's target while the budget's `room` lasts. Returns the particles that died this frame (so the view frees
+   * what drew them).
    */
   step(dt: number, view: View, targets: readonly LayerTarget[], room: number, wind: WeatherWind): WeatherParticle[] {
     const s = dt / 1000;
@@ -168,17 +177,25 @@ export class WeatherModel {
       const t = want.get(key);
       const n = live.get(key) ?? 0;
       p.age += dt;
-      if (p.age >= p.life || !t || n >= t.count) {
+      if (p.fadeLeft !== null) p.fadeLeft -= dt;
+      else if (!t || n >= t.count) p.fadeLeft = M.overMs;
+      const layer = t?.layer ?? LAYERS.get(key);
+      if (p.age >= p.life || (p.fadeLeft !== null && p.fadeLeft <= 0) || !layer) {
         this.particles.splice(i, 1);
         dead.push(p);
         continue;
       }
-      live.set(key, n + 1);
-      const g = t.layer.gusty ? wind.gust : 1;
-      const sway = t.layer.motion === 'drift' || t.layer.motion === 'fall' ? Math.sin((p.age / 1000) * 1.7 + p.seed * 6.28) * (t.layer.motion === 'fall' ? 6 : 3) : 0;
+      if (p.fadeLeft === null) live.set(key, n + 1);
+      const g = layer.gusty ? wind.gust : 1;
+      const sway = layer.motion === 'drift' || layer.motion === 'fall' ? Math.sin((p.age / 1000) * M.swayRate + p.seed * 2 * Math.PI) * (layer.motion === 'fall' ? M.swayFall : M.swayDrift) : 0;
       p.x += (p.vx * g - wind.dy * sway) * s;
-      p.y += (p.vy * g + wind.dx * sway * 0.5) * s;
+      p.y += (p.vy * g + wind.dx * sway * M.swayAlong) * s;
       if (p.x < view.x - m || p.x > view.x + view.width + m || p.y < view.y - m || p.y > view.y + view.height + m) {
+        if (p.fadeLeft !== null) {
+          this.particles.splice(i, 1);
+          dead.push(p);
+          continue;
+        }
         const at = this.upwind(view, p);
         p.x = at.x;
         p.y = at.y;
@@ -193,7 +210,7 @@ export class WeatherModel {
         const at = this.anywhere(view);
         const p = this.make(t, at.x, at.y, wind);
         // Spread the first lives, so a field doesn't all die at once.
-        p.age = t.layer.motion === 'splash' ? 0 : nextFloat(this.rng) * p.life * 0.6;
+        p.age = t.layer.motion === 'splash' ? 0 : nextFloat(this.rng) * p.life * M.spreadLife;
         this.particles.push(p);
         this.spawned += 1;
         n += 1;
@@ -204,16 +221,27 @@ export class WeatherModel {
     return dead;
   }
 
-  /** Live particles of a layer, or all. */
+  /** Particles drawn (fading ones too: the budget counts them), of a layer or all. */
   count(layer?: string): number {
     return layer ? this.particles.filter((p) => p.layer === layer).length : this.particles.length;
   }
 
-  /** A particle's alpha now: its layer's, faded in and out over its life, flickering (embers), scaled in a crossfade. */
+  /** Particles that count toward their layers' targets (not fading out). */
+  live(): number {
+    let n = 0;
+    for (const p of this.particles) if (p.fadeLeft === null) n += 1;
+    return n;
+  }
+
+  /**
+   * A particle's alpha now: its layer's, faded in and out over its life, flickering (embers), scaled in a crossfade,
+   * and fading out over WEATHER_MOTION.overMs once over its layer's target.
+   */
   static alpha(p: WeatherParticle, layer: WeatherLayer): number {
     const k = p.age / p.life;
-    const env = Math.min(1, k / 0.15, (1 - k) / 0.2);
-    const flicker = layer.flicker ? 1 + layer.flicker * Math.sin(p.age * 0.03 + p.seed * 20) : 1;
-    return Math.max(0, layer.alpha * env * flicker * Math.min(1, 0.4 + p.weight));
+    const env = Math.min(1, k / M.fadeIn, (1 - k) / M.fadeOut);
+    const flicker = layer.flicker ? 1 + layer.flicker * Math.sin(p.age * M.flickerRate + p.seed * M.flickerSeed) : 1;
+    const over = p.fadeLeft === null ? 1 : Math.max(0, p.fadeLeft / M.overMs);
+    return Math.max(0, layer.alpha * env * flicker * Math.min(1, M.weightFloor + p.weight) * over);
   }
 }
