@@ -60,8 +60,7 @@ export class InventoryPanel {
   private readonly cells: CellView[];
   private readonly boxCells: CellView[];
   private readonly stashCells: CellView[];
-  /** 081: the open's fade and rise. */
-  private readonly motion: MenuMotion;
+  private readonly motion: MenuMotion; // 081: the open's fade and rise
 
   constructor(scene: Scene) {
     const text = (style: 'body' | 'display' | 'title' = 'body') => new TextLine(scene, 0, 0, DEPTHS.menu + 2, false, style);
@@ -94,8 +93,7 @@ export class InventoryPanel {
   }
 
   private openAs(mode: InventoryShown['mode'], id: number | null = null): void {
-    if (mode === null) this.motion.hide();
-    else if (this.mode === null) this.motion.show();
+    if (mode === null) this.motion.hide(); else if (this.mode === null) this.motion.show();
     this.mode = mode;
     this.containerId = id;
     this.press = null;

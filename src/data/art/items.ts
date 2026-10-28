@@ -1,6 +1,7 @@
 import { INTAKE_CAP_ICON, INTAKE_EMPTY_ICON, LOGISTICS_ICONS, SITE_ICONS } from '../foundryAssets';
 import { SPRITES } from '../assets';
-import { ellipse, flat, line, path, rect, solid, trim, type Ink, type Shape, type VectorSprite } from './types';
+import { ICON_CASING } from './casing';
+import { ellipse, flat, line, path, rect, solid, trim, type Shape, type VectorSprite } from './types';
 
 // Item icons and build emblems (020), in the 016 vector style: 16x16 world px
 // round the centre, used on the ground, in the HUD, in menus and riding
@@ -187,29 +188,6 @@ export const ICON_BOMB: Shape[] = [
   line([2.4, -3, 4.2, -5.6], 1.1, 'wood', true),
   glowDot(4.6, -6.2, 1.3, 'cinder-light'),
 ];
-
-/**
- * 081: a casing: an open shell, its two halves parted. The bowl below shows its dark hollow inside a brass rim; the
- * lid is lifted and tipped up to the right, its rim brass too. `stops` shade the metal (light, mid, dark) and `sheen`
- * lights the lid's top left. No wick and no cinder band: that's the bomb.
- */
-export const casingShell = (stops: readonly [Ink, Ink, Ink], sheen: Ink): Shape[] => {
-  const metal = { radial: [-3, -1, 8] as [number, number, number], stops: [{ at: 0, color: stops[0] }, { at: 0.5, color: stops[1] }, { at: 1, color: stops[2] }] };
-  return [
-    // The bowl, its open top towards the viewer.
-    path('M -6.6 1.4 C -6.6 7.4 3 7.4 3 1.4 Z', { fill: metal, outline: true }),
-    ellipse(-1.8, 1.4, 4.8, 1.7, { fill: 'ink', stroke: { color: 'brass', width: 0.8 } }),
-    ellipse(-1.2, 1.8, 2.8, 0.8, flat({ id: 'iron-dark', alpha: 0.8 })),
-    // The lid, lifted and tipped up to the right.
-    path('M 0.2 -1.8 C -0.4 -7.6 7.4 -8.4 7.2 -2.6 Z', { fill: metal, outline: true }),
-    path('M 0.2 -1.8 Q 3.6 -1 7.2 -2.6', trim('brass', 0.9)),
-    path('M 1.6 -3.4 Q 2 -5.8 4.2 -6.2', trim(sheen, 0.7)),
-    path('M -5.2 2.6 Q -5 4.6 -3.2 5.4', trim({ id: 'snow', alpha: 0.25 }, 0.5)),
-  ];
-};
-
-/** The casing (005, 081): an iron shell, open. */
-export const ICON_CASING: Shape[] = casingShell(['iron', 'iron-dark', 'ink'], { id: 'rock-light', alpha: 0.6 });
 
 export const ICON_LEY_BOLT: Shape[] = [
   { ...line([-6.4, 6.4, 0.6, -0.6], 2.4, { id: 'cyan', alpha: 0.5 }), glow: { color: 'cyan', blur: 3 } },

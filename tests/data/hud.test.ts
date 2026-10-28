@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { SPRITES } from '../../src/data/assets';
-import { BOMB_SPHERE, ICON_BOMB, ICON_CASING, ITEM_SPRITES_VECTOR } from '../../src/data/art/items';
+import { BOMB_SPHERE, ICON_BOMB, ITEM_SPRITES_VECTOR } from '../../src/data/art/items';
+import { ICON_CASING } from '../../src/data/art/casing';
 import { inksOf } from '../../src/data/art/types';
 import { HUD_SPRITES_VECTOR } from '../../src/data/art/hud';
 import { VIEW_HEIGHT, VIEW_WIDTH } from '../../src/data/config';

@@ -1,7 +1,7 @@
 import { roundTier } from '../tags';
 import { TIER_ARMED, TIER_PROJECTILES, TIER_SPRITES, type TierSprite } from '../tierAssets';
 import type { TierId } from '../tiers';
-import { casingShell } from './items';
+import { casingShell } from './casing';
 import { MINE_SPRITES_VECTOR } from './mines';
 import { VECTOR_SPRITES } from './sprites';
 import { ellipse, flat, line, path, solid, trim, type Ink, type Paint, type Shape, type VectorSprite } from './types';
