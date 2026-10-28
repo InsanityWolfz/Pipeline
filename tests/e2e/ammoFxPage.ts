@@ -18,7 +18,8 @@ export async function fxSandbox(page: Page, rounds: (string | null)[], enemies: 
       g.step(1, { sandbox: { kind: 'god', on: true } });
       const p0 = g.getState().player;
       for (const e of g.getState().enemies) if (Math.hypot(e.x - p0.x, e.y - p0.y) < 420) g.setEnemyHealth(e.id, 0);
-      g.step(2);
+      // Long enough for the tube's cooldown from an earlier shot and every round in flight to run out.
+      g.step(60);
       const p = g.getState().player;
       const before = new Set(g.getState().enemies.map((e) => e.id));
       for (const [id, dx, dy] of es) g.spawnEnemy(id, p.x + dx, p.y + dy);
