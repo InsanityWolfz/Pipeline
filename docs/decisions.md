@@ -355,3 +355,7 @@ Each plan's build notes hold the detail; these are the lasting technical choices
   - Return stones are data (`src/data/returnStones.ts`: place, wake radius, landing tile, pack margin) read by sim rules; a fourth boss door gets a stone by a new row.
   - Fast-travel destinations come from one sim list (`travelDestinations`) carrying each entry's `kind`, so every menu shows the same places in the same order.
   - A sprite scaled for an effect divides by `textureScale()` like every other view, and `ui()` reports drawn sizes, not the tween's factor, so a test can catch a wrong scale.
+
+- **079 the foundry's mood:**
+  - The foundry's mood and lights reuse 074's system as data (`FOUNDRY_MOOD`, `FOUNDRY_LIGHTS`); only running, on-screen forges get effects, so a big factory costs no more than what's on screen.
+  - Ley pulses are fired by intake fills, a sim event render already reads; nothing new is decided in render.
