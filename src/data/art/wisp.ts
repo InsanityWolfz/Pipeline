@@ -74,7 +74,7 @@ export const WISP_RIG: EnemyRigDef = {
   tells: { windup: { part: 'hand-front', at: { side: [6, -19], down: [11, -19], up: [11, -19] } } },
   poses: {
     idle: [{ bob: -3 }],
-    walk: [{ bob: -4, lean: 0.1 }, { bob: -3, lean: 0.12, armFront: 0.1 }, { bob: -2, lean: 0.1 }, { bob: -3, lean: 0.08, armBack: 0.1 }],
+    walk: [{ bob: -3.5, lean: 0.1 }, { bob: -3, lean: 0.12, armFront: 0.1 }, { bob: -2.5, lean: 0.1 }, { bob: -3, lean: 0.08, armBack: 0.1 }],
     // 076: gather (the flame dips and narrows, hands down), coil (rising tall, hands wide apart, the orb growing),
     // peak (the hands snap round the full orb, the flame flaring; render trembles it).
     windup: [

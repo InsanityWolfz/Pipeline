@@ -72,9 +72,9 @@ export const CINDER_MOTE_RIG: EnemyRigDef = {
   poses: {
     idle: [{ bob: -2, glow: 0.6 }],
     walk: [
-      { bob: -3, lean: 0.08, glow: 0.6 },
+      { bob: -2.5, lean: 0.08, glow: 0.6 },
       { bob: -2, lean: 0.1, glow: 0.8 },
-      { bob: -1, lean: 0.08, glow: 0.6 },
+      { bob: -1.5, lean: 0.08, glow: 0.6 },
       { bob: -2, lean: 0.06, glow: 0.4 },
     ],
     // 076: gather (the cage contracts and the ember dims), coil (the ember swells, flickering over two frames), peak

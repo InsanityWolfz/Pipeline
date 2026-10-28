@@ -122,9 +122,9 @@ export const CHARGER_RIG: EnemyRigDef = {
   poses: {
     idle: [{ bob: 0, glow: 0.35 }],
     walk: [
-      { step: 3, lift: 2, bob: -1, glow: 0.35 },
+      { step: 3, lift: 2, bob: -0.5, glow: 0.35 },
       { step: 0, bob: 0.5, glow: 0.35 },
-      { step: -3, lift: 2, bob: -1, glow: 0.35 },
+      { step: -3, lift: 2, bob: -0.5, glow: 0.35 },
       { step: 0, bob: 0.5, glow: 0.35 },
     ],
     // 076: gather (the head rears up and back), coil (head down, horns forward, pawing over two frames, deeper than

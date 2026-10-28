@@ -135,10 +135,10 @@ export const SLAG_WHELP_RIG: EnemyRigDef = {
   poses: {
     idle: [{ glow: 0.7 }],
     walk: [
-      { step: 1.5, lift: 1, bob: -1, scaleY: 1.05, glow: 0.7 },
-      { step: 0, bob: 0, scaleY: 0.95, glow: 0.7 },
-      { step: -1.5, lift: 1, bob: -1, scaleY: 1.05, glow: 0.7 },
-      { step: 0, bob: 0, scaleY: 0.95, glow: 0.7 },
+      { step: 1.5, lift: 1, bob: -0.5, scaleY: 1.015, glow: 0.7 },
+      { step: 0, bob: 0, scaleY: 0.985, glow: 0.7 },
+      { step: -1.5, lift: 1, bob: -0.5, scaleY: 1.015, glow: 0.7 },
+      { step: 0, bob: 0, scaleY: 0.985, glow: 0.7 },
     ],
     // 076: gather (a squish), coil (rearing up tall, leaning back), peak (taller still; render trembles it). The bite lunges.
     windup: [

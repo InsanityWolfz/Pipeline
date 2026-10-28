@@ -136,9 +136,9 @@ export const BELLOWS_HOUND_RIG: EnemyRigDef = {
   poses: {
     idle: [{ bob: 0, glow: 0.45 }],
     walk: [
-      { step: 3, lift: 2, bob: -1, glow: 0.45 },
+      { step: 3, lift: 2, bob: -0.5, glow: 0.45 },
       { step: 0, bob: 0.5, glow: 0.45 },
-      { step: -3, lift: 2, bob: -1, glow: 0.45 },
+      { step: -3, lift: 2, bob: -0.5, glow: 0.45 },
       { step: 0, bob: 0.5, glow: 0.45 },
     ],
     // 076: gather (rearing back on its haunches, the bellows filling), coil (crouched low, the bellows drawing in over

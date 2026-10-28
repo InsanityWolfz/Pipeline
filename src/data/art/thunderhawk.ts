@@ -97,9 +97,9 @@ export const THUNDERHAWK_RIG: EnemyRigDef = {
     idle: [{ bob: -1, armBack: 0.15, armFront: 0.15, glow: 0.4 }],
     // Its circling flight: a full wing beat over four frames.
     walk: [
-      { bob: -2, armBack: 0.45, armFront: 0.45, glow: 0.4 },
+      { bob: -1.5, armBack: 0.45, armFront: 0.45, glow: 0.4 },
       { bob: -1, armBack: 0.1, armFront: 0.1, glow: 0.5 },
-      { bob: 0, armBack: -0.35, armFront: -0.35, glow: 0.4 },
+      { bob: -0.5, armBack: -0.35, armFront: -0.35, glow: 0.4 },
       { bob: -1, armBack: 0.05, armFront: 0.05, glow: 0.3 },
     ],
     // 076: gather (wings fold in and it climbs), coil (rearing up with the wings swept high, tail fanned), peak (wings

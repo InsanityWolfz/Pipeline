@@ -89,9 +89,9 @@ export const BURROWER_RIG: EnemyRigDef = {
     idle: [{ bob: 0, glow: 0.5 }],
     walk: [
       { step: 2, lift: 1, bob: -0.5, glow: 0.5 },
-      { step: 0, bob: 0.5, scaleY: 0.96, glow: 0.5 },
+      { step: 0, bob: 0.5, scaleY: 0.985, glow: 0.5 },
       { step: -2, lift: 1, bob: -0.5, glow: 0.5 },
-      { step: 0, bob: 0.5, scaleY: 0.96, glow: 0.5 },
+      { step: 0, bob: 0.5, scaleY: 0.985, glow: 0.5 },
     ],
     // Nose-down, drilling into the ground, squashing (its wind-up is spent underground: its body hidden, its frames these).
     dig: [

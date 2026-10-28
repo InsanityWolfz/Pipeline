@@ -91,10 +91,10 @@ export const SHARDBACK_RIG: EnemyRigDef = {
   poses: {
     idle: [{ bob: 0, glow: 0.6 }],
     walk: [
-      { step: 2, lift: 1.5, bob: -1, glow: 0.6 },
-      { step: 0, bob: 0.5, scaleY: 0.97, glow: 0.6 },
-      { step: -2, lift: 1.5, bob: -1, glow: 0.6 },
-      { step: 0, bob: 0.5, scaleY: 0.97, glow: 0.6 },
+      { step: 2, lift: 1.5, bob: -0.5, glow: 0.6 },
+      { step: 0, bob: 0.5, scaleY: 0.985, glow: 0.6 },
+      { step: -2, lift: 1.5, bob: -0.5, glow: 0.6 },
+      { step: 0, bob: 0.5, scaleY: 0.985, glow: 0.6 },
     ],
     turn: [
       { step: 1, lean: -0.05, glow: 0.6 },

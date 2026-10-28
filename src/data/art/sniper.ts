@@ -72,9 +72,9 @@ export const SNIPER_RIG: EnemyRigDef = {
   poses: {
     idle: [{ bob: 0, glow: 0.5 }],
     walk: [
-      { step: 2, lift: 1.5, bob: -1, glow: 0.5 },
+      { step: 2, lift: 1.5, bob: -0.5, glow: 0.5 },
       { step: 0, bob: 0.5, glow: 0.5 },
-      { step: -2, lift: 1.5, bob: -1, glow: 0.5 },
+      { step: -2, lift: 1.5, bob: -0.5, glow: 0.5 },
       { step: 0, bob: 0.5, glow: 0.5 },
     ],
     // Stepping out of cover: a quick sidelong shuffle, the lens already lit.

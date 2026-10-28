@@ -24,6 +24,10 @@ export type EnemyAnims = Readonly<Record<Exclude<EnemyAnim, `${'recover' | 'stag
   Readonly<Partial<Record<`${'recover' | 'stagger' | ExtraPose}-${'down' | 'up' | 'side'}`, AnimDef>>>;
 
 const ENEMY_WALK_FPS = 6;
+/** 076: the two-frame shuffles (the Bulwark's and Shardback's turn, the Sniper's sidestep): 3 steps a second, as the walk's. */
+const SHUFFLE_FPS = 3;
+/** Looping extras that are footwork, at SHUFFLE_FPS. */
+const SHUFFLES: readonly ExtraPose[] = ['turn', 'step'];
 const SWIPE_FPS = 20;
 
 /** 076: a wind-up strip's frames besides its coil: gather and peak. */
@@ -62,7 +66,7 @@ export function enemyAnims(prefix: string, recover = false, extras: readonly Ext
     if (recover) out[`recover-${v}`] = anim(`recover-${v}`, 1, 1, true);
     for (const x of extras) {
       const n = MULTI_FRAME_EXTRAS[x] ?? 1;
-      out[`${x}-${v}`] = anim(`${x}-${v}`, n, n > 1 ? ENEMY_WALK_FPS : 1, true);
+      out[`${x}-${v}`] = anim(`${x}-${v}`, n, n > 1 ? (SHUFFLES.includes(x) ? SHUFFLE_FPS : ENEMY_WALK_FPS) : 1, true);
     }
   }
   return out as EnemyAnims;

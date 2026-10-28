@@ -156,10 +156,10 @@ export const BULWARK_RIG: EnemyRigDef = {
   poses: {
     idle: [{ bob: 0, glow: 0.7 }],
     walk: [
-      { step: 3, lift: 2, bob: -1 },
-      { step: 0, bob: 1, scaleY: 0.98 },
-      { step: -3, lift: 2, bob: -1 },
-      { step: 0, bob: 1, scaleY: 0.98 },
+      { step: 3, lift: 2, bob: -0.5 },
+      { step: 0, bob: 0.5, scaleY: 0.985 },
+      { step: -3, lift: 2, bob: -0.5 },
+      { step: 0, bob: 0.5, scaleY: 0.985 },
     ],
     // Shuffling round on the spot behind the shield.
     turn: [

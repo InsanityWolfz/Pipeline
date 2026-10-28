@@ -122,10 +122,10 @@ export const WARDEN_RIG: EnemyRigDef = {
   poses: {
     idle: [{ bob: 0 }],
     walk: [
-      { step: 3, lift: 2, bob: -1 },
-      { step: 0, bob: 1, scaleY: 0.97 },
-      { step: -3, lift: 2, bob: -1 },
-      { step: 0, bob: 1, scaleY: 0.97 },
+      { step: 3, lift: 2, bob: -0.5 },
+      { step: 0, bob: 0.5, scaleY: 0.985 },
+      { step: -3, lift: 2, bob: -0.5 },
+      { step: 0, bob: 0.5, scaleY: 0.985 },
     ],
     // 076: gather (it sinks into a squat, fists low), coil (both fists high overhead, its back arched, stretched),
     // peak (the fists trembling, eye and core blazing). The slam lands squashed.
