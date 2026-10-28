@@ -90,7 +90,7 @@ export class MenuMotion {
       return;
     }
     this.layer.setAlpha(shown(0));
-    this.tabTween = this.scene.tweens.add({ targets: this.layer, alpha: 1, duration: MENU_MOTION.tabMs, ease: 'Cubic.easeOut', onComplete: this.onTabDone }).seek(SEEK_MS);
+    this.tabTween = this.scene.tweens.add({ targets: this.layer, alpha: { from: this.layer.alpha, to: 1 }, duration: MENU_MOTION.tabMs, ease: 'Cubic.easeOut', onComplete: this.onTabDone }).seek(SEEK_MS);
   }
 
   private readonly onOpen = (tween: Tweens.Tween): void => {

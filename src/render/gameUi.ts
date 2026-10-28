@@ -13,6 +13,7 @@ import type { GameUiState } from './testHook';
 import { NO_LIGHTING } from './lighting/LightingView';
 import type { GameObjects } from 'phaser';
 import { MENU_MOTION_SHOWN } from './menuCurves';
+import { hoverRims } from './menuFeedback';
 import { NO_AMMO_FX } from './fx/ammoFxShown';
 import { bakeReport } from './vector/textures';
 import { NO_BOSS_SHOW } from './bossShow';
@@ -94,7 +95,7 @@ export function gameUi(g: GameScene): GameUiState {
     sandbox: g.sim.sandbox ? (g.sandboxPanel?.state ?? { open: false, rows: [], keys: [], boxes: [], tabs: [], sliding: false }) : null,
     sandboxDrawn: g.sandboxPanel?.drawn ?? false,
     lighting: g.lighting?.shown ?? NO_LIGHTING,
-    menuMotion: { ...MENU_MOTION_SHOWN },
+    menuMotion: { ...MENU_MOTION_SHOWN, rims: hoverRims() },
     hudDraws: { bossBar: 0, hpFill: 0, xp: 0, tubeCard: 0, ...g.hud?.draws, tweens: g.tweens?.getTweens().length ?? 0, objects: objectCount(g.children?.list ?? []) },
     ammoFx: g.shots?.fx.shown ?? NO_AMMO_FX,
     hitFeedback: { numbers: g.feel?.juice.numbers ?? 0, holds: g.enemyView?.holds ?? 0, holdMs: g.enemyView?.holdMs ?? 0 },

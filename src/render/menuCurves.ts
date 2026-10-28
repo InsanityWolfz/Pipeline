@@ -68,10 +68,12 @@ export interface MenuMotionShown {
   hovers: number;
   tabs: number;
   reduced: boolean;
+  /** The last hovered menu's lit row and its rims' alphas: the lit one, and the one fading out of the row the cursor left. */
+  rims: { row: number; lit: number; fading: number };
 }
 
 /** The one report every menu's motion writes (one menu opens at a time). */
-export const MENU_MOTION_SHOWN: MenuMotionShown = { menu: '', running: false, ms: 0, alpha: 1, rise: 0, opens: 0, hovers: 0, tabs: 0, reduced: false };
+export const MENU_MOTION_SHOWN: MenuMotionShown = { menu: '', running: false, ms: 0, alpha: 1, rise: 0, opens: 0, hovers: 0, tabs: 0, reduced: false, rims: { row: -1, lit: 0, fading: 0 } };
 
 /** Whether the player's system asks for reduced motion, read when it's needed (081: at each open, as JuiceView reads it for shake). */
 export function reducedMotion(): boolean {

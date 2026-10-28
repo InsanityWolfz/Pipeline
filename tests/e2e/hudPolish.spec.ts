@@ -104,6 +104,42 @@ test('a hovered row’s rim fades in under its icons and words, never over them'
   expect(errors).toEqual([]);
 });
 
+test('a row the cursor leaves keeps its rim a frame later and fades it out, down the menu and back up', async ({ page }) => {
+  test.setTimeout(120_000);
+  const errors = watchErrors(page);
+  await boot(page, '?playtest');
+  await page.evaluate(() => window.__GAME__?.step(1));
+  await openCrafting(page);
+  await expect.poll(async () => (await ui(page)).menuMotion.running).toBe(false);
+  const rows = (await ui(page)).craftMenu?.rows.filter((r) => r.shown).slice(0, 3) ?? [];
+  expect(rows.length).toBe(3);
+  const centre = (r: { x: number; y: number; w: number; h: number }) => screenPoint(page, r.x + r.w / 2, r.y + r.h / 2);
+  let p = await centre(rows[0] ?? { x: 0, y: 0, w: 0, h: 0 });
+  await page.mouse.move(p.x, p.y);
+  await expect.poll(async () => (await ui(page)).menuMotion.rims.lit).toBe(1);
+  for (const i of [1, 2, 1, 0]) {
+    const before = (await ui(page)).menuMotion.rims.row;
+    // The tween clock slowed, so the frame after the move is still inside the 80 ms however long the page takes to look.
+    await page.evaluate(() => window.__GAME__?.tweenSpeed(0.05));
+    p = await centre(rows[i] ?? { x: 0, y: 0, w: 0, h: 0 });
+    await page.mouse.move(p.x, p.y);
+    // The first frame the new row lights: the old row's rim is still showing.
+    const first = await page.evaluate(async (was) => {
+      for (let k = 0; k < 200; k++) {
+        await new Promise((r) => requestAnimationFrame(r));
+        const rims = window.__GAME__?.ui().menuMotion.rims;
+        if (rims && rims.row !== was) return rims;
+      }
+      return null;
+    }, before);
+    expect(first?.fading ?? 0, `leaving for row ${i}`).toBeGreaterThan(0);
+    expect(first?.lit ?? 1, `row ${i} fading in`).toBeLessThan(1);
+    await page.evaluate(() => window.__GAME__?.tweenSpeed(1));
+    await expect.poll(async () => (await ui(page)).menuMotion.rims).toMatchObject({ lit: 1, fading: 0 });
+  }
+  expect(errors).toEqual([]);
+});
+
 test('with reduced motion the menu is whole and in place on its first frame', async ({ page }) => {
   test.setTimeout(90_000);
   const errors = watchErrors(page);
