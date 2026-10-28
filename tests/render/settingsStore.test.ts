@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { BIND_ACTIONS, DEFAULT_BINDINGS, DEFAULT_SETTINGS, FIXED_KEYS } from '../../src/data/settings';
 import { STORAGE_KEYS } from '../../src/data/save';
 import { SOUND_SETTINGS_KEY } from '../../src/data/sounds';
-import { loadSettings, parseSettings, rebind, stepVolume } from '../../src/render/flow/settingsStore';
+import { loadSettings, nextQuality, parseSettings, rebind, stepVolume } from '../../src/render/flow/settingsStore';
 import { installStorage } from './memoryStorage';
 
 // 042: settings in one versioned key, the old sound key read once, guarded storage, and rebinding by swapping.
@@ -107,5 +107,22 @@ describe('older settings files and the newer keys (069 review)', () => {
     const old = Object.fromEntries(BIND_ACTIONS.filter((a) => !['area', 'blueprints', 'pipette'].includes(a)).map((a) => [a, DEFAULT_BINDINGS[a]]));
     const parsed = parseSettings(JSON.stringify({ bindings: { ...old, rotate: 'Q', flip: 'X' } }));
     expect(parsed?.bindings).toMatchObject({ rotate: 'Q', flip: 'X', area: '', pipette: '', blueprints: DEFAULT_BINDINGS.blueprints, build: DEFAULT_BINDINGS.build });
+  });
+});
+
+describe('Graphics quality (074)', () => {
+  it('reads a stored tier, and a missing or bad one as Medium, without a new settings version', () => {
+    expect(parseSettings(JSON.stringify({ quality: 'high' }))?.quality).toBe('high');
+    expect(parseSettings(JSON.stringify({ quality: 'low' }))?.quality).toBe('low');
+    expect(parseSettings(JSON.stringify({}))?.quality).toBe('medium');
+    expect(parseSettings(JSON.stringify({ quality: 'ultra' }))?.quality).toBe('medium');
+    expect(parseSettings(JSON.stringify({ quality: 2 }))?.quality).toBe('medium');
+    expect(parseSettings(JSON.stringify({ quality: 'high' }))?.version).toBe(1);
+  });
+
+  it('steps Low → Medium → High → Low', () => {
+    expect(nextQuality('low')).toBe('medium');
+    expect(nextQuality('medium')).toBe('high');
+    expect(nextQuality('high')).toBe('low');
   });
 });

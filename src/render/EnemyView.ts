@@ -10,6 +10,7 @@ import { CHAMPIONS } from '../data/champions';
 import { LANDMARK_LOOK, LANDMARK_SPRITES } from '../data/landmarkAssets';
 import { defOf } from '../sim/champions';
 import { TextLine } from './textLine';
+import type { CatchView } from './lighting/CatchView';
 import type { EnemyState } from '../sim/enemies';
 import type { SimState } from '../sim/state';
 import type { Facing } from '../sim/player';
@@ -96,7 +97,7 @@ export class EnemyView {
   }
 
   /** `sim` for what an enemy's extras read beyond itself (035: a Sniper's laser runs to the player). */
-  update(enemies: readonly EnemyState[], sim: SimState): void {
+  update(enemies: readonly EnemyState[], sim: SimState, catcher?: CatchView): void {
     const live = new Set<number>();
     const now = this.scene.time.now;
     this.last.clear();
@@ -107,6 +108,7 @@ export class EnemyView {
       const until = this.frozenUntil.get(e.id);
       if (until !== undefined && now < until) {
         d.sprite.anims.pause();
+        catcher?.offer(d.sprite, d.sprite.x, d.sprite.y, 'enemy', e.id);
         continue;
       }
       if (until !== undefined) {
@@ -122,6 +124,8 @@ export class EnemyView {
       // An add rising (041) fades up from under the ground.
       const up = riseShown(e);
       d.sprite.setPosition(e.x, bottom + HOLLOWS_LOOK.addRise.sink * (1 - up)).setDepth(bottom).setFlipX(e.facing === 'left').setAlpha(up);
+      // 074: a light near its feet catches on it.
+      catcher?.offer(d.sprite, e.x, bottom, 'enemy', e.id);
       // Switch only on a change, so a one-shot swipe holds its last frame instead of restarting.
       const view = viewOf(e.facing);
       if (d.angle !== undefined && Math.abs(d.angle - e.angle) > 1e-6) d.turnUntil = now + HOLLOWS_LOOK.turnHoldMs;

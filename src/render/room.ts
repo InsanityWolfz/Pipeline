@@ -10,6 +10,7 @@ import { floorFrame, wallPieces, worldTileHash } from './roomTiles';
 import { hollowsFrame } from './hollowsTiles';
 import { addVectorSprite, addVector } from './vector/textures';
 import type { Occluders } from './occluders';
+import type { WorldLayer } from './lighting/WorldLayer';
 
 const FLOOR_PROP_DEPTH = (DEPTHS.floor + DEPTHS.shadow) / 2;
 
@@ -22,8 +23,11 @@ export class RoomView {
 
   private readonly occluders: Occluders | undefined;
 
-  /** `occluders` (070): ruin blocks (and the block props standing in for them) can hide the player. */
-  constructor(scene: Scene, occluders?: Occluders) {
+  private readonly world: WorldLayer | undefined;
+
+  /** `occluders` (070): ruin blocks (and the block props standing in for them) can hide the player. `world` (074): floors are its ground, walls and props its props. */
+  constructor(scene: Scene, occluders?: Occluders, world?: WorldLayer) {
+    this.world = world;
     this.scene = scene;
     this.occluders = occluders;
   }
@@ -75,10 +79,16 @@ export class RoomView {
       }
     }
     const crystal = room.crystal;
-    if (!crystal) return;
-    const cx = (crystal.tx + 0.5) * TILE_SIZE;
-    const cy = (crystal.ty + 1) * TILE_SIZE;
-    add(cx, cy, SPRITES.leyCrystal).setOrigin(0.5, 1).setDepth(cy);
+    if (crystal) {
+      const cx = (crystal.tx + 0.5) * TILE_SIZE;
+      const cy = (crystal.ty + 1) * TILE_SIZE;
+      add(cx, cy, SPRITES.leyCrystal).setOrigin(0.5, 1).setDepth(cy);
+    }
+    // 074: floors (everything at the floor's depth) are the world layer's ground; walls, doors and props its props.
+    for (const o of this.objects) {
+      if (o.depth === DEPTHS.floor) this.world?.addGround(o);
+      else this.world?.addProp(o);
+    }
   }
 
   /** A prop by its layer: on its block, at the foot of its wall, flat on the floor, or standing on its tile. */

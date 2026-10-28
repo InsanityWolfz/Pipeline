@@ -1,4 +1,5 @@
 import type { GameObjects, Scene } from 'phaser';
+import type { WorldLayer } from './lighting/WorldLayer';
 import { BlendModes } from 'phaser';
 import { DEPTHS } from '../data/assets';
 import { TILE_SIZE } from '../data/config';
@@ -55,11 +56,13 @@ export class HollowsView {
   private riseMs = 0;
   private shownState: HollowsShown = NO_HOLLOWS_SHOWN;
 
-  constructor(scene: Scene) {
+  /** `world` (074 review): the altar takes the region's mood and lights. */
+  constructor(scene: Scene, world?: WorldLayer) {
     this.scene = scene;
     this.barrier = new RingCurtain(scene);
     const a = HOLLOWS.arena.altar;
     this.altar = addVector(scene, (a.tx + 0.5) * T, (a.ty + 1) * T, HOLLOWS_SPRITES.altar.dim).setDepth((a.ty + 1) * T).setVisible(false);
+    world?.addProp(this.altar);
     this.summon = scene.add.graphics().setDepth(DEPTHS.groundFx).setBlendMode(BlendModes.ADD).setVisible(false);
     this.circles = scene.add.graphics().setDepth(DEPTHS.groundFx).setVisible(false);
   }
