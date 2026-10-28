@@ -102,6 +102,8 @@ export interface GameTestHook {
   summaryRows(): ReturnType<Legibility['summaryRows']>;
   /** 075: the wanderer's drawn box and hem colour, read from its texture (null on the title). */
   wanderer(): PlayerPixels | null;
+  /** 075: holds the wanderer's idle clock (breath, sway, trim pulse and shimmer) at `ms`, or lets it run again with null, so a pixel check samples a still frame. */
+  wandererClock(ms: number | null): void;
 }
 
 /**
