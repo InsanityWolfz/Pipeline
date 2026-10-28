@@ -183,30 +183,36 @@ test('080: the same seed and commands give the same state through an intro on Lo
   expect(low).toBe(await run('high'));
 });
 
-/** Steps `n` ticks one drawn frame at a time (the player kept topped up) and gives the most live particles any frame showed. */
-async function mostLive(page: Page, n: number): Promise<number> {
-  return page.evaluate(async (count) => {
+/**
+ * Steps `n` ticks, `per` to each drawn frame (the player kept topped up), and gives the most live particles any frame
+ * showed. The bursts fire on beat and frame crossings, so a frame over several ticks still throws each, and fewer frames
+ * between them only crowds the particles closer (a stricter check), at a third of the frames CI must draw.
+ */
+async function mostLive(page: Page, n: number, per = 3): Promise<number> {
+  return page.evaluate(async ([count, each]) => {
     const g = window.__GAME__;
     if (!g) throw new Error('no game');
     let most = 0;
-    for (let t = 0; t < count; t++) {
-      const s = g.step(1);
+    for (let t = 0; t < count; t += each) {
+      const s = g.step(Math.min(each, count - t));
       g.setPlayerHealth(100);
       for (let i = 0; i < 10 && (g.ui().drawnTick ?? -1) < s.tick; i++) await new Promise((r) => requestAnimationFrame(r));
       most = Math.max(most, g.ui().particles.live);
     }
     return most;
-  }, n);
+  }, [n, per] as const);
 }
 
 for (const tier of ['low', 'medium', 'high'] as const) {
   test(`080: on ${tier}, an intro's and the Bulwark's phase bursts never take the live particles past the budget`, async ({ page }) => {
-    test.setTimeout(180_000);
+    test.setTimeout(120_000);
     await intoSandboxArena(page, 'sunken-forum');
     await page.evaluate((q) => window.__GAME__?.setLook({ quality: q }), tier);
     const quality = (await page.evaluate(() => window.__GAME__?.ui().lighting.quality)) ?? 'medium';
-    // Each tick drawn, through the whole intro, then the call (its burst) and the roar into enrage (its steam).
-    const intro = await mostLive(page, 170);
+    // Through the intro's bursts (the stir, each rise pose, the beat) to the card, then on to the fight; then the call
+    // (its burst) and the roar into enrage (its steam).
+    const intro = await mostLive(page, 96);
+    await page.evaluate(() => window.__GAME__?.step(74));
     await setHealth(page, 'bulwark', Math.floor(BW.maxHealth * BW.adds.below) - 1);
     const call = await mostLive(page, 30);
     await setHealth(page, 'bulwark', Math.floor(BW.maxHealth * BW.enrage.below) - 1);
