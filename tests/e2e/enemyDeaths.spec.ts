@@ -99,9 +99,8 @@ test('Low throws half the motes of Medium, High half again', async ({ page }) =>
   const thrown: Record<string, number> = {};
   for (const q of ['low', 'medium', 'high'] as const) {
     await sandbox(page, q);
-    // Slowed on the tween clock, so the death's waves are thrown over several seconds of real time and each frame's
-    // jump stays short, however slowly a loaded runner draws High.
-    await page.evaluate(() => window.__GAME__?.tweenSpeed(0.1));
+    // At full speed: slowed on the tween clock, the sandbox's other particles (spawned in real time, aged on the tween
+    // clock) pile up toward the budget and thin the last wave.
     const before = await page.evaluate(() => window.__GAME__?.ui().particles.thrown ?? 0);
     await spawnAndKill(page, ['husk'], [[60, 0]]);
     await watch(page, 60_000, true);
