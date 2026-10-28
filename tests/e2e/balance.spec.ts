@@ -8,7 +8,7 @@ import { boot, watchErrors } from './helpers';
 
 const A = HOLLOWS.arena;
 
-/** Into the forum with only the Bulwark left, standing `dy` tiles below its start, it awake. */
+/** Into the forum with only the Bulwark left, standing `dy` tiles below its start, it awake (080: its intro over). */
 async function forum(page: Page, dy: number): Promise<number> {
   await boot(page, '?start=hollows');
   return page.evaluate(
@@ -23,7 +23,8 @@ async function forum(page: Page, dy: number): Promise<number> {
       h.walkTo((lx + 0.5) * 32, (ly + 1.5) * 32);
       if (g.step(1, { interact: true }).events.arenaEnters.length === 0) throw new Error('the forum door did not open');
       h.walkTo((tx + 0.5) * 32, (ty + 0.5) * 32);
-      for (let t = 0; t < 120 && !g.getState().bosses[0]?.engaged; t++) g.step(1);
+      // 080: its intro (165 ticks) stepped out to the first tick of its fight.
+      for (let t = 0; t < 400 && (!g.getState().bosses[0]?.engaged || g.getState().bosses[0]?.mode === 'intro'); t++) g.step(1);
       const b = g.getState().bosses[0];
       if (!b?.engaged) throw new Error('the Bulwark never woke');
       return b.id;
