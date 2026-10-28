@@ -32,7 +32,7 @@ interface ArenaDoorSpots {
   in: { tx: number; ty: number };
 }
 
-function installArenaDoors({ arenas, intro }: { arenas: ArenaDoorSpots[]; intro: { fullTicks: number; shortTicks: number } }): void {
+function installArenaDoors({ arenas, intro }: { arenas: ArenaDoorSpots[]; intro: { fullTicks: number; shortTicks: number; settle: Record<string, number> } }): void {
   const h = window.__helpers;
   const g = () => {
     const game = window.__GAME__;
@@ -57,7 +57,7 @@ function installArenaDoors({ arenas, intro }: { arenas: ArenaDoorSpots[]; intro:
     const s = g().getState();
     if (!s.enemies.some((e) => e.enemyId === a.boss && e.room === s.room && e.mode === 'idle' && e.health > 0)) return;
     const started = g().step(1).events.bossIntros[0];
-    if (started) g().step((started.short ? intro.shortTicks : intro.fullTicks) - 1);
+    if (started) g().step((started.short ? intro.shortTicks : intro.fullTicks + (intro.settle[a.boss] ?? 0)) - 1);
   };
   h.leaveArena = (id) => {
     const a = find(id);
@@ -74,7 +74,7 @@ export async function installArenaHelpers(page: Page): Promise<void> {
     const side = Math.sign(a.door.leaveTo.ty - mid.ty);
     return { id: a.id, boss: a.boss, out: a.door.leaveTo, by: { tx: mid.tx, ty: mid.ty + side }, in: { tx: mid.tx, ty: mid.ty - side } };
   });
-  await page.addInitScript(installArenaDoors, { arenas: spots, intro: { fullTicks: BOSS_INTRO.fullTicks, shortTicks: BOSS_INTRO.shortTicks } });
+  await page.addInitScript(installArenaDoors, { arenas: spots, intro: { fullTicks: BOSS_INTRO.fullTicks, shortTicks: BOSS_INTRO.shortTicks, settle: { ...BOSS_INTRO.settleTicks } } });
 }
 
 /** Into a boss arena by E at its door (the in-page `enterArena`). */

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { BOSS_INTRO } from '../../src/data/bossIntro';
+import { BOSS_INTRO, introTicksFor } from '../../src/data/bossIntro';
 import { enemyDef, type ForgewrightDef } from '../../src/data/enemies';
 import { blastArea } from '../../src/sim/blast';
 import { createEnemy, immune, targetable, type EnemyState } from '../../src/sim/enemies';
@@ -26,13 +26,14 @@ function aimOf(b: EnemyState): { x: number; y: number } {
 
 describe('080: the intro window', () => {
   for (const id of BOSSES) {
-    it(`${id}: starts on the entry tick, holds exactly ${BOSS_INTRO.fullTicks} ticks, then wakes on the next`, () => {
+    const len = introTicksFor(id, false);
+    it(`${id}: starts on the entry tick, holds exactly ${len} ticks, then wakes on the next`, () => {
       const { s, b } = entered(id);
       expect(b.mode).toBe('idle');
       run(s, 1);
       expect({ mode: b.mode, modeTicks: b.modeTicks }).toEqual({ mode: 'intro', modeTicks: 1 });
       expect(s.events.bossIntros).toEqual([{ id: b.id, enemyId: id, short: false }]);
-      for (let t = 2; t <= BOSS_INTRO.fullTicks; t++) {
+      for (let t = 2; t <= len; t++) {
         run(s, 1);
         expect(b.mode, `tick ${t}`).toBe('intro');
         expect(b.modeTicks).toBe(t);
@@ -85,5 +86,13 @@ describe('080: the intro window', () => {
     for (const e of [b, ...pack]) expect({ mode: e.mode, modeTicks: e.modeTicks, x: e.x, y: e.y }).toEqual({ mode: 'intro', modeTicks: BOSS_INTRO.fullTicks, x: e.homeX, y: e.homeY });
     run(s, 1);
     for (const e of [b, ...pack]) expect(e.mode).not.toBe('intro');
+  });
+});
+
+describe('fix-conductor-intro-beat: the fight starts a beat after the pan (Shaun, 2026-10-28)', () => {
+  it('the Conductor holds still 30 ticks past the full intro; the other bosses keep 165', () => {
+    expect(introTicksFor('conductor', false)).toBe(BOSS_INTRO.fullTicks + 30);
+    for (const id of ['pylon-warden', 'bulwark', 'forgewright']) expect(introTicksFor(id, false)).toBe(BOSS_INTRO.fullTicks);
+    expect(introTicksFor('conductor', true)).toBe(BOSS_INTRO.shortTicks);
   });
 });
