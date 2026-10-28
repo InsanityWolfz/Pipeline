@@ -23,6 +23,9 @@ export const WIND: Readonly<Record<DecorRegion, Wind>> = {
   storm: { toward: 135, strength: 1.8, gusts: { everyMs: [4000, 8000], mult: 1.5, ms: 1000 } },
 };
 
+/** A gust eases in over this many ms as it starts, and out as it ends (smoothstep), the dust's speed and the sway with it. */
+export const GUST_EASE_MS = 300;
+
 /**
  * The sway: each plant, vine and tree turns about its foot: amplitude × wind strength (at most `maxStrength`) ×
  * sin(2π × clock / its cycle + phase), plus a lean downwind of at most `lean` × the amplitude. A cycle takes `periodMs`
