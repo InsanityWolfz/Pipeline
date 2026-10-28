@@ -6,6 +6,7 @@ import { INK_ID, hexToRgb, paletteHex } from '../data/palette';
 import { PROPS, type PropDef } from '../data/props';
 import type { Room } from '../data/rooms';
 import { colorOf } from './color';
+import { OVERWORLD_ROOM } from '../data/overworld';
 
 // The room's air (014): soft ley light pooled around glowing things, drifting
 // motes, and a dusk tint with a vignette. Looks only.
@@ -64,7 +65,9 @@ export class AmbientView {
     for (const spot of [...props, ...extra]) this.glows.push(this.glow(spot));
     const mood = ROOM_MOOD[room.id];
     this.tint.setFillStyle(mood ? colorOf(mood.tint) : 0, mood?.alpha ?? 0);
-    for (let i = 0; i < AMBIENT.motes; i++) this.motes.push(this.mote());
+    // 077: in the overworld its regions' weather replaces these room-wide motes (Region 1's pollen and ley motes).
+    const motes = room.id === OVERWORLD_ROOM ? 0 : AMBIENT.motes;
+    for (let i = 0; i < motes; i++) this.motes.push(this.mote());
   }
 
   private glow(spot: GlowSpot): GameObjects.Image {

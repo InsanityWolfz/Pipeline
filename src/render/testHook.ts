@@ -42,6 +42,8 @@ import type { LightingShown } from './lighting/LightingView';
 import type { Quality } from '../data/settings';
 import type { PlayerPixels, PlayerUi } from './PlayerView';
 
+import type { WeatherShown, WorldShown } from './world/worldShown';
+
 export interface GameTestHook {
   /** The live game's summary; null on the title (042). */
   getState(): SimSummary;
@@ -67,6 +69,9 @@ export interface GameTestHook {
   setLook(look: { quality?: Quality; flashes?: boolean }): void;
   /** 074: skips every mood, light and fog (as `?mood=off` does), for the frame-time A/B in one page. */
   lightingOff(off: boolean): void;
+  /** 077: skips plants, sway, ripples, ley flow, set-piece loops and weather (as `?world=off`); and the next weather strike now. */
+  worldLifeOff(off: boolean): void;
+  strikeWeather(): void;
   /** The player's room as rows of tiles a player can stand on ('.') or not ('#'), solid things included: for test helpers that find paths. */
   passable(): string[];
   /** Claims a site outright, as holding E at its cleared pylon would (028: the e2e's "or set it claimed"). */
@@ -139,8 +144,12 @@ export interface UiState {
   supply: { started: number; inFlight: { itemId: string; progress: number; site: string; icon: string; iconShown: boolean }[] };
   /** 053: the overworld's ground chunks built now, as `cx,cy` keys (only those near the camera are). */
   overworldChunks: string[];
-  /** 074: each overworld ground chunk's bake time so far, ms. */
+  /** 074: each overworld ground chunk's bake time so far, ms; 077: its whole build (bake, sprites, decor). */
   groundBakeMs: readonly number[];
+  chunkBuildMs: readonly number[];
+  /** 077: the world's decor, sway, ripples, beads and set pieces, and the weather (WorldShown, WeatherShown). */
+  world: WorldShown;
+  weather: WeatherShown;
   /** The camera shakes asked for since boot, oldest first (the last 50) (021). */
   shakes: string[];
   /** 060: burn beats' small numbers shown since boot, and enemies drawn with flames on them now. */

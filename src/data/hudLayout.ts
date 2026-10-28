@@ -215,6 +215,8 @@ export const HOVER_NAME = {
   /** A ley line (018) hovers within this many px of its seam, and names itself this far above the cursor. */
   leyLine: 8,
   leyLineRise: 14,
+  /** 077: a set piece is hovered over the middle share of its drawn box's width (its edges are often air). */
+  setPieceWidth: 0.8,
   /** The description line (018) sits this far under the name, px. */
   descriptionGap: 2,
   gap: 4,

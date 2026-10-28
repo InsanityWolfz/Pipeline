@@ -76,6 +76,8 @@ export function installTestHook(flow: FlowScene): void {
       const l = live().lighting;
       if (l) l.off = off;
     },
+    worldLifeOff: (off) => live().worldLife?.setOff(off),
+    strikeWeather: () => live().worldLife?.strikeNow(),
     claim: act((sim, _scene, site: string) => claim(sim, site)),
     completeObjectives: act((sim, _scene, count: number) => {
       sim.objectives = sim.objectives.map((done, i) => done || i < count);

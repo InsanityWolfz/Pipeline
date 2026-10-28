@@ -13,6 +13,8 @@ import type { GameUiState } from './testHook';
 import { NO_LIGHTING } from './lighting/LightingView';
 import { bakeReport } from './vector/textures';
 
+import { NO_WEATHER, NO_WORLD } from './world/worldShown';
+
 // What a game scene shows, for the test hook's ui() (split from GameScene in 042). Every view may be missing (before
 // the scene is created, or on the title's blank), so each falls back to its empty value.
 
@@ -70,5 +72,8 @@ export function gameUi(g: GameScene): GameUiState {
     sandboxDrawn: g.sandboxPanel?.drawn ?? false,
     lighting: g.lighting?.shown ?? NO_LIGHTING,
     vectorBake: { ...bakeReport() },
+
+    world: g.worldLife?.world ?? NO_WORLD,
+    weather: g.worldLife?.weatherShown ?? NO_WEATHER,
   };
 }

@@ -51,6 +51,8 @@ import { Occluders } from './occluders';
 import { SilhouetteView } from './SilhouetteView';
 import { WorldLayer } from './lighting/WorldLayer';
 import { LightingView } from './lighting/LightingView';
+import { WorldLife } from './world/WorldLife';
+import { settings } from './flow/settingsStore';
 
 const FIRST_PIECE = BUILD_BAR[0] ?? '';
 
@@ -94,8 +96,9 @@ export class GameScene extends Scene {
   legibility?: Legibility;
   /** 070: the player's silhouette behind props. */
   silhouette?: SilhouetteView;
-  /** 074: the region's mood and light. */
+  /** 074: the region's mood and light. 077: the overworld's decor, set pieces, motion and weather. */
   lighting?: LightingView;
+  worldLife?: WorldLife;
   /** 044: the Sandbox panel (056, 057: the sandbox's controls, pop-outs there, and only there). */
   sandboxPanel?: SandboxPanel;
   /** The room on screen. It lags the player's room through a door's fade (roomFollow.ts). */
@@ -142,9 +145,10 @@ export class GameScene extends Scene {
     const occluders = new Occluders();
     // 074: the ground and props the region's mood and lights reach.
     const world = new WorldLayer();
-    this.roomViews = new RoomViews(this, occluders, world);
+    this.worldLife = new WorldLife(this, { quality: () => this.lighting?.quality ?? 'medium', flashes: () => settings().flashes, particles: () => this.feel?.juice.particles.count ?? 0, strike: (x, y) => this.lighting?.weatherStrike(x, y) }, world, occluders);
+    this.roomViews = new RoomViews(this, occluders, world, this.worldLife);
     this.foundryView = new FoundryView(this, occluders);
-    this.nodeView = new NodeView(this, occluders, world);
+    this.nodeView = new NodeView(this, occluders, world, this.worldLife.sway);
     this.groundItemView = new GroundItemView(this);
     this.enemyView = new EnemyView(this);
     this.playerView = new PlayerView(this);

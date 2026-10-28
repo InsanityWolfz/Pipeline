@@ -11,6 +11,8 @@ import { ENEMIES } from '../../data/enemies';
 import type { EnemyPoseName } from '../../data/art/enemyRig';
 import { poseOfAnim } from './catalog';
 
+import { RUIN_VARIANTS } from '../../data/decor';
+
 // The contact sheet (016, dev only): every vector sprite, pose and facing at 4×, grouped by family (020).
 
 const ZOOM = 4;
@@ -66,7 +68,12 @@ for (const view of ['side', 'down', 'up'] as const satisfies readonly WandererVi
 
 // Grouped for review (020): each machine on its own row, then each family of sprites. A dev-only page: it groups
 // by frame-name prefixes rather than the asset tables, which is fine for a review sheet that ships in no build.
+/** 077's ruin variants (named `ow-` like the frames they replace). */
+const VARIANT_NAMES = new Set(RUIN_VARIANTS.flatMap((v) => v.base.flatMap((b) => v.frames(b))));
+
 const FAMILIES: readonly [title: string, test: (name: string) => boolean][] = [
+  ['Set pieces (077): each base, its loop frames and the Colossus\'s ivy', (n) => n.startsWith('setpiece-')],
+  ['World detail (077): plants, ground scatter, ruin variants, the ripple ring, glint and ley bead', (n) => /^(decor-|scatter-|fx-ripple|fx-ley-bead)/.test(n) || VARIANT_NAMES.has(n)],
   ...MACHINE_IDS.map((id): [string, (n: string) => boolean] => [`Machine: ${id} (idle, jammed, working)`, (n) => n.startsWith(`machine-${id}-`)]),
   ['The storm tier (066): stormsteel, storm glass, the stormsteel parts, every storm round, in flight and armed', (n) => /^(item-stormsteel|item-storm-glass|icon-[a-z-]*-(stormsteel|storm-glass)|arrow-stormsteel|bomb-stormsteel|landmine-stormsteel|landmine-armed-stormsteel|ley-bolt-storm-glass)/.test(n)],
   ['Material tiers (062): ley-steel, ley glass, the steel parts, every steel and glass round, in flight and armed', (n) => /^(item-ley-steel|item-ley-glass|item-steel-|icon-[a-z-]*-(steel|glass)|arrow-steel|bomb-steel|landmine-steel|landmine-armed-steel|ley-bolt-glass)/.test(n)],

@@ -2,6 +2,22 @@
 
 Newest entry first. Entries before 050 are in docs/progress-archive.md.
 
+## 2026-10-28: 077 World detail, landmarks and weather
+**Changed:** on `claude/077-world-and-weather` (InsanityWolfz/Pipeline#94, stacked on 074), art pass 4 of 8, from Shaun's art interview (plan docs/plans/077-world-and-weather.md):
+- moderate world detail: flowers, rubble, plants and ruin bits per region, placed by a deterministic hash per tile, with paths and fight space kept clear;
+- three landmarks per region (Region 1: Fallen Colossus, Ley Tower, The Watcher; Hollows: Unfinished Giant, Aqueduct Head, Great Crane; Emberworks: Great Furnace, Great Crucible, Toppled Stack; Stormcrown: Storm Tower, Stormcaller, Wind Harp), each only on tiles that already block, named on hover;
+- swaying grass and trees on a fixed 2.4–3.6 s cycle (wind changes only amplitude, eased), rippling water and flowing ley;
+- weather: pollen and ley motes in Region 1, dust with gusts in the Hollows, ash and embers in the Emberworks, rain and lightning in the Stormcrown; none in the foundry, Low's counts in boss fights; lightning never strikes through the player or under the HUD.
+
+No sim change; `SAVE_VERSION` stays 22. Reviewed, including a motion check at real speed: two blocking findings fixed (plants snapped at every gust and fluttered at region borders; a per-frame walk over every chunk). `npm run check` 2749 tests; CI green. Raised for Shaun: 077.1–077.17; 077.3, 077.4, 077.12, 077.16 and 077.17 need his call.
+
+**Next:** Shaun's playtest after 074; "merge 94" after 91.
+
+**Notes:**
+- Frame times (software renderer): a Stormcrown rain fight 108 / 107 / 303 ms on Low / Medium / High; Low is no slower than the world off.
+- The shared particle budget copies 076's numbers until 076 merges; 078 turns it into one ledger.
+- `tests/e2e/feedback.spec.ts` "F in play" sits near its 30 s limit on a loaded runner (typing about 350 ms a key); older than 077, worth a fix-track change.
+
 ## 2026-10-27: 075 The wanderer redesign
 **Changed:** on `claude/075-wanderer-redesign` (InsanityWolfz/Pipeline#92), art pass 2 of 8, from Shaun's art interview (docs/brainstorm/2026-10-27-art-interview.md; plan docs/plans/075-wanderer-redesign.md):
 - the wanderer is now an arcane ranger: a pointed hood with the faceless cyan glow, a knee-length cape, a ley-etched jerkin, bracers, a rune strap, and the minigun tube, hose and brass tank kept; soft gradients, a rim light and the thin ink outline;

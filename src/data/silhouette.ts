@@ -14,7 +14,9 @@ export const PLAYER_SILHOUETTE = {
   /** Props standing farther than this from the feet, px either way, are never tested (the tallest props' height). */
   reach: 96,
   alphaAtLeast: 128,
-  /** What hides the player (and nothing else): ruin blocks and grove trees (tiles), tree nodes, the bench and machines. */
+  /** What hides the player (and nothing else): ruin blocks and grove trees (tiles), tree nodes, the bench, machines and (077) the set pieces. */
   nodes: ['tree'] as readonly string[],
   fixtures: ['bench'] as readonly string[],
+  /** 077: the set pieces hide the player too (their still base; a loop or swaying part never changes the cover test's key). */
+  setPieces: true,
 } as const;

@@ -323,3 +323,8 @@ Each plan's build notes hold the detail; these are the lasting technical choices
   - What the body shows of gear is a sim fact (`wornRarity`, the highest rarity worn), read by render; the rig never decides rarity.
   - Pose timings read the sim's own durations (`ROLL_TICKS`, `PLAYER_HIT_FX.poseTicks`); every other motion number lives in `WANDERER_MOTION`, so a timing change can't leave the art out of step.
   - Rig parts are baked to textures at boot and cached per view, so drawing allocates nothing per frame.
+
+- **077 world detail, landmarks and weather:**
+  - Decor and landmarks are render-only and never change collision: landmarks stand only on tiles that already block, and placement is a pure hash per tile, so the world is the same every boot.
+  - Sway keeps each plant's own cycle; wind changes only amplitude and lean, eased, so a gust or a region border never jumps a plant's phase.
+  - Weather lives in render, sized per Graphics quality tier, and never runs in the foundry or the sandbox.

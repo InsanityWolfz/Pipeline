@@ -5,6 +5,10 @@ import { OVERWORLD } from '../../data/overworld';
 import { SPRINGS } from '../../data/springs';
 import { TILE } from '../../data/rooms';
 import { worldTileHash } from '../roomTiles';
+import { EMBERWORKS_SPRITES } from '../../data/emberworksAssets';
+import { VARIANT_FRAMES } from '../../data/assets';
+import { variantFrame } from '../world/variants';
+import { setPieceOnTile } from '../world/decorPlace';
 import type { Quality } from '../../data/settings';
 
 // 074: the overworld's fixed lights, worked out once and bucketed by ground chunk so a frame looks only at the chunks
@@ -103,11 +107,15 @@ export function firesOf(rows: readonly string[]): FixedFire[] {
   const out: FixedFire[] = [];
   for (const [ty, row] of rows.entries()) {
     const below = rows[ty + 1] ?? '';
-    const front = (tx: number) => row[tx] === TILE.kiln && below[tx] !== TILE.kiln;
+    // 077: a kiln under a set piece (the Great Crucible, the Toppled Stack) isn't drawn, so it gives no light.
+    const front = (tx: number) => row[tx] === TILE.kiln && below[tx] !== TILE.kiln && !setPieceOnTile(tx, ty);
     for (let tx = 0; tx < row.length; tx++) {
       if (row[tx] === TILE.chimney) {
         const rises = F.chimney.rises;
-        out.push({ x: (tx + 0.5) * T, y: (ty + 1) * T - (rises[worldTileHash(tx, ty) % rises.length] ?? 0), radius: F.radii.chimney, intensity: F.chimney.intensity });
+        const look = EMBERWORKS_SPRITES.chimney[worldTileHash(tx, ty) % EMBERWORKS_SPRITES.chimney.length] ?? '';
+        // 077: a chimney broken to a stump (its ruin variant) burns low, at its own lip.
+        const rise = variantFrame(rows, look, tx, ty) === VARIANT_FRAMES.chimneyStump ? F.chimney.stumpRise : (rises[worldTileHash(tx, ty) % rises.length] ?? 0);
+        out.push({ x: (tx + 0.5) * T, y: (ty + 1) * T - rise, radius: F.radii.chimney, intensity: F.chimney.intensity });
         continue;
       }
       if (!front(tx) || front(tx - 1)) continue;
