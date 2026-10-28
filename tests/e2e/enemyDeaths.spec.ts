@@ -5,6 +5,7 @@ import { hexToRgb, paletteHex } from '../../src/data/palette';
 import type { Quality } from '../../src/data/settings';
 import { VIEW_WIDTH } from '../../src/data/config';
 import { boot, cameraSettled, watchErrors } from './helpers';
+import { dissolveMs } from '../../src/render/deathMotes';
 
 // 076: deaths dissolve into ley motes in the family's colours: the struck pose, then the dissolve, gone in about
 // 600 ms (bosses 1.4 s), the corpse no longer lingering; the motes stay within each tier's caps and the particle
@@ -85,16 +86,20 @@ test('a death dissolves in about 600 ms (a boss in 1.4 s), and nothing lingers',
   const errors = watchErrors(page);
   await sandbox(page);
   await spawnAndKill(page, ['husk'], [[60, 0]]);
-  // Real time, about the dissolve's: it runs on the frame clock, which a loaded runner stretches and Phaser's smoothed
-  // delta can run a little ahead of.
-  const husk = await watch(page, 2500);
+  // The dissolve runs on the tween clock, so its length is read on that clock (`dissolveDoneMs`): real time on a loaded
+  // runner both stretches it and, with Phaser's smoothed delta, can run behind it (fix-e2e-wallclock: CI read 308 and
+  // 324 ms of real time for a 600 ms dissolve). Its last frame may run past the end by a frame's delta (under 250 ms even on a loaded runner).
+  const doneMs = () => page.evaluate(() => window.__GAME__?.ui().particles.dissolveDoneMs ?? -1);
+  const husk = await watch(page, 4000, true);
   expect(husk.dissolving).toBe(1);
-  expect(husk.endedAt).toBeGreaterThan(350);
-  expect(husk.endedAt).toBeLessThan(1600);
+  expect(husk.endedAt).toBeGreaterThan(0);
+  expect(await doneMs()).toBeGreaterThanOrEqual(dissolveMs(false));
+  expect(await doneMs()).toBeLessThan(dissolveMs(false) + 250);
   await spawnAndKill(page, ['pylon-warden'], [[80, 0]]);
-  const warden = await watch(page, 3500);
-  expect(warden.endedAt).toBeGreaterThan(1000);
-  expect(warden.endedAt).toBeLessThan(2800);
+  const warden = await watch(page, 6000, true);
+  expect(warden.endedAt).toBeGreaterThan(0);
+  expect(await doneMs()).toBeGreaterThanOrEqual(dissolveMs(true));
+  expect(await doneMs()).toBeLessThan(dissolveMs(true) + 250);
   expect(await page.evaluate(() => window.__GAME__?.ui().particles.dissolving)).toBe(0);
   expect(errors).toEqual([]);
 });

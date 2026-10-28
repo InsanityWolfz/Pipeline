@@ -23,7 +23,10 @@ test('New game, Quit to title, then New game again starts a working game', async
   await flowIs(page, 'play');
   await page.waitForFunction(() => window.__GAME__?.ui().ready === true);
   // The new game runs: its world steps on its own. 070: given 20 s, as a busy two-core runner beside a heavy test file
-  // (landmarks.spec.ts, in this shard since 070's files) steps it at about 6 ticks a second, on main as on 070.
-  await expect.poll(() => page.evaluate(() => window.__GAME__?.getState()?.tick ?? -1), { timeout: 20_000 }).toBeGreaterThan(30);
+  // steps it at about 6 ticks a second. fix-e2e-wallclock: with the art pass, a first game's opening seconds bake its
+  // art and step slower still on a software renderer (measured locally: 18 ticks a second for 4 s, then 58; no leak, the
+  // game after a Quit runs faster than the first), so it gets the slow tests' time. It checks the same.
+  test.slow();
+  await expect.poll(() => page.evaluate(() => window.__GAME__?.getState()?.tick ?? -1), { timeout: 60_000 }).toBeGreaterThan(30);
   expect(errors).toEqual([]);
 });
