@@ -28,7 +28,7 @@ import { LightningClock, lightningActive, strikeTarget, type StrikeTarget } from
 import { budgetRoom, layerTargets, WeatherModel, weatherWeights } from './weatherModel';
 import { WeatherView } from './WeatherView';
 import { WindNow } from './wind';
-import { NO_WEATHER, NO_WORLD, type WeatherShown, type WorldShown } from './worldShown';
+import { lazyWorld, NO_WEATHER, NO_WORLD, type WeatherShown, type WorldShown } from './worldShown';
 
 // 077: the overworld's life, each frame: the wind where the camera is, the sway (only the chunks in view, under the
 // tier's cap), set pieces' loops and halos in view, ripples and ley beads in view, the weather (its layers, the shared
@@ -229,10 +229,12 @@ export class WorldLife {
   }
 
   private report(step: { updated: number; chunks: string[]; sample: number[] }, pieces: string[], beads: number, glints: number, quality: Quality, weights: Record<string, number>, want: number, fight: boolean, room: number): void {
-    this.shownWorld = {
+    // The chunks only when the hook reads them: never a walk over every built chunk a frame.
+    const decor = this.decor;
+    const chunks = () => [...decor.chunks.entries()].map(([key, c]) => ({ key, plants: c.plants, vines: c.vines.length, trees: c.trees, variants: c.variants, setPieces: c.pieces.map((p) => p.def.id), shown: decor.chunkShown(c) }));
+    this.shownWorld = lazyWorld({
       off: this.off,
       quality,
-      chunks: [...this.decor.chunks.entries()].map(([key, c]) => ({ key, plants: c.plants, vines: c.vines.length, trees: c.trees, variants: c.variants, setPieces: c.pieces.map((p) => p.def.id), shown: this.decor.chunkShown(c) })),
       swayUpdated: step.updated,
       swayChunks: step.chunks,
       swaySample: step.sample,
@@ -242,7 +244,7 @@ export class WorldLife {
       beads,
       setPiecesInView: pieces,
       loops: Object.fromEntries(this.loops),
-    };
+    }, chunks);
     const layers: Record<string, number> = {};
     for (const p of this.weather.particles) layers[p.layer] = (layers[p.layer] ?? 0) + 1;
     this.shownWeather = {
