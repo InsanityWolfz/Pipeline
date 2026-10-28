@@ -10,19 +10,25 @@ import { boot, cameraSettled, watchErrors } from './helpers';
 // 600 ms (bosses 1.4 s), the corpse no longer lingering; the motes stay within each tier's caps and the particle
 // budget, Low throwing half of Medium's; the cinder mote's own burst still plays.
 
-/** The sandbox (044) with the camera at rest, at a Graphics quality. */
+/**
+ * The sandbox (044) with the camera at rest, at a Graphics quality. Its own pack (and the golem's whelps) is cleared
+ * on Low, so its twenty-odd deaths throw the fewest motes, and has dissolved away before the quality under test is set
+ * and anything is measured.
+ */
 async function sandbox(page: Page, quality: Quality = 'medium'): Promise<void> {
   await boot(page, '?sandbox');
-  await page.evaluate((q) => {
+  await page.evaluate(() => {
     const g = window.__GAME__;
     if (!g) throw new Error('no game');
-    g.setLook({ quality: q });
-    for (const e of g.getState().enemies) g.setEnemyHealth(e.id, 0);
-    g.step(60);
-  }, quality);
+    g.setLook({ quality: 'low' });
+    for (let k = 0; k < 3; k++) {
+      for (const e of g.getState().enemies) g.setEnemyHealth(e.id, 0);
+      g.step(30);
+    }
+  });
   await cameraSettled(page, 20_000);
-  // The sandbox's own pack, cleared above, has dissolved away before anything is measured.
-  await expect.poll(() => page.evaluate(() => (window.__GAME__?.ui().particles.dissolving ?? 1) + (window.__GAME__?.ui().particles.deathMotes ?? 1)), { timeout: 60_000 }).toBe(0);
+  await expect.poll(() => page.evaluate(() => (window.__GAME__?.ui().particles.dissolving ?? 1) + (window.__GAME__?.ui().particles.deathMotes ?? 1)), { timeout: 120_000 }).toBe(0);
+  await page.evaluate((q) => window.__GAME__?.setLook({ quality: q }), quality);
 }
 
 /** Spawns enemies round the player (dx, dy px each) and kills them all in one tick; returns their ids. */
@@ -125,50 +131,59 @@ test('ten Hollows enemies killed at once never pass a tier’s death-mote cap or
   }
 });
 
+/** Pixels of each family's mote colours in a box 50 world px round the death spot (70 px right of the player, 25 up). */
+async function colourCounts(page: Page): Promise<number[]> {
+  return page.evaluate(
+    async ([families, view]) => {
+      const canvas = document.querySelector('canvas');
+      const g = window.__GAME__;
+      if (!canvas || !g) throw new Error('no canvas');
+      await new Promise((r) => requestAnimationFrame(r));
+      // In backbuffer px from the camera's centre.
+      const ui = g.ui();
+      const p = g.getState().player;
+      const k = (canvas.width / view) * ui.camera.zoom;
+      const cx = canvas.width / 2 + (p.x + 70 - ui.camera.x) * k;
+      const cy = canvas.height / 2 + (p.y - 25 - ui.camera.y) * k;
+      const half = 50 * k;
+      const img = await createImageBitmap(canvas, Math.round(cx - half), Math.round(cy - half), Math.round(half * 2), Math.round(half * 2));
+      const c = new OffscreenCanvas(img.width, img.height);
+      const x = c.getContext('2d');
+      if (!x) throw new Error('no 2d');
+      x.drawImage(img, 0, 0);
+      const data = x.getImageData(0, 0, img.width, img.height).data;
+      return families.map((cols) => {
+        let n = 0;
+        for (let i = 0; i < data.length; i += 4) {
+          for (const [r, g, b] of cols) if (Math.abs((data[i] ?? 0) - r) < 14 && Math.abs((data[i + 1] ?? 0) - g) < 14 && Math.abs((data[i + 2] ?? 0) - b) < 14) n += 1;
+        }
+        return n;
+      });
+    },
+    [ENEMY_FAMILIES.map((f) => f.motes.map((m) => hexToRgb(paletteHex(m)))), VIEW_WIDTH] as const,
+  );
+}
+
 test("the motes rise in each family's colours", async ({ page }) => {
   // On Low the motes are drawn plain (no additive blend), so their pixels are their palette colours.
   const one = { ruin: 'husk', quarry: 'charger', forge: 'bellows-hound', storm: 'storm-sentinel' } as const;
   for (const fam of ENEMY_FAMILIES) {
     await sandbox(page, 'low');
+    // What the box shows before (the ground, the pack's drops), taken off what it shows with the motes rising.
+    const ground = await colourCounts(page);
     await page.evaluate(() => window.__GAME__?.tweenSpeed(0.15));
     await spawnAndKill(page, [one[fam.id]], [[70, -10]]);
-    // Wait until two waves are out, then count pixels of each family's mote colours round the death.
+    // Wait until two waves are out, then read the motes' colours, and count pixels of each family's colours round the
+    // death beyond what the box showed before.
     await expect.poll(() => page.evaluate(() => window.__GAME__?.ui().particles.deathMotes ?? 0), { timeout: 10_000 }).toBeGreaterThan(4);
-    const counts = await page.evaluate(
-      async ([families, view]) => {
-        const canvas = document.querySelector('canvas');
-        const g = window.__GAME__;
-        if (!canvas || !g) throw new Error('no canvas');
-        await new Promise((r) => requestAnimationFrame(r));
-        // A box 50 world px round the body, in backbuffer px from the camera's centre.
-        const ui = g.ui();
-        const p = g.getState().player;
-        const k = (canvas.width / view) * ui.camera.zoom;
-        const cx = canvas.width / 2 + (p.x + 70 - ui.camera.x) * k;
-        const cy = canvas.height / 2 + (p.y - 25 - ui.camera.y) * k;
-        const half = 50 * k;
-        const img = await createImageBitmap(canvas, Math.round(cx - half), Math.round(cy - half), Math.round(half * 2), Math.round(half * 2));
-        const c = new OffscreenCanvas(img.width, img.height);
-        const x = c.getContext('2d');
-        if (!x) throw new Error('no 2d');
-        x.drawImage(img, 0, 0);
-        const data = x.getImageData(0, 0, img.width, img.height).data;
-        return families.map((cols) => {
-          let n = 0;
-          for (let i = 0; i < data.length; i += 4) {
-            for (const [r, g, b] of cols) if (Math.abs((data[i] ?? 0) - r) < 14 && Math.abs((data[i + 1] ?? 0) - g) < 14 && Math.abs((data[i + 2] ?? 0) - b) < 14) n += 1;
-          }
-          return n;
-        });
-      },
-      [ENEMY_FAMILIES.map((f) => f.motes.map((m) => hexToRgb(paletteHex(m)))), VIEW_WIDTH] as const,
-    );
+    const colors = (await page.evaluate(() => window.__GAME__?.ui().particles.moteColors)) ?? {};
+    const counts = (await colourCounts(page)).map((n, i) => Math.max(0, n - (ground[i] ?? 0)));
     await page.evaluate(() => window.__GAME__?.tweenSpeed(1));
-    const own = counts[ENEMY_FAMILIES.indexOf(fam)] ?? 0;
-    expect(own, fam.id).toBeGreaterThan(8);
-    // Its own colours outnumber any other family's (the ruins' and the quarry's share cyan-glow, so a ruin death
-    // is told from a forge or storm one, and the quarry's vein from the forge's gold).
-    for (const [i, other] of ENEMY_FAMILIES.entries()) if (other.id !== fam.id && !(fam.motes as readonly string[]).some((m) => (other.motes as readonly string[]).includes(m))) expect(counts[i] ?? 0, `${fam.id} vs ${other.id}`).toBeLessThan(own);
+    // Every mote flying is in one of the family's colours (no other family's), and they are drawn in them. (The pixels
+    // alone can't tell the families apart: a husk's straw and a drop's gold sit near the forge's brass.)
+    expect(Object.keys(colors).length, fam.id).toBeGreaterThan(0);
+    for (const c of Object.keys(colors)) expect(fam.motes as readonly string[], `${fam.id}: ${c}`).toContain(c);
+    expect(counts[ENEMY_FAMILIES.indexOf(fam)] ?? 0, fam.id).toBeGreaterThan(8);
   }
 });
 

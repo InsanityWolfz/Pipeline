@@ -38,7 +38,8 @@ test('the contact sheet shows every enemy frame under its family, with no consol
 });
 
 test('every enemy fought in the sandbox, through wind-ups, reactions and deaths, shows only drawn frames', async ({ page }) => {
-  test.setTimeout(180_000);
+  // 1,140 drawn frames sampled: a loaded runner can draw a few a second.
+  test.setTimeout(420_000);
   const errors = watchErrors(page);
   await boot(page, '?sandbox');
   await cameraSettled(page, 20_000);

@@ -15,8 +15,8 @@ interface Particle {
   gravity: number;
   age: number;
   life: number;
-  /** 076: a death's ley mote, counted against the live death-mote cap. */
-  mote: boolean;
+  /** 076: a death's ley mote (its palette id), counted against the live death-mote cap; null for any other particle. */
+  mote: string | null;
 }
 
 /** 076: one death mote: where it starts (already lifted to the body), its colour, size and look. */
@@ -60,7 +60,7 @@ export class Particles {
         gravity: burst.gravity,
         age: 0,
         life: between(burst.lifeMs),
-        mote: false,
+        mote: null,
       });
     }
   }
@@ -72,7 +72,7 @@ export class Particles {
       const speed = between(o.speed);
       const rect = this.scene.add.rectangle(m.x, m.y, o.size, o.size, colorOf(m.color)).setOrigin(0.5).setDepth(o.depth);
       if (o.add) rect.setBlendMode(BlendModes.ADD);
-      this.live.push({ rect, x: m.x, y: m.y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed, gravity: o.gravity, age: 0, life: between(o.lifeMs), mote: true });
+      this.live.push({ rect, x: m.x, y: m.y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed, gravity: o.gravity, age: 0, life: between(o.lifeMs), mote: m.color });
       this.motes += 1;
       this.thrown += 1;
     }
@@ -86,6 +86,13 @@ export class Particles {
   /** 076: death motes thrown since boot. */
   get motesThrown(): number {
     return this.thrown;
+  }
+
+  /** 076: the death motes flying now, by palette id. */
+  get moteColors(): Record<string, number> {
+    const out: Record<string, number> = {};
+    for (const p of this.live) if (p.mote) out[p.mote] = (out[p.mote] ?? 0) + 1;
+    return out;
   }
 
   update(deltaMs: number): void {
