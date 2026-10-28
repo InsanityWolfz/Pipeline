@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { ENEMY_MOTION as M } from '../../src/data/art/enemyMotion';
 import { enemyDef } from '../../src/data/enemies';
-import { attacking, flinchSquash, reactionOf, staggerIndex, staggers, staggerSquash } from '../../src/render/enemyReaction';
+import { attacking, flinchSquash, reactionOf, staggeredInTick, staggerIndex, staggers, staggerSquash } from '../../src/render/enemyReaction';
 
 // 076: hits make enemies flinch or stagger, as pose animation only (the flash, numbers and hit-stop are unchanged).
 
@@ -9,6 +9,17 @@ const HUSK = enemyDef('husk').maxHealth;
 const still = { attacking: false, reactable: true, boss: false, flash: 0, staggerMs: null };
 
 describe('flinch or stagger (076)', () => {
+  it("adds a tick's hits up per enemy, never across ticks, so a slow machine staggers no more than a fast one (review 7)", () => {
+    const of = (id: number) => (id === 1 || id === 2 ? { maxHealth: HUSK, boss: false } : undefined);
+    const hit = (id: number, damage: number) => ({ target: 'enemy' as const, id, damage });
+    // Two 30% hits in one tick stagger; the same two hits a tick apart (one slow frame's worth) don't.
+    expect(staggeredInTick([hit(1, HUSK * 0.3), hit(1, HUSK * 0.3)], of)).toEqual([1]);
+    expect(staggeredInTick([hit(1, HUSK * 0.3)], of)).toEqual([]);
+    // Hits on two enemies in one tick are counted apart; the player's hits and unknown ids are skipped.
+    expect(staggeredInTick([hit(1, HUSK * 0.3), hit(2, HUSK * 0.3)], of)).toEqual([]);
+    expect(staggeredInTick([{ target: 'player' as const, id: 0, damage: 999 }, hit(9, 999)], of)).toEqual([]);
+  });
+
   it('a small hit flinches; 40% in one frame, or a punch, staggers; a boss never staggers', () => {
     // A ring 1 Husk has 40 HP: one 14-damage arrow flinches it, two in one frame stagger it.
     expect(HUSK).toBe(40);

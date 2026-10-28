@@ -19,6 +19,36 @@ export function staggers(hits: readonly { damage: number; melee?: boolean; burn?
   return blows.some((h) => h.melee === true) || blows.reduce((n, h) => n + h.damage, 0) >= M.stagger.threshold * maxHealth;
 }
 
+/** A hit as the sim reports it (enough of `HitEvent` to weigh it). */
+interface TickHit {
+  target: string;
+  id?: number;
+  damage: number;
+  melee?: boolean;
+  burn?: boolean;
+}
+
+/**
+ * The enemies one sim tick's hits stagger (review 7: weighed per tick, as the sim deals them, so a slow machine that
+ * draws several ticks in a frame staggers no more than a fast one), in the order first hit. `of` gives an enemy's
+ * (scaled) max health and whether it's a boss; unknown ids are skipped.
+ */
+export function staggeredInTick(hits: readonly TickHit[], of: (id: number) => { maxHealth: number; boss: boolean } | undefined): number[] {
+  const byId = new Map<number, TickHit[]>();
+  for (const h of hits) {
+    if (h.target !== 'enemy' || h.id === undefined) continue;
+    const list = byId.get(h.id) ?? [];
+    list.push(h);
+    byId.set(h.id, list);
+  }
+  const out: number[] = [];
+  for (const [id, list] of byId) {
+    const e = of(id);
+    if (e && staggers(list, e.maxHealth, e.boss)) out.push(id);
+  }
+  return out;
+}
+
 export interface ReactionIn {
   /** It is winding up or attacking. */
   attacking: boolean;
