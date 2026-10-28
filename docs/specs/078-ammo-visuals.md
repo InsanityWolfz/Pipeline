@@ -3,6 +3,8 @@ status: approved
 
 Approved by Shaun in chat, 2026-10-27, with the whole art pass (074–081); its plan is pre-approved.
 
+Plan pre-approved by Shaun in chat, 2026-10-27. Plan: docs/plans/078-ammo-visuals.md.
+
 Drafted from Shaun's art-pass interview (docs/brainstorm/2026-10-27-art-interview.md, answers 5, 14–17 and 27–28) and his calls on 078 that day. This is art spec 5 of 8, built in order after 074, 075, 076 and 077. Shaun asked for no sample pages first ("Just build it"); he reviews the result at the playtest.
 
 ## Goal
