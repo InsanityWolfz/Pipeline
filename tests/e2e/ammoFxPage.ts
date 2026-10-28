@@ -1,6 +1,6 @@
 import { expect, type Page } from '@playwright/test';
 import type { Quality } from '../../src/data/settings';
-import type { ImpactShown } from '../../src/render/fx/ShotFxView';
+import type { ImpactShown } from '../../src/render/fx/ammoFxShown';
 import { bootSandbox } from './sandboxPage';
 
 // 078: helpers for the shot effects' e2e, shots and probe: the sandbox with a loadout and a few targets, volleys fired

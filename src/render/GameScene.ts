@@ -9,8 +9,6 @@ import { clearEvents, createEvents, type SimEvents } from '../sim/events';
 import type { Command } from '../sim/input';
 import { roomById, type SimState } from '../sim/state';
 import { stepSim } from '../sim/step';
-import { ArrowView } from './ArrowView';
-import { BombView } from './BombView';
 import { BuildView } from './BuildView';
 import { Controls, NO_UI_COMMAND, type UiCommand } from './controls';
 import { CraftMenuView } from './CraftMenuView';
@@ -28,10 +26,8 @@ import { SiteView } from './SiteView';
 import { WakeView } from './WakeView';
 import { mergeEvents } from './eventLog';
 import { ParticleLedger } from './particleBudget';
-import { TrailView } from './fx/TrailView';
-import { ShotFxView } from './fx/ShotFxView';
-import { drawShots } from './fx/drawShots';
-import type { Quality } from '../data/settings';
+import { ShotLayer } from './fx/ShotLayer';
+import { inRoom } from './inRoom';
 import { FeelView } from './FeelView';
 import { TutorialUi } from './TutorialUi';
 import { currentFit, type ScreenFit } from './scale';
@@ -61,9 +57,6 @@ import { settings } from './flow/settingsStore';
 
 const FIRST_PIECE = BUILD_BAR[0] ?? '';
 
-const inRoom = <T extends { roomId: string }>(list: readonly T[], roomId: string): T[] =>
-  list.filter((o) => o.roomId === roomId);
-
 // Draws the sim and drives it in real time. Holds no game rules.
 export class GameScene extends Scene {
   /** The sim this scene draws and drives (042: the test hook follows the live scene's). */
@@ -74,16 +67,13 @@ export class GameScene extends Scene {
   private controls?: Controls;
   roomViews?: RoomViews;
   playerView?: PlayerView;
-  arrowView?: ArrowView;
-  /** 078: the trails and the shot effects. */
-  trails?: TrailView;
-  shotFx?: ShotFxView;
+  /** 078: the rounds in flight (ArrowView, BombView), their trails and the shot effects. */
+  shots?: ShotLayer;
   hud?: HudView;
   enemyView?: EnemyView;
   groundItemView?: GroundItemView;
   effects?: EffectsView;
   nodeView?: NodeView;
-  private bombView?: BombView;
   private foundryView?: FoundryView;
   buildView?: BuildView;
   /** 063: the Tools group, the area box and its menu. */
@@ -164,11 +154,8 @@ export class GameScene extends Scene {
     this.playerView = new PlayerView(this);
     this.silhouette = new SilhouetteView(this, occluders);
     this.effects = new EffectsView(this, this.playerView.sprite, (atDark, ms, rgb) => this.sceneCameras?.fadeThrough(atDark, ms, rgb), () => this.feel?.juice.particles, (id) => this.enemyView?.lastOf(id));
-    // 078: every trail ribbon (fed by ArrowView), and the shot effects (impacts, blasts, ends, sparks, marks).
-    this.trails = new TrailView(this);
-    this.arrowView = new ArrowView(this, this.trails);
-    this.shotFx = new ShotFxView(this, this.trails, () => this.feel?.juice.particles, (id) => this.enemyView?.lastOf(id));
-    this.bombView = new BombView(this);
+    // 078: the rounds in flight, their trails and the shot effects.
+    this.shots = new ShotLayer(this, () => this.feel?.juice.particles, (id) => this.enemyView?.lastOf(id));
     this.hud = new HudView(this);
     this.buildView = new BuildView(this);
     this.blueprintUi = new BlueprintUi(this);
@@ -184,7 +171,7 @@ export class GameScene extends Scene {
     this.sandboxPanel = new SandboxPanel(this);
     this.legibility = new Legibility(this, [this.hud, this.siteMenus, this.buildView]);
     this.cursorView = new CursorView(this);
-    this.feel = new FeelView(this, (id) => this.foundryView?.dropIn(id), (id, ms) => this.enemyView?.freeze(id, ms), { ledger: this.ledger, quality: () => this.fxQuality });
+    this.feel = new FeelView(this, (id) => this.foundryView?.dropIn(id), (id, ms) => this.enemyView?.freeze(id, ms), { ledger: this.ledger, quality: () => this.lighting?.quality ?? 'medium' });
     this.room.show(this.sim.roomId);
     this.draw();
 
@@ -200,11 +187,6 @@ export class GameScene extends Scene {
   }
 
   /** Matches both cameras to the backbuffer (016). Called on boot and whenever the window changes. */
-  /** 078: the Graphics quality effects draw at (the Canvas renderer runs as Low, 074). */
-  get fxQuality(): Quality {
-    return this.lighting?.quality ?? 'medium';
-  }
-
   applyFit(fit: ScreenFit): void {
     this.fit = fit;
     this.sceneCameras?.applyFit(fit);
@@ -312,8 +294,8 @@ export class GameScene extends Scene {
     if (this.playerView) this.silhouette?.update(this.playerView.sprite, shown === sim.roomId && sim.player.dying === 0);
     if (this.playerView && shown === sim.roomId) catches?.offer(this.playerView.sprite, sim.player.x, sim.player.y, 'player', 0);
     catches?.end();
-    // 078: the rounds and the shot effects, which need this frame's events, rounds and posed muzzle.
-    drawShots({ trails: this.trails, arrows: this.arrowView, bombs: this.bombView, shotFx: this.shotFx, player: this.playerView }, sim, this.pending, shown, this.fxQuality, this.game.loop.delta * this.tweens.timeScale);
+    // 078: the rounds and shot effects (this frame's events, rounds and posed muzzle), at the Graphics quality (074).
+    this.shots?.draw(sim, this.pending, shown, this.lighting?.quality ?? 'medium', this.game.loop.delta * this.tweens.timeScale, this.playerView);
     this.site?.update(sim, shown);
     this.siteMenus?.update(sim);
     this.menu?.update(sim);

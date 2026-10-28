@@ -1,4 +1,3 @@
-import { isFlatKind } from '../data/pieces';
 import type { Scene } from 'phaser';
 import { STAGES } from '../data/stages';
 import { TILE_SIZE } from '../data/config';
@@ -7,16 +6,14 @@ import { INTAKE } from '../data/foundry';
 import { DUST, GLOWS, HARVEST_BURSTS, HARVEST_WORK, HIT_STOP_MS } from '../data/juice';
 import { FOUNDRY_ROOM } from '../data/rooms';
 import { SOUND_LEVELS, SOUNDS, WINDUP_SOUNDS } from '../data/sounds';
-import { isClaimed } from '../sim/claims';
 import { wornRelic } from '../sim/stats';
 import type { SimEvents } from '../sim/events';
 import { pieceRect } from '../sim/pieces';
 import { roomById, type SimState } from '../sim/state';
 import { AmbientView, type GlowSpot } from './AmbientView';
+import { movingGlows } from './movingGlows';
 import { JuiceView } from './JuiceView';
 import { SoundView } from './SoundView';
-import { attuneBeat } from './attune';
-import { intakeAnchor } from './foundryLayout';
 import { playHollows, SealSound } from './hollowsFeel';
 import { playEmberworks, VentFeel } from './emberworksFeel';
 import { playStormcrown } from './stormcrownFeel';
@@ -83,7 +80,7 @@ export class FeelView {
     this.watch(sim, shown, deltaMs);
     this.juice.update(deltaMs);
     this.intakeMs = Math.max(0, this.intakeMs - deltaMs);
-    this.ambient.update(deltaMs, this.movingGlows(sim, shown));
+    this.ambient.update(deltaMs, movingGlows(sim, shown, this.intakeMs > 0));
     this.sound.endFrame();
   }
 
@@ -281,30 +278,5 @@ export class FeelView {
       this.workMs = 0;
       j.burst(HARVEST_BURSTS[worked.nodeId] ?? 'harvestChips', worked.x, worked.y);
     }
-  }
-
-  /** Lights that move or come and go: live veins, claimed pylons, items on conduits, the intake and the tube. */
-  private movingGlows(sim: SimState, shown: string): GlowSpot[] {
-    const spots: GlowSpot[] = [];
-    for (const n of sim.nodes) if (n.roomId === shown && n.nodeId === 'ley-vein' && n.uses > 0) spots.push({ x: n.x, y: n.y, ...GLOWS.vein });
-    for (const pylon of roomById(shown).pylons ?? []) if (isClaimed(sim, pylon.site)) spots.push({ ...tileCentre(pylon.tx, pylon.ty), ...GLOWS.pylon });
-    if (shown === FOUNDRY_ROOM) {
-      for (const p of sim.foundry.pieces) {
-        const r = pieceRect(p);
-        if (isFlatKind(p.kind)) spots.push({ x: r.x, y: r.y, ...GLOWS.conduit });
-        if (p.kind === 'conduit' && p.item) spots.push({ x: r.x, y: r.y, ...GLOWS.conduitItem });
-      }
-      // The intake glows once attuned (growing as its rings light), swelling as each item goes in.
-      const { pipeGlow } = attuneBeat(sim.link.attunePulse);
-      if (sim.link.attuned && pipeGlow > 0) {
-        const swell = sim.link.attunePulse > 0 ? pipeGlow : this.intakeMs > 0 ? GLOWS.intake.pulse : 1;
-        spots.push({ ...intakeAnchor(), color: GLOWS.intake.color, radius: GLOWS.intake.radius * swell });
-      }
-    }
-    if (sim.hasTube && sim.link.attuned && shown === sim.roomId) {
-      // The same growing glow round the tube while its rings light.
-      spots.push({ x: sim.player.x, y: sim.player.y, color: GLOWS.tube.color, radius: GLOWS.tube.radius * attuneBeat(sim.link.attunePulse).gunGlow });
-    }
-    return spots;
   }
 }

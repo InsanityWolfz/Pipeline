@@ -87,8 +87,8 @@ export function installTestHook(flow: FlowScene): void {
     }),
     fxOff: (off) => {
       const scene = live();
-      if (scene.shotFx) scene.shotFx.off = off;
-      if (off) scene.shotFx?.clear();
+      if (scene.shots) scene.shots.fx.off = off;
+      if (off) scene.shots?.fx.clear();
     },
     strikeWeather: () => live().worldLife?.strikeNow(),
     claim: act((sim, _scene, site: string) => claim(sim, site)),
