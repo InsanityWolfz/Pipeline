@@ -2,6 +2,19 @@
 
 Newest entry first. Entries before 050 are in docs/progress-archive.md.
 
+## 2026-10-28: 080 Boss intros and phases
+**Changed:** on `claude/080-boss-intros` (InsanityWolfz/Pipeline#97, stacked on 073 and 074–076), art pass 7 of 8 (plan docs/plans/080-boss-intros.md):
+- a 2.75 s intro per boss when the player first stands inside its arena: dormant, stir, rise, one beat with the only screen shake in the game (300 ms, world camera only, off with "Flashes and shake" or reduced motion), then a name card on the stone tablet; the Warden stands and slams, the Bulwark hauls its shield from the floor, the Forgewright's cold forge kindles, the Conductor draws a bolt to its staff; a short pan in and out;
+- a sim `intro` mode: the boss and its posted enemies are inactive and untargetable, the player takes no damage, burns don't tick; altar re-fights get a 1 s intro with no card; it replays only when the fight restarts; each fight from the intro's end is today's fight from its wake, tick for tick;
+- visible phases from existing sim flags: the Bulwark's called runes and enraged veins and roar, the Forgewright's heat bands and flame crest, the Conductor's storm dome, earthed arcs and halo.
+
+`SAVE_VERSION` 24 (072 takes 23). Reviewed, with a motion check: two blocking findings fixed (two criteria had no test; tuning numbers lived in render), plus burns skipping intros and a 3 px hand-back. `npm run check` 2886 tests; CI green. Raised for Shaun: 080.15–080.27; 080.25 and 080.27 need his call.
+
+**Next:** Shaun's playtest; his call on 080.27 (the Conductor's pan ends as he attacks); "merge 97" after 90 and 91–93.
+
+**Notes:**
+- `npm run measure`: every boss fight is exactly 2.75 s longer; the targets met are unchanged (Bulwark 21.2 s).
+
 ## 2026-10-28: 076 Enemy and boss polish
 **Changed:** on `claude/076-enemy-polish` (InsanityWolfz/Pipeline#93, stacked on 074 and 075), art pass 3 of 8, from Shaun's art interview (plan docs/plans/076-enemy-polish.md):
 - all 19 rigs (15 enemies, 4 bosses) redrawn in a family look per region: Mossbound ruins (Region 1), Quarry constructs (the Hollows), Forge constructs (the Emberworks), Storm-works (the Stormcrown); soft gradients, a rim light per family, the thin ink outline; boxes and hitboxes unchanged;

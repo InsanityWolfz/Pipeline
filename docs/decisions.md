@@ -330,3 +330,8 @@ Each plan's build notes hold the detail; these are the lasting technical choices
   - Enemy poses follow the sim's own wind-up progress (gather, coil, peak by share of the wind-up), so the art can't drift from timing; motion values live in `ENEMY_MOTION`, with per-attack overrides (slams take no release stretch).
   - Death motes share one capped total per death, split across a boss and its standing parts, and scale with Graphics quality.
   - Staggers count hits per sim tick, never per render frame, so slow machines see the same reactions.
+
+- **080 boss intros and phases:**
+  - The intro is a sim mode (`intro`), not a pause: the world keeps stepping while the boss and its posted enemies are skipped and immune and the player's damage is guarded, so the fight that follows is unchanged tick for tick.
+  - Screen shake exists only in boss intros, on the world camera, behind the "Flashes and shake" setting and reduced motion; the HUD and name card sit on the UI camera.
+  - Boss phases are drawn from existing sim flags only; render never decides a phase.
