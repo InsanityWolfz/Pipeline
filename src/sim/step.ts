@@ -51,6 +51,7 @@ import { rampOverpressure, stepPools } from './keystones';
 import { noteCarried } from './knownRounds';
 import { noteBag, sortBag } from './bag';
 import { stepSandbox } from './sandbox';
+import { stepReturnStones, stepReturnWake } from './returnStones';
 
 /** Each room's bodies, built once per tick on first use. */
 function bodiesOf(state: SimState): (roomId: string) => RoomBodies {
@@ -92,6 +93,8 @@ export function stepSim(state: SimState, input: Command = NO_COMMAND): void {
   stepLink(state);
   // Enemies act after the player moves, so a swipe lands on where the player stands now.
   stepDiscovery(state);
+  // 072: a return stone wakes as the player comes by it.
+  stepReturnWake(state);
   stepFog(state);
   stepPopulation(state);
   stepCacheRearm(state);
@@ -105,7 +108,7 @@ export function stepSim(state: SimState, input: Command = NO_COMMAND): void {
   // Build mode keeps E for hoppers and crates, not harvesting.
   // 045: a new E handler here adds its kind to INTERACT_KINDS (src/data/interact.ts) and to interactTarget
   // (src/sim/interactables.ts), whose test then holds it to a prompt.
-  const used = stepCache(state, stepClaims(state, stepAltars(state, stepArenaLock(state, stepTubeStone(state, cmd)))));
+  const used = stepCache(state, stepReturnStones(state, stepClaims(state, stepAltars(state, stepArenaLock(state, stepTubeStone(state, cmd))))));
   if (cmd.identify) identifyAll(state);
   if (cmd.equip) equip(state, cmd.equip);
   if (cmd.restore) restore(state, cmd.restore);

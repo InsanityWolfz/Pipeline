@@ -4,7 +4,7 @@ import { SANDBOX_ROOM } from '../data/rooms';
 import { altarInReach, altarState } from './altar';
 import { arenaLocked, doorInReach, doorUse } from './arenaLock';
 import { cacheInReach, isOpened } from './cache';
-import { claimedPylons, dormant, fixtureInReach, isClaimed, occupied, pylonInReach } from './claims';
+import { travelDestinations, dormant, fixtureInReach, isClaimed, occupied, pylonInReach } from './claims';
 import { fixtureDef } from './fixtures';
 import { usableInReach } from './foundryUse';
 import { nodeInReach } from './harvest';
@@ -15,11 +15,12 @@ import { INTAKE } from '../data/foundry';
 import { roomOf, type SimState } from './state';
 import { tileCentre } from './tiles';
 import { stoneInReach } from './tutorial';
+import { usableStoneInReach } from './returnStones';
 
 // What E would act on right now (045): the thing in reach that takes an E press, in the order the sim takes one
 // (src/sim/step.ts), and the world point its prompt floats over. Nothing while a harvest, claim or cache hold runs
 // (018: the prompt never sits on a hold's bar), or where E would do nothing: a dormant or guarded pylon, a dim altar, an opened
-// cache, an empty crate, the waystone with no pylon claimed, and in build mode a node (E there is for pieces).
+// cache, an empty crate, the waystone with no pylon claimed, a dormant return stone (072), and in build mode a node (E there is for pieces).
 
 export interface InteractTarget {
   kind: InteractKind;
@@ -55,9 +56,12 @@ export function interactTarget(state: SimState): InteractTarget | null {
   for (const kind of ['waystone', 'stash', 'bench'] as const) {
     const f = fixtureInReach(state, kind);
     if (!f) continue;
-    if (kind === 'waystone' && claimedPylons(state).length === 0) return null;
+    if (kind === 'waystone' && travelDestinations(state).length === 0) return null;
     return at(kind, state.sandbox && state.roomId === SANDBOX_ROOM ? tileCentre(SANDBOX.bench) : tileCentre(fixtureDef(f.id)));
   }
+  // 072: a woken return stone (a dormant one, and the sandbox's, take no E).
+  const stone = usableStoneInReach(state);
+  if (stone) return at('return-stone', tileCentre(stone));
   const cache = cacheInReach(state);
   if (cache) return isOpened(state, cache.id) ? null : at('cache', tileCentre(cache));
   // 069: an intake entrance holding rounds offers Purge (the one under the cursor, or one nearer than any diagram).

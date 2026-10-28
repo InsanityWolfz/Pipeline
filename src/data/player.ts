@@ -50,6 +50,8 @@ export interface StartDef {
   populated: boolean;
   /** Sites already claimed (034: `?start=hollows` starts with the shrine's, so the Hollows' barrier is down). */
   claims?: readonly string[];
+  /** 072: return stones already woken (the sandbox shows all three). */
+  returnStones?: readonly string[];
   /** Identified gear the player starts with, none worn (036: `?playtest` carries a Rare piece per slot and a relic). */
   gear?: readonly GearPiece[];
   /** 044: the sandbox (`?sandbox`): its room, kit and tools; src/sim/sandbox.ts sets the rest up. Never in a save. */

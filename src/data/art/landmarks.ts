@@ -120,10 +120,13 @@ const ICON_FOUNDRY: Shape[] = [
   path('M -4.2 4 L -4.2 -1 Q -4.2 -4.6 0 -4.6 Q 4.2 -4.6 4.2 -1 L 4.2 4 Z', { fill: 'brass', outline: true }),
   path('M -2.2 4 L -2.2 -0.6 Q -2.2 -2.6 0 -2.6 Q 2.2 -2.6 2.2 -0.6 L 2.2 4 Z', flat('ink')),
 ];
-const ICON_PYLON: Shape[] = [
-  path('M -2 4.5 L -1.2 -2 L 1.2 -2 L 2 4.5 Z', { fill: 'rock-light', outline: true }),
+/** A pylon's icon, its needle in `body` (072.9: a return stone's is in a boss door's brass, as its door is on the minimap). */
+const pylonIcon = (body: string): Shape[] => [
+  path('M -2 4.5 L -1.2 -2 L 1.2 -2 L 2 4.5 Z', { fill: body, outline: true }),
   { ...path('M 0 -5.5 L 1.6 -3 L 0 -1 L -1.6 -3 Z', { fill: 'wisp-light', outline: true }), glow: { color: 'wisp', blur: 2 } },
 ];
+const ICON_PYLON = pylonIcon('rock-light');
+const ICON_RETURN_STONE = pylonIcon('brass');
 const ICON_ARENA: Shape[] = [
   ellipse(0, 0, 4.4, 4.4, { fill: 'hollow-dark', outline: true }),
   line([-2.4, -2.4, 2.4, 2.4], 1.1, 'rust-light', true),
@@ -167,6 +170,7 @@ export const LANDMARK_SPRITES_VECTOR: readonly VectorSprite[] = [
   one(MAP_ICONS.foundry, [11, 11], [5.5, 5.5], ICON_FOUNDRY),
   one(MAP_ICONS.pylon, [8, 13], [4, 6.5], ICON_PYLON),
   one(MAP_ICONS.arena, [11, 11], [5.5, 5.5], ICON_ARENA),
+  one(MAP_ICONS.returnStone, [8, 13], [4, 6.5], ICON_RETURN_STONE),
   one(FOUNDRY_MAP_ICONS.tube, [9, 11], [4.5, 5.5], ICON_TUBE),
   one(FOUNDRY_MAP_ICONS.bench, [10, 10], [5, 5], ICON_BENCH),
   one(FOUNDRY_MAP_ICONS.stash, [10, 8], [5, 4], ICON_STASH),

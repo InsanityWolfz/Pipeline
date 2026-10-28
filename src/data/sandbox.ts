@@ -15,6 +15,7 @@ import { ALL_CRAFTED } from './playtest';
 import { RELICS } from './relics';
 import type { Ring } from './ringScale';
 import type { BindAction } from './settings';
+import { RETURN_STONES } from './returnStones';
 import { SANDBOX_ROOM } from './rooms';
 import type { TilePos, TileRect } from './tiles';
 
@@ -191,6 +192,8 @@ export const SANDBOX_START: StartDef = {
   populated: false,
   gear: SANDBOX_GEAR,
   sandbox: true,
+  // 072: every boss arena's return stone, woken.
+  returnStones: RETURN_STONES.map((s) => s.id),
 };
 
 /**

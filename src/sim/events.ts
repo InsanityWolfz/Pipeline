@@ -195,6 +195,8 @@ export interface SimEvents extends ForgeEvents, BlueprintEvents, EmberEvents, St
   bombletBursts: BurstEvent[];
   /** What the player carried was banked (on entering the foundry or depositing). */
   banks: Record<string, number>[];
+  /** 072: a return stone woke (its id). */
+  returnWakes: { id: string }[];
   /** 042: the player entered the foundry (by its door, by fast travel, or waking there after a KO): render saves. */
   foundryArrivals: { via: 'door' | 'travel' | 'wake' }[];
   /** On a KO, what was lost: item id to count. */
@@ -289,6 +291,7 @@ export function createEvents(): SimEvents {
     mineBursts: [],
     bombletBursts: [],
     banks: [],
+    returnWakes: [],
     foundryArrivals: [],
     lost: {},
     ko: false,

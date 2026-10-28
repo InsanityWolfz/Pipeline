@@ -10,6 +10,7 @@ import { CROWN_SPIRE } from '../data/stormcrownSites';
 import { linkTrios, swarmOf } from './miteAi';
 import { HOLLOWS } from '../data/hollows';
 import { LANDMARK_LIST } from '../data/landmarks';
+import { RETURN_STONE, RETURN_STONES } from '../data/returnStones';
 import { TILE, WALKABLE } from '../data/rooms';
 import type { TileRect } from '../data/tiles';
 import { createEnemy, type EnemyState } from './enemies';
@@ -129,8 +130,14 @@ const SHRINE_GROUND = ((): TileRect => {
   return { x0: a.x0 - m.x, y0: a.y0 - m.y, x1: a.x1 + m.x, y1: a.y1 + m.y };
 })();
 
-/** Where packs never stand: the clearings (the meadow, the ruin field, the shrine site), the shrine's surroundings, the landmarks' areas (032), the Sunken Forum (034), the Anvil Hall (061) and the Crown Spire (065). */
-export const KEEP_OUT: readonly TileRect[] = [...OVERWORLD.clearings, SHRINE_GROUND, ...LANDMARK_LIST.map((l) => l.area), HOLLOWS.arena.bounds, ANVIL_HALL.bounds, CROWN_SPIRE.bounds];
+/** 072: the ground round each return stone, `packMargin` tiles every way, so arriving by fast travel is never an ambush. */
+const STONE_GROUND: readonly TileRect[] = RETURN_STONES.map((s) => {
+  const m = RETURN_STONE.packMargin;
+  return { x0: s.tx - m, y0: s.ty - m, x1: s.tx + m, y1: s.ty + m };
+});
+
+/** Where packs never stand: the clearings (the meadow, the ruin field, the shrine site), the shrine's surroundings, the landmarks' areas (032), the Sunken Forum (034), the Anvil Hall (061), the Crown Spire (065) and (072) the return stones' ground. */
+export const KEEP_OUT: readonly TileRect[] = [...OVERWORLD.clearings, SHRINE_GROUND, ...LANDMARK_LIST.map((l) => l.area), HOLLOWS.arena.bounds, ANVIL_HALL.bounds, CROWN_SPIRE.bounds, ...STONE_GROUND];
 
 /** A ring's ground a pack can walk to from `starts` without leaving it: generated cliffs and kilns can wall off a pocket, and nothing spawns in one. */
 function reachIn(ring: number, starts: readonly { tx: number; ty: number }[]): Set<number> {

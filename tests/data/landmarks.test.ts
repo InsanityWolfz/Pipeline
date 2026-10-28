@@ -125,6 +125,8 @@ describe('landmark entries', () => {
     const frames = new Set(vectorFrames().map((f) => f.name));
     for (const l of LANDMARK_LIST) expect(frames.has(MAP_ICONS[l.marker]), l.id).toBe(true);
     for (const key of Object.values(LANDMARK_SPRITES).flat()) expect(frames.has(key), key).toBe(true);
+    // 051, 072.9: every minimap icon (the foundry's stairs, the shrine's pylon, an arena, a woken return stone) too.
+    for (const key of Object.values(MAP_ICONS)) expect(frames.has(key), key).toBe(true);
   });
 });
 

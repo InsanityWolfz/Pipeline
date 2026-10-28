@@ -121,6 +121,21 @@ No sim change; `SAVE_VERSION` stays 22. Reviewed, including a motion check at re
 - `npm run measure`: pack fights and the Bulwark match main (the ring 3 stone mean 15.3 s against 15.6 s); there's no Warden measure.
 - tutorialFrost.spec.ts's long walk now also clears enemies midway: pack respawn spots drift with the seeded RNG once fights go differently.
 
+## 2026-10-27: 072 Boss return points
+**Changed:** on `claude/072-boss-return-points` (InsanityWolfz/Pipeline#86), from the agent-playtest proposals Shaun picked (plan docs/plans/072-boss-return-points.md):
+- a return stone stands three tiles west of each boss arena's door (the Bulwark's Forum, the Anvil Hall, the Conductor's hall); it wakes when the player passes within 2.5 tiles from outside, never from inside an arena;
+- woken stones join fast travel (claimed pylons first, then stones in the order they woke), and a stone offers "Travel to foundry"; a travel lands on the tile west of the stone, clear of the door's E;
+- packs never spawn within 7 tiles of a stone; woken stones survive KOs and saves.
+
+`SAVE_VERSION` 23 (069 takes 22). Reviewed: one blocking finding fixed (the stone was drawn at about twice its size; `ui()` now reports its drawn size and the e2e checks it), plus four suggestions (the spawn margin from 5 to 7 tiles, matching a pylon's safe zone). `npm run check` 2539 tests; CI green. Raised for Shaun: 072.1–072.9; 072.5, 072.7 and 072.9 need his call.
+
+**Next:** Shaun's playtest; his calls on 072.5 (travelling home banks the haul), 072.7 (7-tile margin), 072.9 (a minimap icon); "merge 86".
+
+**Notes:**
+- The plan's landing tile (one below the stone) was in the Forum door's E reach; it moved west of the stone.
+- The container restarted twice during the build; nothing was lost.
+- 2026-10-27: Shaun OK'd 072.5, 072.7 and the rest; 072.9 built on this branch (a woken stone's minimap icon, the pylon's in brass, with a hover line; shot 06); main (069) merged in.
+
 ## 2026-10-26: 070 Handling and clarity
 **Changed:** on `claude/070-handling-clarity` (InsanityWolfz/Pipeline#84), from the agent-playtest proposals Shaun picked (plan docs/plans/070-handling-clarity.md, six slices):
 - hold E to harvest: channels chain while E is held and the player stays in reach; release, a knockback or build mode ends the chain;
