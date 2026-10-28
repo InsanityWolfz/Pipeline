@@ -59,6 +59,8 @@ test('killing 10 Hollows enemies at once in the dust: weather stops spawning whi
       expect(s.weather.live, q).toBeLessThanOrEqual(WEATHER_CAP[q]);
       // 076 is in: its death motes stay within their live cap with the weather on.
       expect(s.deathMotes, q).toBeLessThanOrEqual(DEATH_MOTES.liveCap[q]);
+      // And every live particle, the weather among them, within the tier's budget (the spec's criterion).
+      expect(s.all, q).toBeLessThanOrEqual(WEATHER_BUDGET.particles[q]);
       // The room this frame's spawns had: the budget less the death motes' room and every live particle.
       expect(s.weather.room, q).toBeLessThanOrEqual(Math.max(0, WEATHER_BUDGET.particles[q] - WEATHER_BUDGET.deathMotes[q] - s.particles));
       const before = seen[i - 1];
@@ -70,7 +72,7 @@ test('killing 10 Hollows enemies at once in the dust: weather stops spawning whi
     if (q === 'low') expect(gated).toBeGreaterThan(0);
     most[q] = Math.max(...seen.map((s) => s.all));
   }
-  // 014's bursts aren't under the budget until 078: what every live particle (076's count, the weather among them) reached.
+  // What every live particle (076's count, the weather among them) reached.
   await info.attach('burst.json', { body: JSON.stringify(most), contentType: 'application/json' });
   console.log('burst', JSON.stringify(most));
 });
