@@ -140,7 +140,7 @@ export interface FoundryLight {
   readonly flicker: number;
   readonly flickerHz: number;
   readonly priority: number;
-  /** How far above its point it sits, px (a machine's fire over its feet, a torch's flame over its tile's middle). */
+  /** How far above its point it sits, px: a machine's fire over its feet, a wall fire's flame over its prop's base. */
   readonly rise: number;
   /** Steady with Flashes off (the coil's lightning); a fire still flickers within ±15% (074.3). */
   readonly steadyWithoutFlashes?: boolean;
@@ -157,8 +157,8 @@ export interface FoundryLight {
 export const FOUNDRY_LIGHTS = {
   tiers: LIT,
   walls: {
-    brazier: { color: 'cinder', radius: 64, intensity: 0.9, flicker: 0.15, flickerHz: 7, priority: 2, rise: 0 },
-    torch: { color: 'cinder', radius: 48, intensity: 0.8, flicker: 0.15, flickerHz: 7, priority: 2, rise: 0 },
+    brazier: { color: 'cinder', radius: 64, intensity: 0.9, flicker: 0.15, flickerHz: 7, priority: 2, rise: 22 },
+    torch: { color: 'cinder', radius: 48, intensity: 0.8, flicker: 0.15, flickerHz: 7, priority: 2, rise: 18 },
   } as Readonly<Record<string, FoundryLight>>,
   intake: { color: 'cyan-glow', radius: 1.5, intensity: 0.7, flicker: 0, flickerHz: 0, priority: 2, rise: 0 } as FoundryLight,
   machines: {

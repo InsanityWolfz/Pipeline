@@ -6,6 +6,7 @@ import { PROPS, type PropDef, type PropPlacement } from '../data/props';
 import { PROP_LAYOUT, ROOM_TOP_MARGIN, WALL_SPRITES } from '../data/roomArt';
 import { TILE, type Room } from '../data/rooms';
 import { registerAnim } from './anims';
+import { propBase } from './propBase';
 import { floorFrame, wallPieces, worldTileHash } from './roomTiles';
 import { hollowsFrame } from './hollowsTiles';
 import { addVectorSprite, addVector } from './vector/textures';
@@ -107,8 +108,8 @@ export class RoomView {
     else if (def.layer === 'wall') sprite.setY(bottom + (def.drop ?? 0)).setDepth(bottom + PROP_LAYOUT.wallNudge);
     // 079: on a side wall's top, nudged toward the room (the sprite reaches east; the east wall mirrors it).
     else if (def.layer === 'side') {
-      const east = p.tx > (this.width - 1) / 2;
-      sprite.setPosition(cx + (east ? -1 : 1) * PROP_LAYOUT.sideInset, bottom + (def.drop ?? 0)).setFlipX(east).setDepth(bottom + PROP_LAYOUT.wallNudge);
+      const at = propBase(p, this.width);
+      sprite.setPosition(at.x, at.y).setFlipX(at.flip).setDepth(bottom + PROP_LAYOUT.wallNudge);
     } else if (def.layer === 'standing') sprite.setY(bottom - PROP_LAYOUT.standingInset).setDepth(bottom - PROP_LAYOUT.standingInset);
     else {
       sprite.setDepth(bottom);
