@@ -53,8 +53,9 @@ describe('roundFx (078)', () => {
   it('reads the family, element, shape and tier off the id', () => {
     const l = roundFx('arrow+stormsteel+frost');
     expect([l.family, l.element, l.shape, l.tier]).toEqual(['arrow', 'frost', null, 'stormsteel']);
-    // The spec's example: a water-light streak with a storm-pale core, frost flakes and violet glints.
-    expect(l.trail).toMatchObject({ kind: 'streak', color: 'water-light', core: 'storm-pale', edge: 'storm-glow' });
+    // The spec's example, its core turned violet in review (078.11): a water-light streak with a storm-glow core, frost
+    // flakes and violet glints.
+    expect(l.trail).toMatchObject({ kind: 'streak', color: 'water-light', core: 'storm-glow', edge: 'storm-pale' });
     expect(l.shed.map((s) => s.burst.colors)).toContainEqual(['foam', 'snow', 'water-light']);
     expect(l.impact.bursts.flatMap((b) => b.colors)).toContain('storm-glow');
     for (const id of ALL) {
@@ -92,6 +93,14 @@ describe('roundFx (078)', () => {
       expect(twin, `${id} looks like ${twin}`).toBeUndefined();
       seen.set(s, id);
     }
+  });
+
+  it('gives a bomb and a bomblet a fuse that glints (their trail kinds draw no ribbon), and nothing else one', () => {
+    expect(roundFx('bomb+steel+fire').fuse).toEqual([3.1, -6.2]);
+    expect(bombletFx('bomb+cluster').fuse).toEqual([1.6, -2.4]);
+    expect(roundFx('bomb').trail.kind).toBe('smoke');
+    expect(bombletFx('bomb+cluster').trail.kind).toBe('glint');
+    for (const id of ['arrow', 'ley-bolt', 'landmine']) expect(roundFx(id).fuse, id).toBeNull();
   });
 
   it('gives homing a wake twice as long, a Split its star and a cluster its bomblets', () => {

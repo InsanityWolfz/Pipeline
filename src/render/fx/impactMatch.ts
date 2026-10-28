@@ -11,7 +11,8 @@ import type { BurstEvent, HitEvent } from '../../sim/events';
 //    hurtbox's centre, within its half-size + 8 px; a round hits an enemy once, so each (round, enemy) pair matches once;
 //    it plays where that path meets the hurtbox's near side;
 // 5. a straight round that vanished with no hit: its end, one frame's travel past its last drawn point;
-// 6. no match: the element's fallback.
+// 6. a hit inside a burst's radius this frame (its area damage): the blast is its impact;
+// 7. no match: the element's fallback.
 
 /** A round as drawn: last frame's point and this frame's (one frame's travel on, for a straight round that vanished). */
 export interface Track {
@@ -51,7 +52,8 @@ export interface ClusterAt {
   ammoId: string;
 }
 
-export type HitMatch = { kind: 'round'; ammoId: string; trackId: number; x: number; y: number; dx: number; dy: number } | { kind: 'fallback' } | { kind: 'arc' } | { kind: 'skip' };
+/** `blast`: a hit inside a burst this frame (the burst's own area damage): its blast plays, no fallback burst too. */
+export type HitMatch = { kind: 'round'; ammoId: string; trackId: number; x: number; y: number; dx: number; dy: number } | { kind: 'fallback' } | { kind: 'blast' } | { kind: 'arc' } | { kind: 'skip' };
 
 export interface Matches {
   /** One per hit event, in order. */
@@ -64,6 +66,7 @@ export interface Matches {
 }
 
 const NEAR = 1;
+const PAIR = 1_000_000;
 
 /** The point on the segment a→b nearest p, as its share along it (0..1). */
 function along(ax: number, ay: number, bx: number, by: number, px: number, py: number): number {
@@ -79,8 +82,10 @@ function lobAt(tracks: readonly Track[], kind: Track['kind'], b: BurstEvent, van
 }
 
 export function matchImpacts(tracks: readonly Track[], ev: MatchEvents, reach: Reach, clusters: readonly ClusterAt[]): Matches {
-  const used = new Set<string>();
+  // A (round, enemy) pair as one number (ids are whole numbers well under PAIR).
+  const used = new Set<number>();
   const hitTracks = new Set<number>();
+  const blasts = [...ev.bursts, ...ev.mineBursts, ...ev.bombletBursts];
   const hits = ev.hits.map((h): HitMatch => {
     if (h.target !== 'enemy' || h.melee || h.burn) return { kind: 'skip' };
     if (h.arc) return { kind: 'arc' };
@@ -90,14 +95,14 @@ export function matchImpacts(tracks: readonly Track[], ev: MatchEvents, reach: R
     const r = box?.r ?? 0;
     let best: { t: Track; d: number; u: number } | null = null;
     for (const t of tracks) {
-      if (t.kind !== 'straight' || used.has(`${t.id}:${h.id}`)) continue;
+      if (t.kind !== 'straight' || used.has(t.id * PAIR + h.id)) continue;
       const u = along(t.x0, t.y0, t.x, t.y, cx, cy);
       const d = Math.hypot(t.x0 + (t.x - t.x0) * u - cx, t.y0 + (t.y - t.y0) * u - cy);
       if (d <= r && (!best || d < best.d)) best = { t, d, u };
     }
-    if (!best) return { kind: 'fallback' };
+    if (!best) return blasts.some((b) => Math.hypot(b.x - h.x, b.y - cy) <= b.radius + r) ? { kind: 'blast' } : { kind: 'fallback' };
     const { t, u, d } = best;
-    used.add(`${t.id}:${h.id}`);
+    used.add(t.id * PAIR + h.id);
     hitTracks.add(t.id);
     // Back along the path from its nearest point to where it meets the hurtbox's near side (never before last frame's point).
     const len = Math.hypot(t.x - t.x0, t.y - t.y0);

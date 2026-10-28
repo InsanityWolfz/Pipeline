@@ -1,3 +1,4 @@
+import { FX_LOOK } from './fxQuality';
 import type { PARTICLES } from './juice';
 import type { TierId } from './tiers';
 
@@ -70,6 +71,8 @@ export interface FamilyFx {
   /** A landmine landing (it arms): dust. Turns a second in flight (a tumble). */
   readonly landing?: FxBurst;
   readonly spin?: number;
+  /** A bomb's or bomblet's fuse tip from its drawn centre, px, where its glint twinkles and its smoke leaves. */
+  readonly fuse?: readonly [number, number];
 }
 
 export interface ElementFx {
@@ -115,7 +118,7 @@ export interface AmmoFxTables {
 
 const DEG = Math.PI / 180;
 /** Hit height: impacts throw from the round's height, not the ground. */
-const HIT_LIFT = 12;
+const HIT_LIFT = FX_LOOK.hitLift;
 
 const spark = (colors: readonly string[], count: number, o: Partial<FxBurst> = {}): FxBurst => ({ colors, count, speed: [60, 140], aim: 'round', gravity: 80, lifeMs: [160, 300], size: 2, lift: HIT_LIFT, ...o });
 const glints = (colors: readonly string[], count: number): FxBurst => spark(colors, count, { speed: [40, 100], gravity: 40, lifeMs: [120, 220], size: 1 });
@@ -155,11 +158,12 @@ export const AMMO_FX: AmmoFxTables = {
     },
     bomb: {
       trail: { kind: 'smoke', length: 0, width: 0, alpha: 0, color: 'ash-light', core: 'cinder-light', additive: false },
-      shed: { colors: ['ash-light', 'ash-pale'], count: 1, speed: [8, 12], aim: 'up', cone: 0.4, gravity: 0, lifeMs: [500, 500], size: 2, grow: 5, alpha: 0.35, role: 'smoke' },
+      shed: { colors: ['ash-pale', 'rock-light'], count: 1, speed: [8, 12], aim: 'up', cone: 0.4, gravity: 0, lifeMs: [600, 600], size: 2.5, grow: 6, alpha: 0.6, role: 'smoke' },
       shedRate: 'smoke',
       impact: { kind: 'blast', bursts: [debris(10), smoke(['ash-light', 'ash-pale'], 6)], shock: { color: 'rock-pale', ms: 150, alpha: 0.5 }, mark: SCORCH },
       end: null,
       muzzle: BOMB_MUZZLE,
+      fuse: [3.1, -6.2],
     },
     landmine: {
       trail: { kind: 'tumble', length: 0, width: 0, alpha: 0, color: 'iron-light', core: 'cyan-glow', additive: false },
@@ -191,6 +195,7 @@ export const AMMO_FX: AmmoFxTables = {
       impact: { kind: 'mini-blast', bursts: [debris(4), smoke(['ash-light', 'ash-pale'], 2, { lifeMs: [450, 700], grow: 4 })] },
       end: null,
       muzzle: [],
+      fuse: [1.6, -2.4],
     },
   },
   elements: {
@@ -230,7 +235,7 @@ export const AMMO_FX: AmmoFxTables = {
   tiers: {
     steel: { core: 'iron-light', edge: 'snow', impact: [glints(['iron-light', 'snow'], 3)], muzzle: [glints(['snow'], 1)] },
     glass: { core: 'snow', edge: 'foam', impact: [glints(['foam', 'snow', 'cyan-glow'], 3)], muzzle: [glints(['snow'], 1)] },
-    stormsteel: { core: 'storm-pale', edge: 'storm-glow', impact: [glints(['storm-glow', 'snow', 'storm-pale'], 3)], muzzle: [glints(['storm-glow'], 1)] },
+    stormsteel: { core: 'storm-glow', edge: 'storm-pale', impact: [glints(['storm-glow', 'snow', 'storm-pale'], 3)], muzzle: [glints(['storm-glow'], 1)] },
     'storm-glass': { core: 'snow', edge: 'storm-pale', impact: [glints(['foam', 'storm-pale'], 3), glints(['storm-glow'], 1)], muzzle: [glints(['foam'], 1)] },
   } satisfies Record<TierId, TierFx>,
 };

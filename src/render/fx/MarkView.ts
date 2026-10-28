@@ -5,7 +5,7 @@ import { FX_LOOK, FX_QUALITY } from '../../data/fxQuality';
 import type { Quality } from '../../data/settings';
 import { colorOf } from '../color';
 import { textureScale } from '../vector/textures';
-import { makeShotTextures, SHOT_TEXTURE_SIZE as R } from './shotTextures';
+import { FLASH_PX, makeShotTextures, SHOT_TEXTURE_SIZE as R, TICK_PX } from './shotTextures';
 import { MarkRing, Pool } from './fxPool';
 
 // 078: what a shot leaves on the ground and its short flashes, from fixed pools of images (made once, hidden, reused):
@@ -93,7 +93,7 @@ export class MarkView {
       .setPosition(x, y)
       .setTint(colorOf(look.color))
       // Flattened to the three-quarter view's ground.
-      .setScale((across / R) * this.unit, (across / R) * this.unit * 0.62)
+      .setScale((across / R) * this.unit, (across / R) * this.unit * FX_LOOK.groundSquash)
       .setAlpha(look.alpha)
       .setVisible(true);
   }
@@ -119,7 +119,7 @@ export class MarkView {
     f.ms = 0;
     f.look = look;
     f.turn = angle;
-    const w = look.look === 'tick' ? 8 : 16;
+    const w = look.look === 'tick' ? TICK_PX : FLASH_PX;
     f.base = ((look.size * scale) / w) * this.unit;
     f.image
       .setTexture(FLASH_TEXTURE[look.look])
@@ -137,8 +137,8 @@ export class MarkView {
     const t = Math.min(1, s.ms / s.life);
     const k = s.to * (0.2 + 0.8 * Math.sqrt(t));
     const a = s.alpha * (1 - t);
-    s.ring.setScale(k, k * 0.62).setAlpha(a);
-    if (s.cored) s.core.setScale(k * 0.86, k * 0.86 * 0.62).setAlpha(a);
+    s.ring.setScale(k, k * FX_LOOK.groundSquash).setAlpha(a);
+    if (s.cored) s.core.setScale(k * FX_LOOK.shockCore, k * FX_LOOK.shockCore * FX_LOOK.groundSquash).setAlpha(a);
   }
 
   update(deltaMs: number): void {

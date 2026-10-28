@@ -30,6 +30,8 @@ export interface RoundLook {
   landing: FxBurst | null;
   /** Turns a second in flight (a landmine's tumble). */
   spin: number;
+  /** A bomb's or bomblet's fuse tip from its drawn centre (it glints and smokes there), or null. */
+  fuse: readonly [number, number] | null;
   /** A hit no round is matched to: today's hit burst for its element. */
   fallback: keyof typeof PARTICLES;
 }
@@ -83,6 +85,7 @@ export function composeFx(family: string, element: string | null, shape: string 
     muzzle: [...f.muzzle.map((b) => (e && b.role !== 'smoke' ? { ...b, colors: [...b.colors, e.muzzle] } : b)), ...(t?.muzzle ?? [])],
     landing: f.landing ?? null,
     spin: f.spin ?? 0,
+    fuse: f.fuse ?? null,
     fallback: e?.fallback ?? PHYSICAL_FALLBACK,
   };
 }
@@ -130,6 +133,16 @@ export function elementOfDamage(damageType: DamageType): string | null {
   return Object.values(TAGS).find((t) => t.slot === 'element' && t.damageType === damageType)?.id ?? null;
 }
 
+/** A look by its rows (cached for the game's tables): a burst with no bomb matched (its element's blast), an arc's hit. */
+export function cachedFx(family: string, element: string | null, shape: string | null, tier: string): RoundLook {
+  const key = `rows|${family}|${element ?? ''}|${shape ?? ''}|${tier}`;
+  const cached = CACHE.get(key);
+  if (cached) return cached;
+  const look = composeFx(family, element, shape, tier, AMMO_FX, key);
+  CACHE.set(key, look);
+  return look;
+}
+
 /** A Split's Shard: its parent's element (its damage type) and tier. */
 export function shardFx(damageType: DamageType, tier: string): RoundLook {
   const element = elementOfDamage(damageType);
@@ -159,7 +172,8 @@ export function fxCount(count: number, quality: Quality, impact: boolean): numbe
   return impact && count > 0 ? Math.max(1, n) : n;
 }
 
-const OFF = new Map<RoundLook, RoundLook>();
+/** Each look's Flashes-off copy, made once (a WeakMap: a look that's dropped takes its copy with it). */
+const OFF = new WeakMap<RoundLook, RoundLook>();
 
 /** The look as drawn: with Flashes off (042.10), no 078 flash (ring, tick, star), no flicker and no crackle. */
 export function shownLook(look: RoundLook, flashes: boolean): RoundLook {

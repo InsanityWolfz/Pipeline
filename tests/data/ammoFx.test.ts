@@ -47,7 +47,11 @@ describe('the ammo looks (078)', () => {
     expect(f.arrow?.trail).toMatchObject({ kind: 'streak', length: 28, width: 1.4, alpha: 0.55, color: 'rock-pale', core: 'snow' });
     expect(f['ley-bolt']?.trail).toMatchObject({ kind: 'ribbon', length: 22, width: 3, color: 'cyan', core: 'cyan-glow', additive: true });
     expect(f.bomb?.trail.kind).toBe('smoke');
-    expect(f.bomb?.shed).toMatchObject({ lifeMs: [500, 500], size: 2, grow: 5, alpha: 0.35 });
+    expect(f.bomb?.shed).toMatchObject({ lifeMs: [600, 600], size: 2.5, grow: 6, alpha: 0.6 });
+    // A bomb's and a bomblet's fuse twinkle where the sprite's spark is.
+    expect(f.bomb?.fuse).toEqual([3.1, -6.2]);
+    expect(f.bomblet?.fuse).toEqual([1.6, -2.4]);
+    expect(f.arrow?.fuse).toBeUndefined();
     expect(f.landmine?.trail.kind).toBe('tumble');
     expect(f.landmine?.spin).toBe(1.5);
     expect(f.landmine?.landing?.count).toBe(4);
