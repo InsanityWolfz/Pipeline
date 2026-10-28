@@ -61,7 +61,7 @@ export class ForgeFxView {
       g.setVisible(f !== undefined);
       if (!f) continue;
       const fire = HEAT.fire[f.pieceId] ?? { x: 0, rise: 10 };
-      const beat = (Math.sin((time / LOOP_MS + f.id * 0.37) * Math.PI * 2) + 1) / 2;
+      const beat = (Math.sin((time / (LOOP_MS * HEAT.glow.loops) + f.id * 0.37) * Math.PI * 2) + 1) / 2;
       g.setPosition(f.x + fire.x, f.bottom - fire.rise).setAlpha(lo + (hi - lo) * beat);
     }
     const alpha = HEAT.shimmer.alpha[quality];

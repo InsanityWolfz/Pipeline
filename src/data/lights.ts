@@ -153,17 +153,19 @@ export interface FoundryLight {
  * - `walls`: by a prop's `light` key (src/data/props.ts): the two braziers (074's `fire.brazier`) and the four torches.
  * - `intake`: the pipe's mouth, its radius 1.5 × the intake's glow (`GLOWS.intake`), breathing and swelling with it.
  * - `machines`: by machine id, only while working and on screen.
+ * Flicker is calmer than the spec's ±15% at 7 Hz (11 for the coil), which jittered at 30 frames a second in the motion
+ * check (079.1): the wall fires ±8% at 2.5 Hz, the forges ±10% at 3 Hz, the coil ±10% at 4 Hz, all within 074's ±15%.
  */
 export const FOUNDRY_LIGHTS = {
   tiers: LIT,
   walls: {
-    brazier: { color: 'cinder', radius: 64, intensity: 0.9, flicker: 0.15, flickerHz: 7, priority: 2, rise: 22 },
-    torch: { color: 'cinder', radius: 48, intensity: 0.8, flicker: 0.15, flickerHz: 7, priority: 2, rise: 18 },
+    brazier: { color: 'cinder', radius: 64, intensity: 0.9, flicker: 0.08, flickerHz: 2.5, priority: 2, rise: 22 },
+    torch: { color: 'cinder', radius: 48, intensity: 0.8, flicker: 0.08, flickerHz: 2.5, priority: 2, rise: 18 },
   } as Readonly<Record<string, FoundryLight>>,
   intake: { color: 'cyan-glow', radius: 1.5, intensity: 0.7, flicker: 0, flickerHz: 0, priority: 2, rise: 0 } as FoundryLight,
   machines: {
-    smelter: { color: 'cinder', radius: 56, intensity: 0.9, flicker: 0.15, flickerHz: 7, priority: 3, rise: 10 },
-    kiln: { color: 'cinder', radius: 56, intensity: 0.9, flicker: 0.15, flickerHz: 7, priority: 3, rise: 9 },
-    'tempering-coil': { color: 'storm-glow', radius: 40, intensity: 0.7, flicker: 0.15, flickerHz: 11, priority: 3, rise: 12, steadyWithoutFlashes: true },
+    smelter: { color: 'cinder', radius: 56, intensity: 0.9, flicker: 0.1, flickerHz: 3, priority: 3, rise: 10 },
+    kiln: { color: 'cinder', radius: 56, intensity: 0.9, flicker: 0.1, flickerHz: 3, priority: 3, rise: 9 },
+    'tempering-coil': { color: 'storm-glow', radius: 40, intensity: 0.7, flicker: 0.1, flickerHz: 4, priority: 3, rise: 12, steadyWithoutFlashes: true },
   } as Readonly<Record<string, FoundryLight>>,
 } as const;

@@ -37,11 +37,11 @@ export function wallLights(room: Room): WallLight[] {
   return out;
 }
 
-/** A light's ±flicker (two waves, so it doesn't pulse evenly), within ±`share`; 1 with none. */
+/** A light's ±flicker (two slow waves beating, so it doesn't pulse evenly or jitter), within ±`share`; 1 with none. */
 function flicker(l: FoundryLight, time: number, seed: number, flashes: boolean): number {
   if (l.flicker === 0 || (!flashes && l.steadyWithoutFlashes)) return 1;
   const w = (time / 1000) * l.flickerHz * Math.PI * 2;
-  return 1 + l.flicker * (0.6 * Math.sin(w + seed) + 0.4 * Math.sin(w * 2.3 + seed * 1.7));
+  return 1 + l.flicker * (0.6 * Math.sin(w + seed) + 0.4 * Math.sin(w * 0.53 + seed * 1.7));
 }
 
 /** 014's glow breathing, 0..1. */

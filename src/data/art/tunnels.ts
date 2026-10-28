@@ -1,6 +1,6 @@
 import { TUNNEL_ICONS, TUNNEL_SPRITES, type PieceView } from '../foundryAssets';
-import { channel, chevron, collar, floorPiece, STRAIGHT, T, trough, type Pt } from './logistics';
-import { ellipse, line, rect, solid, trim, type PathCmd, type Shape, type ShapeStyle, type VectorSprite } from './types';
+import { channel, chevron, collar, collarGlint, floorPiece, STRAIGHT, T, trough, type Pt } from './logistics';
+import { ellipse, flat, line, rect, solid, trim, type PathCmd, type Shape, type ShapeStyle, type VectorSprite } from './types';
 
 // The underground pair (052), lying flat like a conduit: the ley channel runs into a
 // carved stone hood and dives under the floor at the entrance, and climbs out of the
@@ -49,13 +49,18 @@ function hood(view: PieceView, u0: number, u1: number, mouth: number, runeUp: bo
   const tip = runeUp ? 3 : -3;
   return [
     rect(b.x + 1, b.y + 2, b.w, b.h, 3, { fill: { id: 'ground-shade', alpha: 0.35 } }),
-    rect(b.x, b.y, b.w, b.h, 3, { ...solid({ linear: [0, b.y, 0, b.y + b.h], stops: [{ at: 0, color: 'rock' }, { at: 1, color: 'rock-dark' }] }) }),
-    rect(top.x, top.y, top.w, top.h, 2, { fill: { linear: [top.x, top.y, top.x + top.w, top.y + top.h], stops: [{ at: 0, color: 'rock-light' }, { at: 1, color: 'rock' }] } }),
+    // 079: a soft diagonal gradient lit from the top left, and the rim on its lit edges.
+    rect(b.x, b.y, b.w, b.h, 3, { ...solid({ linear: [b.x, b.y, b.x + b.w, b.y + b.h], stops: [{ at: 0, color: 'rock' }, { at: 1, color: 'rock-dark' }] }) }),
+    line([b.x + 0.6, b.y + b.h - 2.5, b.x + 0.6, b.y + 0.6, b.x + b.w - 2.5, b.y + 0.6], 0.6, { id: 'snow', alpha: 0.55 }),
+    rect(top.x, top.y, top.w, top.h, 2, { fill: { linear: [top.x, top.y, top.x + top.w, top.y + top.h], stops: [{ at: 0, color: 'rock-pale' }, { at: 0.45, color: 'rock-light' }, { at: 1, color: 'rock' }] } }),
     // The dark mouth, with the channel's glow deep inside.
     oval(view, mouth, 0, 2.8, 6.4, solid('ink')),
     oval(view, mouth + face * 0.8, 0, 1.4, 3.6, { fill: 'cyan-deep', glow: { color: 'cyan', blur: 3 } }),
     // Brass bands either side of the mouth.
-    ...[-8.6, 8.6].map((v) => oval(view, mouth + face * 1.6, v, 1.4, 1.4, solid('brass'))),
+    ...[-8.6, 8.6].flatMap((v) => {
+      const [x, y] = at(view, mouth + face * 1.6, v);
+      return [oval(view, mouth + face * 1.6, v, 1.4, 1.4, solid('brass')), ellipse(x - 0.5, y - 0.5, 0.5, 0.5, flat('brass-light'))];
+    }),
     poly(view, [[mid + face * 1.2 - tip / 2, -3.2], [mid + face * 1.2 + tip / 2, 0], [mid + face * 1.2 - tip / 2, 3.2]], { stroke: { color: 'cyan-glow', width: 1.2 }, glow: { color: 'cyan', blur: 2 } }),
   ];
 }
@@ -68,12 +73,12 @@ function run(view: PieceView, u0: number, u1: number, chevrons: readonly number[
 
 /** An entrance: in from its back edge, into the hood's mouth. */
 function entrance(view: PieceView): Shape[] {
-  return [...run(view, -16, 4, [-10, -3]), collar(STRAIGHT[view][0]), ...hood(view, 1, 15, 2.4, false)];
+  return [...run(view, -16, 4, [-10, -3]), collar(STRAIGHT[view][0]), collarGlint(STRAIGHT[view][0]), ...hood(view, 1, 15, 2.4, false)];
 }
 
 /** An exit: up out of the hood's mouth, out its front edge. */
 function exit(view: PieceView): Shape[] {
-  return [...run(view, -4, 16, [5, 11]), collar(STRAIGHT[view][1]), ...hood(view, -15, -1, -2.4, true)];
+  return [...run(view, -4, 16, [5, 11]), collar(STRAIGHT[view][1]), collarGlint(STRAIGHT[view][1]), ...hood(view, -15, -1, -2.4, true)];
 }
 
 const VIEWS: readonly PieceView[] = ['side', 'up', 'down'];

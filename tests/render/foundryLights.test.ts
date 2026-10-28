@@ -76,4 +76,23 @@ describe('the foundry’s lights (079)', () => {
     expect(within(seen.coil, 0.7)).toBe(true);
     expect(new Set(seen.coilOff).size).toBe(1);
   });
+
+  // 079.1, the motion check: at 30 frames a second a light changes gently from one frame to the next (the spec's
+  // 7 Hz two-wave flicker jumped up to a third of its brightness a frame).
+  it('flickers gently: a wall fire moves at most 4% a 33 ms frame, a forge’s at most 7%', () => {
+    const steps = (pick: (ls: ReturnType<typeof foundryLights>) => number) => {
+      let worst = 0;
+      let last = pick(foundryLights({ ...base, forges: [forge(1, 'smelter'), forge(2, 'tempering-coil')] }));
+      for (let t = 1000 / 30; t < 4000; t += 1000 / 30) {
+        const now = pick(foundryLights({ ...base, time: t, forges: [forge(1, 'smelter'), forge(2, 'tempering-coil')] }));
+        worst = Math.max(worst, Math.abs(now - last) / last);
+        last = now;
+      }
+      return worst;
+    };
+    expect(steps((ls) => ls.find((l) => l.source === 'wall' && l.radius === 48)?.intensity ?? 1)).toBeLessThanOrEqual(0.04);
+    expect(steps((ls) => ls.find((l) => l.source === 'wall' && l.radius === 64)?.intensity ?? 1)).toBeLessThanOrEqual(0.04);
+    expect(steps((ls) => ls.find((l) => l.color === 'cinder' && l.source === 'forge')?.intensity ?? 1)).toBeLessThanOrEqual(0.07);
+    expect(steps((ls) => ls.find((l) => l.color === 'storm-glow')?.intensity ?? 1)).toBeLessThanOrEqual(0.07);
+  });
 });
