@@ -30,6 +30,8 @@ export interface TrailsShown {
   byKind: Partial<Record<TrailKind, number>>;
   slots: { live: number; created: number };
   cap: number;
+  /** The most any drawn trail turns from its tail to its head, degrees (a homing bolt's curving wake). */
+  bend: number;
 }
 
 export class TrailView {
@@ -179,7 +181,18 @@ export class TrailView {
 
   get shown(): TrailsShown {
     const byKind: Partial<Record<TrailKind, number>> = {};
-    for (const s of this.pool.live) if (s.fade < 0) byKind[s.look.trail.kind] = (byKind[s.look.trail.kind] ?? 0) + 1;
-    return { byKind, slots: { live: this.pool.live.length, created: this.pool.created }, cap: this.cap };
+    let bend = 0;
+    for (const s of this.pool.live) {
+      if (s.fade >= 0) continue;
+      byKind[s.look.trail.kind] = (byKind[s.look.trail.kind] ?? 0) + 1;
+      const r = s.ring;
+      const n = trailCut(r, s.look.trail.length).points;
+      if (n < 3) continue;
+      const head = Math.atan2(r.y(0) - r.y(1), r.x(0) - r.x(1));
+      const tail = Math.atan2(r.y(n - 2) - r.y(n - 1), r.x(n - 2) - r.x(n - 1));
+      const d = Math.abs(((head - tail + Math.PI * 3) % (Math.PI * 2)) - Math.PI);
+      bend = Math.max(bend, (d * 180) / Math.PI);
+    }
+    return { byKind, slots: { live: this.pool.live.length, created: this.pool.created }, cap: this.cap, bend };
   }
 }

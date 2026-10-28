@@ -68,6 +68,8 @@ export interface GameTestHook {
   tweenSpeed(scale: number): void;
   /** 074: sets the Graphics quality and Flashes, as their Settings rows do (stored, applied live). */
   setLook(look: { quality?: Quality; flashes?: boolean }): void;
+  /** 078: opens every intake entrance and fills each with a round (999 of it), or empties it with null: a volley anywhere. */
+  loadEntrances(rounds: (string | null)[]): SimSummary;
   /** 078: skips the shot effects (trails, impacts, marks, sparks), as `?fx=off` does, for the probe's A/B in one page. */
   fxOff(off: boolean): void;
   /** 074: skips every mood, light and fog (as `?mood=off` does), for the frame-time A/B in one page. */
@@ -160,6 +162,8 @@ export interface UiState {
   enemyFlames: number;
   /** 078: the shot effects as drawn: trails by kind, their slots, the marks, the last impacts, the last muzzle sparks. */
   ammoFx: AmmoFxShown;
+  /** 078: damage numbers shown and hit-stop holds since boot, and the last hold's ms (hit feedback is unchanged). */
+  hitFeedback: { numbers: number; holds: number; holdMs: number };
   /**
    * Particles flying now (064); 076: as `live`, with the death motes among them and the deaths dissolving. 078: the
    * ledger's weather (or room motes) and effects, the live effects by priority, and the pool's objects made since boot.

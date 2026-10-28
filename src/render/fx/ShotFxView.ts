@@ -47,9 +47,13 @@ export interface AmmoFxShown {
   trails: TrailsShown['byKind'];
   slots: { live: number; created: number };
   trailCap: number;
+  /** The most a drawn trail bends, degrees. */
+  bend: number;
   marks: MarksShown;
   tracks: number;
+  /** The last impacts and blasts played (up to 24), and how many since boot. */
   impacts: ImpactShown[];
+  played: number;
   ends: number;
   fallbacks: number;
   /** The last shot's muzzle sparks: where they left, their lane (radians), its round, and how many flew. */
@@ -59,7 +63,7 @@ export interface AmmoFxShown {
 }
 
 /** `ui().ammoFx` before the scene has built the view. */
-export const NO_AMMO_FX: AmmoFxShown = { off: false, trails: {}, slots: { live: 0, created: 0 }, trailCap: 0, marks: { live: 0, created: 0, cap: 0, shocks: 0, flashes: 0, made: 0 }, tracks: 0, impacts: [], ends: 0, fallbacks: 0, muzzle: null, machineSparks: 0, landings: 0 };
+export const NO_AMMO_FX: AmmoFxShown = { off: false, trails: {}, slots: { live: 0, created: 0 }, trailCap: 0, bend: 0, marks: { live: 0, created: 0, cap: 0, shocks: 0, flashes: 0, made: 0 }, tracks: 0, impacts: [], played: 0, ends: 0, fallbacks: 0, muzzle: null, machineSparks: 0, landings: 0 };
 
 const IMPACTS_KEPT = 24;
 /** Impact flashes sit at about the height shots fly. */
@@ -77,6 +81,7 @@ export class ShotFxView {
   private room = '';
   private readonly impacts: ImpactShown[] = [];
   private ends = 0;
+  private played = 0;
   private fallbacks = 0;
   private muzzle: AmmoFxShown['muzzle'] = null;
   private machine = 0;
@@ -231,6 +236,7 @@ export class ShotFxView {
   }
 
   private record(look: RoundLook, particles: number, glints: number, flash: boolean, mark: string | null): void {
+    this.played += 1;
     this.impacts.push({ look: look.id, kind: look.impact.kind, family: look.family, element: look.element, tier: look.tier, particles, glints, flash, mark });
     if (this.impacts.length > IMPACTS_KEPT) this.impacts.shift();
   }
@@ -283,9 +289,11 @@ export class ShotFxView {
       trails: tr.byKind,
       slots: tr.slots,
       trailCap: tr.cap,
+      bend: tr.bend,
       marks: this.marks.shown,
       tracks: this.tracks.all.length,
       impacts: [...this.impacts],
+      played: this.played,
       ends: this.ends,
       fallbacks: this.fallbacks,
       muzzle: this.muzzle ? { ...this.muzzle } : null,

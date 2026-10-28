@@ -77,6 +77,14 @@ export function installTestHook(flow: FlowScene): void {
       if (l) l.off = off;
     },
     worldLifeOff: (off) => live().worldLife?.setOff(off),
+    loadEntrances: act((sim, _scene, rounds: (string | null)[]) => {
+      sim.link.entrances.forEach((e, i) => {
+        const round = rounds[i] ?? null;
+        e.open = true;
+        e.ammoId = round;
+        e.count = round === null ? 0 : 999;
+      });
+    }),
     fxOff: (off) => {
       const scene = live();
       if (scene.shotFx) scene.shotFx.off = off;

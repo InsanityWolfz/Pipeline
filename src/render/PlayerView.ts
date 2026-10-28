@@ -205,7 +205,7 @@ export class PlayerView {
       squash: this.pose.squash,
       stride: this.stride,
       hood: this.marks.hood,
-      muzzle: this.muzzle,
+      muzzle: this.muzzle ? { ...this.muzzle } : null,
       drawMs: this.drawMs,
       tinted: this.sprite.isTinted,
     };

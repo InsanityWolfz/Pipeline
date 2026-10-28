@@ -89,6 +89,7 @@ export function gameUi(g: GameScene): GameUiState {
     sandboxDrawn: g.sandboxPanel?.drawn ?? false,
     lighting: g.lighting?.shown ?? NO_LIGHTING,
     ammoFx: g.shotFx?.shown ?? NO_AMMO_FX,
+    hitFeedback: { numbers: g.feel?.juice.numbers ?? 0, holds: g.enemyView?.holds ?? 0, holdMs: g.enemyView?.holdMs ?? 0 },
     vectorBake: { ...bakeReport() },
 
     world: g.worldLife?.world ?? NO_WORLD,

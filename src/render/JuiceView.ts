@@ -34,6 +34,8 @@ export class JuiceView {
   readonly shakes: ShakeSize[] = [];
   /** Burn beats' small numbers shown since boot (060), for the test hook. */
   burnNumbers = 0;
+  /** 078: damage numbers shown since boot, for the hit feedback check (unchanged by the shot effects). */
+  numbers = 0;
 
   /** 078: `ledger` counts every live particle by kind; `quality` is the Graphics quality the bursts scale by. */
   constructor(scene: Scene, ledger: ParticleLedger, quality: () => Quality) {
@@ -68,6 +70,7 @@ export class JuiceView {
   damageNumber(amount: number, x: number, y: number, onPlayer: boolean, small = false): void {
     if (small && Math.round(amount) < 1) return;
     if (small) this.burnNumbers += 1;
+    this.numbers += 1;
     const n = small ? { ...DAMAGE_NUMBERS, scale: DAMAGE_NUMBERS.scale * DAMAGE_NUMBERS.burn.scale, pop: DAMAGE_NUMBERS.pop * DAMAGE_NUMBERS.burn.scale, enemy: DAMAGE_NUMBERS.burn.color } : DAMAGE_NUMBERS;
     const now = this.scene.time.now;
     this.recent = this.recent.filter((r) => now - r.at < n.stackMs);
