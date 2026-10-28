@@ -31,7 +31,7 @@ type Arena = ArenaDef;
 export const ARENA_ROOMS: readonly string[] = [...new Set(ARENAS.flatMap((a) => a.rooms))];
 
 /** The arena's boss, alive in `roomId`, if any: the one in the arena's group, or (044) any in the sandbox. */
-const bossOf = (state: Pick<SimState, 'enemies'>, arena: Arena, roomId: string): EnemyState | undefined =>
+export const arenaBoss = (state: Pick<SimState, 'enemies'>, arena: Arena, roomId: string): EnemyState | undefined =>
   !arena.rooms.includes(roomId) ? undefined : state.enemies.find((e) => e.enemyId === arena.boss && e.roomId === roomId && e.health > 0 && (roomId === SANDBOX_ROOM || e.group === arena.id));
 
 /**
@@ -39,7 +39,7 @@ const bossOf = (state: Pick<SimState, 'enemies'>, arena: Arena, roomId: string):
  * lock, drawn over the door. (The Warden wakes on sight, through its walls, so a fight seen from outside isn't one.)
  */
 export function arenaLocked(state: Pick<SimState, 'enemies' | 'player' | 'roomId'>, arena: Arena, roomId: string = OVERWORLD_ROOM): boolean {
-  const boss = bossOf(state, arena, roomId);
+  const boss = arenaBoss(state, arena, roomId);
   return boss !== undefined && engaged(boss) && state.roomId === roomId && insideTiles(arena.inside, state.player.x, state.player.y);
 }
 
@@ -114,7 +114,7 @@ export function stepArenaLock(state: SimState, cmd: Command): Command {
   state.player.y = to.y;
   if (use === 'enter') state.events.arenaEnters.push({ arena: arena.id });
   else {
-    const boss = bossOf(state, arena, state.roomId);
+    const boss = arenaBoss(state, arena, state.roomId);
     if (boss) resetBoss(state, boss);
     state.events.arenaLeaves.push({ arena: arena.id });
   }

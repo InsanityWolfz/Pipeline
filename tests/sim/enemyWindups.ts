@@ -140,11 +140,15 @@ export function fingerprint(text: string): string {
 
 /**
  * The summary as main has it: without 075's `wornRarity` (the gear worn's best rarity, which this fight never
- * changes), so the fingerprints recorded on main hold against 074+075+076.
+ * changes) and 080's `bossIntros` event list, so the fingerprints recorded on main hold against 074+075+076.
  */
 function mainSummary(s: SimState): object {
   const summary: Record<string, unknown> = { ...summarize(s) };
   delete summary.wornRarity;
+  // 080's intro event list, always empty in these pack fights (no boss arena), which main's events lack.
+  const events: Record<string, unknown> = { ...(summary.events as Record<string, unknown>) };
+  delete events.bossIntros;
+  summary.events = events;
   return summary;
 }
 

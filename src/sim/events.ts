@@ -155,6 +155,8 @@ export interface SimEvents extends ForgeEvents, BlueprintEvents, EmberEvents, St
   blocked: { id: number; x: number; y: number }[];
   /** A region boss fell for the first time (034): it wakes its altar and is gone for good. */
   bossDefeats: { boss: string }[];
+  /** 080: a boss fight's intro started: the boss, its kind, and whether it's the short one (an altar re-fight). */
+  bossIntros: { id: number; enemyId: string; short: boolean }[];
   /** An offering at an altar (034) summons its boss again: it rises after the summon. */
   summons: { altar: string; boss: string }[];
   /** E at an arena's door from inside (043, 055): the player left and its fight reset. */
@@ -261,6 +263,7 @@ export function createEvents(): SimEvents {
     melees: [],
     blocked: [],
     bossDefeats: [],
+    bossIntros: [],
     summons: [],
     arenaLeaves: [],
     arenaEnters: [],

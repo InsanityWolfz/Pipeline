@@ -47,6 +47,8 @@ export function stepEnemies(state: SimState, bodies: (roomId: string) => RoomBod
     const e = list[i];
     // Gone this tick (041: adds sunk by their Bulwark's reset earlier in the loop): it doesn't act.
     if (!e || (state.enemies !== list && !state.enemies.includes(e))) continue;
+    // 080: in its boss's intro it doesn't think, move, turn or count anything (bossIntro.ts ends it).
+    if (e.mode === 'intro') continue;
     // Rising (041): it doesn't act or move; up from the ground, it wakes.
     if (e.rising > 0) {
       e.rising -= 1;

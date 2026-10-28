@@ -226,8 +226,8 @@ describe('sim state', () => {
     const mines = ['mineArms', 'mineBursts', 'bombletBursts'] as const;
     // 041: the Bulwark's enrage, rear stomp and adds.
     const balance = ['enrages', 'stomps', 'addsRise', 'waveStarts', 'backWaves'] as const;
-    // 043: leaving a sealed arena; 055: going in at its door.
-    const lock = ['arenaLeaves', 'arenaEnters'] as const;
+    // 043: leaving a sealed arena; 055: going in at its door; 080: a boss intro starting.
+    const lock = ['arenaLeaves', 'arenaEnters', 'bossIntros'] as const;
     // 042: entering the foundry (render saves on it).
     const save = ['foundryArrivals'] as const;
     // 046: the first time machines make each item (the "+ shaft" popups).

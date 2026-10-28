@@ -1,5 +1,5 @@
 {
-  "version": 22,
+  "version": 24,
   "shape": [
     "state.activatePulse: number",
     "state.arrows: array",
@@ -155,6 +155,7 @@
     "state.events.blueprintSaves: array",
     "state.events.bombletBursts: array",
     "state.events.bossDefeats: array",
+    "state.events.bossIntros: array",
     "state.events.bursts: array",
     "state.events.cacheOpens: array",
     "state.events.chains: array",
@@ -259,6 +260,7 @@
     "state.fixtures: array",
     "state.fixtures[].id: string",
     "state.fixtures[].item: null",
+    "state.fixtures[].item: string",
     "state.fixtures[].timer: number",
     "state.fixtures[]: object",
     "state.floodPools: array",
