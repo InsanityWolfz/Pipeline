@@ -26,7 +26,7 @@ export const FORGE_LOOK = {
   /** The slam's circle (the shared enemy red), the spray's cone (`length` px), the flood's red half (054's shade), each filling as its wind-up runs. */
   slam: { alpha: 0.22, fillAlpha: 0.5 },
   spray: { length: 140, alpha: 0.2, fillAlpha: 0.4 },
-  flood: { shadeAlpha: 0.16, fillAlpha: 0.32, edgeWidth: 2, edgeAlpha: 0.8 },
+  flood: { shadeAlpha: 0.16, fillAlpha: 0.32 },
   /** The fire pools: a flickering molten sheet, `alpha` low to high every `flickerMs`, a bright edge and tongues of flame every `tongueEvery` px. */
   pools: { color: 'flame-dark', bright: 'cinder', light: 'cinder-light', alpha: [0.45, 0.6] as const, flickerMs: 260, edgeWidth: 2, tongueEvery: 24, tongue: 5 },
   /** The boss bar's heat gauge under its health bar, `inset` px in from each end (clear of the sandbox's strip): `h` px, `gap` px below it, its fill ember, flashing `full` once full. */
