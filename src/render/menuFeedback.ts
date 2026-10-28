@@ -103,8 +103,12 @@ export class RowHover {
     const parent = image.parentContainer;
     if (parent && o.parentContainer !== parent) parent.add(o);
     this.follow(o, image);
-    if (parent) parent.moveAbove(o, image);
-    else o.setDepth(image.depth + 0.5);
+    // Just above its row, under the row's icons and words (Phaser's moveAbove leaves a child that's already higher).
+    if (parent) {
+      const at = parent.getIndex(image);
+      const now = parent.getIndex(o);
+      parent.moveTo(o, now > at ? at + 1 : at);
+    } else o.setDepth(image.depth + 0.5);
     return o;
   }
 

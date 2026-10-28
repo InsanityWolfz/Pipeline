@@ -80,6 +80,30 @@ test('the craft menu opens in 120 ms of tween time, taking a click and Esc on it
   expect(errors).toEqual([]);
 });
 
+test('a hovered row’s rim fades in under its icons and words, never over them', async ({ page }) => {
+  test.setTimeout(90_000);
+  const errors = watchErrors(page);
+  await fieldWithWood(page);
+  await openCrafting(page);
+  await expect.poll(async () => (await ui(page)).menuMotion.running).toBe(false);
+  const row = await craftRow(page, 'shaft');
+  const size = page.viewportSize() ?? { width: 1280, height: 720 };
+  const k = size.width / VIEW_WIDTH;
+  const box = { x: Math.round((row.x + 2) * k), y: Math.round((row.y + 2) * k), w: Math.round((row.w - 40) * k), h: Math.round((row.h - 4) * k) };
+  /** The row's bright pixels: its words and the icons' highlights. */
+  const bright = async () => (await pixels(page, await page.screenshot(), box)).filter((p) => (p[0] ?? 0) + (p[1] ?? 0) + (p[2] ?? 0) > 540).length;
+  await frames(page, 2);
+  const plain = await bright();
+  expect(plain).toBeGreaterThan(20);
+  const hovers = (await ui(page)).menuMotion.hovers;
+  const p = await screenPoint(page, row.x + row.w / 2, row.y + row.h / 2);
+  await page.mouse.move(p.x, p.y);
+  await expect.poll(async () => (await ui(page)).menuMotion.hovers).toBeGreaterThan(hovers);
+  await frames(page, 12);
+  expect(await bright()).toBeGreaterThanOrEqual(Math.round(plain * 0.8));
+  expect(errors).toEqual([]);
+});
+
 test('with reduced motion the menu is whole and in place on its first frame', async ({ page }) => {
   test.setTimeout(90_000);
   const errors = watchErrors(page);
