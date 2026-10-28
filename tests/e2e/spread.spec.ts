@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { SPREAD_STEP } from '../../src/data/foundry';
-import { boot, cameraSettled, quietScreen, watchErrors } from './helpers';
+import { boot, cameraSettled, frameSettled, quietScreen, watchErrors } from './helpers';
 import { feedLines, restoreEntrance, toIntake, ui } from './intakePage';
 
 // Spreads from the intake (024): a warden core restores one side entrance (033: E at
@@ -39,6 +39,7 @@ test('a warden core restores one entrance (033); two fed arrow entrances fire a 
   await boot(page, '?playtest');
   const before = await toIntake(page);
   expect(before.intake.entrances.map((e) => e.open)).toEqual([false, true, false, false, false]);
+  await frameSettled(page);
   // With a warden core carried, the prompt shows beside the pipe, and every capped entrance wears its cap (060: three; 064: four).
   await expect.poll(async () => (await ui(page))?.intakePrompt).toBe('E: restore an entrance');
   expect((await ui(page))?.intakeCaps).toBe(4);

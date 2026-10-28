@@ -299,6 +299,25 @@ export async function boot(page: Page, query = '?start=field'): Promise<void> {
   await page.waitForFunction(() => window.__GAME__?.ui().ready === true);
 }
 
+/**
+ * 078: waits by drawn frames, not wall time, until a frame shows the sim's tick with no door fade running. A door's
+ * fade runs a set number of frames (a slow page's render clock steps at most one 60 fps frame a drawn frame), so on a
+ * loaded runner it can outlast a poll's 5 s while every frame is right.
+ */
+export async function frameSettled(page: Page, maxFrames = 600): Promise<void> {
+  const ok = await page.evaluate(async (n) => {
+    const g = window.__GAME__;
+    if (!g) throw new Error('no game');
+    for (let i = 0; i < n; i++) {
+      await new Promise((r) => requestAnimationFrame(r));
+      const u = g.ui();
+      if (u.drawnTick === g.getState().tick && !u.camera.fading) return true;
+    }
+    return false;
+  }, maxFrames);
+  expect(ok, `a frame showing the sim's tick, no fade, within ${maxFrames} frames`).toBe(true);
+}
+
 /** Waits until the camera, easing after the player in real time, has come to rest (`timeout` ms: a long ease under load needs more). */
 export async function cameraSettled(page: Page, timeout = 5000): Promise<void> {
   let last = { x: NaN, y: NaN };

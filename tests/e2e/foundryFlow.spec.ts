@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { ITEMS } from '../../src/data/items';
-import { boot, cameraSettled, quietScreen, watchErrors } from './helpers';
+import { boot, cameraSettled, frameSettled, quietScreen, watchErrors } from './helpers';
 import { feedLines, restoreEntrance, toIntake, ui } from './intakePage';
 
 // Foundry flow (028): the shrine claim brings a supply port per raw onto the
@@ -33,6 +33,7 @@ test('the shrine claim brings four ports at ×1; the wood port feeds a hopper an
   const s = await claimAndEnter(page);
   expect(s.room).toBe('foundry');
   expect(s.ports).toEqual(RAWS.map((raw) => ({ id: `${raw}-port`, raw, tx: 1, ty: ROWS[raw], pylons: 1, perMinute: 15, waiting: expect.any(Boolean) })));
+  await frameSettled(page);
   // Each port shows its raw's icon on its face and its plate.
   await expect
     .poll(async () => (await ui(page))?.ports)
