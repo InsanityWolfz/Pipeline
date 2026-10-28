@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { ENEMY_MOTION } from '../../src/data/art/enemyMotion';
 import { DEATH_MOTES, PARTICLE_BUDGET } from '../../src/data/juice';
-import { deathMoteCount, dissolveAt, dissolveMs, moteWaves, waveCount } from '../../src/render/deathMotes';
+import { deathMoteCount, dissolveAt, dissolveMs, forgeShares, moteWaves, waveCount } from '../../src/render/deathMotes';
 
 // 076: deaths dissolve into ley motes in the family's colours, as many as the size class, a champion and the
 // Graphics quality say, thinned to fit the per-death cap, the live death-mote cap and the particle budget.
@@ -36,6 +36,21 @@ describe('death motes (076)', () => {
     expect(deathMoteCount('husk', false, { quality: 'high', liveMotes: DEATH_MOTES.liveCap.high, liveParticles: 0 })).toBe(0);
     expect(waveCount(20, { quality: 'medium', liveMotes: DEATH_MOTES.liveCap.medium - 4, liveParticles: 0 })).toBe(4);
     expect(waveCount(20, { quality: 'medium', liveMotes: 0, liveParticles: 0 })).toBe(20);
+  });
+
+  it("split the Forgewright's one capped total between its body and its standing bellows, a quarter each (review 2)", () => {
+    for (const q of ['low', 'medium', 'high'] as const) {
+      const total = deathMoteCount('forgewright', false, empty(q));
+      expect(total).toBeLessThanOrEqual(DEATH_MOTES.perDeathCap[q]);
+      for (const standing of [0, 1, 2]) {
+        const s = forgeShares(total, standing);
+        expect(s.bellows).toHaveLength(standing);
+        for (const b of s.bellows) expect(b).toBe(Math.round(total / 4));
+        // The cap is hard: the body and its bellows together throw the one total, never more.
+        expect(s.body + s.bellows.reduce((a, b) => a + b, 0)).toBe(total);
+        expect(s.body).toBeGreaterThanOrEqual(0);
+      }
+    }
   });
 
   it('leave in three waves that add up', () => {

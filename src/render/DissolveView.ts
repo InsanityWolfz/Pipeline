@@ -14,7 +14,7 @@ import { DEATH_MOTES } from '../data/juice';
 import { LANDMARK_LOOK, LANDMARK_SPRITES } from '../data/landmarkAssets';
 import type { DeathEvent } from '../sim/events';
 import { colorOf } from './color';
-import { deathMoteCount, dissolveAt, moteWaves, waveCount, type MoteRoom } from './deathMotes';
+import { deathMoteCount, dissolveAt, forgeShares, moteWaves, waveCount, type MoteRoom } from './deathMotes';
 import { settings } from './flow/settingsStore';
 import type { Mote, Particles } from './Particles';
 import { addVector, addVectorSprite, textureScale } from './vector/textures';
@@ -87,7 +87,10 @@ export class DissolveView {
     const family = familyOf(def.id);
     const tint = addVectorSprite(this.scene, death.x, bottom, frame).setDepth(bottom + 0.001).setFlipX(flip).setScale(base).setBlendMode(BlendModes.ADD).setTint(colorOf(family.motes[0])).setTintMode(TintModes.FILL).setAlpha(0);
     const total = deathMoteCount(def.id, death.champion === true, this.room());
-    const d: Dissolve = { death, box: def.hurtbox, boss: def.boss, family, k, body, tint, base, ms: 0, waves: moteWaves(total, D.waves), next: 0 };
+    // The Forgewright's standing bellows take their quarters out of its one capped total.
+    const standing = def.kind === 'forgewright' ? (this.lastOf(death.id)?.bellows.filter((b) => b.health > 0) ?? []) : [];
+    const shares = forgeShares(total, standing.length);
+    const d: Dissolve = { death, box: def.hurtbox, boss: def.boss, family, k, body, tint, base, ms: 0, waves: moteWaves(shares.body, D.waves), next: 0 };
     if (death.champion) {
       const G = CHAMPIONS.glow;
       d.glow = addVector(this.scene, death.x, death.y + def.hurtbox.offsetY * k, LANDMARK_SPRITES.championGlow).setTint(colorOf(G.color)).setBlendMode(BlendModes.ADD).setDepth(bottom - 0.001);
@@ -99,20 +102,23 @@ export class DissolveView {
     }
     this.live.push(d);
     this.draw(d);
-    if (def.kind === 'forgewright') this.bellows(death, def, total);
+    if (def.kind === 'forgewright') this.bellows(death, def, shares.bellows);
   }
 
-  /** The Forgewright's two bellows dissolve with it, each with a quarter of its motes. */
-  private bellows(death: DeathEvent, def: ForgewrightDef, total: number): void {
+  /** The Forgewright's bellows, if standing, dissolve with it, each with its share (a quarter) of its motes. */
+  private bellows(death: DeathEvent, def: ForgewrightDef, shares: readonly number[]): void {
     const e = this.lastOf(death.id);
     if (!e) return;
     const family = familyOf(def.id);
+    let n = 0;
     e.bellows.forEach((b, i) => {
+      if (b.health <= 0) return;
+      const share = shares[n] ?? 0;
+      n += 1;
       const at = bellowsPoint(e, def, i);
       const frame = FORGE_SPRITES.bellows[bellowsLook(b.patch)];
       const body = addVectorSprite(this.scene, at.x, at.y, frame).setDepth(at.y).setFlipX(i === 0);
       const tint = addVectorSprite(this.scene, at.x, at.y, frame).setDepth(at.y + 0.001).setFlipX(i === 0).setBlendMode(BlendModes.ADD).setTint(colorOf(family.motes[0])).setTintMode(TintModes.FILL).setAlpha(0);
-      const share = waveCount(Math.round(total / 4), this.room());
       this.live.push({ death: { ...death, x: at.x, y: at.y }, box: def.bellows.hurtbox, boss: true, family, k: 1, body, tint, base: body.scaleX, ms: 0, waves: moteWaves(share, D.waves), next: 0 });
     });
   }
