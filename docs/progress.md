@@ -11,7 +11,7 @@ Newest entry first. Entries before 050 are in docs/progress-archive.md.
 
 `SAVE_VERSION` stays 22. Reviewed: one blocking finding fixed (only the attack half of the arena rule was built, so arena enemies gave up after 1 s off screen), plus tests for wind-ups finishing off screen and trails burning. `npm run check` 2659 tests; CI green. Raised for Shaun: 073.7–073.14; 073.12–073.14 need his call. 071 closed unmerged.
 
-**Next:** Shaun's playtest; his calls on 073.12 (the Warden wakes on entering the shrine), 073.13 (a Sniper can park just off screen), 073.14 (on screen means the feet); "merge 90".
+**Next:** "merge 90". Shaun OK'd 073.12–073.14 on 2026-10-28.
 
 **Notes:**
 - `npm run measure`: pack fights and the Bulwark match main (the ring 3 stone mean 15.3 s against 15.6 s); there's no Warden measure.

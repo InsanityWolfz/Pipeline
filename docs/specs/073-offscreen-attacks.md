@@ -101,6 +101,8 @@ Build-time choices the spec didn't decide; the least surprising reading is built
 - **073.13 A Sniper can park off screen (Shaun).** From 073.6: engaged within its 320 px sight, a Sniper with no cover keeps 200 px off, so straight above or below the player it can stand just off screen holding its shot for good, never going home or healing, until the player turns toward it. Proposal: keep (the spec's choice); the alternative is to let it leash after the grace like everything else.
 - **073.14 "On screen" is the feet (Shaun).** The rule tests the enemy's feet, as waking does. An enemy standing 170–180 px above the player is on screen with most of its body off the top edge, so it can start an attack with only its telegraph (a lane, a laser line, a circle) in view. Proposal: keep; the alternative is a margin (e.g. its body height) above the top edge, a new tuning value.
 
+OK'd by Shaun in chat, 2026-10-28: 073.12, 073.13 and 073.14 ("I OK those three calls").
+
 ## Results (build)
 - Plan: docs/plans/073-offscreen-attacks.md, followed as written.
 - The rule: `mayStart` in src/sim/aiCommon.ts (in the player's room and inside the aggro box, or inside a boss arena with the player: `inArenaWithPlayer`, src/sim/arenaWait.ts), read beside the cooldown check in each of the 15 non-boss AIs and the Warden's. No data changes, no render changes.
