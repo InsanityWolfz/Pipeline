@@ -9,6 +9,7 @@ import { craftRow, openCrafting } from './craftPage';
 import { screenPoint } from './foundryPage';
 import { drawn, frames, openWorld, pixels, setLook, toRegion } from './lightingPage';
 import { bootSandbox, hidePanel } from './sandboxPage';
+import { intoSandboxArena, tickDrawn } from './bossIntroPage';
 
 // 081: HUD polish. Menus open in 120 ms of tween time and take input from their first frame; reduced motion lands at
 // once; the HUD and an open menu are still at rest, with no objects, tweens or redraws piling up; the boss bar redraws
@@ -51,7 +52,9 @@ test('the craft menu opens in 120 ms of tween time, taking a click and Esc on it
     return out;
   }, opens);
   expect((await ui(page)).menuMotion.menu).toBe('craft');
-  expect(seen.some((s) => s.running && s.alpha < 1 && s.rise > 0)).toBe(true);
+  // The craft menu fades without the rise: its rows take clicks through Phaser's hit areas, which a rise would move (081.3).
+  expect(seen.some((s) => s.running && s.alpha < 1)).toBe(true);
+  expect(seen.every((s) => s.rise === 0)).toBe(true);
   const last = seen.at(-1);
   expect(last).toEqual({ running: false, ms: MENU_MOTION.openMs, alpha: 1, rise: 0 });
   expect(Math.max(...seen.map((s) => s.ms))).toBeLessThanOrEqual(MENU_MOTION.maxMs);
@@ -64,7 +67,7 @@ test('the craft menu opens in 120 ms of tween time, taking a click and Esc on it
   await page.evaluate(() => window.__GAME__?.tweenSpeed(0));
   await openCrafting(page);
   const first = (await ui(page)).menuMotion;
-  expect(first).toMatchObject({ running: true, ms: 0, alpha: 0, rise: MENU_MOTION.rise });
+  expect(first).toMatchObject({ running: true, ms: 0, alpha: 0, rise: 0 });
   expect((await craftRow(page, 'shaft')).y).toBe(row.y);
   const wood = (await page.evaluate(() => window.__GAME__?.getState().inventory.wood)) ?? 0;
   const p = await screenPoint(page, row.x + row.w / 2, row.y + row.h / 2);
@@ -76,7 +79,16 @@ test('the craft menu opens in 120 ms of tween time, taking a click and Esc on it
   await expect.poll(async () => (await ui(page)).craftOpen).toBe(false);
   // Closed at once: nothing of the open left running.
   expect((await ui(page)).menuMotion).toMatchObject({ running: false, alpha: 1, rise: 0 });
+  // The inventory hit-tests its final layout itself, so it rises: 4 px below its place on its first frame, its layout as settled.
+  await page.keyboard.press('i');
+  await expect.poll(async () => (await ui(page)).inventory.open).toBe(true);
+  expect((await ui(page)).menuMotion).toMatchObject({ menu: 'inventory', running: true, alpha: 0, rise: MENU_MOTION.rise });
+  const frozen = (await ui(page)).inventory.panel;
   await page.evaluate(() => window.__GAME__?.tweenSpeed(1));
+  await expect.poll(async () => (await ui(page)).menuMotion.running).toBe(false);
+  expect((await ui(page)).inventory.panel).toEqual(frozen);
+  await page.keyboard.press('Escape');
+  await expect.poll(async () => (await ui(page)).inventory.open).toBe(false);
   expect(errors).toEqual([]);
 });
 
@@ -233,6 +245,31 @@ test('the boss bar sits in its frame at its old box and redraws only when the fi
   expect(errors).toEqual([]);
 });
 
+test('through 080’s intro the bar fills and fades in on 081’s frame: it redraws as it fills, the frame fading with it', async ({ page }) => {
+  test.setTimeout(150_000);
+  const errors = watchErrors(page);
+  await intoSandboxArena(page, 'anvil-hall', true);
+  const seen: { mode: string; fill: number; alpha: number; draws: number }[] = [];
+  for (let i = 0; i < 60; i++) {
+    const t = await tickDrawn(page, 4, {}, 'forgewright');
+    const u = await ui(page);
+    if (t.bar) seen.push({ mode: t.boss?.mode ?? '', fill: t.bar.fill, alpha: t.bar.frameAlpha, draws: u.hudDraws.bossBar });
+    if (seen.length > 0 && t.boss?.mode !== 'intro') break;
+  }
+  const intro = seen.filter((s) => s.mode === 'intro');
+  expect(intro.length).toBeGreaterThan(3);
+  // It fills from part-way to whole, and the frame fades in with the bar.
+  expect(Math.min(...intro.map((s) => s.fill))).toBeLessThan(1);
+  expect(Math.min(...intro.map((s) => s.alpha))).toBeLessThan(1);
+  expect(seen.at(-1)).toMatchObject({ fill: 1, alpha: 1 });
+  // Each step that filled it more redrew it: the bar never freezes mid-intro.
+  for (let i = 1; i < seen.length; i++) {
+    const [a, b] = [seen[i - 1], seen[i]];
+    if (a && b && b.fill > a.fill) expect(b.draws, `step ${i}`).toBeGreaterThan(a.draws);
+  }
+  expect(errors).toEqual([]);
+});
+
 /** Mean per-channel difference between two equal-length pixel lists. */
 const diff = (a: number[][], b: number[][]): number =>
   a.reduce((s, p, i) => s + Math.abs((p[0] ?? 0) - (b[i]?.[0] ?? 0)) + Math.abs((p[1] ?? 0) - (b[i]?.[1] ?? 0)) + Math.abs((p[2] ?? 0) - (b[i]?.[2] ?? 0)), 0) / (3 * Math.max(1, a.length));
@@ -250,7 +287,9 @@ async function hudPieces(page: Page): Promise<Record<string, number[][]>> {
     tube: await pixels(page, shot, at(u.hud?.tubeSlot ?? { x: 0, y: 0, w: 0, h: 0 })),
   };
   const cell = u.hud?.hotbar;
-  if (cell?.shown) out.cell = await pixels(page, shot, at({ x: cell.x, y: cell.y, w: 24, h: 28 }));
+  // The carried bar shows (the hollows start carries the tube), so its first cell is always checked.
+  expect(cell?.shown, 'carried bar shown').toBe(true);
+  out.cell = await pixels(page, shot, at({ x: cell?.x ?? 0, y: cell?.y ?? 0, w: 24, h: 28 }));
   return out;
 }
 
@@ -284,7 +323,6 @@ test('the polished HUD and an open craft row read the same in the Stormcrown as 
   for (const piece of ['hp', 'tube', 'row', 'cell']) {
     const a = r1?.[piece];
     const b = storm?.[piece];
-    if (piece === 'cell' && !a) continue;
     expect(a?.length ?? 0, piece).toBeGreaterThan(0);
     expect(diff(a ?? [], b ?? []), piece).toBeLessThan(3);
   }

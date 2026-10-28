@@ -5,7 +5,7 @@ Approved by Shaun in chat, 2026-10-27, with the whole art pass (074–081); its 
 
 Plan pre-approved by Shaun in chat, 2026-10-27. Plan: docs/plans/081-hud-polish.md.
 
-Stacked on 074 (merged into this branch); merges after it. 080's boss name card is on its own branch, not merged here: the tablet polish lives in the shared `drawTablet` (`src/render/tablet.ts`) and `tablet()` (`src/data/art/hud.ts`), so a card drawn with either takes the new look with no change on its side.
+Stacked on the art pass before it, as "Depends on" says: 080's branch (with 073–076) and 078's (with 074–077) are merged into this branch, and 081 merges last, after 073–080. 080's boss name card is drawn with the shared `drawTablet` (`src/render/tablet.ts`), so it takes the new tablet look with no change on its side, and the boss bar keeps 080's intro fill and fade on 081's frame.
 
 Drafted from Shaun's art-pass interview (docs/brainstorm/2026-10-27-art-interview.md, answers 15, 17, 25, 27 and 28) and his calls on 081 that day. This is art spec 8 of 8, built in order after 074–080. Shaun asked for no sample pages first ("Just build it"); he reviews the result at the playtest.
 

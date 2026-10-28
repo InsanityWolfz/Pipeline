@@ -91,7 +91,8 @@ export class CraftMenuView {
   constructor(scene: Scene, onCraft: (recipeId: string, max: boolean) => void) {
     const L = CRAFT_MENU_LAYOUT;
     this.hover = new RowHover(scene, RECIPE_ROW_FRAMES);
-    this.motion = new MenuMotion(scene, 'craft', DEPTHS.menu);
+    // Its rows take clicks through Phaser's hit areas, so it fades in without the rise (081.3).
+    this.motion = new MenuMotion(scene, 'craft', DEPTHS.menu, false);
     const add = (x: number, y: number, frame: string, depth: number = DEPTHS.menu): GameObjects.Image => {
       const image = addVector(scene, x, y, frame).setOrigin(0).setScrollFactor(0).setDepth(depth);
       this.objects.push(image);

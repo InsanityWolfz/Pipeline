@@ -6,7 +6,7 @@ lines. Pre-approved by Shaun in chat (2026-10-27). 081 has no sim rule, so its "
 (tests/data), pure render helpers (tests/render) and the e2e. Each slice is committed with `npm run check` green.
 
 ## Findings that shape the plan
-- **Stacking.** 081 is stacked on 074 (merged in at the start; it merges after 074). 075–080 aren't merged into it.
+- **Stacking.** 081 is stacked on 074 (merged in at the start); after review, 080's branch (with 073–076) and 078's (with 074–077) were merged in too, and 081 merges last, after 073–080.
   080's boss name card isn't here: the tablet polish lives in the shared `drawTablet` and `tablet()`, so a card that
   draws with either takes the look with no change on its side (the seam, noted in the spec). 080 may also change the
   boss bar's phase look; 081 changes only the bar's frame, its fill's lit line and the name's outline, all in

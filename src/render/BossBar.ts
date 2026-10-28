@@ -21,9 +21,9 @@ import { introShort } from '../sim/bossIntro';
  * The boss bar as drawn (034), for `ui().bossBar`: the boss's name, health and max, and whether it's enraged (041), or
  * null while none fights; 060: whether it shows the blue shield (the Forgewright's plating), and its heat gauge's fill
  * (0..1, null for a boss without one). 080: `fill`, how much of its health the bar shows: it fills from empty during its
- * intro (`health` is still the sim's).
+ * intro (`health` is still the sim's). 081: `frameAlpha`, the baked frame's alpha (it fades in with the bar through 080's intro).
  */
-export type BossBarShown = { name: string; health: number; maxHealth: number; enraged: boolean; shielded: boolean; heat: number | null; fill: number } | null;
+export type BossBarShown = { name: string; health: number; maxHealth: number; enraged: boolean; shielded: boolean; heat: number | null; fill: number; frameAlpha: number } | null;
 
 const B = HOLLOWS_LOOK.bossBar;
 /** 081's lit lines, made once. */
@@ -42,7 +42,7 @@ export class BossBar {
   private readonly name: TextLine;
   private icon?: GameObjects.Image;
   private readonly key = new DrawKey(5);
-  private readonly record: NonNullable<BossBarShown> = { name: '', health: 0, maxHealth: 0, enraged: false, shielded: false, heat: null, fill: 1 };
+  private readonly record: NonNullable<BossBarShown> = { name: '', health: 0, maxHealth: 0, enraged: false, shielded: false, heat: null, fill: 1, frameAlpha: 1 };
   shown: BossBarShown = null;
 
   constructor(scene: Scene) {
@@ -86,6 +86,7 @@ export class BossBar {
     r.shielded = shielded;
     r.heat = heat;
     r.fill = fill;
+    r.frameAlpha = this.frame.alpha;
     this.shown = r;
     const H = FORGE_LOOK.heat;
     const heatW = heat === null ? -1 : Math.round((B.w - 2 * H.inset) * heat);

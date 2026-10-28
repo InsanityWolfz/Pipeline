@@ -143,6 +143,15 @@ const spark = (x: number, y: number, r: number): Shape => ({
   glow: { color: 'storm-glow', blur: 3 },
 });
 
+// The stormsteel casing (081): the steel shell tempered, and struck through with lightning so it parts from the steel
+// one at real size: a violet vein forked down the bowl, a spark at the lid's lip, the lid's rim storm-pale.
+const STORMSTEEL_CASING: Shape[] = [
+  ...tempered(STEEL_CASING),
+  { ...path('M -5.4 3.2 L -3.2 4.2 L -1.8 3 L 0.4 4.6 L 2 3.4', trim('storm-pale', 0.7)), glow: { color: 'storm-glow', blur: 2.5 } },
+  { ...path('M 1.6 -3.2 L 3 -4.6 L 4.6 -3.8 L 6 -5.4', trim('storm-pale', 0.6)), glow: { color: 'storm-glow', blur: 2 } },
+  spark(0.2, -1.8, 1.6),
+];
+
 const STORMSTEEL: Shape[] = [
   ...tempered(LEY_STEEL),
   // A second fork of the vein, so the bar reads as struck through with lightning.
@@ -172,6 +181,6 @@ export const TIER_SPRITES_VECTOR: readonly VectorSprite[] = [
   icon(TIER_SPRITES.itemStormsteel, STORMSTEEL),
   icon(TIER_SPRITES.itemStormGlass, STORM_GLASS),
   icon(TIER_SPRITES.itemStormsteelArrowhead, tempered(STEEL_ARROWHEAD)),
-  icon(TIER_SPRITES.itemStormsteelCasing, tempered(STEEL_CASING)),
+  icon(TIER_SPRITES.itemStormsteelCasing, STORMSTEEL_CASING),
   icon(TIER_SPRITES.itemStormsteelPlate, tempered(STEEL_PLATE)),
 ];
