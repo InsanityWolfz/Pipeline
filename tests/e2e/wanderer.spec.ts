@@ -99,7 +99,10 @@ test('the trim follows the best rarity worn, from the sim; nothing worn is the p
     },
     [relic.id, relic.slot] as const,
   );
-  // Facing up, the cape's hem shows across the back.
+  // The idle breath, the cape's sway and the trim's pulse and shimmer run on real time, so between polls the hem moved
+  // under the sample point and its pixel was sometimes an edge blended with the cape (a pulsing relic read as common).
+  // Pinned at 0 ms: the hem holds still and the pulse is at full strength. Facing up, the hem shows across the back.
+  await page.evaluate(() => window.__GAME__?.wandererClock(0));
   await aimAt(page, 0, -200);
   const wear = async (id: number) => {
     await page.evaluate((pieceId) => window.__GAME__?.step(1, { equip: { id: pieceId } }), id);

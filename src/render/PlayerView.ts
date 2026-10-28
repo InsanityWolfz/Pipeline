@@ -68,6 +68,8 @@ export class PlayerView {
   private pose: WandererPose = { ...REST_POSE };
   private readonly clocks = new PlayerClocks();
   private readonly scheme = activeScheme();
+  /** Test hook only: the idle clock held at this many ms (the breath, the sway, the trim's pulse and shimmer), or null to run. */
+  pinnedMs: number | null = null;
   private anim: PlayerUi['anim'] = 'idle';
   private stride = 0;
   private marks: WandererMarks = { hood: [0, 0], hem: null };
@@ -169,7 +171,7 @@ export class PlayerView {
       trim,
       scheme: this.scheme,
       tick,
-      ms: now,
+      ms: this.pinnedMs ?? now,
       dtMs: dt,
       facing,
       aim: localAim(view, dx, dy, facing === 'left'),
@@ -205,8 +207,15 @@ export class PlayerView {
     if (!at) return null;
     const s = this.scale;
     const [ax, ay] = WANDERER.box.anchor;
-    const d = this.canvas.context.getImageData(Math.round((at[0] + ax) * s), Math.round((at[1] + ay) * s), 1, 1).data;
-    return [d[0] ?? 0, d[1] ?? 0, d[2] ?? 0];
+    // The stroke's core, not an anti-aliased edge: the brightest pixel of the 3×3 round the point (the trim is lighter
+    // than the cape and outline it lies on).
+    const d = this.canvas.context.getImageData(Math.round((at[0] + ax) * s) - 1, Math.round((at[1] + ay) * s) - 1, 3, 3).data;
+    let best: [number, number, number] = [0, 0, 0];
+    for (let i = 0; i + 2 < d.length; i += 4) {
+      const px: [number, number, number] = [d[i] ?? 0, d[i + 1] ?? 0, d[i + 2] ?? 0];
+      if (px[0] + px[1] + px[2] > best[0] + best[1] + best[2]) best = px;
+    }
+    return best;
   }
 
   /** The drawn pixels' box in world px, from the feet (the texture's alpha above a quarter), or null when nothing shows. */
