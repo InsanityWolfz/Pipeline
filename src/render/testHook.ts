@@ -93,7 +93,7 @@ export interface UiState extends BossShowUi {
   /** 078: damage numbers shown and hit-stop holds since boot, and the last hold's ms (hit feedback is unchanged). */
   hitFeedback: { numbers: number; holds: number; holdMs: number };
   /**
-   * Particles flying now (064); 076: as `live`, with the death motes among them and the deaths dissolving. 078: the
+   * Particles flying now (064); 076: as `live`, with the death motes among them and the deaths dissolving; 077: `live` counts the weather too. 078: the
    * ledger's weather (or room motes) and effects, the live effects by priority, and the pool's objects made since boot.
    */
   particles: { live: number; deathMotes: number; thrown: number; dissolving: number; weather: number; effects: number; byPriority: Record<'cue' | 'shot' | 'soft', number>; pool: { created: number } };

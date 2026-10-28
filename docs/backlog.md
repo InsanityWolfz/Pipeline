@@ -82,7 +82,7 @@ Only Shaun moves a spec to approved. Unattended runs only pick up approved items
 | 075 | The wanderer redesign: a hooded arcane ranger with ley-etched gear, the cyan face glow, minigun tube, hose and tank; two or three colour schemes; cloak trim and glow by the best armour's rarity; walk and run, firing, roll, hits, KO and idle animation, snappy with squash and stretch | done |
 | 076 | Enemy and boss polish: a family look per region, clearer wind-ups, hit reactions, deaths that dissolve into ley motes in the region's colour | done |
 | 077 | World props, landmarks and weather: moderate detail with clear paths, a few big set pieces per region, swaying grass and trees, water and ley motion, dust, ash and embers, rain and lightning; no critters | done |
-| 078 | Ammo visuals and particles: a trail and impact for every ammo (frost, homing and the tiers too), moderate particles for impacts, deaths, muzzle flashes, machine sparks and ambient motes | approved |
+| 078 | Ammo visuals and particles: a trail and impact for every ammo (frost, homing and the tiers too), moderate particles for impacts, deaths, muzzle flashes, machine sparks and ambient motes | done |
 | 079 | The foundry's mood: a warm torch- and forge-lit workshop, a little extra on the machines and conduits, heat, steam, glow and ley flow pulses | approved |
 | 080 | Boss intros and phases: a 2–3 s spawn animation (the only screen shake) and a name card; a visible change at each phase | done |
 | 081 | HUD polish: the stone tablets polished: one tighter tablet look with lit brass and cut wells, four icons redrawn, menu motion under 150 ms that never blocks input; no layout moves, nothing shrinks, readable in every mood | done |

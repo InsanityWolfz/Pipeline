@@ -4,14 +4,13 @@ import { sheetSections } from './wandererPoses';
 import { ENEMY_RIGS } from '../../data/art/enemies';
 import { vectorFrames } from './catalog';
 import { MACHINE_IDS } from '../../data/foundryAssets';
+import { RUIN_VARIANTS } from '../../data/decor';
 import { animFrames, ENEMY_ANIMS } from '../../data/assets';
 import { ENEMY_FAMILIES } from '../../data/art/enemyFamilies';
 import { WINDUP_STRIPS } from '../../data/art/enemyMotion';
 import { ENEMIES } from '../../data/enemies';
 import type { EnemyPoseName } from '../../data/art/enemyRig';
 import { poseOfAnim } from './catalog';
-
-import { RUIN_VARIANTS } from '../../data/decor';
 
 // The contact sheet (016, dev only): every vector sprite, pose and facing at 4×, grouped by family (020).
 

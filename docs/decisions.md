@@ -337,6 +337,11 @@ Each plan's build notes hold the detail; these are the lasting technical choices
   - Death motes share one capped total per death, split across a boss and its standing parts, and scale with Graphics quality.
   - Staggers count hits per sim tick, never per render frame, so slow machines see the same reactions.
 
+- **078 ammo visuals:**
+  - Ammo looks are data rows by family, element and tier, so a new ammo gets its look by adding a row.
+  - All particles (death motes, weather, effects) draw from one pooled ledger with a fixed share each per Graphics quality tier; no share borrows from another.
+  - e2e tests that wait for a screen to settle count drawn frames, never wall-clock seconds.
+
 - **080 boss intros and phases:**
   - The intro is a sim mode (`intro`), not a pause: the world keeps stepping while the boss and its posted enemies are skipped and immune and the player's damage is guarded, so the fight that follows is unchanged tick for tick.
   - Screen shake exists only in boss intros, on the world camera, behind the "Flashes and shake" setting and reduced motion; the HUD and name card sit on the UI camera.
