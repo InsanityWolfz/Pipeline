@@ -50,6 +50,8 @@ export const DECOR: {
   readonly maxPlantsPerChunk: number;
   readonly salts: { readonly plant: number; readonly kind: number; readonly scatter: number; readonly vine: number; readonly variant: number };
   readonly tile: { readonly jitterX: number; readonly jitterY: number };
+  /** A vine hangs from its cliff's lit top edge, `faceTop` px over the tile's bottom (the cliff's face is 22 px tall), up to `jitterX` px either side of the tile's middle. */
+  readonly vineHang: { readonly faceTop: number; readonly jitterX: number };
 } = {
   regions: {
     meadow: {
@@ -85,6 +87,7 @@ export const DECOR: {
   },
   /** A chunk holds at most this many plants; past it, the farthest from the chunk's centre are dropped. */
   maxPlantsPerChunk: 80,
+  vineHang: { faceTop: 21, jitterX: 6 },
   /** Each set's salt, mixed into the tile's hash, so the sets don't line up with each other or the ground's own touches. */
   salts: { plant: 0x77a1, kind: 0x77b2, scatter: 0x77c3, vine: 0x77d4, variant: 0x77e5 },
   /** A plant or scatter mark stands up to this many px off its tile's centre, either way. */

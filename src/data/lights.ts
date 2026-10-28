@@ -120,6 +120,9 @@ export const LIGHT_POOL = { size: 128, alpha: 0.3, maxAlpha: 0.55 } as const;
  * src/data/setPieces.ts): the Ley Tower's cracked crystal is a ley light (breathing with 014's glows), the Great
  * Furnace's mouth and the Great Crucible's glow are fires (flickering ±15%). The other set pieces give none.
  */
+/** 077: a set piece's breathing light (the Ley Tower's crystal) swings between `floor` and 1 of its intensity, on the glows' beat `stagger` beats along. */
+export const SET_PIECE_BREATHE = { floor: 0.75, stagger: 5 } as const;
+
 export const SET_PIECE_LIGHTS: Readonly<Record<string, { readonly source: 'ley' | 'fire'; readonly color: string; readonly radius: number; readonly intensity: number; readonly priority: number; readonly flicker?: boolean }>> = {
   'ley-tower': { source: 'ley', color: 'cyan', radius: 96, intensity: 0.7, priority: 3 },
   'great-furnace': { source: 'fire', color: 'cinder', radius: 96, intensity: 0.9, priority: 2, flicker: true },

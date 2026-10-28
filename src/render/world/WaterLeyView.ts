@@ -10,8 +10,6 @@ import { glints, RippleModel, type Pool, type Ring } from './ripples';
 // frame from the models; the rest hidden. Rings and glints lie on the water just over the ground and glows; beads run
 // along the ley seams, additive.
 
-const RING_ACROSS = 20;
-
 export class WaterLeyView {
   private readonly rings: GameObjects.Image[] = [];
   private readonly glints: GameObjects.Image[] = [];
@@ -22,9 +20,10 @@ export class WaterLeyView {
       const o = addVector(scene, 0, 0, frame).setDepth(depth).setVisible(false);
       return additive ? o.setBlendMode(BlendModes.ADD) : o;
     };
-    for (let i = 0; i < RIPPLES.max.high; i++) this.rings.push(make(AMBIENT_FRAMES.ripple, DEPTHS.glow + 0.01, false));
-    for (let i = 0; i < 16; i++) this.glints.push(make(AMBIENT_FRAMES.glint, DEPTHS.glow + 0.012, true));
-    for (let i = 0; i < LEY_FLOW.max.high; i++) this.beads.push(make(AMBIENT_FRAMES.bead, DEPTHS.glow + 0.015, true));
+    const over = RIPPLES.depthOverGlow;
+    for (let i = 0; i < RIPPLES.max.high; i++) this.rings.push(make(AMBIENT_FRAMES.ripple, DEPTHS.glow + over.ring, false));
+    for (let i = 0; i < RIPPLES.glints.pool; i++) this.glints.push(make(AMBIENT_FRAMES.glint, DEPTHS.glow + over.glint, true));
+    for (let i = 0; i < LEY_FLOW.max.high; i++) this.beads.push(make(AMBIENT_FRAMES.bead, DEPTHS.glow + over.bead, true));
   }
 
   /** Draws this frame's rings, High's glints on the ponds in view (`glinting`), and the beads. */
@@ -36,14 +35,14 @@ export class WaterLeyView {
       if (!r) return;
       const look = RippleModel.look(r);
       o.setPosition(r.x, r.y)
-        .setScale(look.across / RING_ACROSS / s)
+        .setScale(look.across / RIPPLES.ringAcross / s)
         .setAlpha(look.alpha)
         .setTint(colorOf(r.spring ? RIPPLES.springColor : RIPPLES.color));
     });
     const gl = glinting.flatMap((p) => glints(p, timeMs));
     this.glints.forEach((o, i) => {
       const g = gl[i];
-      o.setVisible(g !== undefined && g.alpha > 0.02);
+      o.setVisible(g !== undefined && g.alpha > RIPPLES.glints.minAlpha);
       if (g) o.setPosition(g.x, g.y).setAlpha(g.alpha).setTint(colorOf(RIPPLES.glints.color));
     });
     this.beads.forEach((o, i) => {

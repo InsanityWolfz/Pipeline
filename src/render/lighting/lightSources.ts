@@ -1,7 +1,7 @@
 import { TILE_SIZE } from '../../data/config';
 import { GROUND } from '../../data/art/ground';
 import { AMBIENT, GLOWS } from '../../data/juice';
-import { LIGHT_SOURCES, ROUND_LIGHTS, SET_PIECE_LIGHTS } from '../../data/lights';
+import { LIGHT_SOURCES, ROUND_LIGHTS, SET_PIECE_BREATHE, SET_PIECE_LIGHTS } from '../../data/lights';
 import { SET_PIECES, setPieceAnchor } from '../../data/setPieces';
 import { PROPS } from '../../data/props';
 import type { Quality } from '../../data/settings';
@@ -95,7 +95,7 @@ export function gatherLights(input: SourceInput): LightCandidate[] {
       const a = setPieceAnchor(p, T);
       const x = a.x + p.lightAt[0];
       const y = a.y + p.lightAt[1];
-      const k = l.flicker ? flicker(time, x * 0.37 + y) : 0.75 + 0.25 * breathe(time, 5);
+      const k = l.flicker ? flicker(time, x * 0.37 + y) : SET_PIECE_BREATHE.floor + (1 - SET_PIECE_BREATHE.floor) * breathe(time, SET_PIECE_BREATHE.stagger);
       add(l.source, x, y, l.radius, l.color, l.intensity * k, l.priority);
     }
   }

@@ -176,8 +176,9 @@ export function vineAt(room: Room, tx: number, ty: number): PlacedMark | null {
   if (!vines || room.rows[ty]?.[tx] !== TILE.cliff || room.rows[ty + 1]?.[tx] !== TILE.floor || keptClear(room, tx, ty + 1) || setPieceOnTile(tx, ty)) return null;
   const h = saltedHash(tx, ty, DECOR.salts.vine);
   if (h % vines.oneIn !== 0) return null;
-  // It hangs from the face's lit top edge (the cliff sprite's face is 22 px tall over the tile's bottom).
-  return { frame: vines.frames[(h >>> 8) % vines.frames.length] ?? '', x: (tx + 0.5) * T + ((h >>> 12) % 13) - 6, y: (ty + 1) * T - 21, tx, ty, flip: ((h >>> 20) & 1) === 1, phase: ((h >>> 21) % 1000) / 1000 };
+  // It hangs from the face's lit top edge.
+  const hang = DECOR.vineHang;
+  return { frame: vines.frames[(h >>> 8) % vines.frames.length] ?? '', x: (tx + 0.5) * T + ((h >>> 12) % (2 * hang.jitterX + 1)) - hang.jitterX, y: (ty + 1) * T - hang.faceTop, tx, ty, flip: ((h >>> 20) & 1) === 1, phase: ((h >>> 21) % 1000) / 1000 };
 }
 
 /** A chunk's plants and vines (`size` px square chunks): the plants capped at `maxPlantsPerChunk`, the nearest its centre kept. */

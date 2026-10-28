@@ -87,7 +87,12 @@ export const RIPPLES = {
   /** Rings start within this share of the pond's radii from its middle (the deep water). */
   deep: 0.55,
   max: { low: 0, medium: 12, high: 20 } as Readonly<Record<Quality, number>>,
-  glints: { perPond: 2, color: 'snow', periodMs: 1800, alpha: 0.8 },
+  /** The ring frame's width, px (render scales it to a ring's size). */
+  ringAcross: 20,
+  /** `pool`: at most this many glints drawn; one under `minAlpha` hides. */
+  glints: { perPond: 2, color: 'snow', periodMs: 1800, alpha: 0.8, pool: 16, minAlpha: 0.02 },
+  /** Rings, glints and ley beads lie this far over 074's glows' depth (in this order, under everything standing). */
+  depthOverGlow: { ring: 0.01, glint: 0.012, bead: 0.015 },
 } as const;
 
 /**
