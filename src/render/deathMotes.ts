@@ -31,6 +31,16 @@ export function deathMoteCount(enemyId: string, champion: boolean, r: MoteRoom):
   return waveCount(Math.min(Math.round(base * DEATH_MOTES.quality[r.quality]), DEATH_MOTES.perDeathCap[r.quality]), r);
 }
 
+/**
+ * The Forgewright's one capped total split between its body and its standing bellows: a quarter each to the bellows
+ * (if standing), the rest to the body, so the death never throws more than the per-death cap.
+ */
+export function forgeShares(total: number, standing: number): { body: number; bellows: number[] } {
+  const each = Math.round(total / 4);
+  const bellows = Array.from({ length: standing }, () => each);
+  return { body: total - each * standing, bellows };
+}
+
 /** `total` split into `waves` waves, the first ones taking any remainder. */
 export function moteWaves(total: number, waves: number): number[] {
   return Array.from({ length: waves }, (_, i) => Math.floor(total / waves) + (i < total % waves ? 1 : 0));

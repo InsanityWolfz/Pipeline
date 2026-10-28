@@ -17,8 +17,16 @@ export const ENEMY_MOTION = {
   peakAt: { 'sniper:windup': SNIPER.snipe.trackTicks / SNIPER.snipe.windupTicks } as Readonly<Record<string, number>>,
   /** The peak's tremble: the sprite's own (never the camera), world px either way, at `hz`; bosses `bossPx`. */
   tremble: { px: 0.8, bossPx: 1.2, hz: 20 },
-  /** An attack's first frames (the swipe and its kin): a stretch that settles over `ticks`. */
-  release: { squash: -0.12, ticks: 4 },
+  /**
+   * An attack's first frames (the swipe and its kin): a stretch that settles over `ticks`. Not for the releases in
+   * `none` (by `enemyId:mode`): slams, stomps and the static mite's discharge, whose impact frame is baked squashed
+   * and must land that way.
+   */
+  release: {
+    squash: -0.12,
+    ticks: 4,
+    none: ['pylon-warden:swipe', 'slag-golem:swipe', 'bulwark:swipe', 'bulwark:stomp', 'forgewright:swipe', 'forgewright:spray', 'forgewright:flood', 'static-mite:swipe'] as readonly string[],
+  },
   /** The flinch while the sim's flash runs: a snap of `squash`, ringing down over `ringTicks` with an overshoot. */
   flinch: { squash: 0.1, ringTicks: 3 },
   /**

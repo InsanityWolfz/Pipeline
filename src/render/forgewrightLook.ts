@@ -1,7 +1,6 @@
 import type { GameObjects } from 'phaser';
 import { arenaOf } from '../data/arenas';
 import { ENEMY_FX } from '../data/assets';
-import { IDLE_SPEED } from '../data/config';
 import type { ForgewrightDef } from '../data/enemies';
 import { FORGE_LOOK } from '../data/forgewrightAssets';
 import type { EnemyState } from '../sim/enemies';
@@ -12,21 +11,6 @@ import { colorOf } from './color';
 // spray's draw-back, the flood's raised hammer, the vent's stagger, a rock on its plating as a hit rings off), and its
 // telegraphs on the ground, each filling as its wind-up runs: the slam's red circle ahead of it, the spray's cone, and
 // the flood's red half of the hall (054's shade) with a hard edge where the pools will stop.
-
-export type ForgePose = 'idle' | 'walk' | 'windup' | 'swipe' | 'recover' | 'hit' | 'block' | 'spray' | 'flood' | 'vent';
-
-/** Its pose for its mode. */
-export function forgePose(e: EnemyState): ForgePose {
-  if (e.mode === 'vent') return 'vent';
-  if (e.mode === 'flood-windup') return 'flood';
-  if (e.mode === 'spray-windup') return 'spray';
-  // The flood's blow and the spray's fling both bring the hammer down.
-  if (e.mode === 'flood' || e.mode === 'spray') return 'swipe';
-  if (e.mode === 'windup' || e.mode === 'swipe' || e.mode === 'recover') return e.mode;
-  if (e.blockFlash > 0) return 'block';
-  if (e.flash > 0) return 'hit';
-  return Math.hypot(e.vx, e.vy) >= IDLE_SPEED ? 'walk' : 'idle';
-}
 
 /** Its wind-up's progress, 0..1. */
 const progress = (e: EnemyState, ticks: number): number => Math.min(1, e.modeTicks / ticks);

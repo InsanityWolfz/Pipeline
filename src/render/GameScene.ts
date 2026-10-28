@@ -270,6 +270,8 @@ export class GameScene extends Scene {
     // fix-build-inventory-respawn: a move key held through the death doesn't carry the player out of the foundry.
     if (this.sim.events.woke) this.controls?.holdMoveThroughWake();
     mergeEvents(this.pending, this.sim.events);
+    // 076: each tick's hits, for the enemies' staggers (weighed per tick, review 7).
+    this.enemyView?.react(this.sim.events.hits, this.sim.enemies);
     this.host.afterTick(this.sim);
   }
 
@@ -283,8 +285,6 @@ export class GameScene extends Scene {
     if (!this.room.fading && this.playerView) this.sceneCameras?.attuneLook(sim, this.room.shownRoomId, this.playerView.sprite);
     this.sceneCameras?.bossLook(bossLookTarget(sim), this.game.loop.delta);
     this.effects.play(this.pending, sim.player);
-    // 076: the frame's hits, for the enemies' staggers.
-    this.enemyView?.react(this.pending.hits);
     if (this.pending.identifies.length > 0) this.site?.identified();
     if (this.pending.woke) this.wake?.show(this.pending.lost, sim);
     const shown = this.room.shownRoomId;

@@ -33,7 +33,6 @@ function particlesUi(g: GameScene): GameUiState['particles'] {
     live: p?.count ?? 0,
     deathMotes: p?.deathMotes ?? 0,
     thrown: p?.motesThrown ?? 0,
-    moteColors: p?.moteColors ?? {},
     dissolving: g.effects?.dissolves.count ?? 0,
     weather: g.ledger.live.weather,
     effects: g.ledger.live.effect,

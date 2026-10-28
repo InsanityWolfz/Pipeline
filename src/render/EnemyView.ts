@@ -22,7 +22,7 @@ import { HOLLOWS_LOOK } from '../data/hollowsAssets';
 import { drawSeam, riseShown } from './bulwarkLook';
 import { chillTint, drawCore, drawFlames, drawIce, drawResin } from './enemyOverlays';
 import { enemyArt, type EnemyArtShown } from './enemyArt';
-import { attacking, staggers } from './enemyReaction';
+import { attacking, staggeredInTick } from './enemyReaction';
 import { drawTelegraph } from './telegraphs';
 import { destroyEnemyBar, drawEnemyBar, makeEnemyBar, type EnemyBar, type EnemyBarShown } from './enemyBar';
 import { destroyHollowsArt, drawHollowsArt, makeHollowsArt, shownOf, type HollowsArt, type HollowsEnemiesShown } from './hollowsEnemyArt';
@@ -93,6 +93,8 @@ export const NO_ENEMY_UI: { champions: ChampionShown[]; hollowsEnemies: HollowsE
   enemyArt: [],
 };
 
+/** No squash and no tremble: what a beam or laser starts from before its enemy's art is first worked out. */
+const STILL = { squash: 0, dx: 0, dy: 0 } as const;
 const viewOf = (f: Facing): 'down' | 'up' | 'side' => (f === 'up' || f === 'down' ? f : 'side');
 
 // Draws live enemies from sim state: the animation for their mode and facing, a
@@ -108,8 +110,8 @@ export class EnemyView {
   /** Each enemy as last drawn, for `ui`. */
   private readonly last = new Map<number, EnemyState>();
   private readonly scene: Scene;
-  /** 076: this frame's hits on each enemy, by id, until `update` reads them (stagger or flinch). */
-  private readonly hits = new Map<number, HitEvent[]>();
+  /** 076: enemies a tick's hits staggered since the last draw, until `update` starts their staggers. */
+  private readonly staggered = new Set<number>();
 
   constructor(scene: Scene) {
     this.scene = scene;
@@ -128,14 +130,13 @@ export class EnemyView {
     return this.last.get(id);
   }
 
-  /** 076: the frame's hit events, which `update` turns into staggers. */
-  react(hits: readonly HitEvent[]): void {
-    for (const h of hits) {
-      if (h.target !== 'enemy') continue;
-      const list = this.hits.get(h.id) ?? [];
-      list.push(h);
-      this.hits.set(h.id, list);
-    }
+  /** 076: one sim tick's hits (review 7: weighed per tick, never summed over a slow frame), for `update`'s staggers. */
+  react(hits: readonly HitEvent[], enemies: readonly EnemyState[]): void {
+    const of = (id: number) => {
+      const e = enemies.find((x) => x.id === id);
+      return e && { maxHealth: defOf(e).maxHealth, boss: enemyDef(e.enemyId).boss };
+    };
+    for (const id of staggeredInTick(hits, of)) this.staggered.add(id);
   }
 
   /** `sim` for what an enemy's extras read beyond itself (035: a Sniper's laser runs to the player). */
@@ -149,8 +150,7 @@ export class EnemyView {
       this.last.set(e.id, e);
       const d = this.drawn.get(e.id) ?? this.create(e);
       // 076: a heavy frame's hits or a punch stagger it (its hit-stop holds the start); a wind-up or an attack cuts a stagger off at once.
-      const hits = this.hits.get(e.id);
-      if (hits && staggers(hits, defOf(e).maxHealth, enemyDef(e.enemyId).boss)) d.staggerMs = -dt;
+      if (this.staggered.has(e.id)) d.staggerMs = -dt;
       if (attacking(e.mode)) d.staggerMs = null;
       const until = this.frozenUntil.get(e.id);
       if (until !== undefined && now < until) {
@@ -171,7 +171,8 @@ export class EnemyView {
       d.angle = e.angle;
       // Freezing (029) holds the sprite, pose and all, as hit-stop does.
       if (d.staggerMs !== null && e.frozen <= 0) d.staggerMs += dt;
-      const art = e.frozen > 0 && d.art ? d.art : enemyArt(e, def, anims, view, now < (d.turnUntil ?? 0), d.staggerMs, now);
+      // Review 8: written into its own art object, kept from frame to frame.
+      const art = e.frozen > 0 && d.art ? d.art : enemyArt(e, def, anims, view, now < (d.turnUntil ?? 0), d.staggerMs, now, d.art);
       d.art = art;
       this.show(d, art, e.frozen > 0);
       // A champion (032) is drawn 1.5× its kind; 076: squashed about its feet.
@@ -193,14 +194,14 @@ export class EnemyView {
       drawEnemyBar(this.scene, d.bar, e, top);
       if (d.champion) this.drawChampion(d.champion, e, bottom, top, now);
       d.waveShaded = drawTelegraph(d.telegraph, e);
-      drawHollowsArt(d.hollows, d.sprite, e, def, sim, now);
+      drawHollowsArt(d.hollows, d.sprite, e, def, sim, now, d.art ?? STILL);
       if (d.overlay && e.enemyId === RESIN.enemyId) drawResin(d.overlay, e, bottom, view, now);
       if (d.overlay && e.enemyId === CORE.enemyId) drawCore(d.overlay, e, bottom, view, now);
       if (d.overlay && def.kind === 'bulwark') drawSeam(d.overlay, e, bottom, view, now);
       // 074: a light near its feet catches on it, as posed this frame.
       catcher?.offer(d.sprite, e.x, bottom, 'enemy', e.id);
     }
-    this.hits.clear();
+    this.staggered.clear();
     for (const [id, d] of this.drawn) {
       if (live.has(id)) continue;
       this.frozenUntil.delete(id);

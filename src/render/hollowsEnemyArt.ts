@@ -11,10 +11,9 @@ import { snipeLine } from '../sim/sniperAi';
 import type { SimState } from '../sim/state';
 import { colorOf } from './color';
 import { addVector, showFrame, textureScale } from './vector/textures';
-import { stripIndex, tremble, windupPhase } from './enemyMotion';
-import { posedPoint } from './vector/enemyPose';
+import { tremble, windupPhase } from './enemyMotion';
+import { shownPoint, type SpriteLook } from './shownPoint';
 import { SNIPER_RIG } from '../data/art/sniper';
-import { STRIP_ENDS } from '../data/enemyAnims';
 import { ENEMY_MOTION } from '../data/art/enemyMotion';
 import { destroyEmberArt, drawEmberArt, makeEmberArt, type BeamShown, type EmberArt } from './emberEnemyArt';
 import { destroyStormArt, drawStormArt, makeStormArt, type StormArt } from './stormEnemyArt';
@@ -71,12 +70,12 @@ export function makeHollowsArt(scene: Scene, def: EnemyDef): HollowsArt | undefi
 }
 
 /** Shows the extras for this frame; hides the body while it's under the ground. */
-export function drawHollowsArt(art: HollowsArt | undefined, sprite: GameObjects.Sprite, e: EnemyState, def: EnemyDef, sim: SimState, now: number): void {
+export function drawHollowsArt(art: HollowsArt | undefined, sprite: GameObjects.Sprite, e: EnemyState, def: EnemyDef, sim: SimState, now: number, look: SpriteLook): void {
   sprite.setVisible(!e.underground);
-  if (art?.ember) drawEmberArt(art.ember, sprite, e, def, sim, now);
+  if (art?.ember) drawEmberArt(art.ember, sprite, e, def, sim, now, look);
   if (art?.storm) drawStormArt(art.storm, e, def);
   if (art?.light && def.kind === 'shardback') drawFlare(art.light, e, def.bash.windupTicks, now);
-  if (art?.light && def.kind === 'sniper') art.laser = drawLaser(art.light, e, def, sim);
+  if (art?.light && def.kind === 'sniper') art.laser = drawLaser(art.light, e, sim, sprite.frame.name, look);
   if (!art?.ripple) return;
   art.ripple.setVisible(e.underground);
   if (!e.underground) return;
@@ -120,7 +119,9 @@ function drawFlare(g: GameObjects.Graphics, e: EnemyState, windupTicks: number, 
 const LASER_DEPTH = DEPTHS.motes - 1;
 
 /** The laser from its lens (per view, flipped facing left, scaled for a champion) to the end of its sight line, which never runs through a solid. */
-function drawLaser(g: GameObjects.Graphics, e: EnemyState, def: Extract<EnemyDef, { kind: 'sniper' }>, sim: SimState): LaserShown | null {
+function drawLaser(g: GameObjects.Graphics, e: EnemyState, sim: SimState, frame: string, look: SpriteLook): LaserShown | null {
+  const def = enemyDef(e.enemyId);
+  if (def.kind !== 'sniper') return null;
   g.clear();
   const line = snipeLine(sim, e, def);
   if (!line) return null;
@@ -129,10 +130,11 @@ function drawLaser(g: GameObjects.Graphics, e: EnemyState, def: Extract<EnemyDef
   // Locked, it brightens and blinks: on and off every `blinkTicks` of the lock.
   const on = !locked || Math.floor((e.modeTicks - def.snipe.trackTicks) / L.blinkTicks) % 2 === 0;
   const view = e.facing === 'up' || e.facing === 'down' ? e.facing : 'side';
-  const lens = lensAt(e, def, view);
+  // 076: from the lens as the sprite shows it: the wind-up frame it holds, its squash and its tremble.
   const k = e.champion ? CHAMPIONS.scale : 1;
-  const x0 = e.x + lens[0] * k * (e.facing === 'left' ? -1 : 1);
-  const y0 = e.y + enemyDef(e.enemyId).feetBox.h / 2 + lens[1] * k;
+  const lens = shownPoint(SNIPER_RIG, view, frame, view === 'up' ? 'housing' : 'lens', HOLLOWS_ENEMY_LOOK.lens[view], look, e.facing === 'left' ? -1 : 1, k);
+  const x0 = e.x + lens[0];
+  const y0 = e.y + def.feetBox.h / 2 + lens[1];
   const color = colorOf(ENEMY_FX.telegraphColor);
   const width = locked ? L.lockedWidth : L.width;
   const alpha = locked ? (on ? L.lockedAlpha : L.alpha * L.dim) : L.alpha;
@@ -141,16 +143,6 @@ function drawLaser(g: GameObjects.Graphics, e: EnemyState, def: Extract<EnemyDef
   if (locked && on) g.lineStyle(L.coreWidth, colorOf(L.core), 1).lineBetween(x0, y0, line.x1, line.y1);
   g.fillStyle(color, alpha).fillCircle(line.x1, line.y1, width + L.dot);
   return { locked, on, x0, y0, x1: line.x1, y1: line.y1 };
-}
-
-/** 076: the lens as the wind-up's frame poses it (it leans into the aim and braces), world px from the feet at 1×. */
-function lensAt(e: EnemyState, def: Extract<EnemyDef, { kind: 'sniper' }>, view: 'side' | 'down' | 'up'): readonly [number, number] {
-  const at = HOLLOWS_ENEMY_LOOK.lens[view];
-  const strip = SNIPER_RIG.poses.windup ?? [];
-  const phase = windupPhase(e.modeTicks, def.snipe.windupTicks, ENEMY_MOTION.peakAt['sniper:windup']);
-  const pose = strip[stripIndex(phase, strip.length - STRIP_ENDS, 0)];
-  const part = view === 'up' ? 'housing' : 'lens';
-  return (pose && posedPoint(SNIPER_RIG, view, pose, part, at)) ?? at;
 }
 
 /** Folds one enemy's extras into what `ui()` reports. */

@@ -1,6 +1,5 @@
 import type { GameObjects } from 'phaser';
 import { DEPTHS } from '../data/assets';
-import { IDLE_SPEED } from '../data/config';
 import { BULWARK_RIG, BULWARK_RUNES, BULWARK_SEAM } from '../data/art/bulwark';
 import { BULWARK } from '../data/bulwark';
 import { windupsOf } from '../sim/bulwarkPhases';
@@ -15,19 +14,6 @@ import { drawCrackedCircle } from './crackedCircle';
 // the gold halo of the core seam on its back whenever its back shows (the place to hit),
 // and its pound's red ground circle, filling through the wind-up in the Warden's style.
 // 041: its enraged look, its rear stomp's half-disc and its adds' rising circles.
-
-export type BulwarkPose = 'idle' | 'walk' | 'turn' | 'lob' | 'throw' | 'windup' | 'swipe' | 'recover' | 'hit' | 'block' | 'roar' | 'brace' | 'stomp';
-
-/** The pose for its mode (041: the roar, and the stomp's brace, stamp and recovery); `turned` says its shield turned since the last frame. */
-export function bulwarkPose(e: EnemyState, turned: boolean): BulwarkPose {
-  if (e.mode === 'lob' || e.mode === 'throw' || e.mode === 'windup' || e.mode === 'swipe' || e.mode === 'recover' || e.mode === 'roar' || e.mode === 'stomp') return e.mode;
-  if (e.mode === 'stomp-windup') return 'brace';
-  if (e.mode === 'stomp-recover') return 'recover';
-  if (e.blockFlash > 0) return 'block';
-  if (e.flash > 0) return 'hit';
-  if (Math.hypot(e.vx, e.vy) >= IDLE_SPEED) return 'walk';
-  return turned ? 'turn' : 'idle';
-}
 
 /**
  * The seam's gold halo on its back (side view: its back edge; from behind: its middle), pulsing; none face-on. Enraged

@@ -18,6 +18,22 @@ No sim change; `SAVE_VERSION` stays 22. Reviewed, including a motion check at re
 - The shared particle budget copies 076's numbers until 076 merges; 078 turns it into one ledger.
 - `tests/e2e/feedback.spec.ts` "F in play" sits near its 30 s limit on a loaded runner (typing about 350 ms a key); older than 077, worth a fix-track change.
 
+## 2026-10-28: 076 Enemy and boss polish
+**Changed:** on `claude/076-enemy-polish` (InsanityWolfz/Pipeline#93, stacked on 074 and 075), art pass 3 of 8, from Shaun's art interview (plan docs/plans/076-enemy-polish.md):
+- all 19 rigs (15 enemies, 4 bosses) redrawn in a family look per region: Mossbound ruins (Region 1), Quarry constructs (the Hollows), Forge constructs (the Emberworks), Storm-works (the Stormcrown); soft gradients, a rim light per family, the thin ink outline; boxes and hitboxes unchanged;
+- wind-ups gather, coil and peak by the sim's own wind-up progress (the peak trembles; the camera never moves), with sim timing unchanged and tested tick for tick;
+- hit reactions: a flinch on every hit, a stagger at 40% of max health in one tick; bosses only flinch, nothing reacts mid-wind-up;
+- deaths dissolve into ley motes in the family's colour (600 ms, bosses 1.4 s) under per-death and live caps that scale with Graphics quality;
+- every walk calmed after Shaun's note on 075's wanderer: bob halved, squash 0.015 at most, guarded by tests.
+
+`SAVE_VERSION` stays 22. Reviewed, including a motion check: three blocking findings fixed (a release stretch cancelled the slams' impact squash; the Forgewright's death went over the mote cap; a fight-hash baseline wasn't main's), plus beams starting from the shown frame, staggers counted per sim tick and no per-frame allocation. `npm run check` 2780 tests; CI green. Raised for Shaun: 076.1–076.12; 076.10 and 076.11 are for his eye.
+
+**Next:** Shaun's playtest after 074 and 075; "merge 93" after 91 and 92.
+
+**Notes:**
+- Boot bakes more frames: 1.13 s against main's 0.63 s at 2×, 1.92 s against 1.08 s at 3×; boot to ready 3.8 s against 3.1 s.
+- This machine draws 8–13 frames a second under load, so real-time motion strips have 11–19 cells a second.
+
 ## 2026-10-27: 075 The wanderer redesign
 **Changed:** on `claude/075-wanderer-redesign` (InsanityWolfz/Pipeline#92), art pass 2 of 8, from Shaun's art interview (docs/brainstorm/2026-10-27-art-interview.md; plan docs/plans/075-wanderer-redesign.md):
 - the wanderer is now an arcane ranger: a pointed hood with the faceless cyan glow, a knee-length cape, a ley-etched jerkin, bracers, a rune strap, and the minigun tube, hose and brass tank kept; soft gradients, a rim light and the thin ink outline;

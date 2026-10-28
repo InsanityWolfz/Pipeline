@@ -17,5 +17,6 @@
   "gale-ram": [["windup",54],["windup",54],["windup",54],["windup",15]],
   "bulwark": [["windup",60],["lob",30],["stomp-windup",40],["lob",30],["windup",60],["stomp-windup",35],["lob",30],["windup",53]],
   "forgewright": [["spray-windup",45],["spray-windup",45],["spray-windup",45],["spray-windup",45],["spray-windup",6],["spray-windup",45],["spray-windup",45],["spray-windup",45],["flood-windup",90],["spray-windup",45],["spray-windup",45],["spray-windup",45],["spray-windup",36]],
+  "forgewright-slam": [["windup",54],["windup",54],["spray-windup",45],["windup",54],["windup",54],["windup",54],["spray-windup",45],["windup",54],["windup",54],["spray-windup",45],["windup",54],["windup",54],["spray-windup",45],["windup",54],["windup",54],["spray-windup",45],["windup",54],["flood-windup",90],["windup",54],["windup",54],["spray-windup",45],["windup",54]],
   "conductor": [["windup:0",45],["windup:1",60],["windup:0",45],["windup:2",60],["windup:0",45],["windup:1",60],["windup:0",45],["windup:2",60],["windup:0",45],["windup:1",60],["windup:0",45],["windup:2",60],["windup:0",45],["windup:1",60],["windup:0",45],["windup:2",60],["windup:0",45],["windup:1",60],["windup:0",45],["windup:2",60],["windup:0",45],["windup:1",60]]
 }

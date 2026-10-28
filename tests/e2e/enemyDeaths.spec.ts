@@ -131,14 +131,13 @@ test('ten Hollows enemies killed at once never pass a tier’s death-mote cap or
   }
 });
 
-/** Pixels of each family's mote colours in a box 50 world px round the death spot (70 px right of the player, 25 up). */
-async function colourCounts(page: Page): Promise<number[]> {
-  return page.evaluate(
-    async ([families, view]) => {
+/** Keeps the box 50 world px round the death spot (70 px right of the player, 25 up), as drawn now, under `slot`. */
+async function grab(page: Page, slot: 'ground' | 'struck' | 'motes'): Promise<void> {
+  await page.evaluate(
+    async ([name, view]) => {
       const canvas = document.querySelector('canvas');
       const g = window.__GAME__;
       if (!canvas || !g) throw new Error('no canvas');
-      await new Promise((r) => requestAnimationFrame(r));
       // In backbuffer px from the camera's centre.
       const ui = g.ui();
       const p = g.getState().player;
@@ -146,22 +145,67 @@ async function colourCounts(page: Page): Promise<number[]> {
       const cx = canvas.width / 2 + (p.x + 70 - ui.camera.x) * k;
       const cy = canvas.height / 2 + (p.y - 25 - ui.camera.y) * k;
       const half = 50 * k;
-      const img = await createImageBitmap(canvas, Math.round(cx - half), Math.round(cy - half), Math.round(half * 2), Math.round(half * 2));
+      // Taken in a frame callback, after the game has drawn that frame and before the buffer is handed on.
+      const img = await new Promise<ImageBitmap>((resolve, reject) => {
+        requestAnimationFrame(() => {
+          createImageBitmap(canvas, Math.round(cx - half), Math.round(cy - half), Math.round(half * 2), Math.round(half * 2)).then(resolve, reject);
+        });
+      });
       const c = new OffscreenCanvas(img.width, img.height);
       const x = c.getContext('2d');
       if (!x) throw new Error('no 2d');
       x.drawImage(img, 0, 0);
-      const data = x.getImageData(0, 0, img.width, img.height).data;
-      return families.map((cols) => {
-        let n = 0;
-        for (let i = 0; i < data.length; i += 4) {
-          for (const [r, g, b] of cols) if (Math.abs((data[i] ?? 0) - r) < 14 && Math.abs((data[i + 1] ?? 0) - g) < 14 && Math.abs((data[i + 2] ?? 0) - b) < 14) n += 1;
-        }
-        return n;
-      });
+      const w = window as unknown as { __deathBox?: Record<string, { w: number; data: Uint8ClampedArray }> };
+      w.__deathBox = { ...(w.__deathBox ?? {}), [name]: { w: img.width, data: x.getImageData(0, 0, img.width, img.height).data } };
     },
-    [ENEMY_FAMILIES.map((f) => f.motes.map((m) => hexToRgb(paletteHex(m)))), VIEW_WIDTH] as const,
+    [slot, VIEW_WIDTH] as const,
   );
+}
+
+/**
+ * Pixels of each family's mote colours in the `motes` grab, the body masked out: wherever the struck body (or its drop)
+ * already showed one of the families' colours, and 2 px round it, doesn't count, nor a colour the ground had. So the
+ * comparison measures motes only, from the pixels drawn, not from what the code says it threw.
+ */
+async function moteCounts(page: Page): Promise<number[]> {
+  return page.evaluate((families) => {
+    const w = window as unknown as { __deathBox?: Record<string, { w: number; data: Uint8ClampedArray }> };
+    const ground = w.__deathBox?.ground;
+    const struck = w.__deathBox?.struck;
+    const motes = w.__deathBox?.motes;
+    if (!ground || !struck || !motes) throw new Error('no grabs');
+    const W = motes.w;
+    const H = motes.data.length / 4 / W;
+    const all = families.flat();
+    const near = (d: Uint8ClampedArray, i: number, cols: readonly (readonly [number, number, number])[]): boolean =>
+      cols.some(([r, g, b]) => Math.abs((d[i] ?? 0) - r) < 14 && Math.abs((d[i + 1] ?? 0) - g) < 14 && Math.abs((d[i + 2] ?? 0) - b) < 14);
+    // The body's (and its drop's) pixels in any family's mote colours: a husk's straw, a drop's gold.
+    const body = new Uint8Array(W * H);
+    for (let i = 0; i < W * H; i++) {
+      let changed = false;
+      for (let ch = 0; ch < 3; ch++) if (Math.abs((struck.data[i * 4 + ch] ?? 0) - (ground.data[i * 4 + ch] ?? 0)) > 24) changed = true;
+      if (changed && near(struck.data, i * 4, all)) body[i] = 1;
+    }
+    const masked = (x: number, y: number): boolean => {
+      for (let dy = -2; dy <= 2; dy++) for (let dx = -2; dx <= 2; dx++) if (body[Math.min(H - 1, Math.max(0, y + dy)) * W + Math.min(W - 1, Math.max(0, x + dx))]) return true;
+      return false;
+    };
+    return families.map((cols) => {
+      let n = 0;
+      for (let y = 0; y < H; y++) {
+        for (let x = 0; x < W; x++) {
+          const i = (y * W + x) * 4;
+          const d = motes.data;
+          if (!near(d, i, cols)) continue;
+          // A colour already there on the ground isn't a mote's either.
+          const gd = ground.data;
+          if (Math.abs((gd[i] ?? 0) - (d[i] ?? 0)) < 8 && Math.abs((gd[i + 1] ?? 0) - (d[i + 1] ?? 0)) < 8 && Math.abs((gd[i + 2] ?? 0) - (d[i + 2] ?? 0)) < 8) continue;
+          if (!masked(x, y)) n += 1;
+        }
+      }
+      return n;
+    });
+  }, ENEMY_FAMILIES.map((f) => f.motes.map((m) => hexToRgb(paletteHex(m)))));
 }
 
 test("the motes rise in each family's colours", async ({ page }) => {
@@ -169,21 +213,24 @@ test("the motes rise in each family's colours", async ({ page }) => {
   const one = { ruin: 'husk', quarry: 'charger', forge: 'bellows-hound', storm: 'storm-sentinel' } as const;
   for (const fam of ENEMY_FAMILIES) {
     await sandbox(page, 'low');
-    // What the box shows before (the ground, the pack's drops), taken off what it shows with the motes rising.
-    const ground = await colourCounts(page);
-    await page.evaluate(() => window.__GAME__?.tweenSpeed(0.15));
+    await grab(page, 'ground');
+    // Held on the tween clock at its struck pose (and its drop): the body to mask out, before any mote is thrown.
+    await page.evaluate(() => window.__GAME__?.tweenSpeed(0));
     await spawnAndKill(page, [one[fam.id]], [[70, -10]]);
-    // Wait until two waves are out (on the slowed clock a runner drawing a few frames a second takes a while), then read
-    // the motes' colours, and count pixels of each family's colours round the death beyond what the box showed before.
+    await expect.poll(() => page.evaluate(() => window.__GAME__?.ui().particles.dissolving ?? 0)).toBe(1);
+    await grab(page, 'struck');
+    // Then slowed, until two waves are out (a runner drawing a few frames a second takes a while).
+    await page.evaluate(() => window.__GAME__?.tweenSpeed(0.15));
     await expect.poll(() => page.evaluate(() => window.__GAME__?.ui().particles.deathMotes ?? 0), { timeout: 60_000 }).toBeGreaterThan(4);
-    const colors = (await page.evaluate(() => window.__GAME__?.ui().particles.moteColors)) ?? {};
-    const counts = (await colourCounts(page)).map((n, i) => Math.max(0, n - (ground[i] ?? 0)));
+    await page.evaluate(() => window.__GAME__?.tweenSpeed(0));
+    await grab(page, 'motes');
+    const counts = await moteCounts(page);
     await page.evaluate(() => window.__GAME__?.tweenSpeed(1));
-    // Every mote flying is in one of the family's colours (no other family's), and they are drawn in them. (The pixels
-    // alone can't tell the families apart: a husk's straw and a drop's gold sit near the forge's brass.)
-    expect(Object.keys(colors).length, fam.id).toBeGreaterThan(0);
-    for (const c of Object.keys(colors)) expect(fam.motes as readonly string[], `${fam.id}: ${c}`).toContain(c);
-    expect(counts[ENEMY_FAMILIES.indexOf(fam)] ?? 0, fam.id).toBeGreaterThan(8);
+    const own = counts[ENEMY_FAMILIES.indexOf(fam)] ?? 0;
+    expect(own, `${fam.id} ${JSON.stringify(counts)}`).toBeGreaterThan(8);
+    // Its own colours outnumber any other family's (the ruins' and the quarry's share cyan-glow, so a ruin death
+    // is told from a forge or storm one, and the quarry's vein from the forge's gold).
+    for (const [i, other] of ENEMY_FAMILIES.entries()) if (other.id !== fam.id && !(fam.motes as readonly string[]).some((m) => (other.motes as readonly string[]).includes(m))) expect(counts[i] ?? 0, `${fam.id} vs ${other.id} ${JSON.stringify(counts)}`).toBeLessThan(own);
   }
 });
 

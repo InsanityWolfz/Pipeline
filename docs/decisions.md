@@ -328,3 +328,8 @@ Each plan's build notes hold the detail; these are the lasting technical choices
   - Decor and landmarks are render-only and never change collision: landmarks stand only on tiles that already block, and placement is a pure hash per tile, so the world is the same every boot.
   - Sway keeps each plant's own cycle; wind changes only amplitude and lean, eased, so a gust or a region border never jumps a plant's phase.
   - Weather lives in render, sized per Graphics quality tier, and never runs in the foundry or the sandbox.
+
+- **076 enemy and boss polish:**
+  - Enemy poses follow the sim's own wind-up progress (gather, coil, peak by share of the wind-up), so the art can't drift from timing; motion values live in `ENEMY_MOTION`, with per-attack overrides (slams take no release stretch).
+  - Death motes share one capped total per death, split across a boss and its standing parts, and scale with Graphics quality.
+  - Staggers count hits per sim tick, never per render frame, so slow machines see the same reactions.

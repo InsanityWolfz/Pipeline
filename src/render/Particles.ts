@@ -34,8 +34,8 @@ interface Particle {
   alpha: number;
   kind: ParticleKind;
   priority: FxPriority;
-  /** 076: a death's ley mote (its palette id); null for any other particle. */
-  mote: string | null;
+  /** 076: a death's ley mote, counted against the live death-mote cap. */
+  mote: boolean;
 }
 
 /** 076: one death mote: where it starts (already lifted to the body), its colour, size and look. */
@@ -86,7 +86,7 @@ export class Particles {
       alpha: 1,
       kind: 'effect',
       priority: 'shot',
-      mote: null,
+      mote: false,
     }));
     this.warm();
   }
@@ -129,7 +129,7 @@ export class Particles {
     p.size = size;
     p.grow = size;
     p.alpha = 1;
-    p.mote = null;
+    p.mote = false;
     p.rect.setTint(colorOf(color)).setDepth(depth).setScale((size * DOT_SIZE) / p.unit).setAlpha(1).setVisible(true).setBlendMode(add ? BlendModes.ADD : BlendModes.NORMAL).setPosition(Math.round(x), Math.round(y));
     this.ledger.add(kind);
     if (kind === 'effect') this.priorities[priority] += 1;
@@ -190,7 +190,7 @@ export class Particles {
       p.vy = Math.sin(angle) * speed;
       p.gravity = o.gravity;
       p.life = between(o.lifeMs);
-      p.mote = m.color;
+      p.mote = true;
       this.motes += 1;
       this.thrown += 1;
     }
@@ -204,13 +204,6 @@ export class Particles {
   /** 076: death motes thrown since boot. */
   get motesThrown(): number {
     return this.thrown;
-  }
-
-  /** 076: the death motes flying now, by palette id. */
-  get moteColors(): Record<string, number> {
-    const out: Record<string, number> = {};
-    for (const p of this.pool.live) if (p.mote) out[p.mote] = (out[p.mote] ?? 0) + 1;
-    return out;
   }
 
   private free(i: number): void {
