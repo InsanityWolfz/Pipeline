@@ -93,6 +93,8 @@ export const NO_ENEMY_UI: { champions: ChampionShown[]; hollowsEnemies: HollowsE
   enemyArt: [],
 };
 
+/** No squash and no tremble: what a beam or laser starts from before its enemy's art is first worked out. */
+const STILL = { squash: 0, dx: 0, dy: 0 } as const;
 const viewOf = (f: Facing): 'down' | 'up' | 'side' => (f === 'up' || f === 'down' ? f : 'side');
 
 // Draws live enemies from sim state: the animation for their mode and facing, a
@@ -188,7 +190,7 @@ export class EnemyView {
       drawEnemyBar(this.scene, d.bar, e, top);
       if (d.champion) this.drawChampion(d.champion, e, bottom, top, now);
       d.waveShaded = drawTelegraph(d.telegraph, e);
-      drawHollowsArt(d.hollows, d.sprite, e, def, sim, now);
+      drawHollowsArt(d.hollows, d.sprite, e, def, sim, now, d.art ?? STILL);
       if (d.overlay && e.enemyId === RESIN.enemyId) drawResin(d.overlay, e, bottom, view, now);
       if (d.overlay && e.enemyId === CORE.enemyId) drawCore(d.overlay, e, bottom, view, now);
       if (d.overlay && def.kind === 'bulwark') drawSeam(d.overlay, e, bottom, view, now);
