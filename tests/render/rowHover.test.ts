@@ -67,10 +67,13 @@ function fakeScene() {
   const scene = {
     events: { emit: () => true },
     tweens: {
-      add(config: { targets: FakeImage; alpha: number; duration: number; onComplete?: () => void }) {
-        const t: FakeTween = { target: config.targets, from: config.targets.alpha, to: config.alpha, duration: config.duration, elapsed: 0, onComplete: config.onComplete, dead: false };
+      add(config: { targets: FakeImage; alpha: number | { from: number; to: number }; duration: number; onComplete?: () => void }) {
+        // As Phaser 4.2.1 does: a seek resets a property tween to its start value, which a bare `to` leaves unset (read
+        // as 0), so only a named `from` survives the seek RowHover makes.
+        const [from, to] = typeof config.alpha === 'number' ? [0, config.alpha] : [config.alpha.from, config.alpha.to];
+        const t: FakeTween = { target: config.targets, from, to, duration: config.duration, elapsed: 0, onComplete: config.onComplete, dead: false };
         tweens.push(t);
-        return { seek: () => undefined, stop: () => (t.dead = true) };
+        return { seek: () => void (t.target.alpha = t.from), stop: () => (t.dead = true) };
       },
       killTweensOf(target: FakeImage) {
         for (const t of tweens) if (t.target === target) t.dead = true;
