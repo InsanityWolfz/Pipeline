@@ -89,8 +89,8 @@ export const overshoot = (x: number, s: number = M.brace.overshoot): number => {
   return 1 + (s + 1) * t * t * t + s * t * t;
 };
 
-/** Stride radians per world px: the strafe steps twice as often at half the stride, so its feet stay planted too. */
-export const strideRate = (firing: boolean): number => M.run.radPerPx / (firing ? M.strafe.stride : 1);
+/** Stride radians per world px, walking or strafing alike (075.13: the strafe no longer steps faster than the walk). */
+export const strideRate = (): number => M.run.radPerPx;
 
 /** The barrel's spin rate (0..1 of full) a frame on: up over `upFrames` while firing, down over `downFrames` after. */
 export const nextSpinRate = (rate: number, firing: boolean): number =>

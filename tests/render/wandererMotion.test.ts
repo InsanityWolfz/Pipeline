@@ -3,8 +3,8 @@ import { WANDERER } from '../../src/data/art/wanderer';
 import { WANDERER_MOTION as M } from '../../src/data/art/wandererMotion';
 import { SHAKE_ON } from '../../src/data/juice';
 import { PLAYER_HIT_FX } from '../../src/data/assets';
-import { ROLL_TICKS } from '../../src/data/player';
-import { HALF_STEP, legAt } from '../../src/render/vector/wandererGait';
+import { legAt } from '../../src/render/vector/wandererGait';
+import { FIRING_WALK_MULTIPLIER, ROLL_TICKS, WALK_SPEED } from '../../src/data/player';
 import { braceDip, nextSpinRate, recoil, STILL, strideRate, wandererAnim, wandererMotion, type WandererClocks } from '../../src/render/vector/wandererMotion';
 
 // 075: the wanderer's motion is a pure function of clocks, sampled at fixed times here as the contact sheet does.
@@ -15,26 +15,40 @@ const TAU = Math.PI * 2;
 const steps = (n: number) => Array.from({ length: n }, (_, i) => (i * TAU) / n);
 
 describe('the run (075)', () => {
-  it('keys the stride to distance: a planted foot moves back exactly as far as the body moves on', () => {
-    const rate = strideRate(false);
-    expect(rate).toBe(0.32);
-    // Through the near foot's stance (phase 0..π), its world x plus the distance walked stays put.
-    for (const firing of [false, true]) {
-      const r = strideRate(firing);
-      const world = (phase: number) => {
-        const p = running(phase, firing ? { firing: 30 } : {});
-        return p.feet.near.x * (1 + p.squash) * WANDERER.scale + phase / r;
-      };
-      const start = world(0.1);
-      for (const ph of [0.5, 1, 1.5, 2, 2.5, 3]) expect(world(ph), `firing ${firing}, phase ${ph}`).toBeCloseTo(start, 1);
+  // Look-and-feel guards (Shaun, playtest 2026-10-28: "the walking animation is abysmal. He's bouncing along like a
+  // crazy person. He's taking a million steps a second."). At WALK_SPEED the stride took about 12 steps a second and
+  // bobbed every one; these keep it a calm jog.
+  it('takes 3 to 4.5 steps a second at walk speed, and strafing while firing is no faster', () => {
+    const stepsPerSecond = (pxPerSecond: number) => (pxPerSecond * strideRate()) / Math.PI;
+    expect(stepsPerSecond(WALK_SPEED)).toBeGreaterThanOrEqual(3);
+    expect(stepsPerSecond(WALK_SPEED)).toBeLessThanOrEqual(4.5);
+    expect(stepsPerSecond(WALK_SPEED * FIRING_WALK_MULTIPLIER)).toBeLessThanOrEqual(stepsPerSecond(WALK_SPEED));
+  });
+
+  it('bobs at most 0.6 world px a step, squashing and stretching gently, the tank lagging at most 0.5 px', () => {
+    for (const extra of [{}, { firing: 30 }]) {
+      const cycle = steps(128).map((ph) => running(ph, extra));
+      const crouch = cycle.map((p) => p.crouch);
+      expect((Math.max(...crouch) - Math.min(...crouch)) * WANDERER.scale).toBeLessThanOrEqual(0.6);
+      expect(Math.max(...cycle.map((p) => Math.abs(p.squash)))).toBeLessThanOrEqual(0.015 + 1e-9);
+      const tank = cycle.map((p) => p.tank.bob);
+      expect((Math.max(...tank) - Math.min(...tank)) * WANDERER.scale).toBeLessThanOrEqual(0.5);
     }
-    expect(HALF_STEP * 2 * WANDERER.scale).toBeCloseTo(Math.PI / 0.32, 5);
+  });
+
+  it('sweeps the planted foot back steadily through its stance', () => {
+    const xs = [0.1, 0.6, 1.1, 1.6, 2.1, 2.6, 3.0].map((ph) => {
+      const p = running(ph);
+      return p.feet.near.x * (1 + p.squash);
+    });
+    for (let i = 1; i < xs.length; i++) expect(xs[i] ?? 0).toBeLessThan(xs[i - 1] ?? 0);
+    expect((xs[0] ?? 0) - (xs.at(-1) ?? 0)).toBeGreaterThan(M.run.reach);
   });
 
   it('lifts the swinging foot, kicks it back, and bends the passing knee', () => {
     const swing = steps(32).map((ph) => running(ph + Math.PI));
-    expect(Math.min(...swing.map((p) => p.feet.near.y))).toBeLessThan(-2.5);
-    expect(Math.min(...swing.map((p) => p.feet.near.x))).toBeLessThan(-HALF_STEP - 1);
+    expect(Math.min(...swing.map((p) => p.feet.near.y))).toBeLessThan(-1.5);
+    expect(Math.min(...swing.map((p) => p.feet.near.x))).toBeLessThan(-M.run.reach - 1);
   });
 
   it('bobs the body lowest just after each contact, squashing there and stretching at passing', () => {
@@ -67,12 +81,10 @@ describe('the run (075)', () => {
     expect(Math.max(...cycle.map((c) => c.p.tank.squash))).toBeCloseTo(M.tank.squash, 2);
   });
 
-  it('strafes while firing at half the stride and bob, with no lean into the run', () => {
-    const runLift = Math.min(...steps(32).map((ph) => running(ph).feet.near.y));
-    const strafe = steps(32).map((ph) => running(ph, { firing: 30 }));
-    expect(Math.min(...strafe.map((p) => p.feet.near.y))).toBeGreaterThan(runLift * 0.75);
+  it('strafes while firing at a shorter stride and a smaller bob, with no lean into the run', () => {
     const reach = (ps: { feet: { near: { x: number } } }[]) => Math.max(...ps.map((p) => p.feet.near.x)) - Math.min(...ps.map((p) => p.feet.near.x));
-    expect(reach(strafe)).toBeLessThan(reach(steps(32).map((ph) => running(ph))) * 0.6);
+    const strafe = steps(32).map((ph) => running(ph, { firing: 30 }));
+    expect(reach(strafe)).toBeLessThan(reach(steps(32).map((ph) => running(ph))) * (M.strafe.stride + 0.1));
     expect(running(1, { firing: 30 }).lean).toBeCloseTo(M.brace.lean, 1);
     expect(running(1).lean).toBeCloseTo(M.run.lean, 5);
   });
@@ -80,7 +92,7 @@ describe('the run (075)', () => {
   it('settles once as the stride ends', () => {
     // At a stride phase where the bob's own squash is nothing, so only the settle shows.
     const s = [0, 2, 4, 6, 8, 12].map((t) => at({ stopped: t, stride: M.run.lag + Math.PI / 4, ms: M.idle.breathMs / 4 }).squash);
-    expect(Math.max(...s)).toBeGreaterThan(0.02);
+    expect(Math.max(...s)).toBeGreaterThan(M.stop.squash * 0.6);
     expect(Math.max(...s)).toBeLessThanOrEqual(M.stop.squash + 1e-9);
     expect(s.at(-1)).toBeCloseTo(at({ ms: M.idle.breathMs / 4 }).squash, 5);
   });
@@ -200,12 +212,12 @@ describe('idle life (075)', () => {
 
   it('keeps the area under a squash, with the feet planted where the stride puts them', () => {
     // A stance frame with a real squash: once squashed about the feet, each foot lands on the stride's own place.
-    for (const ph of [0.2, 0.4, 0.6, 2.9]) {
+    for (const ph of [0.2, 0.4, 0.6, Math.PI + 0.4]) {
       const s = running(ph);
       expect(Math.abs(s.squash), `phase ${ph}`).toBeGreaterThan(0.005);
       expect((1 + s.squash) * (1 - s.squash)).toBeGreaterThan(0.99);
-      expect(s.feet.near.x * (1 + s.squash), `phase ${ph}`).toBeCloseTo(legAt(ph, HALF_STEP).x, 5);
-      expect(s.feet.far.x * (1 + s.squash), `phase ${ph}`).toBeCloseTo(legAt(ph + Math.PI, HALF_STEP).x, 5);
+      expect(s.feet.near.x * (1 + s.squash), `phase ${ph}`).toBeCloseTo(legAt(ph, M.run.reach).x, 5);
+      expect(s.feet.far.x * (1 + s.squash), `phase ${ph}`).toBeCloseTo(legAt(ph + Math.PI, M.run.reach).x, 5);
     }
   });
 

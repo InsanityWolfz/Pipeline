@@ -116,7 +116,8 @@ describe('the wanderer motion numbers (075)', () => {
     expect(M.roll.turnEnd).toBeLessThan(ROLL_TICKS);
     expect(M.ko.out).toBeLessThan(DYING_TICKS);
     expect(M.ko.flat).toBe(36);
-    expect(M.run.radPerPx).toBe(0.32);
+    // 075.13 (Shaun, 2026-10-28): slowed from the spec's starting 0.32 to a calm jog.
+    expect(M.run.radPerPx).toBeCloseTo(Math.PI / 32, 9);
     expect(M.cape.run).toBe(0.35);
     expect(M.spin).toMatchObject({ upFrames: 15, downFrames: 30 });
     expect(M.flashFrames).toBe(3);
