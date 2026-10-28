@@ -157,6 +157,10 @@ Shaun follows the work from his phone, so sessions keep him informed without him
 
 **Saves.** Don't preserve old saves (Shaun, 2026-10-20). A change that breaks the save format bumps `SAVE_VERSION` with no migration; an older save reads as too old and the player starts over.
 
+**Usage (Shaun, 2026-10-28: "one at a time, lighter").** Run one builder agent at a time, never several in parallel. A separate reviewer agent only for specs that change gameplay or the sim; for visual-only specs the builder's motion check plus the main session's own look at the shots is the review. Motion checks are one short strip per moving thing, not sweeps. Wrapups, merges and small fixes are done by the main session itself, without an agent. Stop an agent that keeps re-reporting while it waits on CI, and watch CI from the main session instead (`gh api repos/InsanityWolfz/Pipeline/commits/<sha>/check-runs`, REST only; GraphQL is blocked).
+
+**Stacked art branches.** When several unmerged specs build on each other, merge them all into the top branch, check once, and merge that one PR: GitHub marks every PR whose head it contains as merged (done for 072–081 on 2026-10-28).
+
 **While a builder works.** Never edit files a builder is changing. If the stop hook reports the builder's in-progress failures, wait with one bounded loop (`timeout 570 bash -c 'until npm run check ...; do sleep 30; done'`) rather than replying to each report.
 
 ## Agents, commands and hooks
