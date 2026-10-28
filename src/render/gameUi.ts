@@ -48,10 +48,12 @@ export function gameUi(g: GameScene): GameUiState {
     swooshes: g.effects?.swooshes ?? 0,
     ...(g.tutorial?.state ?? NO_TUTORIAL_UI),
     // 042: the camera locks to the player: its centre, and the player's sprite point.
-    // 046: `fading` while a door's fade runs, so screenshots can wait it out on state.
-    camera: { x: main?.centerX ?? 0, y: main?.centerY ?? 0, player: { x: g.playerView?.sprite.x ?? 0, y: g.playerView?.sprite.y ?? 0 }, fading: g.cameras?.main?.fadeEffect.isRunning ?? false, zoom: worldZoom(g) },
+    // 046: `fading` while a door's fade runs, so screenshots can wait it out on state. 075: `shaking` while a shake runs.
+    camera: { x: main?.centerX ?? 0, y: main?.centerY ?? 0, player: { x: g.playerView?.sprite.x ?? 0, y: g.playerView?.sprite.y ?? 0 }, fading: g.cameras?.main?.fadeEffect.isRunning ?? false, zoom: worldZoom(g), shaking: g.cameras?.main?.shakeEffect.isRunning ?? false },
     // 065: the slow's wind curls round the player.
     slowSwirl: g.playerView?.swirling ?? false,
+    // 075: the wanderer's view, animation, scheme, trim and squash, hood, drawn bounds and draw time.
+    player: g.playerView?.ui ?? null,
     // 070: the player's silhouette shows (a prop in front hides them).
     silhouette: g.silhouette?.shown ?? false,
     hud: g.hud?.bottom ?? null,

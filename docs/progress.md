@@ -2,6 +2,22 @@
 
 Newest entry first. Entries before 050 are in docs/progress-archive.md.
 
+## 2026-10-27: 075 The wanderer redesign
+**Changed:** on `claude/075-wanderer-redesign` (InsanityWolfz/Pipeline#92), art pass 2 of 8, from Shaun's art interview (docs/brainstorm/2026-10-27-art-interview.md; plan docs/plans/075-wanderer-redesign.md):
+- the wanderer is now an arcane ranger: a pointed hood with the faceless cyan glow, a knee-length cape, a ley-etched jerkin, bracers, a rune strap, and the minigun tube, hose and brass tank kept; soft gradients, a rim light and the thin ink outline;
+- the default colours are "ley cobalt"; `?scheme=rust` and `?scheme=bone` show the alternatives in a preview;
+- snappy animation: a real run cycle and braced strafe, firing recoil with barrel spin, a muzzle flash and hose pulse, a somersault roll, a hit snap-back, a KO, idle breathing and cape sway; no screen shake;
+- the cape's hem, hood edge and throat gem show the rarity of the best armour worn (`wornRarity`, sim); the old light/heavy tint is gone.
+
+`SAVE_VERSION` stays 22. Reviewed: three blocking findings fixed (a black review shot; the no-shake check missed rolls and hits; poses copied sim timings instead of reading them), plus per-frame allocations removed and the sleeves darkened. `npm run check` 2643 tests; CI green. Raised for Shaun: 075.1–075.12.
+
+**Next:** Shaun's playtest; his OK on the colour scheme and 075.2, 075.3, 075.10–075.12; "merge 92".
+
+**Notes:**
+- The region review shots show today's daylight, not 074's moods; retake them on whichever of 074 and 075 merges second (075.1).
+- After Shaun's first look (2026-10-28: "the walking animation is abysmal"): the walk ran at 12.2 steps a second with a 1 px hop and squash on every step; now 3.75 steps a second, a 0.4 px bob, strafing no faster, guarded by tests; a rule in .claude/rules/render.md and the reviewer's checklist now has motion judged in motion.
+- Shots spawn 12 px from the feet box's centre, while the drawn muzzle sits about 26 px forward and 19 px up; older than 075, more visible with the flash (075.10).
+
 ## 2026-10-27: 074 Light and region moods
 **Changed:** on `claude/074-light-and-moods` (InsanityWolfz/Pipeline#91), art pass 1 of 8, from Shaun's art interview and his pick of the "pushed vector, ley light, a mood per region" direction (docs/brainstorm/2026-10-27-art-interview.md, docs/art/style-test-2.html; plan docs/plans/074-light-and-moods.md):
 - a mood per region as data: Region 1 stays sunny; the Hollows dusky (`hollow` 0.7, `hollow-dark` fog); the Emberworks rust-dark with ash smoke and a flame wash; the Stormcrown dark (`storm-dark` 0.85) with fog and lightning flashes that obey the Flashes setting;

@@ -318,3 +318,8 @@ Each plan's build notes hold the detail; these are the lasting technical choices
   - Lighting is render-only and never feeds the sim: region and ring moods, light sources and quality tiers are data (`src/data`), drawn by a lighting layer in render.
   - Characters sit in a never-darkened layer and take only a light's catch, so enemies and telegraphs stay readable in every mood.
   - Lights reach only what's near them: ground is lit in 160 px squares and props one by one only where a light reaches, which keeps draw calls low on High.
+
+- **075 the wanderer redesign:**
+  - What the body shows of gear is a sim fact (`wornRarity`, the highest rarity worn), read by render; the rig never decides rarity.
+  - Pose timings read the sim's own durations (`ROLL_TICKS`, `PLAYER_HIT_FX.poseTicks`); every other motion number lives in `WANDERER_MOTION`, so a timing change can't leave the art out of step.
+  - Rig parts are baked to textures at boot and cached per view, so drawing allocates nothing per frame.

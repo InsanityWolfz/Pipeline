@@ -21,7 +21,8 @@ import { GroundItemView } from './GroundItemView';
 import { HoverView } from './HoverView';
 import { HudView } from './HudView';
 import { NodeView } from './NodeView';
-import { bodyLook, PlayerView } from './PlayerView';
+import { PlayerView } from './PlayerView';
+import { wornRarity } from '../sim/worn';
 import { SiteMenus } from './SiteMenus';
 import { SiteView } from './SiteView';
 import { WakeView } from './WakeView';
@@ -284,7 +285,7 @@ export class GameScene extends Scene {
     this.groundItemView?.update(inRoom(sim.groundItems, shown), picked, sim.player, sim, catches);
     this.enemyView?.update(inRoom(sim.enemies, shown), sim, catches);
     // Through a door's fade the player is already in the next room; hide them until it shows.
-    this.playerView?.update(sim.player, sim.tube, sim.link, bodyLook(sim), sim.hasTube, shown === sim.roomId);
+    this.playerView?.update(sim.player, sim.tube, sim.link, wornRarity(sim), sim.hasTube, sim.tick, shown === sim.roomId);
     if (this.playerView) this.silhouette?.update(this.playerView.sprite, shown === sim.roomId && sim.player.dying === 0);
     if (this.playerView && shown === sim.roomId) catches?.offer(this.playerView.sprite, sim.player.x, sim.player.y, 'player', 0);
     catches?.end();
