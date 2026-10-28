@@ -11,6 +11,9 @@ const note = (page: Page) => page.evaluate(() => window.__GAME__?.ui().flow.note
 const lastNote = (page: Page) => page.evaluate(() => JSON.parse(localStorage.getItem('pipeline.feedback') ?? '[]').at(-1));
 
 test('F in play: typing reaches the note, not the game; the note keeps a snapshot of getState()', async ({ page }) => {
+  // Real keys, one at a time, each waiting for a frame: on a loaded two-core runner with the art pass in, about 350 ms a
+  // key, which ran this test past its 30 s limit (fix-e2e-wallclock). It gets the slow tests' time; it checks the same.
+  test.slow();
   await boot(page, '?start=field');
   const before = await page.evaluate(() => window.__GAME__?.sound());
   await page.keyboard.press('f');
