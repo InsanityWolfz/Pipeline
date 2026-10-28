@@ -12,6 +12,7 @@ import { NO_BLUEPRINT_UI } from './BlueprintUi';
 import type { GameUiState } from './testHook';
 import { NO_LIGHTING } from './lighting/LightingView';
 import { NO_WEATHER, NO_WORLD } from './world/worldShown';
+import { bakeReport } from './vector/textures';
 
 // What a game scene shows, for the test hook's ui() (split from GameScene in 042). Every view may be missing (before
 // the scene is created, or on the title's blank), so each falls back to its empty value.
@@ -41,7 +42,7 @@ export function gameUi(g: GameScene): GameUiState {
     nodeGlow: g.nodeView?.glowing ?? [],
     shakes: [...(g.feel?.juice.shakes ?? [])],
     burnNumbers: g.feel?.juice.burnNumbers ?? 0,
-    particles: g.feel?.juice.particles.count ?? 0,
+    particles: { live: (g.feel?.juice.particles.count ?? 0) + (g.worldLife?.weatherCount ?? 0), deathMotes: g.feel?.juice.particles.deathMotes ?? 0, thrown: g.feel?.juice.particles.motesThrown ?? 0, dissolving: g.effects?.dissolves.count ?? 0 },
     cursor: g.cursorView?.state ?? null,
     sliding: g.groundItemView?.sliding ?? 0,
     groundItems: g.groundItemView?.shown ?? [],
@@ -49,10 +50,12 @@ export function gameUi(g: GameScene): GameUiState {
     swooshes: g.effects?.swooshes ?? 0,
     ...(g.tutorial?.state ?? NO_TUTORIAL_UI),
     // 042: the camera locks to the player: its centre, and the player's sprite point.
-    // 046: `fading` while a door's fade runs, so screenshots can wait it out on state.
-    camera: { x: main?.centerX ?? 0, y: main?.centerY ?? 0, player: { x: g.playerView?.sprite.x ?? 0, y: g.playerView?.sprite.y ?? 0 }, fading: g.cameras?.main?.fadeEffect.isRunning ?? false, zoom: worldZoom(g) },
+    // 046: `fading` while a door's fade runs, so screenshots can wait it out on state. 075: `shaking` while a shake runs.
+    camera: { x: main?.centerX ?? 0, y: main?.centerY ?? 0, player: { x: g.playerView?.sprite.x ?? 0, y: g.playerView?.sprite.y ?? 0 }, fading: g.cameras?.main?.fadeEffect.isRunning ?? false, zoom: worldZoom(g), shaking: g.cameras?.main?.shakeEffect.isRunning ?? false },
     // 065: the slow's wind curls round the player.
     slowSwirl: g.playerView?.swirling ?? false,
+    // 075: the wanderer's view, animation, scheme, trim and squash, hood, drawn bounds and draw time.
+    player: g.playerView?.ui ?? null,
     // 070: the player's silhouette shows (a prop in front hides them).
     silhouette: g.silhouette?.shown ?? false,
     hud: g.hud?.bottom ?? null,
@@ -69,5 +72,6 @@ export function gameUi(g: GameScene): GameUiState {
     lighting: g.lighting?.shown ?? NO_LIGHTING,
     world: g.worldLife?.world ?? NO_WORLD,
     weather: g.worldLife?.weatherShown ?? NO_WEATHER,
+    vectorBake: { ...bakeReport() },
   };
 }

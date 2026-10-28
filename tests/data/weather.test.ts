@@ -5,6 +5,7 @@ import { paletteHex } from '../../src/data/palette';
 import { QUALITY_TIERS } from '../../src/data/settings';
 import { WEATHER, WEATHER_BUDGET, WEATHER_CAP, WEATHER_LIGHTNING } from '../../src/data/weather';
 import { DEPTHS } from '../../src/data/assets';
+import { DEATH_MOTES, PARTICLE_BUDGET } from '../../src/data/juice';
 
 // 077: each region's weather and the ambient motion as data: layers in palette ids, each tier's counts within the
 // cap, the cap leaving 076's death motes their room in the shared budget; the wind, sway, ripples and ley flow.
@@ -40,7 +41,9 @@ describe('weather (077)', () => {
     const left = Object.fromEntries(QUALITY_TIERS.map((q) => [q, WEATHER_BUDGET.particles[q] - WEATHER_BUDGET.deathMotes[q] - WEATHER_CAP[q]]));
     expect(left).toEqual({ low: 50, medium: 80, high: 140 });
     // 076's numbers (its spec's PARTICLE_BUDGET and live death-mote cap), mirrored until it merges.
-    expect(WEATHER_BUDGET).toEqual({ particles: { low: 150, medium: 300, high: 500 }, deathMotes: { low: 60, medium: 120, high: 200 } });
+    // 076 is in: the budget reads its constants (no copy).
+    expect(WEATHER_BUDGET.particles).toBe(PARTICLE_BUDGET);
+    expect(WEATHER_BUDGET.deathMotes).toBe(DEATH_MOTES.liveCap);
   });
 
   it('times weather lightning every 10–22 s, never near a storm rod, at least 6 tiles from the player', () => {

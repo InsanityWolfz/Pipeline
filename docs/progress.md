@@ -18,6 +18,22 @@ No sim change; `SAVE_VERSION` stays 22. Reviewed, including a motion check at re
 - The shared particle budget copies 076's numbers until 076 merges; 078 turns it into one ledger.
 - `tests/e2e/feedback.spec.ts` "F in play" sits near its 30 s limit on a loaded runner (typing about 350 ms a key); older than 077, worth a fix-track change.
 
+## 2026-10-28: 076 Enemy and boss polish
+**Changed:** on `claude/076-enemy-polish` (InsanityWolfz/Pipeline#93, stacked on 074 and 075), art pass 3 of 8, from Shaun's art interview (plan docs/plans/076-enemy-polish.md):
+- all 19 rigs (15 enemies, 4 bosses) redrawn in a family look per region: Mossbound ruins (Region 1), Quarry constructs (the Hollows), Forge constructs (the Emberworks), Storm-works (the Stormcrown); soft gradients, a rim light per family, the thin ink outline; boxes and hitboxes unchanged;
+- wind-ups gather, coil and peak by the sim's own wind-up progress (the peak trembles; the camera never moves), with sim timing unchanged and tested tick for tick;
+- hit reactions: a flinch on every hit, a stagger at 40% of max health in one tick; bosses only flinch, nothing reacts mid-wind-up;
+- deaths dissolve into ley motes in the family's colour (600 ms, bosses 1.4 s) under per-death and live caps that scale with Graphics quality;
+- every walk calmed after Shaun's note on 075's wanderer: bob halved, squash 0.015 at most, guarded by tests.
+
+`SAVE_VERSION` stays 22. Reviewed, including a motion check: three blocking findings fixed (a release stretch cancelled the slams' impact squash; the Forgewright's death went over the mote cap; a fight-hash baseline wasn't main's), plus beams starting from the shown frame, staggers counted per sim tick and no per-frame allocation. `npm run check` 2780 tests; CI green. Raised for Shaun: 076.1–076.12; 076.10 and 076.11 are for his eye.
+
+**Next:** Shaun's playtest after 074 and 075; "merge 93" after 91 and 92.
+
+**Notes:**
+- Boot bakes more frames: 1.13 s against main's 0.63 s at 2×, 1.92 s against 1.08 s at 3×; boot to ready 3.8 s against 3.1 s.
+- This machine draws 8–13 frames a second under load, so real-time motion strips have 11–19 cells a second.
+
 ## 2026-10-27: 074 Light and region moods
 **Changed:** on `claude/074-light-and-moods` (InsanityWolfz/Pipeline#91), art pass 1 of 8, from Shaun's art interview and his pick of the "pushed vector, ley light, a mood per region" direction (docs/brainstorm/2026-10-27-art-interview.md, docs/art/style-test-2.html; plan docs/plans/074-light-and-moods.md):
 - a mood per region as data: Region 1 stays sunny; the Hollows dusky (`hollow` 0.7, `hollow-dark` fog); the Emberworks rust-dark with ash smoke and a flame wash; the Stormcrown dark (`storm-dark` 0.85) with fog and lightning flashes that obey the Flashes setting;
@@ -33,6 +49,22 @@ No sim change; `SAVE_VERSION` stays 22. Reviewed, including a motion check at re
 **Notes:**
 - Frame times (headless software renderer, loaded machine): a Stormcrown fight 127 / 123 / 385 ms on Low / Medium / High; Low costs no more than the moods off (0.97×). High lights only what a light reaches: 29 draw calls a frame, against 218 before.
 - The sim runs fixed ticks, but under about 6 fps (`MAX_TICKS_PER_FRAME` 10) the game slows rather than skip; true on main too.
+
+## 2026-10-27: 075 The wanderer redesign
+**Changed:** on `claude/075-wanderer-redesign` (InsanityWolfz/Pipeline#92), art pass 2 of 8, from Shaun's art interview (docs/brainstorm/2026-10-27-art-interview.md; plan docs/plans/075-wanderer-redesign.md):
+- the wanderer is now an arcane ranger: a pointed hood with the faceless cyan glow, a knee-length cape, a ley-etched jerkin, bracers, a rune strap, and the minigun tube, hose and brass tank kept; soft gradients, a rim light and the thin ink outline;
+- the default colours are "ley cobalt"; `?scheme=rust` and `?scheme=bone` show the alternatives in a preview;
+- snappy animation: a real run cycle and braced strafe, firing recoil with barrel spin, a muzzle flash and hose pulse, a somersault roll, a hit snap-back, a KO, idle breathing and cape sway; no screen shake;
+- the cape's hem, hood edge and throat gem show the rarity of the best armour worn (`wornRarity`, sim); the old light/heavy tint is gone.
+
+`SAVE_VERSION` stays 22. Reviewed: three blocking findings fixed (a black review shot; the no-shake check missed rolls and hits; poses copied sim timings instead of reading them), plus per-frame allocations removed and the sleeves darkened. `npm run check` 2643 tests; CI green. Raised for Shaun: 075.1–075.12.
+
+**Next:** Shaun's playtest; his OK on the colour scheme and 075.2, 075.3, 075.10–075.12; "merge 92".
+
+**Notes:**
+- The region review shots show today's daylight, not 074's moods; retake them on whichever of 074 and 075 merges second (075.1).
+- After Shaun's first look (2026-10-28: "the walking animation is abysmal"): the walk ran at 12.2 steps a second with a 1 px hop and squash on every step; now 3.75 steps a second, a 0.4 px bob, strafing no faster, guarded by tests; a rule in .claude/rules/render.md and the reviewer's checklist now has motion judged in motion.
+- Shots spawn 12 px from the feet box's centre, while the drawn muzzle sits about 26 px forward and 19 px up; older than 075, more visible with the flash (075.10).
 
 ## 2026-10-26: 070 Handling and clarity
 **Changed:** on `claude/070-handling-clarity` (InsanityWolfz/Pipeline#84), from the agent-playtest proposals Shaun picked (plan docs/plans/070-handling-clarity.md, six slices):

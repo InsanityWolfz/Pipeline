@@ -11,7 +11,7 @@ export const CONDUCTOR_SPRITES = {
 } as const;
 
 /** Its animation set (joined into ENEMY_ANIMS): it gathers before a blink, raises its staff to call the storm, and spreads its arms to run the rod chain. */
-export const CONDUCTOR_ANIMS = { conductor: enemyAnims('conductor', true, ['blink', 'call', 'chain']) } as const;
+export const CONDUCTOR_ANIMS = { conductor: enemyAnims('conductor', true, ['blink', 'call', 'chain'], 1, true) } as const;
 
 export const CONDUCTOR_LOOK = {
   /** A rod shows `regrowing` over the last `regrowingTicks` of its regrowth; its small bar shows once it's hurt, `w` × `h` px, `gap` px over its box. */

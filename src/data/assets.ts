@@ -145,8 +145,8 @@ export type { EnemyAnim, EnemyAnims, ExtraPose } from './enemyAnims';
 export const ENEMY_ANIMS: Readonly<Record<string, EnemyAnims>> = {
   husk: enemyAnims('husk'),
   wisp: enemyAnims('wisp'),
-  warden: enemyAnims('warden', true),
-  bulwark: enemyAnims('bulwark', true, ['turn', 'lob', 'throw', 'block', 'roar', 'brace', 'stomp']),
+  warden: enemyAnims('warden', true, [], 1, true),
+  bulwark: enemyAnims('bulwark', true, ['turn', 'lob', 'throw', 'block', 'roar', 'brace', 'stomp'], 1, true),
   ...HOLLOWS_ENEMY_ANIMS,
   ...FORGE_ANIMS,
   ...CONDUCTOR_ANIMS,
@@ -189,6 +189,12 @@ export const ENEMY_FX = {
   telegraphColor: 'rust',
   telegraphAlpha: 0.25,
   telegraphFillAlpha: 0.55,
+  /**
+   * 076: every ground telegraph's rim round its full extent, near-opaque `danger`, so it reads over sunlit grass as
+   * over slate; and the alpha its fill strengthens to by the wind-up's peak.
+   */
+  telegraphRim: { color: 'danger', width: 1.5, alpha: 0.9 },
+  telegraphFillPeak: 0.85,
   /** The Wisp's cast telegraph: a ley ring tightening on it and a faint line along its locked aim (009). */
   castColor: 'cyan',
   castRing: { from: 22, to: 10, width: 2, alphaFrom: 0.4 },
@@ -202,9 +208,6 @@ export const ENEMY_FX = {
    * `color`, with the shield icon (`w` x `h` px) `gap` px left of the bar, centred on it, `depth` over the world's UI.
    */
   immuneBar: { color: 'water', icon: { w: 7, h: 8, gap: 1, depth: 0.5 } },
-  /** A corpse lingers this long after its death animation, then fades over `corpseFadeMs`. */
-  corpseLingerMs: 600,
-  corpseFadeMs: 600,
 } as const;
 
 /**

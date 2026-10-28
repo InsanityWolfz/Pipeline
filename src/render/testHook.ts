@@ -35,8 +35,10 @@ import type { StormcrownShown } from './StormcrownView';
 import type { ArenaDoorShown } from './ArenaDoorView';
 import type { HollowsEnemiesShown } from './hollowsEnemyArt';
 import type { EnemyBarShown } from './enemyBar';
+import type { EnemyArtUi } from './EnemyView';
 import type { Legibility, LegibilityUi } from './Legibility';
 import type { SandboxPanelState } from './SandboxPanel';
+import type { PlayerPixels, PlayerUi } from './PlayerView';
 import type { LightingShown } from './lighting/LightingView';
 import type { Quality } from '../data/settings';
 import type { WeatherShown, WorldShown } from './world/worldShown';
@@ -102,6 +104,10 @@ export interface GameTestHook {
   keywords(): KeywordReport;
   /** 040: every summary the game can show (each round, talent, stage and gear piece), laid out as drawn: its rows (at most four), whether a line was cut, its size. */
   summaryRows(): ReturnType<Legibility['summaryRows']>;
+  /** 075: the wanderer's drawn box and hem colour, read from its texture (null on the title). */
+  wanderer(): PlayerPixels | null;
+  /** 075: holds the wanderer's idle clock (breath, sway, trim pulse and shimmer) at `ms`, or lets it run again with null, so a pixel check samples a still frame. */
+  wandererClock(ms: number | null): void;
 }
 
 /**
@@ -148,8 +154,8 @@ export interface UiState {
   /** 060: burn beats' small numbers shown since boot, and enemies drawn with flames on them now. */
   burnNumbers: number;
   enemyFlames: number;
-  /** Particles flying now (064). */
-  particles: number;
+  /** Particles flying now (064); 076: as `live`, with the death motes among them and the deaths dissolving; 077: `live` counts the weather too. */
+  particles: { live: number; deathMotes: number; thrown: number; dissolving: number };
   /** Which cursor shows (021: the menu pointer or the crosshair), its depth, and the highest depth of anything else. */
   cursor: CursorState | null;
   /** Picked-up items still sliding into the player (021). */
@@ -194,9 +200,11 @@ export interface UiState {
   objectiveTick: number;
   /** The centre of the world camera's view, world px (023: screenshots wait for it to settle on the player), and the player's sprite point it follows (042: locked to it). */
   /** 069: `zoom` is the world's zoom over the view (1, or build mode's 0.75 zoomed out). */
-  camera: { x: number; y: number; player: { x: number; y: number }; fading: boolean; zoom: number };
+  camera: { x: number; y: number; player: { x: number; y: number }; fading: boolean; zoom: number; shaking: boolean };
   /** 065: the slow's wind curls are drawn round the player. */
   slowSwirl: boolean;
+  /** 075: the wanderer drawn: view, animation, scheme, trim, squash, hood, draw time and tint. Null before the scene. */
+  player: PlayerUi | null;
   /** 070: the player shows as a silhouette (a ruin block, tree, the bench or a machine in front hides them). */
   silhouette: boolean;
   /** The bottom HUD as drawn (025), view px: the hotbar row (and whether it shows) and the tube slot with each unit's icon frame and text. */
@@ -232,6 +240,10 @@ export interface UiState {
   hollowsEnemies: HollowsEnemiesShown;
   /** 054: each drawn enemy's health bar: whether it shows, and whether it reads immune (blue, with the shield). */
   enemyBars: EnemyBarShown[];
+  /** 076: each drawn enemy's art: family, pose, wind-up phase, reaction, squash, the frame shown and the tremble. */
+  enemyArt: EnemyArtUi[];
+  /** 076: the boot's vector bake: wall ms, texture pages, frames and the enemy frames among them. */
+  vectorBake: { ms: number; pages: number; frames: number; enemyFrames: number };
   /** 032: the waystone's menu while open (two or more claimed pylons): each row's text and box, view px; else null. */
   waystone: { text: string; x: number; y: number; w: number; h: number }[] | null;
   /** 069: an intake entrance's purge menu while open: its row's text and box, view px; else null. */

@@ -1,6 +1,5 @@
 import type { GameObjects } from 'phaser';
 import { DEPTHS } from '../data/assets';
-import { IDLE_SPEED } from '../data/config';
 import { BULWARK_RIG, BULWARK_RUNES, BULWARK_SEAM } from '../data/art/bulwark';
 import { BULWARK } from '../data/bulwark';
 import { windupsOf } from '../sim/bulwarkPhases';
@@ -8,6 +7,7 @@ import { enemyDef } from '../data/enemies';
 import { HOLLOWS_LOOK } from '../data/hollowsAssets';
 import type { EnemyState } from '../sim/enemies';
 import { colorOf } from './color';
+import { fillAt, rimStyle } from './telegraphLook';
 import { drawCrackedCircle } from './crackedCircle';
 
 // How the Bulwark reads on screen (034), for EnemyView: its pose (the extras it has:
@@ -15,19 +15,6 @@ import { drawCrackedCircle } from './crackedCircle';
 // the gold halo of the core seam on its back whenever its back shows (the place to hit),
 // and its pound's red ground circle, filling through the wind-up in the Warden's style.
 // 041: its enraged look, its rear stomp's half-disc and its adds' rising circles.
-
-export type BulwarkPose = 'idle' | 'walk' | 'turn' | 'lob' | 'throw' | 'windup' | 'swipe' | 'recover' | 'hit' | 'block' | 'roar' | 'brace' | 'stomp';
-
-/** The pose for its mode (041: the roar, and the stomp's brace, stamp and recovery); `turned` says its shield turned since the last frame. */
-export function bulwarkPose(e: EnemyState, turned: boolean): BulwarkPose {
-  if (e.mode === 'lob' || e.mode === 'throw' || e.mode === 'windup' || e.mode === 'swipe' || e.mode === 'recover' || e.mode === 'roar' || e.mode === 'stomp') return e.mode;
-  if (e.mode === 'stomp-windup') return 'brace';
-  if (e.mode === 'stomp-recover') return 'recover';
-  if (e.blockFlash > 0) return 'block';
-  if (e.flash > 0) return 'hit';
-  if (Math.hypot(e.vx, e.vy) >= IDLE_SPEED) return 'walk';
-  return turned ? 'turn' : 'idle';
-}
 
 /**
  * The seam's gold halo on its back (side view: its back edge; from behind: its middle), pulsing; none face-on. Enraged
@@ -96,9 +83,12 @@ export function drawStomp(g: GameObjects.Graphics, e: EnemyState): void {
   g.fillStyle(color, P.alpha);
   g.slice(e.x, e.y, def.stomp.radius, angle - half, angle + half, false);
   g.fillPath();
-  g.fillStyle(color, P.fillAlpha);
+  g.fillStyle(color, fillAt(P.fillAlpha, progress));
   g.slice(e.x, e.y, def.stomp.radius * progress, angle - half, angle + half, false);
   g.fillPath();
+  rimStyle(g);
+  g.slice(e.x, e.y, def.stomp.radius, angle - half, angle + half, false);
+  g.strokePath();
 }
 
 /** Its back wave building (041.16): its rear arc shaded red (054) under ripples running out to the arc's edge as the wind-up runs. Whether it drew the shade, for `ui()`. */
@@ -114,9 +104,12 @@ export function drawWave(g: GameObjects.Graphics, e: EnemyState): boolean {
   g.fillStyle(color, W.shadeAlpha);
   g.slice(e.x, e.y, def.wave.radius, angle - half, angle + half, false);
   g.fillPath();
-  g.fillStyle(color, W.fillAlpha);
+  g.fillStyle(color, fillAt(W.fillAlpha, progress));
   g.slice(e.x, e.y, def.wave.radius * progress, angle - half, angle + half, false);
   g.fillPath();
+  rimStyle(g);
+  g.slice(e.x, e.y, def.wave.radius, angle - half, angle + half, false);
+  g.strokePath();
   for (let i = 0; i < W.rings; i++) {
     // Each ripple runs out ahead of the one before it; all lie on the edge as the wave breaks.
     const r = def.wave.radius * Math.min(1, progress * (1 + i / W.rings));
@@ -152,7 +145,8 @@ export function drawPound(g: GameObjects.Graphics, e: EnemyState): void {
   const progress = Math.min(1, e.modeTicks / windupsOf(e, def).pound);
   const color = colorOf(P.color);
   g.fillStyle(color, P.alpha).fillCircle(e.x, e.y, def.pound.radius);
-  g.fillStyle(color, P.fillAlpha).fillCircle(e.x, e.y, def.pound.radius * progress);
+  g.fillStyle(color, fillAt(P.fillAlpha, progress)).fillCircle(e.x, e.y, def.pound.radius * progress);
+  rimStyle(g).strokeCircle(e.x, e.y, def.pound.radius);
   // 041.12: a roll won't save from it, so it wears a second ring.
   if (def.pound.rollProof) {
     const R = HOLLOWS_LOOK.rollProof;

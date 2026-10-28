@@ -1,5 +1,6 @@
 import { CONDUCTOR_SPRITES } from '../conductorAssets';
-import { DEATH_POSES, type EnemyPart, type EnemyRigDef } from './enemyRig';
+import type { EnemyPart, EnemyRigDef } from './enemyRig';
+import { BRASS, glassInlay, litRect, rimOf, rivets, stormVein } from './enemyLook';
 import { ellipse, flat, line, path, rect, solid, type Shape, type VectorSprite } from './types';
 
 // The Conductor (064, draft for Shaun's review): a tall robed storm construct of the lost builders, its slate-violet
@@ -8,6 +9,11 @@ import { ellipse, flat, line, path, rect, solid, type Shape, type VectorSprite }
 // never quite touches). The six arena rods are its own sprites: standing (a tall iron rod, a forked brass crown, a
 // cyan rune course), broken (snapped off above its socket) and regrowing (the stump sprouting cyan light). Light
 // from the top left; world px round the feet.
+// 076: the Storm-works look: the slate-violet robe with a pale storm rim, its iron body and brass collar and crown
+// riveted; the crown's sparks are violet lightning, the staff carries a storm-glass head; its eyes and the robe's seam
+// stay ley cyan. The rods take the same look, their crown sparks violet. Each attack is a strip: the lash dips the
+// staff across its body, draws it far back with the robe swept, crackles; the call lowers the staff crouching, raises
+// it high overhead stretched, trembles; the chain draws its arms in, spreads them wide with the robe flared, trembles.
 
 const robe = { linear: [-20, -80, 20, -6] as const, stops: [{ at: 0, color: 'storm-light' }, { at: 0.5, color: 'storm' }, { at: 1, color: 'storm-dark' }] };
 const hood = { linear: [-10, -98, 10, -78] as const, stops: [{ at: 0, color: 'storm-light' }, { at: 1, color: 'storm-dark' }] };
@@ -19,7 +25,7 @@ const hem = (id: string, role: 'leg-back' | 'leg-front', x: number, fill: string
   id,
   role,
   pivot: [x, -20],
-  shapes: [path(`M ${x - 9} -24 L ${x + 9} -24 L ${x + 11} -6 Q ${x} -3 ${x - 11} -6 Z`, solid(fill)), line([x - 10, -7, x + 10, -7], 1, 'brass-dark')],
+  shapes: [path(`M ${x - 9} -24 L ${x + 9} -24 L ${x + 11} -6 Q ${x} -3 ${x - 11} -6 Z`, { fill: { linear: [x - 9, -24, x + 11, -4], stops: [{ at: 0, color: fill === 'storm' ? 'storm-light' : 'storm' }, { at: 1, color: 'storm-dark' }] }, outline: true, rim: rimOf('storm') }), line([x - 10, -7, x + 10, -7], 1, 'brass-dark')],
 });
 
 /** The robe and its iron body: a long slate-violet robe, a brass collar and belt, a cyan ley seam down its front. */
@@ -28,12 +34,17 @@ const body = (front: boolean): EnemyPart => ({
   role: 'body',
   pivot: [0, -48],
   shapes: [
-    path('M -14 -78 Q -20 -50 -19 -18 L 19 -18 Q 20 -50 14 -78 Q 0 -84 -14 -78 Z', { fill: robe, outline: true }),
+    path('M -14 -78 Q -20 -50 -19 -18 L 19 -18 Q 20 -50 14 -78 Q 0 -84 -14 -78 Z', { fill: robe, outline: true, rim: rimOf('storm') }),
     path('M 4 -80 Q 12 -50 10 -18 L 19 -18 Q 20 -50 14 -78 Z', flat({ id: 'storm-dark', alpha: 0.5 })),
-    rect(-15, -48, 30, 4, 1.5, solid('brass')),
+    path('M -12 -60 Q -14 -40 -13 -22 M 7 -64 Q 9 -42 8 -22', { stroke: { color: { id: 'storm-dark', alpha: 0.6 }, width: 0.9 } }),
+    litRect(-15, -48, 30, 4, 1.5, BRASS, 'storm'),
+    ...rivets([[-12, -46], [12, -46]], 0.8),
+    ...glassInlay(-8, -46, 1.6),
+    ...glassInlay(8, -46, 1.6),
     ellipse(0, -46, 2.2, 2.2, { fill: 'cyan', glow: { color: 'cyan', blur: 3 } }),
     ...(front ? [{ ...line([0, -76, 0, -50], 1, { id: 'cyan', alpha: 0.8 }), glow: { color: 'cyan', blur: 3 } }, { ...line([0, -43, 0, -20], 1, { id: 'cyan', alpha: 0.6 }), glow: { color: 'cyan', blur: 3 } }] : []),
-    path('M -16 -80 Q 0 -86 16 -80 L 13 -74 Q 0 -78 -13 -74 Z', { fill: 'brass', outline: true }),
+    path('M -16 -80 Q 0 -86 16 -80 L 13 -74 Q 0 -78 -13 -74 Z', { fill: { linear: [-16, -86, 16, -74], stops: [{ at: 0, color: 'brass-light' }, { at: 0.45, color: 'brass' }, { at: 1, color: 'brass-dark' }] }, outline: true }),
+    ...rivets([[-10, -78], [10, -78]], 0.7),
     ellipse(-8, -70, 4, 8, flat({ id: 'storm-pale', alpha: 0.25 })),
   ],
 });
@@ -44,7 +55,7 @@ const head = (face: boolean): EnemyPart => ({
   role: 'head',
   pivot: [0, -86],
   shapes: [
-    path('M -10 -78 Q -12 -92 0 -100 Q 12 -92 10 -78 Z', { fill: hood, outline: true }),
+    path('M -10 -78 Q -12 -92 0 -100 Q 12 -92 10 -78 Z', { fill: hood, outline: true, rim: rimOf('storm') }),
     ...(face ? [path('M -6 -80 Q -7 -90 0 -93 Q 7 -90 6 -80 Z', flat('ink'))] : []),
     line([-10, -79, 10, -79], 1.2, 'brass'),
   ],
@@ -54,6 +65,7 @@ const head = (face: boolean): EnemyPart => ({
 const eyes = (xs: readonly number[]): EnemyPart => ({
   id: 'eyes',
   role: 'glow',
+  follows: 'head',
   pivot: [0, -86],
   shapes: xs.map((x) => ellipse(x, -86, 1.4, 1, { fill: 'cyan-glow', glow: { color: 'cyan', blur: 4 } })),
 });
@@ -64,7 +76,7 @@ const arm = (from: readonly [number, number], to: readonly [number, number], mir
   role: 'arm-back',
   mirror,
   pivot: from,
-  shapes: [line([from[0], from[1], to[0], to[1]], 8, 'storm', true), ellipse(to[0], to[1] + 2, 3.6, 3.4, solid('iron-light'))],
+  shapes: [line([from[0], from[1], to[0], to[1]], 8, 'storm', true), line([from[0] - 1.6, from[1], to[0] - 1.6, to[1]], 1.6, { id: 'storm-light', alpha: 0.6 }), ellipse(to[0], to[1] + 2, 3.6, 3.4, { fill: { linear: [to[0] - 3, to[1] - 1, to[0] + 3, to[1] + 5], stops: [{ at: 0, color: 'iron-light' }, { at: 1, color: 'iron' }] }, outline: true })],
 });
 
 /** The staff: a sleeve and hand gripping an iron storm rod, its forked brass crown sparking cyan. */
@@ -77,12 +89,16 @@ const staff = (from: readonly [number, number], to: readonly [number, number], m
     pivot: from,
     shapes: [
       line([from[0], from[1], hx, hy], 8, 'storm', true),
+      line([from[0] - 1.6, from[1], hx - 1.6, hy], 1.6, { id: 'storm-light', alpha: 0.6 }),
       line([hx, hy + 22, hx, hy - 40], 2.6, 'iron', true),
+      line([hx - 0.6, hy + 20, hx - 0.6, hy - 38], 0.7, 'iron-light'),
       line([hx, hy - 40, hx - 5, hy - 50], 1.6, 'brass', true),
       line([hx, hy - 40, hx + 5, hy - 50], 1.6, 'brass', true),
-      line([hx, hy - 40, hx, hy - 52], 1.6, 'brass-light', true),
-      { ...ellipse(hx, hy - 52, 2.4, 2.4, { fill: 'cyan-glow' }), glow: { color: 'cyan', blur: 5 } },
-      ellipse(hx, hy + 2, 3.6, 3.4, solid('iron-light')),
+      line([hx, hy - 40, hx, hy - 50], 1.6, 'brass-light', true),
+      ...glassInlay(hx, hy - 52, 3),
+      ...stormVein([hx - 5, hy - 50, hx - 2, hy - 54, hx - 4, hy - 57], 0.5),
+      ...stormVein([hx + 5, hy - 50, hx + 3, hy - 55, hx + 6, hy - 58], 0.5),
+      ellipse(hx, hy + 2, 3.6, 3.4, { fill: { linear: [hx - 3, hy - 1, hx + 3, hy + 5], stops: [{ at: 0, color: 'iron-light' }, { at: 1, color: 'iron' }] }, outline: true }),
     ],
   };
 };
@@ -90,8 +106,13 @@ const staff = (from: readonly [number, number], to: readonly [number, number], m
 export const CONDUCTOR_RIG: EnemyRigDef = {
   id: 'conductor',
   scale: 1,
-  box: { size: [96, 140], anchor: [48, 130] },
+  box: { size: [136, 160], anchor: [68, 150] },
   hip: [0, -20],
+  tells: {
+    windup: { part: 'staff', at: { side: [16, -98], down: [-20, -98], up: [20, -98] } },
+    call: { part: 'staff', at: { side: [16, -98], down: [-20, -98], up: [20, -98] } },
+    chain: { part: 'staff', at: { side: [16, -46], down: [-20, -46], up: [20, -46] } },
+  },
   views: {
     // Facing right: the staff in front, the free arm behind.
     side: [ground, hem('hem-back', 'leg-back', -4, 'storm-dark'), arm([-4, -70], [-10, -46]), hem('hem-front', 'leg-front', 4, 'storm'), body(false), head(false), eyes([5]), staff([8, -70], [16, -46])],
@@ -109,38 +130,54 @@ export const CONDUCTOR_RIG: EnemyRigDef = {
       { step: -1, bob: -2, glow: 0.6 },
       { step: 0, bob: -3, glow: 0.6 },
     ],
-    // The arc lash: the staff drawn back, then whipped forward along the line.
-    windup: [{ armFront: -1.8, lean: -0.12, bob: -3, glow: 1 }],
+    // 076: the lash: the staff dipped across its body; drawn far back, the robe swept; crackling. Whipped forward.
+    windup: [
+      { armFront: 0.55, lean: 0.08, bob: -2, squash: 0.06, glow: 0.8 },
+      { armFront: -2.05, armBack: 0.3, lean: -0.22, bob: -3, squash: -0.06, glow: 1 },
+      { armFront: -2.3, armBack: 0.35, lean: -0.28, bob: -3, squash: -0.08, glow: 1 },
+    ],
     swipe: [
-      { armFront: 1.1, lean: 0.18, bob: -1, glow: 1 },
+      { armFront: 1.1, lean: 0.2, bob: -1, shift: 2, squash: -0.06, glow: 1 },
       { armFront: 1.2, lean: 0.2, bob: -1, glow: 1 },
     ],
     recover: [{ armFront: 0.6, lean: 0.1, bob: -2, glow: 0.4 }],
-    hit: [{ lean: -0.1, bob: -1 }],
+    // Flinch only: a snap of the hood.
+    hit: [{ lean: -0.1, head: -0.3, bob: -1, squash: 0.04 }],
     // Before a blink: it gathers, flickering, its eyes blazing (the vanish and the arrival are render's flare).
     blink: [
-      { bob: -5, scaleY: 1.04, alpha: 0.75, armFront: -0.6, armBack: -0.6, glow: 1 },
-      { bob: -4, scaleY: 1.02, alpha: 0.95, armFront: -0.5, armBack: -0.5, glow: 0.8 },
+      { bob: -5, squash: -0.04, alpha: 0.75, armFront: -0.6, armBack: -0.6, glow: 1 },
+      { bob: -4, squash: -0.02, alpha: 0.95, armFront: -0.5, armBack: -0.5, glow: 0.8 },
     ],
-    // The storm call: the staff raised high overhead.
-    call: [{ armFront: -2.8, armBack: -0.8, lean: -0.16, bob: -5, glow: 1 }],
-    // The rod chain: its arms spread wide, the staff out to one side.
-    chain: [{ armFront: -1.3, armBack: -1.3, bob: -4, scaleY: 1.03, glow: 1 }],
-    death: DEATH_POSES,
+    // The storm call: the staff lowered, crouching; raised high overhead, stretched; trembling.
+    call: [
+      { armFront: 0.45, sink: 2, bob: 0, squash: 0.12, glow: 0.8 },
+      { armFront: -2.85, armBack: -0.9, lean: -0.16, bob: -6, squash: -0.12, head: -0.2, glow: 1 },
+      { armFront: -3.05, armBack: -1, lean: -0.18, bob: -7, squash: -0.15, head: -0.25, glow: 1 },
+    ],
+    // The rod chain: arms drawn in; spread wide, the robe flared; trembling.
+    chain: [
+      { armFront: 0.35, armBack: 0.35, spread: -3, bob: -2, squash: -0.04, glow: 0.8 },
+      { armFront: -1.35, armBack: -1.35, spread: 4, bob: -4, squash: 0.08, glow: 1 },
+      { armFront: -1.5, armBack: -1.5, spread: 5, bob: -4.5, squash: 0.1, glow: 1 },
+    ],
+    // The staff falls and the crown's sparks die.
+    death: [{ armFront: 1.35, armBack: 0.4, head: 0.35, headLift: 2, bob: 0, squash: -0.06, lean: 0.12, glow: 0 }],
   },
 };
 
 /** An arena rod's socket: an iron collar on a slate block, its rune ring. */
 const SOCKET: Shape[] = [
   ellipse(0, 0, 11, 3.5, flat({ id: 'ink', alpha: 0.3 })),
-  rect(-7, -5, 14, 5, 1.5, { fill: { linear: [-7, -5, 7, 0], stops: [{ at: 0, color: 'storm-light' }, { at: 1, color: 'storm-dark' }] }, outline: true }),
+  rect(-7, -5, 14, 5, 1.5, { fill: { linear: [-7, -5, 7, 0], stops: [{ at: 0, color: 'storm-pale' }, { at: 0.45, color: 'storm-light' }, { at: 1, color: 'storm-dark' }] }, outline: true, rim: rimOf('storm') }),
+  ...rivets([[-5, -2.5], [5, -2.5]], 0.6),
   rect(-3.5, -8, 7, 4, 1, solid('iron-dark')),
 ];
 
 /** A rod's shaft from `top`, iron with a brass band and a cyan rune course, lit along its light side. */
 const shaft = (top: number): Shape[] => [
   rect(-2.6, top, 5.2, -8 - top, 1, { fill: { linear: [-2.6, 0, 2.6, 0], stops: [{ at: 0, color: 'iron-light' }, { at: 0.5, color: 'iron' }, { at: 1, color: 'iron-dark' }] }, outline: true }),
-  rect(-3.4, -24, 6.8, 3, 1, solid('brass')),
+  litRect(-3.4, -24, 6.8, 3, 1, BRASS, 'storm'),
+  ...glassInlay(0, -40, 1.6),
 ];
 
 const STANDING: Shape[] = [
@@ -150,7 +187,9 @@ const STANDING: Shape[] = [
   line([0, -60, -6, -70], 1.6, 'brass', true),
   line([0, -60, 6, -70], 1.6, 'brass', true),
   line([0, -60, 0, -72], 1.6, 'brass-light', true),
-  { ...ellipse(0, -72, 2, 2, { fill: 'cyan-glow' }), glow: { color: 'cyan', blur: 4 } },
+  { ...ellipse(0, -72, 2.2, 2.2, { fill: 'snow' }), glow: { color: 'storm-glow', blur: 5 } },
+  ...stormVein([-6, -70, -4, -74, -6, -77], 0.45),
+  ...stormVein([6, -70, 4, -75, 6, -77], 0.45),
 ];
 
 /** Snapped off above its socket: a jagged iron stump, its rune dark, the crown lying beside it. */

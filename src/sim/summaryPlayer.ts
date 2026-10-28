@@ -1,4 +1,6 @@
 import type { HealSource } from '../data/player';
+import type { Rarity } from '../data/gear';
+import { wornRarity } from './worn';
 import { OVERWORLD } from '../data/overworld';
 import { TILE_SIZE } from '../data/config';
 import { springAt } from './healing';
@@ -38,6 +40,8 @@ export interface PlayerSummary {
     /** 065: slowed (a gale ram's gust): the share of walk and roll speed taken and ticks left, else null. */
     slow: { share: number; ticks: number } | null;
   };
+  /** 075: the rarity of the best gear piece worn (the cloak's trim), or null with nothing worn. */
+  wornRarity: Rarity | null;
   /** The Ley Springs (030): each one's centre tile, pool radius px, and whether the player's feet are in it. */
   springs: { id: string; tx: number; ty: number; radius: number; inside: boolean }[];
 }
@@ -63,6 +67,7 @@ export function playerSummary(state: SimState): PlayerSummary {
       healing: p.healing,
       slow: p.slowTicks > 0 ? { share: p.slow, ticks: p.slowTicks } : null,
     },
+    wornRarity: wornRarity(state),
     springs: OVERWORLD.springs.map((sp) => ({ id: sp.id, tx: sp.tx, ty: sp.ty, radius: sp.radius * TILE_SIZE, inside: springAt(state.roomId, p.x, p.y)?.id === sp.id })),
   };
 }

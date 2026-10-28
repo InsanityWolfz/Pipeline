@@ -21,7 +21,8 @@ import { GroundItemView } from './GroundItemView';
 import { HoverView } from './HoverView';
 import { HudView } from './HudView';
 import { NodeView } from './NodeView';
-import { bodyLook, PlayerView } from './PlayerView';
+import { PlayerView } from './PlayerView';
+import { wornRarity } from '../sim/worn';
 import { SiteMenus } from './SiteMenus';
 import { SiteView } from './SiteView';
 import { WakeView } from './WakeView';
@@ -152,7 +153,7 @@ export class GameScene extends Scene {
     this.enemyView = new EnemyView(this);
     this.playerView = new PlayerView(this);
     this.silhouette = new SilhouetteView(this, occluders);
-    this.effects = new EffectsView(this, this.playerView.sprite, (atDark, ms, rgb) => this.sceneCameras?.fadeThrough(atDark, ms, rgb));
+    this.effects = new EffectsView(this, this.playerView.sprite, (atDark, ms, rgb) => this.sceneCameras?.fadeThrough(atDark, ms, rgb), () => this.feel?.juice.particles, (id) => this.enemyView?.lastOf(id), () => this.worldLife?.weatherCount ?? 0);
     this.arrowView = new ArrowView(this);
     this.bombView = new BombView(this);
     this.hud = new HudView(this);
@@ -251,6 +252,8 @@ export class GameScene extends Scene {
     // fix-build-inventory-respawn: a move key held through the death doesn't carry the player out of the foundry.
     if (this.sim.events.woke) this.controls?.holdMoveThroughWake();
     mergeEvents(this.pending, this.sim.events);
+    // 076: each tick's hits, for the enemies' staggers (weighed per tick, review 7).
+    this.enemyView?.react(this.sim.events.hits, this.sim.enemies);
     this.host.afterTick(this.sim);
   }
 
@@ -288,7 +291,7 @@ export class GameScene extends Scene {
     this.groundItemView?.update(inRoom(sim.groundItems, shown), picked, sim.player, sim, catches);
     this.enemyView?.update(inRoom(sim.enemies, shown), sim, catches);
     // Through a door's fade the player is already in the next room; hide them until it shows.
-    this.playerView?.update(sim.player, sim.tube, sim.link, bodyLook(sim), sim.hasTube, shown === sim.roomId);
+    this.playerView?.update(sim.player, sim.tube, sim.link, wornRarity(sim), sim.hasTube, sim.tick, shown === sim.roomId);
     if (this.playerView) this.silhouette?.update(this.playerView.sprite, shown === sim.roomId && sim.player.dying === 0);
     if (this.playerView && shown === sim.roomId) catches?.offer(this.playerView.sprite, sim.player.x, sim.player.y, 'player', 0);
     catches?.end();

@@ -4,6 +4,7 @@ import { attackOf, enemyDef, type EnemyDef } from '../data/enemies';
 import type { EnemyState } from '../sim/enemies';
 import { drawPound, drawRise, drawStomp, drawWave } from './bulwarkLook';
 import { colorOf } from './color';
+import { fillAt, rimStyle } from './telegraphLook';
 import { drawHollowsTelegraph } from './hollowsTelegraphs';
 import { drawForgeTelegraph } from './forgewrightLook';
 import { drawConductorTelegraph } from './conductorLook';
@@ -47,7 +48,8 @@ function drawAttack(g: GameObjects.Graphics, e: EnemyState, def: EnemyDef): void
   if (def.kind === 'slammer') {
     const color = colorOf(ENEMY_FX.telegraphColor);
     g.fillStyle(color, ENEMY_FX.telegraphAlpha).fillCircle(e.x, e.y, def.slam.radius);
-    g.fillStyle(color, ENEMY_FX.telegraphFillAlpha).fillCircle(e.x, e.y, def.slam.radius * progress);
+    g.fillStyle(color, fillAt(ENEMY_FX.telegraphFillAlpha, progress)).fillCircle(e.x, e.y, def.slam.radius * progress);
+    rimStyle(g).strokeCircle(e.x, e.y, def.slam.radius);
     return;
   }
   if (def.kind === 'bulwark') {
@@ -59,14 +61,17 @@ function drawAttack(g: GameObjects.Graphics, e: EnemyState, def: EnemyDef): void
   drawArc(g, e.x, e.y, Math.atan2(e.swipeDirY, e.swipeDirX), swipe.arcDegrees, swipe.reach, progress, ENEMY_FX.telegraphAlpha, ENEMY_FX.telegraphFillAlpha);
 }
 
-/** A swipe-style arc (004): the full reach faint, filling out to `progress` of it. */
+/** A swipe-style arc (004): the full reach faint, filling out to `progress` of it, strengthening; 076: rimmed in danger. */
 export function drawArc(g: GameObjects.Graphics, x: number, y: number, angle: number, arcDegrees: number, reach: number, progress: number, alpha: number, fillAlpha: number): void {
   const half = (arcDegrees * Math.PI) / 360;
   const color = colorOf(ENEMY_FX.telegraphColor);
   g.fillStyle(color, alpha);
   g.slice(x, y, reach, angle - half, angle + half, false);
   g.fillPath();
-  g.fillStyle(color, fillAlpha);
+  g.fillStyle(color, fillAt(fillAlpha, progress));
   g.slice(x, y, reach * progress, angle - half, angle + half, false);
   g.fillPath();
+  rimStyle(g);
+  g.slice(x, y, reach, angle - half, angle + half, false);
+  g.strokePath();
 }

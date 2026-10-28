@@ -71,6 +71,9 @@ export const RELIC_CHANCE = 0.03;
 /** Affixes a relic rolls beside its rule. */
 export const RELIC_AFFIXES = 2;
 
+/** 075: the rarities lowest to highest, so the best of several worn pieces (the cloak's trim) is the latest here. */
+export const RARITY_ORDER: readonly Rarity[] = ['common', 'fine', 'rare', 'relic'];
+
 /** Each rarity: its affix count, its relative odds among non-relics (a relic is RELIC_CHANCE, checked first), its name and palette colour. */
 export const RARITIES: Readonly<Record<Rarity, { affixes: number; chance: number; name: string; color: string }>> = {
   common: { affixes: 1, chance: 0.6, name: 'Common', color: 'rock-light' },

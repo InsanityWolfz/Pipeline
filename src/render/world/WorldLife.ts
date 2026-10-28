@@ -110,6 +110,11 @@ export class WorldLife {
     return this.shownWorld;
   }
 
+  /** Weather particles drawn now (fading ones too): live particles in 076's budget. */
+  get weatherCount(): number {
+    return this.weather.count();
+  }
+
   get weatherShown(): WeatherShown {
     return this.shownWeather;
   }

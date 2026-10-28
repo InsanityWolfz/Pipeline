@@ -110,6 +110,11 @@ export function installTestHook(flow: FlowScene): void {
       const scene = live();
       return scene.legibility?.summaryRows(scene.sim) ?? [];
     },
+    wanderer: () => flow.live?.playerView?.pixels() ?? null,
+    wandererClock: (ms: number | null) => {
+      const view = live().playerView;
+      if (view) view.pinnedMs = ms;
+    },
     passable: () => {
       const sim = live().sim;
       const { room, obstacles } = roomBodies(sim, sim.roomId);

@@ -69,16 +69,28 @@ export async function hoverWorld(page: Page, x: number, y: number): Promise<void
   await frames(page, 3);
 }
 
-/** Waits `n` frames, returning what `ui().world` and `ui().weather` showed on each. */
-export function sample(page: Page, n: number): Promise<{ world: WorldShown; weather: WeatherShown; particles: number }[]> {
+export interface Sampled {
+  world: WorldShown;
+  weather: WeatherShown;
+  all: number;
+  particles: number;
+  deathMotes: number;
+}
+
+/**
+ * Waits `n` frames, returning what `ui().world` and `ui().weather` showed on each, with `ui().particles`: `all` live
+ * (076's count, the weather among them), `particles` those that aren't weather, and the death motes alive.
+ */
+export function sample(page: Page, n: number): Promise<Sampled[]> {
   return page.evaluate(async (count) => {
     const g = window.__GAME__;
     if (!g) throw new Error('no game');
-    const out: { world: WorldShown; weather: WeatherShown; particles: number }[] = [];
+    const out: Sampled[] = [];
     for (let i = 0; i < count; i++) {
       await new Promise((r) => requestAnimationFrame(r));
       const u = g.ui();
-      out.push({ world: u.world, weather: u.weather, particles: u.particles });
+      const weather = u.weather.live + u.weather.fading;
+      out.push({ world: u.world, weather: u.weather, all: u.particles.live, particles: u.particles.live - weather, deathMotes: u.particles.deathMotes });
     }
     return out;
   }, n);

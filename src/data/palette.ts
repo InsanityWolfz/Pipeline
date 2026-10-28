@@ -119,14 +119,27 @@ export const DAYLIGHT_PALETTE: readonly VectorColor[] = [
   // Highlights
   { id: 'snow', hex: '#ffffff' },
   { id: 'hit-red', hex: '#ff4d4d' },
+  // 075: the arcane ranger's colour schemes (cobalt cloth, hide jerkin; pale bone cloth) and the static rim light.
+  { id: 'cobalt-dark', hex: '#1f2d66' },
+  { id: 'cobalt', hex: '#3456b4' },
+  { id: 'cobalt-light', hex: '#6a8ee4' },
+  { id: 'hide', hex: '#9a6a40' },
+  { id: 'hide-light', hex: '#c8955f' },
+  { id: 'bone-dark', hex: '#a39783' },
+  { id: 'bone', hex: '#d9d0be' },
+  { id: 'bone-light', hex: '#f4efe3' },
+  { id: 'rim-light', hex: '#ffe6c4' },
 ];
 
 /** The hex of a palette colour by id. Throws on an unknown id. */
 export function paletteHex(id: string): string {
-  const color = DAYLIGHT_PALETTE.find((c) => c.id === id);
-  if (!color) throw new Error(`Unknown palette color '${id}'`);
-  return color.hex;
+  const hex = HEX_BY_ID.get(id);
+  if (hex === undefined) throw new Error(`Unknown palette color '${id}'`);
+  return hex;
 }
+
+/** 075: looked up by id, since the wanderer's live redraw asks for many colours a frame. */
+const HEX_BY_ID: ReadonlyMap<string, string> = new Map(DAYLIGHT_PALETTE.map((c) => [c.id, c.hex]));
 
 /** `#rrggbb` as [r, g, b]. */
 export function hexToRgb(hex: string): [number, number, number] {

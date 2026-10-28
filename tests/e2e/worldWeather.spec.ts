@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { DEATH_MOTES } from '../../src/data/juice';
 import { WEATHER, WEATHER_BUDGET, WEATHER_CAP } from '../../src/data/weather';
 import { watchErrors } from './helpers';
 import { stepUntil } from './hollowsSandbox';
@@ -56,6 +57,8 @@ test('killing 10 Hollows enemies at once in the dust: weather stops spawning whi
     let gated = 0;
     for (const [i, s] of seen.entries()) {
       expect(s.weather.live, q).toBeLessThanOrEqual(WEATHER_CAP[q]);
+      // 076 is in: its death motes stay within their live cap with the weather on.
+      expect(s.deathMotes, q).toBeLessThanOrEqual(DEATH_MOTES.liveCap[q]);
       // The room this frame's spawns had: the budget less the death motes' room and every live particle.
       expect(s.weather.room, q).toBeLessThanOrEqual(Math.max(0, WEATHER_BUDGET.particles[q] - WEATHER_BUDGET.deathMotes[q] - s.particles));
       const before = seen[i - 1];
@@ -65,9 +68,9 @@ test('killing 10 Hollows enemies at once in the dust: weather stops spawning whi
       }
     }
     if (q === 'low') expect(gated).toBeGreaterThan(0);
-    most[q] = Math.max(...seen.map((s) => s.particles + s.weather.live));
+    most[q] = Math.max(...seen.map((s) => s.all));
   }
-  // 014's bursts aren't under the budget until 078 (076 brings the death motes): what they and the weather reached.
+  // 014's bursts aren't under the budget until 078: what every live particle (076's count, the weather among them) reached.
   await info.attach('burst.json', { body: JSON.stringify(most), contentType: 'application/json' });
   console.log('burst', JSON.stringify(most));
 });

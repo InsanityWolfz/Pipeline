@@ -15,7 +15,7 @@ export const EMBER_ENEMY_ANIMS = {
 
 export const EMBER_ENEMY_LOOK = {
   /** The mote's swell: its burst's circle faint, a disc growing to it over the wind-up; the sprite swells by up to `grow` (×) with it. */
-  swell: { alpha: 0.22, fillAlpha: 0.45, edgeWidth: 1.5, edgeAlpha: 0.8, grow: 0.45 },
+  swell: { alpha: 0.22, fillAlpha: 0.45, grow: 0.45 },
   /**
    * The hazards (a mote's pool, a hound's trail): 060's flood pools' molten sheet (FORGE_LOOK.pools' colours), with
    * tongues of flame every `tongueEvery` px round their edge, `tongue` px tall, the last `fadeTicks` fading out.

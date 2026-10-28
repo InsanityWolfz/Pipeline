@@ -1,5 +1,6 @@
 import type { DecorRegion } from './decor';
 import { HUD_LAYOUT } from './hudLayout';
+import { DEATH_MOTES, PARTICLE_BUDGET } from './juice';
 import type { Quality } from './settings';
 
 // 077: each region's weather, render only and only in the overworld: Region 1's drifting pollen and ley motes, the
@@ -76,13 +77,13 @@ export const WEATHER: Readonly<Record<DecorRegion, RegionWeather>> = {
 export const WEATHER_CAP: Readonly<Record<Quality, number>> = { low: 40, medium: 100, high: 160 };
 
 /**
- * The particle budget weather shares (076, not yet on main: `PARTICLE_BUDGET` and the live death-mote cap in its
- * src/data/juice.ts). Weather spawns a particle only while the live total of every kind is below `particles` minus
- * `deathMotes`, so deaths always have their room. These mirror 076's numbers; when 076 merges they read its constants.
+ * The particle budget weather shares (076's `PARTICLE_BUDGET` and live death-mote cap, src/data/juice.ts). Weather
+ * counts as live particles and spawns one only while the live total of every kind is below `particles` minus
+ * `deathMotes`, so deaths always have their room.
  */
 export const WEATHER_BUDGET: { readonly particles: Readonly<Record<Quality, number>>; readonly deathMotes: Readonly<Record<Quality, number>> } = {
-  particles: { low: 150, medium: 300, high: 500 },
-  deathMotes: { low: 60, medium: 120, high: 200 },
+  particles: PARTICLE_BUDGET,
+  deathMotes: DEATH_MOTES.liveCap,
 };
 
 /**
