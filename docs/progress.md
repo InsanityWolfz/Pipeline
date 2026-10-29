@@ -9,7 +9,9 @@ Newest entry first. Entries before 050 are in docs/progress-archive.md.
 
 - The process slimmed down at Shaun's call ("can we get rid of all this junk?"): the spec/plan/build/verify/review/wrapup loop is now talk, build, play, merge (docs/process.md rewritten short); the reviewer and qa agents and the spec, plan, build, verify, review, wrapup and next commands are deleted; the browser tests are down from 152 files to 5 smoke tests (smoke, shippable, newGameAfterQuit, firing, saving) plus tests/prod, in one CI job; `npm run check` runs only the unit tests the branch touches (`check:full`, all 3124, on CI); the stop hook skips a tree it already passed; screenshots, motion strips and agents only when Shaun asks.
 
-**Next:** more rounds of the direction talk; nothing is built from it until design.md is rewritten with Shaun's approval. Hold the performance pass and new content until then. The held-clock fix needs CI green and a PR.
+- Merged as InsanityWolfz/Pipeline#102. Late on, Claude pitched classes built from the four projectile families (docs/brainstorm), and Shaun asked which game to take to Steam; Claude recommended SlotsVsSlots, reviewed it overnight read-only (its code couldn't be run here), and wrote the doc "Slots vs. Slots: the road to Steam".
+
+**Next:** Shaun's call between Pipeline's direction and SlotsVsSlots; more rounds of the direction talk if Pipeline continues; nothing is built from it until design.md is rewritten with Shaun's approval. Hold the performance pass and new content until then. The held-clock fix needs CI green and a PR.
 
 ## 2026-10-28: Session end: the art pass merged
 **Changed:** 072, 073 and the whole art pass (074–081) merged; 071 dropped for 073; fixes: keep-items-before-foundry (#89), the Conductor's intro beat (#99), and e2e tests that timed the game on the wall clock (#100: game-clock and frame-based waits, Playwright's waits sized for CI's slower renderer, weather off in the mote-colour test). The art pass was combined on 081's branch and merged as one PR (#98), which marked PRs 86, 90–94, 96 and 97 merged.

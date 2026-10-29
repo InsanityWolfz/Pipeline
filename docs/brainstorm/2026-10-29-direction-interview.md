@@ -96,6 +96,16 @@ multiplayer."
 
 Every multiplayer answer was the option Claude marked recommended.
 
+## Late that night
+- Claude's pitch for classes (not decided): keep the projectiles, one class per family with its own element
+  (Ranger: arrows and lightning; Bombardier: bombs and fire; Ley mage: ley bolts and frost; Trapper: mines and
+  poison), skills on the four keys instead of ammo items, augments socketed into each class's tube from loot,
+  co-op combos through the keyword statuses, the built bosses as party puzzles; cut the factory, keep the foundry
+  as a home base. Order: a one-player class test, then a two-player network test, then design.md.
+- Shaun then asked which of his two games is better to finish and sell on Steam. Claude's answer: SlotsVsSlots
+  (smaller, a proven genre, an open hook, close to a product); Pipeline could come back as a second game.
+  The overnight review of SlotsVsSlots is Shaun's doc "Slots vs. Slots: the road to Steam".
+
 ## Still open (next round)
 - The foundry's fate: cut, or the middle path (each class's tube takes socketed augments, no factory).
 - Classes: how many, what sets them apart (their tube? their talents?), and how they work together in a party.
