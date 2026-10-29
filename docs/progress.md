@@ -2,6 +2,13 @@
 
 Newest entry first. Entries before 050 are in docs/progress-archive.md.
 
+## 2026-10-29: Held clock for same-seed tests; a direction interview
+**Changed:** on `claude/jolly-bell-c3uifv` (unmerged, no PR yet):
+- fix-held-clock: main's red e2e (`bossPhases.spec.ts` "the same seed and commands give the same state through an intro on Low and High", one tick apart) came from the real-time loop running a frame-dependent number of ticks between boot and the test's first `step()`. A dev-only `?clock=held` starts each game with the hook's clock taken; bossPhases', lighting's and enemyPolish's same-seed tests use it, and a smoke test checks nothing ticks first. Under CPU load the old test failed 2 of 6 runs, the held one 0 of 6. `npm run check` 3124 tests. The four touched e2e files had 5 local failures not yet looked at (this container's Playwright wants a browser build it doesn't have, so they ran on the preinstalled Chromium); CI is the judge.
+- After playing main, Shaun questioned the direction ("I don't know if I see the vision anymore"): too many ammo types (84 of 121 items), the factory not changing fights, unreadable volleys, the foundry feeling like chores. Three interview rounds in docs/brainstorm/2026-10-29-direction-interview.md lean to simple rounds with one element each and the volley built by machines at the tube's end, but the pitch is unsettled, and he raised Terraria-style multiplayer.
+
+**Next:** more rounds of the direction talk; nothing is built from it until design.md is rewritten with Shaun's approval. Hold the performance pass and new content until then. The held-clock fix needs CI green and a PR.
+
 ## 2026-10-28: Session end: the art pass merged
 **Changed:** 072, 073 and the whole art pass (074–081) merged; 071 dropped for 073; fixes: keep-items-before-foundry (#89), the Conductor's intro beat (#99), and e2e tests that timed the game on the wall clock (#100: game-clock and frame-based waits, Playwright's waits sized for CI's slower renderer, weather off in the mote-colour test). The art pass was combined on 081's branch and merged as one PR (#98), which marked PRs 86, 90–94, 96 and 97 merged.
 
