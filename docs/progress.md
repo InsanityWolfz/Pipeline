@@ -2,6 +2,17 @@
 
 Newest entry first. Entries before 050 are in docs/progress-archive.md.
 
+## 2026-10-28: Session end: the art pass merged
+**Changed:** 072, 073 and the whole art pass (074–081) merged; 071 dropped for 073; fixes: keep-items-before-foundry (#89), the Conductor's intro beat (#99), and e2e tests that timed the game on the wall clock (#100: game-clock and frame-based waits, Playwright's waits sized for CI's slower renderer, weather off in the mote-colour test). The art pass was combined on 081's branch and merged as one PR (#98), which marked PRs 86, 90–94, 96 and 97 merged.
+
+**Next:** first, main's CI: after the final merges, e2e (1) failed once on `tests/e2e/bossPhases.spec.ts:157` ("the same seed and commands give the same state through an intro on Low and High"): the High run's state was one tick ahead (2121 against 2120). `step()` stops the clock, so the extra tick likely comes from the arena helper (`enterArena`'s walk or the door's fade) depending on drawn frames; make that path tick-exact rather than loosening the comparison (a re-run was requested once). Then Shaun plays the whole game on main (`?playtest`) and answers docs/open-calls.md; then pick the next thing: a performance pass (a new game's first ~4 s run slow while the art warms up), one cheap AI playtest of the new art, or new content (Region 5, a final boss, the post-game modifiers from design.md).
+
+**Notes:**
+- Work in a fresh chat session: the working rules are in docs/process.md ("Usage": one builder at a time, lighter reviews; "Stacked art branches"), .claude/rules/render.md (motion judged in motion) and .claude/rules/tests.md (no wall-clock durations; drifting effects off in pixel checks).
+- Usage ran out twice this session: running three or four Opus builders, reviewers and spec writers in parallel cost about 0.3–0.75M tokens a spec. Run one at a time.
+- `SAVE_VERSION` is 24 (072's 23, 080's 24).
+- GameScene.ts is 314 lines (081.10): split it the next time it grows.
+
 ## 2026-10-28: 079 The foundry's mood
 **Changed:** on `claude/079-foundry-mood` (InsanityWolfz/Pipeline#95), art pass 6 of 8 (plan docs/plans/079-foundry-mood.md):
 - the foundry as a warm, torch- and forge-lit workshop on 074's light system: an amber ambient, two braziers and four new side-wall torches, the intake's glow; smelters and kilns light the floor while they work (ember), the Tempering coil violet;
