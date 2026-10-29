@@ -32,3 +32,18 @@ test('boots, exposes the test hook and steps exactly', async ({ page }) => {
 
   expect(errors).toEqual([]);
 });
+
+// fix-held-clock: `?clock=held` starts the game with the hook's clock already taken, so a run's tick 0 is the test's,
+// not however many ticks the real-time loop ran before its first step() (bossPhases' Low/High runs were one apart).
+test('?clock=held: nothing ticks before the first step(), however many frames draw', async ({ page }) => {
+  await page.goto('/?start=hollows&seed=5&clock=held');
+  await page.waitForFunction(() => window.__GAME__?.ui().ready === true);
+  const held = await page.evaluate(async () => {
+    const g = window.__GAME__;
+    if (!g) throw new Error('no game');
+    for (let i = 0; i < 30; i++) await new Promise((r) => requestAnimationFrame(r));
+    return { tick: g.getState().tick, drawn: g.ui().drawnTick };
+  });
+  expect(held).toEqual({ tick: 0, drawn: 0 });
+  expect((await page.evaluate(() => window.__GAME__?.step(5)))?.tick).toBe(5);
+});

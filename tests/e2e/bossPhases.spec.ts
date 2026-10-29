@@ -157,7 +157,9 @@ test('080: the Warden: one shake on its intro\'s beat, and none through its figh
 test('080: the same seed and commands give the same state through an intro on Low and High', async ({ page }) => {
   test.setTimeout(120_000);
   const run = async (quality: 'low' | 'high') => {
-    await boot(page, '?start=hollows&seed=5');
+    // fix-held-clock: the clock is held from the first frame, so both runs start on tick 0 (unheld, the real-time loop
+    // ran a frame-dependent count of ticks before the first step(), and High once came out one tick ahead).
+    await boot(page, '?start=hollows&seed=5&clock=held');
     await page.evaluate((q) => window.__GAME__?.setLook({ quality: q }), quality);
     await page.evaluate(() => {
       const g = window.__GAME__;

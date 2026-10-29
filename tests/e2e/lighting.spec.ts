@@ -147,7 +147,7 @@ test('the same seed and commands give the same game on Low and on High', async (
   test.setTimeout(90_000);
   const run = async (quality: 'low' | 'high') => {
     const page = await browser.newPage();
-    await boot(page, '?start=field&seed=7407');
+    await boot(page, '?start=field&seed=7407&clock=held');
     await setLook(page, { quality });
     const state = await page.evaluate(async () => {
       const g = window.__GAME__;

@@ -164,7 +164,7 @@ test('a punch on a ring 1 Husk staggers it, reel then recover, and a wind-up cut
 
 test('the same seed and commands give the same state on Low and High', async ({ page }) => {
   const run = async (quality: 'low' | 'high') => {
-    await boot(page, '?start=hollows&seed=5');
+    await boot(page, '?start=hollows&seed=5&clock=held');
     await page.evaluate((q) => window.__GAME__?.setLook({ quality: q }), quality);
     return page.evaluate(async () => {
       const g = window.__GAME__;

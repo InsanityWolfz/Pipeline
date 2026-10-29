@@ -4,6 +4,7 @@ import { END_CARD } from '../../data/endCard';
 import type { SimState } from '../../sim/state';
 import { GameScene } from '../GameScene';
 import type { ScreenFit } from '../scale';
+import { holdsClock } from './flowTypes';
 import type { GameHost } from './host';
 import type { SaveStore } from './saveStore';
 
@@ -36,6 +37,8 @@ export class GameRunner {
     this.endCardSeen = endCardSeen;
     this.endCardAt = null;
     const scene = new GameScene(sim, host);
+    // fix-held-clock: a test that compares runs takes the clock before the first frame, not after a frame-dependent count of ticks.
+    scene.manualStepping = holdsClock(window.location.search);
     this.count += 1;
     this.game.scene.add(`game-${this.count}`, scene, true);
     this.onTop();
