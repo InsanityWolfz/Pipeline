@@ -96,7 +96,7 @@ scripts/build-sound.ts    generates the sound effects
 The ceremony fits the change. Every change still gets its own branch, a test, green CI and Shaun's merge.
 
 - **Feature track:** anything with new design, new content or several systems. It runs the feature loop below.
-- **Fix track:** a bug or small tweak with no design question: it changes how something already specced behaves or looks, in about one system and under about 100 lines. No spec, no plan, no reviewer, no wrapup. Branch `claude/fix-<name>` off `main`; a failing test first (Vitest, or Playwright for render-only bugs), then the fix; `npm run check` and the touched e2e files locally; push and let CI run the rest; one PR with what was wrong, the cause, the fix and the test. Add a `fix-<name>` row to the status page; skip progress.md unless there's a handoff note. If a fix turns out to need design, stop and make it a spec.
+- **Fix track:** a bug or small tweak with no design question: it changes how something already specced behaves or looks, in about one system and under about 100 lines. No spec, no plan, no reviewer, no wrapup. Branch `claude/fix-<name>` off `main`; a failing test first (Vitest, or Playwright for render-only bugs), then the fix; `npm run check` locally; push and let CI run the rest; one PR with what was wrong, the cause, the fix and the test. Add a `fix-<name>` row to the status page; skip progress.md unless there's a handoff note. If a fix turns out to need design, stop and make it a spec.
 - Several small fixes Shaun names together may share one fix branch and PR.
 
 ## The feature loop
@@ -108,7 +108,7 @@ _Loop: Spec, then you approve, then Plan, Build, Verify, Review, then you playte
 1. **Spec** (`/spec`): Claude interviews you about the feature, then writes `docs/specs/NNN-name.md` with testable acceptance criteria tied to the design doc, as the first commit on the spec's own branch (`claude/NNN-name`), and opens that branch's draft PR. There is no separate spec PR: the same PR carries the spec, the build and the wrapup. You approve it before anything is built.
 2. **Plan** (`/plan`): Claude breaks the spec into a vertical slice that works end to end (sim, render and data together), not one layer at a time. A written plan file (`docs/plans/NNN-name.md`) only for a spec that spans several systems or is expected to pass about 300 lines; otherwise the plan is a short checklist in the PR body.
 3. **Build** (`/build`): sim tests are written first, then the code. Small commits on the spec's branch.
-4. **Verify** (`/verify`): `npm run check` and the e2e files the change touches, locally; the full Playwright suite runs in CI (`.github/workflows/ci.yml`, 4 shards) on every push. A hook enforces `npm run check`, so Claude can't declare done with failing checks, and a PR is ready only when CI is green on its head.
+4. **Verify** (`/verify`): `npm run check` locally (typecheck, lint and the unit tests the branch touches); every unit test and the full Playwright suite run in CI (`.github/workflows/ci.yml`, 4 shards) on every push. A hook enforces `npm run check`, so Claude can't declare done with failing checks, and a PR is ready only when CI is green on its head.
 5. **Review** (`/review`): a separate reviewer agent with fresh context checks the diff against the spec, the architecture rules and the design doc. It never sees the build session's reasoning, so the work isn't grading itself.
 6. **Log** (`/wrapup`): written into the PR before it goes to you for the playtest, so "merge" is only the merge: the spec marked done, backlog, decisions, one progress entry, and any repeated mistake turned into a new rule in `.claude/rules`. That's how the process improves over time.
 
@@ -123,10 +123,11 @@ From 021 to 041, 21 specs were stacked on one branch with no pull requests. `mai
 3. **At most one "raised after the build" round per spec.** If Shaun's answers lead to more building that misses again, record the numbers and put the follow-up in a new spec.
 4. **Balance targets are measurements.** Scripted-bot targets over many seeds (fight lengths, clear times, damage taken) are printed by `npm run measure` (tests/measure, its own Vitest config; a missed target never fails it) and recorded in the spec and PR. They are not tests in `npm run check`, and the build doesn't loop on tuning to make chaotic seeds pass. Balance is judged at playtest.
 5. **Small approval batches.** About three specs approved at a time, so the proposals Shaun approves on draft are ones he has read.
-6. **CI runs the full suite.** Sessions run `npm run check` and the e2e files the change touches; the full Playwright suite runs in CI on every push (2026-10-21). A local full `npm run test:e2e` (about 7 minutes) only when CI can't be read, once per spec.
+6. **CI runs the full suite.** Sessions run only `npm run check` (typecheck, lint and the unit tests the branch touches); every unit test (`npm run check:full`) and the full Playwright suite run in CI on every push, at no cost to Claude usage. A browser test runs locally only to reproduce a CI failure (Shaun, 2026-10-29: "too many tests get run every time we change something small").
 7. **Commit after each item.** A container restart loses anything uncommitted.
 8. **Each fact in one place.** Live step state (building, review, ready to play) lives on the status page; the work and its history in the PR and git; spec status in the spec and docs/backlog.md. docs/progress.md is a handoff log: one entry per merged PR or per session that leaves something unfinished, never one per step.
 9. **Review shots for the current change only.** Take shots for the spec being built. Don't retake older specs' shots because the map or HUD moved; old shots are history. A shot spec that breaks is fixed only when Shaun asks for it.
+10. **Fewer new tests (Shaun, 2026-10-29).** Unit tests for game rules; a browser test only for a flow that could break (menus, doors, saving, the flow screens). No browser test per visual criterion, and screenshots, review shots and motion strips only when Shaun asks.
 
 ## Working with Shaun (2026-10-20)
 
@@ -183,14 +184,14 @@ Keep the team small. More agents means more tokens and more places for drift.
 | `/spec <item>` | Interviews you, writes the spec on its own branch, opens its draft PR, sets status to draft |
 | `/plan` | Plans the approved spec as a vertical slice (a plan file only for big specs) |
 | `/build` | Implements the plan, tests first |
-| `/verify` | Runs `npm run check`, the touched e2e files and the `qa` agent; CI runs the rest |
+| `/verify` | Runs `npm run check` and pushes; CI runs the rest |
 | `/review` | Runs the `reviewer` agent on the branch diff |
 | `/wrapup` | Before the playtest: marks done, updates backlog, decisions, progress and rules in the PR |
 | `/next` | Unattended mode: takes the top approved spec, runs plan through review, opens a draft pull request |
 
 **Hooks** (deterministic, unlike CLAUDE.md, which is advisory):
 
-- **Stop hook:** runs `npm run check` (typecheck, lint, unit tests) whenever Claude tries to finish. A failure blocks finishing and feeds the errors back.
+- **Stop hook:** runs `npm run check` (typecheck, lint, the touched unit tests) whenever Claude tries to finish, unless nothing has changed since it last passed. A failure blocks finishing and feeds the errors back.
 - **PostToolUse hook on edits:** runs ESLint with autofix on the changed file, so style never costs tokens.
 
 ## Starter files
@@ -338,7 +339,7 @@ errors. Output pass/fail per criterion with evidence.
 }
 ```
 
-Both are Node scripts so they run the same on Windows, macOS and Linux. `check.mjs` runs `npm run check` and exits with code 2 on failure, which blocks Claude from finishing and sends it the errors. It exits 0 without running anything when there's no `package.json` yet or no file outside `docs/` has changed, so spec interviews and doc edits aren't blocked. `lint-file.mjs` reads the edited file path from the hook input and runs ESLint with autofix on it. Claude writes both scripts during bootstrap and confirms them against the current Claude Code hooks documentation.
+Both are Node scripts so they run the same on Windows, macOS and Linux. `check.mjs` runs `npm run check` and exits with code 2 on failure, which blocks Claude from finishing and sends it the errors. It exits 0 without running anything when there's no `package.json` yet, no file outside `docs/` has changed, or the working tree is the one it last passed on (2026-10-29), so spec interviews and doc edits aren't blocked. `lint-file.mjs` reads the edited file path from the hook input and runs ESLint with autofix on it. Claude writes both scripts during bootstrap and confirms them against the current Claude Code hooks documentation.
 
 ## Preview builds
 

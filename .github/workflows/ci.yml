@@ -1,5 +1,5 @@
 # Runs the checks on every pushed branch, so sessions don't have to run the
-# full suite themselves: `npm run check`, then the Playwright game tests in 4 shards,
+# full suite themselves: `npm run check:full` (every unit test), then the Playwright game tests in 4 shards,
 # and the production build's smoke tests (tests/prod: the built game under /Pipeline/, as Pages serves it).
 # Review shots (REVIEW_SHOTS=1) are not run here; they skip without it.
 name: CI
@@ -23,7 +23,7 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: npm run check
+      - run: npm run check:full
 
   e2e:
     runs-on: ubuntu-latest

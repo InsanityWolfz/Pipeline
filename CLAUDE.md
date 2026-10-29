@@ -13,7 +13,8 @@ How we work: docs/process.md. Current state: docs/progress.md.
 
 ## Commands
 - npm run dev        start the game
-- npm run check      typecheck + lint + unit tests (must pass)
+- npm run check      typecheck + lint + the unit tests the branch touches (must pass)
+- npm run check:full every unit test (CI runs it)
 - npm run test:e2e   Playwright game tests
 - npm run measure    balance measurements (report only)
 
@@ -35,11 +36,12 @@ Two tracks (docs/process.md "Two tracks"):
 - Fix (a bug or small tweak, no design question, ~1 system, <~100 lines):
   claude/fix-<name>, failing test, fix, PR. No spec, plan, review or wrapup.
 One spec = one branch = one PR into main; never stack specs on one branch.
-CI runs the full Playwright suite on every push; locally run npm run check
-and the touched e2e files. A PR is ready only with CI green on its head.
+CI runs every unit test and the full Playwright suite on every push; locally
+run only npm run check, and a browser test only to reproduce a CI failure
+(Shaun, 2026-10-29). A PR is ready only with CI green on its head.
 The wrapup goes in before the playtest, so "merge NN" is only the merge.
 progress.md: one entry per merged PR or unfinished session, not per step.
-Review shots: only for the current spec; don't retake older specs' shots.
+Screenshots and motion strips only when Shaun asks (2026-10-29).
 A spec closes when its criteria are met or recorded; new notes become new specs.
 Balance targets are measurements (npm run measure), not check tests.
 Never report done while checks fail.
