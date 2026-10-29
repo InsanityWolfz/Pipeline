@@ -40,3 +40,6 @@ export function skipsTitle(search: string): boolean {
 
 /** Whether a URL starts the sandbox (044): Settings hides its save rows and shows the panel's key. */
 export const isSandboxUrl = (search: string): boolean => new URLSearchParams(search).has('sandbox');
+
+/** Dev builds: whether a URL starts each game with the test hook's clock held (`?clock=held`), so no tick runs before the first step(). */
+export const holdsClock = (search: string): boolean => import.meta.env.DEV && new URLSearchParams(search).get('clock') === 'held';

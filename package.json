@@ -9,7 +9,8 @@
     "lint": "eslint .",
     "test": "vitest run --passWithNoTests",
     "measure": "vitest run --config vitest.measure.config.ts",
-    "check": "npm run typecheck && npm run lint && npm run test",
+    "check": "npm run typecheck && npm run lint && vitest run --passWithNoTests --changed origin/main",
+    "check:full": "npm run typecheck && npm run lint && npm run test",
     "test:e2e": "playwright test --pass-with-no-tests",
     "test:prod": "npm run build && playwright test -c playwright.prod.config.ts",
     "sound": "node scripts/build-sound.ts"
