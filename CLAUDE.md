@@ -29,29 +29,23 @@ How we work: docs/process.md. Current state: docs/progress.md.
 - One system per file, ~300 lines max, no `any`
 
 ## Workflow
-Two tracks (docs/process.md "Two tracks"):
-- Feature: /spec -> /plan -> /build -> /verify -> /review -> /wrapup.
-  Never skip verify or review. The spec is the first commit of its own
-  branch and draft PR; build and wrapup land in that same PR.
-- Fix (a bug or small tweak, no design question, ~1 system, <~100 lines):
-  claude/fix-<name>, failing test, fix, PR. No spec, plan, review or wrapup.
-One spec = one branch = one PR into main; never stack specs on one branch.
-CI runs every unit test and the full Playwright suite on every push; locally
-run only npm run check, and a browser test only to reproduce a CI failure
-(Shaun, 2026-10-29). A PR is ready only with CI green on its head.
-The wrapup goes in before the playtest, so "merge NN" is only the merge.
-progress.md: one entry per merged PR or unfinished session, not per step.
-Screenshots and motion strips only when Shaun asks (2026-10-29).
-A spec closes when its criteria are met or recorded; new notes become new specs.
-Balance targets are measurements (npm run measure), not check tests.
-Never report done while checks fail.
+Talk, build, play, merge (docs/process.md, 2026-10-29):
+- Agree on the change in chat; design questions to Shaun, answers in
+  docs/brainstorm/. Build on claude/<name> off main, small commits, pushed.
+- Locally run only npm run check; CI runs every unit test and the browser
+  smoke tests. A browser test locally only to reproduce a CI failure.
+- New rules get a unit test; a new browser test only for a flow that could
+  break. Screenshots, motion strips and agents only when Shaun asks.
+- A PR is ready only with CI green on its head; merge only when Shaun says
+  "merge" for it. Never report done while checks fail.
+- Balance targets are measurements (npm run measure), not check tests.
+- progress.md: one entry per merged PR or unfinished session, not per step.
 Shaun follows from his phone: keep the status page, notifications and merges
-exactly as docs/process.md "Working with Shaun" says.
+as docs/process.md "Working with Shaun" says.
 When something needs Shaun (an approval, a decision, a playtest), end the reply with it; when nothing does, leave that out. Report only what is relevant to Shaun; keep internal progress to yourself unless he asks for a status report.
 
 ## Never
-- Invent design. If docs/design.md or the spec doesn't say, ask, or add
-  an open question to the spec.
+- Invent design. If docs/design.md doesn't say, ask.
 - Add a dependency without asking.
 - Edit docs/design.md without explicit approval.
 - Leave a session without updating docs/progress.md.

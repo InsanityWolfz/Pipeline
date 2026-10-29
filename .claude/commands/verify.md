@@ -1,1 +1,0 @@
-Run npm run check (typecheck, lint and the unit tests the branch touches). Push; CI (.github/workflows/ci.yml) runs every unit test and the full Playwright suite. Don't run browser tests locally except to reproduce a CI failure, and take screenshots (the qa agent) only when Shaun asks for them. Fix failures until green, including CI on the final head.

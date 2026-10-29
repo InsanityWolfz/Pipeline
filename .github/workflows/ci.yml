@@ -1,5 +1,5 @@
 # Runs the checks on every pushed branch, so sessions don't have to run the
-# full suite themselves: `npm run check:full` (every unit test), then the Playwright game tests in 4 shards,
+# full suite themselves: `npm run check:full` (every unit test), then the Playwright smoke tests,
 # and the production build's smoke tests (tests/prod: the built game under /Pipeline/, as Pages serves it).
 # Review shots (REVIEW_SHOTS=1) are not run here; they skip without it.
 name: CI
@@ -27,10 +27,6 @@ jobs:
 
   e2e:
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        shard: [1, 2, 3, 4]
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
@@ -39,11 +35,11 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npx playwright install --with-deps chromium
-      - run: npx playwright test --shard=${{ matrix.shard }}/4
+      - run: npx playwright test
       - if: failure()
         uses: actions/upload-artifact@v5
         with:
-          name: e2e-results-${{ matrix.shard }}
+          name: e2e-results
           path: test-results/
           retention-days: 7
 

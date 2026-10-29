@@ -1,5 +1,7 @@
 # Backlog
 
+History from the old spec loop (retired 2026-10-29, docs/process.md): work is now agreed in chat, not picked from this list.
+
 Build order: combat first, then the foundry, then claiming. Statuses: idea, draft, approved, done, dropped (closed unmerged).
 Only Shaun moves a spec to approved. Unattended runs only pick up approved items.
 

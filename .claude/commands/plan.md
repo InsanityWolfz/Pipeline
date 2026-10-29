@@ -1,1 +1,0 @@
-Only for a spec with status: approved. Plan a vertical slice touching sim, render and data together. List the tests first. Write docs/plans/NNN-name.md only if the spec spans several systems or is expected to pass about 300 lines; otherwise put the plan as a short checklist in the PR body. In an attended session, stop for my approval.
