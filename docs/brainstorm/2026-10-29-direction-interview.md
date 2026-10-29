@@ -84,7 +84,22 @@ better game."
 - A free test before choosing: play only the fighting (`?sandbox` or `?playtest`) for a session, with friends in mind.
   If the fighting carries the game on its own, the pivot stands on solid ground.
 
+## Multiplayer (Shaun)
+"Yeah, I think combat's the best part. I think the only way to make this game be fun or be able to sell is to make it
+multiplayer."
+
+- Party size: **2–4 friends**, Terraria-style co-op.
+- Hosting: **one player hosts, friends join** with a code or link (a small relay to connect people, no game servers).
+- Platform: **browser now, Steam later** (a desktop wrapper once it's worth selling).
+- Ownership: **characters travel, worlds are the host's**: class, level, talents and gear are the player's and join
+  any friend's world; the world's progress belongs to its host.
+
+Every multiplayer answer was the option Claude marked recommended.
+
 ## Still open (next round)
+- The foundry's fate: cut, or the middle path (each class's tube takes socketed augments, no factory).
+- Classes: how many, what sets them apart (their tube? their talents?), and how they work together in a party.
+- A cheap proof before any redesign: two players in today's combat over the network, to see that it feels right.
 - Why the game exists: to play with friends, or to ship and sell? It decides how much the hook is worth.
 - Multiplayer: a real goal, and when? Shared foundry or one each? It decides how heavy the foundry can be (friends
   waiting while one player builds for an hour).
