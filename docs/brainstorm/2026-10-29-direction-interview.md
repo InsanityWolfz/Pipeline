@@ -68,7 +68,24 @@ into the world. Maybe I'm trying to combine too many games at once."
   through the puzzles design.md already gives them (twin cores, a front shield, evasion, swarms), with raw throughput
   the slower fallback; `npm run measure` can show a tailored gun against an untailored one.
 
+## Then (Shaun, in his words)
+"I almost hate to say it, but the worst part about the game is the foundry. Like, I like Factorio, but you go in
+there, dude, it's just like, it's confusing, and the pylons are confusing. We'd be better off just making a
+Terraria-style Realm of the Mad God multiplayer game, where the classes and talents like an ARPG, and you just pick a
+class and have talents and augment them with stuff and get gear. Would that be better? I feel like that might be a
+better game."
+
+- Claude's read: combat is the strongest part, and a class ARPG with friends is likely more fun than today's game.
+  Most of the sim isn't the foundry: a rough name-based count puts foundry, claims and crafting at about an eighth
+  of src/sim's ~14.5k lines; combat, enemies, bosses, world, gear and talents carry over. The cost is the hook: without
+  the foundry it's a well-made game in a crowded genre. Middle path: drop the factory and keep the tube as the weapon
+  you augment (a class picks its tube; augments socket into it), which is the "augment them with stuff" part.
+  Multiplayer is the biggest single piece of work in any direction (netcode, hosting, a shared world).
+- A free test before choosing: play only the fighting (`?sandbox` or `?playtest`) for a session, with friends in mind.
+  If the fighting carries the game on its own, the pivot stands on solid ground.
+
 ## Still open (next round)
+- Why the game exists: to play with friends, or to ship and sell? It decides how much the hook is worth.
 - Multiplayer: a real goal, and when? Shared foundry or one each? It decides how heavy the foundry can be (friends
   waiting while one player builds for an hour).
 - Which pitch the game is; Shaun wants to go back and forth before choosing a direction.
